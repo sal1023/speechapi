@@ -1,0 +1,27 @@
+<jaxws:bindings wsdlLocation="etc/SpeechAttach.wsdl"  version="2.0"
+    xmlns:jaxws="http://java.sun.com/xml/ns/jaxws"
+    xmlns:wsdl="http://schemas.xmlsoap.org/wsdl/"
+    xmlns:xs="http://www.w3.org/2001/XMLSchema"
+    xmlns:jxb="http://java.sun.com/xml/ns/jaxb">
+
+    <jaxws:bindings node="wsdl:definitions">
+        <jaxws:package name="com.spokentech"/>
+    </jaxws:bindings>
+
+    <jaxws:bindings node="wsdl:definitions/wsdl:types/xs:schema[@targetNamespace='http://spokentech.com/types']" xmlns:xs="http://www.w3.org/2001/XMLSchema" xmlns:wsdl="http://schemas.xmlsoap.org/wsdl
+/">
+        <jxb:schemaBindings xmlns:jxb="http://java.sun.com/xml/ns/jaxb">
+            <jxb:package name="com.spokentech.server"/>
+        </jxb:schemaBindings>
+    </jaxws:bindings>
+    <jaxws:bindings>
+        <handler-chains xmlns="http://java.sun.com/xml/ns/javaee">
+           <handler-chain>
+              <handler>
+                  <handler-name>ServerLogicalHandler
+                  <handler-class>com.spokentech.speechdown.server.ws.ServerLogicalHandler</handler-class>
+              </handler>
+           </handler-chain>
+        </handler-chains>
+    </jaxws:bindings>
+</jaxws:bindings>
