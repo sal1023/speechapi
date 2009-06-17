@@ -1,0 +1,125 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<definitions
+    name="SpeechLink"
+    targetNamespace="http://spokentech.com/speechdown"
+    xmlns="http://schemas.xmlsoap.org/wsdl/"
+    xmlns:xsd="http://www.w3.org/2001/XMLSchema"
+    xmlns:wsdl="http://schemas.xmlsoap.org/wsdl/"
+    xmlns:tns="http://spokentech.com/speechdown"
+    xmlns:s="http://spokentech.com/speechdown/types"
+    xmlns:soap="http://schemas.xmlsoap.org/wsdl/soap/">
+
+    <types>
+          <schema xmlns="http://www.w3.org/2001/XMLSchema"
+               targetNamespace="http://spokentech.com/speechdown/types"
+               xmlns:xmime="http://www.w3.org/2005/05/xmlmime" 
+               elementFormDefault="qualified">
+
+                 <complexType name="RecResponseType">
+                     <sequence>
+                         <element name="text" type="string"/>
+                         <element name="oog" type="boolean"/>
+                         <element name="serialized" type="string"/>
+                     </sequence>
+                 </complexType>
+                 <complexType name="RecRequestAttachType">
+                     <sequence>
+                         <element name="grammar" type="string"/>
+                         <element name="audio" type="base64Binary" xmime:expectedContentTypes="audio/x-wav"/>
+                     </sequence>
+                 </complexType>
+                 
+                 <complexType name="RecRequestLinkType">
+                     <sequence>
+                         <element name="grammar" type="string"/>
+                         <element name="audioURL" type="string"/>
+                     </sequence>
+                 </complexType>
+
+                 <complexType name="SynthResponseAttachType">
+                     <sequence>
+                         <element name="audio" type="base64Binary" xmime:expectedContentTypes="audio/x-wav"/>
+                     </sequence>
+                 </complexType>
+
+
+                 <element name="RecognizeRequestLinkType" type="s:RecRequestLinkType"/>
+                 <element name="RecognizeRequestAttachType" type="s:RecRequestAttachType"/>
+                 <element name="RecognizeResponseType" type="s:RecResponseType"/>
+                 <element name="SynthesizeRequestType" type="xsd:string"/>
+                 <element name="SynthesizeResponseAttachType" type="s:SynthResponseAttachType"/>
+                 <element name="SynthesizeResponseLinkType" type="xsd:string"/>
+          </schema>
+    </types>
+    <message name="RecognizeRequest">
+        <part name="recRequest" element="s:RecognizeRequestAttachType"/>
+    </message>
+    <message name="RecognizeResponse">
+        <part name="recResult" element="s:RecognizeResponseType"/>
+    </message>
+    <message name="SynthesizeRequest">
+        <part name="text" element="s:SynthesizeRequestType"/>
+    </message>
+    <message name="SynthesizeResponse">
+        <part name="audio" element="s:SynthesizeResponseAttachType"/>
+    </message>
+
+    <message name="RecognizeLinkRequest">
+        <part name="recRequest" element="s:RecognizeRequestLinkType"/>
+    </message>
+    <message name="RecognizeLinkResponse">
+        <part name="recResult" element="s:RecognizeResponseType"/>
+    </message>
+    <message name="SynthesizeLinkRequest">
+        <part name="text" element="s:SynthesizeRequestType"/>
+    </message>
+    <message name="SynthesizeLinkResponse">
+        <part name="audio" element="s:SynthesizeResponseLinkType"/>
+    </message>
+
+
+
+     <portType name="SpeechLinkPortType">
+          <operation name="synthesize">
+               <input message="tns:SynthesizeLinkRequest"/>
+               <output message="tns:SynthesizeLinkResponse"/>
+          </operation>
+          <operation name="recognize">
+               <input message="tns:RecognizeLinkRequest"/>
+               <output message="tns:RecognizeLinkResponse"/>
+          </operation>
+     </portType>
+
+
+     <binding name="SpeechLinkBinding" type="tns:SpeechLinkPortType">
+          <soap:binding style="document" transport="http://schemas.xmlsoap.org/soap/http"/>
+          <operation name="synthesize">
+               <soap:operation soapAction=""/>
+               <input>
+                    <soap:body use="literal"/>
+               </input>
+               <output>
+                    <soap:body use="literal"/>
+               </output>
+          </operation>
+          <operation name="recognize">
+               <soap:operation soapAction=""/>
+               <input>
+                    <soap:body use="literal"/>
+               </input>
+               <output>
+                    <soap:body use="literal"/>
+               </output>
+          </operation>
+     </binding>
+
+  <service name="SpeechLinkService">
+    <port name="SpeechLinkPort" binding="tns:SpeechLinkBinding">
+      <soap:address location="http://localhost:8090/jaxws-speechdown/speechservice"/>
+    </port>
+  </service>
+  
+  
+  
+</definitions>
