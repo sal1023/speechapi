@@ -48,15 +48,15 @@ import com.spokentech.speechdown.common.RecognitionResult;
 import com.spokentech.speechdown.server.RecognizerService;
 import com.spokentech.speechdown.server.SynthesizerService;
 import com.spokentech.speechdown.server.recog.AudioStreamDataSource;
-import com.spokentech.speechdown.types.RecRequestAttachType;
-import com.spokentech.speechdown.types.RecResponseType;
-import com.spokentech.speechdown.types.SynthResponseAttachType;
+import com.spokentech.speechdown.RecRequestAttachType;
+import com.spokentech.speechdown.RecResponseType;
+import com.spokentech.speechdown.SynthResponseAttachType;
 import com.spokentech.speechdown.SpeechAttachPortType; 
 
 
 @WebService(
     portName="SpeechAttachPort",
-    targetNamespace="http://spokentech.com/speechdown",
+    targetNamespace="http://spokentech.com/speechcloud",
     serviceName="SpeechAttachService",
     wsdlLocation="/WEB-INF/wsdl/SpeechAttach.wsdl",
     endpointInterface="com.spokentech.speechdown.SpeechAttachPortType")

@@ -50,7 +50,7 @@ public class Recognizer {
     private static Logger _logger = Logger.getLogger(Recognizer.class);
     public static final String CRLF = "\r\n";
     
-	private static  QName speechAttachQName = new QName("http://spokentech.com/speechdown", "SpeechAttachPort");
+	private static  QName speechAttachQName = new QName("http://spokentech.com/speechcloud", "SpeechAttachPort");
     
 
     public static final String HELP_OPTION = "help";

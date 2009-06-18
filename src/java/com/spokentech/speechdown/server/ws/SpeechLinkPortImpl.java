@@ -10,14 +10,14 @@ import com.spokentech.speechdown.server.SynthesisException;
 
 import com.spokentech.speechdown.server.RecognizerService;
 import com.spokentech.speechdown.server.SynthesizerService;
-import com.spokentech.speechdown.types.RecRequestLinkType;
-import com.spokentech.speechdown.types.RecResponseType;
+import com.spokentech.speechdown.RecRequestLinkType;
+import com.spokentech.speechdown.RecResponseType;
 import com.spokentech.speechdown.SpeechLinkPortType; 
 
 
 @WebService(
     portName="SpeechLinkPort",
-    targetNamespace="http://spokentech.com/speechdown",
+    targetNamespace="http://spokentech.com/speechcloud",
     serviceName="SpeechLinkService",
     wsdlLocation="/WEB-INF/wsdl/SpeechLink.wsdl",
     endpointInterface="com.spokentech.speechdown.SpeechLinkPortType")

@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
 
-<project name="speechdown" basedir="." default="help">
+<project name="speechcloud" basedir="." default="help">
 
 	<property environment="env" />
 
@@ -21,7 +21,7 @@
 	<property name="build.cli.classes.home" value="${build.home}/cli/classes" />
 	<property name="build.generated.home" value="${build.home}/gen" />
 	<property name="build.war.home" value="${build.home}/war" />
-	<property name="name" value="jaxws-${ant.project.name}" />
+	<property name="name" value="${ant.project.name}" />
 	<property name="war.filename" value="${name}.war" />
 
 	<property name="lib.dir" value="${basedir}/lib" />
@@ -92,10 +92,7 @@
 		<classpath refid="jaxws.classpath" />
 	</taskdef>
 	
-	
-	
-	
-	
+
 
 	<taskdef name="wsimport" classname="com.sun.tools.ws.ant.WsImport">
 		<classpath refid="jaxws.classpath" />
@@ -138,9 +135,9 @@
 	<target name="create-war" depends="compile-server">
 	
 		<filter token="applicationContext.recognizerService.baseGrammarDir" value="c:/temp" />
-		<filter token="applicationContext.recognizerService.sphinxConfigFile" value="file:///${catalina.home}/webapps/jaxws-${ant.project.name}/WEB-INF/sphinx-config.xml" />
-		<filter token="applicationContext.synthesizerService.prefix" value="http://${catalina.host}:${catalina.port}/jaxws-${ant.project.name}/prompts/" />
-		<filter token="applicationContext.synthesizerService.promptDir" value="${catalina.home}/webapps/jaxws-${ant.project.name}/prompts" />
+		<filter token="applicationContext.recognizerService.sphinxConfigFile" value="file:///${catalina.home}/webapps/${ant.project.name}/WEB-INF/sphinx-config.xml" />
+		<filter token="applicationContext.synthesizerService.prefix" value="http://${catalina.host}:${catalina.port}/${ant.project.name}/prompts/" />
+		<filter token="applicationContext.synthesizerService.promptDir" value="${catalina.home}/webapps/${ant.project.name}/prompts" />
 		<copy todir="${build.war.home}/WEB-INF" overwrite="true" filtering="true">
 			<fileset dir="${basedir}/etc" includes="*.xml" />
 		</copy>
@@ -166,16 +163,18 @@
 				verbose="${verbose}"
 				keep="true"
 				destdir="${build.client.classes.home}"
+	            sourcedestdir="${build.generated.home}"
 				package="com.spokentech.speechdown.client"
-				wsdl="http://${catalina.host}:${catalina.port}/jaxws-${ant.project.name}/speechlink?wsdl">
+				wsdl="http://${catalina.host}:${catalina.port}/${ant.project.name}/speechlink?wsdl">
 		</wsimport>
 	    <wsimport
 				debug="true"
 				verbose="${verbose}"
 				keep="true"
+     	        sourcedestdir="${build.generated.home}"
 				destdir="${build.client.classes.home}"
 				package="com.spokentech.speechdown.client"
-				wsdl="http://${catalina.host}:${catalina.port}/jaxws-${ant.project.name}/speechattach?wsdl">
+				wsdl="http://${catalina.host}:${catalina.port}/${ant.project.name}/speechattach?wsdl">
 		</wsimport>
 	</target>
 
@@ -221,7 +220,7 @@
 				destdir="${build.cli.classes.home}"
 				sourcedestdir="${build.generated.home}"
 				package="com.spokentech.speechdown.client"
-				wsdl="http://${catalina.host}:${catalina.port}/jaxws-${ant.project.name}/speechlink?wsdl">
+				wsdl="http://${catalina.host}:${catalina.port}/${ant.project.name}/speechlink?wsdl">
 		</wsimport>
 	    <wsimport
 				debug="true"
@@ -230,7 +229,7 @@
 				destdir="${build.cli.classes.home}"
 				sourcedestdir="${build.generated.home}"
 				package="com.spokentech.speechdown.client"
-				wsdl="http://${catalina.host}:${catalina.port}/jaxws-${ant.project.name}/speechattach?wsdl">
+				wsdl="http://${catalina.host}:${catalina.port}/${ant.project.name}/speechattach?wsdl">
 		</wsimport>
 	</target>
 
@@ -325,6 +324,7 @@
            <echo message="Invoking WsImport task (WSDL-to-Java mapping)" />
            <wsimport 
               fork="true"
+              package="${pkg}"
               verbose="${verbose}"
               debug="${wsimport.debug}"
               destdir="${build.classes.home}"
