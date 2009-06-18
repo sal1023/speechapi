@@ -30,7 +30,6 @@ import org.springframework.context.ApplicationContext;
 import org.springframework.web.context.support.WebApplicationContextUtils;
 
 import com.spokentech.speechdown.common.RecognitionResult;
-import com.spokentech.speechdown.types.RecResponseType;
 
 
 /**

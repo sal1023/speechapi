@@ -32,9 +32,6 @@ import com.spokentech.speechdown.client.RecRequestLinkType;
 import com.spokentech.speechdown.client.RecResponseType;
 import com.spokentech.speechdown.client.SynthResponseAttachType;
 
-//import com.spokentech.speechdown.server.ws.RecRequestAttachType;
-//import com.spokentech.speechdown.server.ws.RecResponseType;
-
 public class SpeechServiceClient {
     private static Logger _logger = Logger.getLogger(SpeechServiceClient.class);
     public static final String CRLF = "\r\n";
@@ -85,7 +82,7 @@ public class SpeechServiceClient {
         
         //Add the audio file attachmnent
 
-        String filename = "lookupsports.wav"; 
+        String filename = "./etc/prompts/lookupsports.wav"; 
     	File fstart = new File(filename);
     	_logger.info("File name for the audio file: "+fstart.getAbsolutePath());
     	DataHandler rdh = new DataHandler(new FileDataSource(filename)); 
