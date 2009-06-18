@@ -2,56 +2,26 @@ package com.spokentech.speechdown.server.ws;
 
 
 import javax.jws.WebService;
-import javax.sound.sampled.AudioInputStream;
-import javax.sound.sampled.AudioSystem;
-import javax.sound.sampled.UnsupportedAudioFileException;
-import javax.xml.ws.WebServiceException;
-
-import javax.xml.ws.Holder;
-
-import java.awt.Image;
-
-import java.net.MalformedURLException;
-
-
-import edu.cmu.sphinx.util.props.ConfigurationManager;
-import edu.cmu.sphinx.recognizer.Recognizer;
-import edu.cmu.sphinx.result.Result;
 
 import java.io.File;
-import java.net.MalformedURLException;
-import java.net.URL;
 import javax.activation.DataHandler;
 import javax.activation.FileDataSource;
-import javax.xml.transform.Source;
 
-import com.sun.xml.ws.developer.StreamingDataHandler; 
 import com.sun.xml.ws.developer.StreamingAttachment;
-
-import java.io.BufferedInputStream;
-import java.io.BufferedOutputStream;
-import java.io.FileOutputStream;
-import java.io.IOException;
 
 import javax.xml.ws.BindingType;
 import javax.xml.ws.soap.SOAPBinding;
 
 import org.apache.log4j.Logger;
 
-/*<element name="RecognizeRequestAttachType" type="s:RecRequestAttachType"/>
-<element name="RecognizeResponseType" type="s:RecResponseType"/>
-<element name="SynthesizeRequestType" type="xsd:string"/>
-<element name="SynthesizeResponseAttachType" type="s:SynthResponseType"/>
-<element name="SynthesizeResponseLinkType" type="xsd:string"/>*/
-
 import com.spokentech.speechdown.common.RecognitionResult;
 import com.spokentech.speechdown.server.RecognizerService;
 import com.spokentech.speechdown.server.SynthesizerService;
-import com.spokentech.speechdown.server.recog.AudioStreamDataSource;
-import com.spokentech.speechdown.RecRequestAttachType;
-import com.spokentech.speechdown.RecResponseType;
-import com.spokentech.speechdown.SynthResponseAttachType;
-import com.spokentech.speechdown.SpeechAttachPortType; 
+
+import com.spokentech.speechdown.server.RecRequestAttachType;
+import com.spokentech.speechdown.server.RecResponseType;
+import com.spokentech.speechdown.server.SynthResponseAttachType;
+import com.spokentech.speechdown.server.SpeechAttachPortType; 
 
 
 @WebService(
@@ -59,7 +29,7 @@ import com.spokentech.speechdown.SpeechAttachPortType;
     targetNamespace="http://spokentech.com/speechcloud",
     serviceName="SpeechAttachService",
     wsdlLocation="/WEB-INF/wsdl/SpeechAttach.wsdl",
-    endpointInterface="com.spokentech.speechdown.SpeechAttachPortType")
+    endpointInterface="com.spokentech.speechdown.server.SpeechAttachPortType")
 
 @BindingType(SOAPBinding.SOAP11HTTP_MTOM_BINDING)
 @StreamingAttachment(parseEagerly=true, memoryThreshold=4000000L)

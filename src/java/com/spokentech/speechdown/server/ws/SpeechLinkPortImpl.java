@@ -5,14 +5,11 @@ import javax.jws.WebService;
 
 import org.apache.log4j.Logger;
 
-import com.spokentech.speechdown.server.RecognitionException;
-import com.spokentech.speechdown.server.SynthesisException;
-
 import com.spokentech.speechdown.server.RecognizerService;
 import com.spokentech.speechdown.server.SynthesizerService;
-import com.spokentech.speechdown.RecRequestLinkType;
-import com.spokentech.speechdown.RecResponseType;
-import com.spokentech.speechdown.SpeechLinkPortType; 
+import com.spokentech.speechdown.server.RecRequestLinkType;
+import com.spokentech.speechdown.server.RecResponseType;
+import com.spokentech.speechdown.server.SpeechLinkPortType; 
 
 
 @WebService(
@@ -20,7 +17,7 @@ import com.spokentech.speechdown.SpeechLinkPortType;
     targetNamespace="http://spokentech.com/speechcloud",
     serviceName="SpeechLinkService",
     wsdlLocation="/WEB-INF/wsdl/SpeechLink.wsdl",
-    endpointInterface="com.spokentech.speechdown.SpeechLinkPortType")
+    endpointInterface="com.spokentech.speechdown.server.SpeechLinkPortType")
 public class SpeechLinkPortImpl implements SpeechLinkPortType{
 
 	   /** The _logger. */
