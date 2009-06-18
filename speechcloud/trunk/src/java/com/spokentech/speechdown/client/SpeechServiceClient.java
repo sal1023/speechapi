@@ -20,8 +20,17 @@ import java.util.Map;
 import org.apache.log4j.Logger;
 import org.jvnet.staxex.StreamingDataHandler;
 
+
+import com.spokentech.speechdown.client.SpeechAttachPortType;
+import com.spokentech.speechdown.client.SpeechAttachService;
+import com.spokentech.speechdown.client.SpeechLinkPortType;
+import com.spokentech.speechdown.client.SpeechLinkService;
 import com.spokentech.speechdown.common.InvalidRecognitionResultException;
 import com.spokentech.speechdown.common.RecognitionResult;
+import com.spokentech.speechdown.client.RecRequestAttachType;
+import com.spokentech.speechdown.client.RecRequestLinkType;
+import com.spokentech.speechdown.client.RecResponseType;
+import com.spokentech.speechdown.client.SynthResponseAttachType;
 
 //import com.spokentech.speechdown.server.ws.RecRequestAttachType;
 //import com.spokentech.speechdown.server.ws.RecResponseType;
@@ -87,7 +96,7 @@ public class SpeechServiceClient {
     	// Add the grammar string (read from a URL in this case)
     	StringBuilder sb = null;
     	try {
-    	   URL content = new URL("file:///C:/work/speechdown/etc/grammar/example.gram");
+    	   URL content = new URL("file:///C:/work/speechcloud/etc/grammar/example.gram");
     	   BufferedReader gin = new BufferedReader(new InputStreamReader(content.openStream()));
     	   
 	        sb = new StringBuilder();

@@ -2,17 +2,17 @@
 
 <definitions
     name="SpeechAttach"
-    targetNamespace="http://spokentech.com/speechdown"
+    targetNamespace="http://spokentech.com/speechcloud"
     xmlns="http://schemas.xmlsoap.org/wsdl/"
     xmlns:xsd="http://www.w3.org/2001/XMLSchema"
     xmlns:wsdl="http://schemas.xmlsoap.org/wsdl/"
-    xmlns:tns="http://spokentech.com/speechdown"
-    xmlns:s="http://spokentech.com/speechdown/types"
+    xmlns:tns="http://spokentech.com/speechcloud"
+    xmlns:s="http://spokentech.com/speechcloud/types"
     xmlns:soap="http://schemas.xmlsoap.org/wsdl/soap/">
 
     <types>
           <schema xmlns="http://www.w3.org/2001/XMLSchema"
-               targetNamespace="http://spokentech.com/speechdown/types"
+               targetNamespace="http://spokentech.com/speechcloud/types"
                xmlns:xmime="http://www.w3.org/2005/05/xmlmime" 
                elementFormDefault="qualified">
 
@@ -115,7 +115,7 @@
 
   <service name="SpeechAttachService">
     <port name="SpeechAttachPort" binding="tns:SpeechAttachBinding">
-      <soap:address location="http://localhost:8090/jaxws-speechdown/speechservice"/>
+      <soap:address location="http://localhost:8090/speechcloud/speechservice"/>
     </port>
   </service>
   
