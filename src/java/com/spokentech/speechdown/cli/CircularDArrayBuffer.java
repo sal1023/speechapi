@@ -34,9 +34,7 @@ public CircularDArrayBuffer(int n) {
 	length = length+1;	
 	if (length > buffer.length) {
 		length = buffer.length;
-		tail = head - 1;
-		if (tail < 0) 
-			tail= buffer.length-1;
+		tail = head;
 	}
 
     //System.out.println("htl "+head+" "+tail+" "+length);
