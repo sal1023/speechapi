@@ -1,30 +1,20 @@
 package com.spokentech.speechdown.cli;
 
 import com.spokentech.speechdown.client.SpeechAttachService;
-import com.spokentech.speechdown.client.SpeechLinkService;
 import com.spokentech.speechdown.client.SpeechAttachPortType;
 import com.spokentech.speechdown.client.SynthResponseAttachType;
 
-
-import java.awt.Toolkit;
-import java.io.BufferedReader;
 import java.io.FileOutputStream;
 import java.io.IOException;
-import java.net.InetAddress;
 import java.net.MalformedURLException;
 import java.io.InputStream;
-import java.io.File;
-import java.io.InputStreamReader;
 import java.net.URL;
 import java.util.Map;
 
-import javax.activation.FileDataSource;
 import javax.activation.DataHandler;
-import javax.xml.transform.stream.StreamSource;
 import javax.xml.ws.BindingProvider;
 import javax.xml.ws.soap.MTOMFeature;
 import javax.xml.namespace.QName;
-
 
 import org.apache.commons.cli.CommandLine;
 import org.apache.commons.cli.CommandLineParser;
@@ -35,13 +25,7 @@ import org.apache.commons.cli.Options;
 import org.apache.commons.cli.ParseException;
 import org.apache.log4j.Logger;
 
-
-import com.spokentech.speechdown.common.InvalidRecognitionResultException;
-import com.spokentech.speechdown.common.RecognitionResult;
 import com.sun.xml.ws.developer.JAXWSProperties;
-
-//import com.spokentech.speechdown.server.ws.RecRequestAttachType;
-//import com.spokentech.speechdown.server.ws.RecResponseType;
 
 public class Synthesizer {
     private static Logger _logger = Logger.getLogger(Synthesizer.class);
@@ -93,10 +77,9 @@ public class Synthesizer {
     		e.printStackTrace();
     	}
 
-    	System.out.println(args.length+args[0]+args[1]);
     	if (args.length != 2 || line.hasOption(HELP_OPTION)) {
     		HelpFormatter formatter = new HelpFormatter();
-    		formatter.printHelp("Synthesizer [options] <grammar-file> <audio-file>", options);
+    		formatter.printHelp("Synthesizer [options] <text string> <output audio-file>", options);
     		return;
     	}
 
