@@ -36,5 +36,8 @@
 	<classpathentry kind="var" path="CATALINA_HOME/lib/servlet-api.jar"/>
 	<classpathentry kind="lib" path="lib/jaxws-spring-1.8.jar"/>
 	<classpathentry kind="lib" path="lib/spring-2.5.5.jar"/>
+	<classpathentry kind="lib" path="lib/httpclient-4.0-beta2.jar"/>
+	<classpathentry kind="lib" path="lib/httpmime-4.0-beta2.jar"/>
+	<classpathentry kind="lib" path="lib/httpcore-4.0.jar"/>
 	<classpathentry kind="output" path="target/eclipse"/>
 </classpath>

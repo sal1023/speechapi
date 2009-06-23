@@ -40,15 +40,21 @@ import org.apache.commons.cli.HelpFormatter;
 import org.apache.commons.cli.Option;
 import org.apache.commons.cli.Options;
 import org.apache.commons.cli.ParseException;
+import org.apache.http.HttpEntity;
+import org.apache.http.HttpResponse;
+import org.apache.http.client.ClientProtocolException;
+import org.apache.http.client.HttpClient;
+import org.apache.http.client.methods.HttpPost;
+import org.apache.http.entity.InputStreamEntity;
+import org.apache.http.entity.mime.MultipartEntity;
+import org.apache.http.entity.mime.content.ContentBody;
+import org.apache.http.impl.client.DefaultHttpClient;
+import org.apache.http.params.HttpParams;
 import org.apache.log4j.Logger;
 
 import com.spokentech.speechdown.common.InvalidRecognitionResultException;
 import com.spokentech.speechdown.common.RecognitionResult;
 import com.sun.xml.ws.developer.JAXWSProperties;
-
-
-//import com.spokentech.speechdown.server.ws.RecRequestAttachType;
-//import com.spokentech.speechdown.server.ws.RecResponseType;
 
 public class MicRecognizer {
     private static Logger _logger = Logger.getLogger(MicRecognizer.class);
@@ -127,7 +133,7 @@ public class MicRecognizer {
 
     	if (args.length != 1 || line.hasOption(HELP_OPTION)) {
     		HelpFormatter formatter = new HelpFormatter();
-    		formatter.printHelp("Recognizer [options] <grammar-file> <audio-file>", options);
+    		formatter.printHelp("MicRecognizer [options] <grammar-file>", options);
     		return;
     	}
  	
@@ -216,7 +222,9 @@ public class MicRecognizer {
             throw new RuntimeException("Can't find microphone");
         }
         
-    	
+    	/*
+    	 *  Web service approach 1 of 3
+    	 *  
     	//setup http steaming on the client side
     	MTOMFeature feature = new MTOMFeature();
     	SpeechAttachPortType port2 = aService.getSpeechAttachPort(feature);
@@ -226,7 +234,7 @@ public class MicRecognizer {
         //log((BindingProvider)port);
         
         //Add the audio file attachment
-    	
+    	*/
     	
     	PipedOutputStream	outputStream = new PipedOutputStream();
     	PipedInputStream inputStream = null;
@@ -237,10 +245,14 @@ public class MicRecognizer {
 	        e3.printStackTrace();
         }
     	
+        /*
+         * Web Service Approach 2 of 3
+         * 
     	DataHandler rdh = new DataHandler(new MyDataSource(inputStream)); 
     	RecRequestAttachType recRequest = new RecRequestAttachType();
     	recRequest.setAudio(rdh);
-    	
+    	*/
+        
     	MicRecognizer mr = new MicRecognizer();
     	mr.start(audioLine,outputStream);
     	
@@ -260,12 +272,80 @@ public class MicRecognizer {
     	} catch (IOException e2) {
     		_logger.info(e2.getStackTrace());
     	}
-    	_logger.info("Grammar: "+sb);
-    	recRequest.setGrammar(sb.toString());
-
-
- 
     	
+    	MultipartEntity mpEntity = new MultipartEntity();
+    	
+    	
+        InputStreamEntity grammarReqEntity = null;
+        try {
+	        grammarReqEntity = new InputStreamEntity(grammarUrl.openStream(), -1);
+        } catch (IOException e1) {
+	        // TODO Auto-generated catch block
+	        e1.printStackTrace();
+        }
+        grammarReqEntity.setContentType("binary/octet-stream");
+        grammarReqEntity.setChunked(true);
+    	
+        //ContentBody cb = new InputStreamBody()
+        //reqEntity.addPart(name, cb);
+    	
+    	_logger.info("Grammar: "+sb);
+    	
+    	// Plain old http approach
+    	
+    	HttpClient httpclient = new DefaultHttpClient();
+
+        HttpPost httppost = new HttpPost("http://localhost:8090" +
+                "/speechcloud/servlet/RequestInfoExample");
+
+        //File file = new File(args[0]);
+
+        //InputStreamEntity reqEntity = new InputStreamEntity(new FileInputStream(file), -1);
+        InputStreamEntity audioReqEntity = new InputStreamEntity(inputStream, -1);
+        audioReqEntity.setContentType("binary/octet-stream");
+        audioReqEntity.setChunked(true);
+        // It may be more appropriate to use FileEntity class in this particular 
+        // instance but we are using a more generic InputStreamEntity to demonstrate
+        // the capability to stream out data from any arbitrary source
+        // 
+        // FileEntity entity = new FileEntity(file, "binary/octet-stream"); 
+        
+        httppost.setEntity(audioReqEntity);
+    
+        
+        System.out.println("executing request " + httppost.getRequestLine());
+        HttpResponse response = null;
+        try {
+	        response = httpclient.execute(httppost);
+        } catch (ClientProtocolException e) {
+	        // TODO Auto-generated catch block
+	        e.printStackTrace();
+        } catch (IOException e) {
+	        // TODO Auto-generated catch block
+	        e.printStackTrace();
+        }
+        HttpEntity resEntity = response.getEntity();
+
+        System.out.println("----------------------------------------");
+        System.out.println(response.getStatusLine());
+        if (resEntity != null) {
+            System.out.println("Response content length: " + resEntity.getContentLength());
+            System.out.println("Chunked?: " + resEntity.isChunked());
+        }
+        if (resEntity != null) {
+            try {
+	            resEntity.consumeContent();
+            } catch (IOException e) {
+	            // TODO Auto-generated catch block
+	            e.printStackTrace();
+            }
+        }
+    	
+        
+    	/*
+    	 *  *** Web Service Approach 3 of 3
+    	 *  
+    	recRequest.setGrammar(sb.toString()); 
     	
     	//Make the Recognition request (returns the recognition results)
     	RecResponseType recResult = port2.recognize (recRequest);
@@ -276,7 +356,7 @@ public class MicRecognizer {
     	} catch (InvalidRecognitionResultException e) {
     		e.printStackTrace();
     	}
-    	
+    	*/
  
     }
 
