@@ -5,6 +5,8 @@ import java.io.ByteArrayOutputStream;
 import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
+import java.io.PrintWriter;
+import java.util.Enumeration;
 import java.util.LinkedList;
 import java.util.List;
 
@@ -13,6 +15,7 @@ import javax.servlet.ServletException;
 import javax.servlet.http.HttpServlet;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
+import javax.sound.sampled.AudioFormat;
 import javax.sound.sampled.AudioInputStream;
 import javax.sound.sampled.AudioSystem;
 import javax.sound.sampled.UnsupportedAudioFileException;
@@ -80,8 +83,16 @@ public class SpeechUploadServlet extends HttpServlet {
 	@SuppressWarnings("unchecked")
 	public void doPost(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
 
+		Enumeration hnames = request.getHeaderNames();
+	    while (hnames.hasMoreElements()) {
+	        String key = (String) hnames.nextElement();
+	        _logger.info(key + " -- " + request.getHeader(key));
+	      }
+
+		
 		// Check that we have a file upload request
 		if (!ServletFileUpload.isMultipartContent(request)) {
+			_logger.info("redirecting to / because not multipart content");
 			response.sendRedirect(response.encodeRedirectURL("/")); // TODO: allow redirect location to be configured
 			return;
 		}
@@ -134,17 +145,18 @@ public class SpeechUploadServlet extends HttpServlet {
 			//Use the stream. Send it to the recognizer
 			
 			String grammarString = readInputStreamAsString(grammar);
-			AudioInputStream as = null;
-            try {
-	            as = AudioSystem.getAudioInputStream(audio);
-            } catch (UnsupportedAudioFileException e1) {
-	            // TODO Auto-generated catch block
-	            e1.printStackTrace();
-            }
+			//AudioInputStream as = null;
+            //try {
+	        //    as = AudioSystem.getAudioInputStream(audio);
+            //} catch (UnsupportedAudioFileException e1) {
+	        //    // TODO Auto-generated catch block
+	        //    e1.printStackTrace();
+            //}
 			
 			RecognitionResult result = null;
 			try {
-			   result = recognizerService.Recognize(as, grammarString);
+			   result = recognizerService.Recognize(audio, grammarString,8000,false,2,AudioFormat.Encoding.PCM_SIGNED);
+
 			}catch (Exception e) {
 				e.printStackTrace();
 			}
@@ -176,10 +188,12 @@ public class SpeechUploadServlet extends HttpServlet {
 			} 
 			*/
 			
+			PrintWriter out = response.getWriter();		
+			out.println(result.toString());
 			
 			// store file list and pass control to view jsp
-			request.setAttribute("fileUploadList", filenames);
-			this.getServletContext().getRequestDispatcher("/speechup_result.jsp").forward(request, response);
+			//request.setAttribute("fileUploadList", filenames);
+			//this.getServletContext().getRequestDispatcher("/speechup_result.jsp").forward(request, response);
 
 		} catch (IOFileUploadException e) {
 			throw (IOException) e.getCause();

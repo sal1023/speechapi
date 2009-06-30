@@ -210,6 +210,35 @@ public class AudioStreamDataSource extends BaseDataProcessor {
         totalValuesRead = 0;
     }
 
+    
+    /**
+     * Sets the InputStream from which this StreamDataSource reads.
+     *
+     * @param inputStream the InputStream from which audio data comes
+     * @param streamName  the name of the InputStream
+     */
+    public void setInputStream(InputStream inputStream, String streamName, int sampleRate, boolean bigEndian, int bytesPerValue, AudioFormat.Encoding encoding) {
+        dataStream = inputStream;
+        streamEndReached = false;
+        utteranceEndSent = false;
+        utteranceStarted = false;
+
+        //AudioFormat format = inputStream.getFormat();
+        this.sampleRate = sampleRate; 
+        this.bigEndian = bigEndian;
+        this.bytesPerValue = bytesPerValue;
+
+        // test whether all files in the stream have the same format
+        if (encoding.equals(AudioFormat.Encoding.PCM_SIGNED))
+            signedData = true;
+        else if (encoding.equals(AudioFormat.Encoding.PCM_UNSIGNED))
+            signedData = false;
+        else
+            throw new RuntimeException("used file encoding is not supported");
+
+        totalValuesRead = 0;
+    }
+    
 
     /**
      * Reads and returns the next Data from the InputStream of StreamDataSource, return null if no data is read and end

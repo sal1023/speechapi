@@ -32,6 +32,7 @@
 	<property name="commons-lang.jar" value="${lib.dir}/commons-lang-2.3.jar" />
 	<property name="commons-cli.jar" value="${lib.dir}/commons-cli-1.0.jar" />
 	<property name="httpmime.jar" value="${lib.dir}/httpmime-4.0-beta2.jar" />
+	<property name="mime4j.jar" value="${lib.dir}/apache-mime4j-0.5.jar" />
 	<property name="httpclient.jar" value="${lib.dir}/httpclient-4.0-beta2.jar" />
 	<property name="httpcore.jar" value="${lib.dir}/httpcore-4.0.jar" />
 	
@@ -80,6 +81,8 @@
 		<pathelement	location="${commons-fileupload.jar}" />
 		<pathelement	location="${commons-io.jar}" />
 		<pathelement	location="${httpmime.jar}" />
+		<pathelement	location="${mime4j.jar}" />
+		
 		<pathelement	location="${httpclient.jar}" />
 		<pathelement	location="${httpcore.jar}" />
 		<!--pathelement	location="${jstl.jar}" /-->

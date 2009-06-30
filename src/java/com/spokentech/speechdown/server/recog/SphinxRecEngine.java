@@ -1,8 +1,11 @@
 package com.spokentech.speechdown.server.recog;
 
 import java.io.IOException;
+import java.io.InputStream;
 
+import javax.sound.sampled.AudioFormat;
 import javax.sound.sampled.AudioInputStream;
+import javax.sound.sampled.AudioFormat.Encoding;
 import javax.speech.recognition.GrammarException;
 import javax.speech.recognition.RuleGrammar;
 import javax.speech.recognition.RuleParse;
@@ -50,7 +53,40 @@ public class SphinxRecEngine extends AbstractPoolableObject implements RecEngine
         
     }
 	
-
+	public RecognitionResult recognize(InputStream as, String grammar, int sampleRate, boolean bigEndian, int bytesPerValue, Encoding encoding) {
+		_recognizer.allocate();
+		GrammarLocation grammarLocation = null;
+	    try {
+	        grammarLocation = _grammarManager.saveGrammar(grammar);
+	    } catch (IOException e) {
+	        _logger.debug(e, e);
+	    }
+	    
+	    try {
+	        loadJSGF(_jsgfGrammar, grammarLocation);
+        } catch (GrammarException e) {
+	        // TODO Auto-generated catch block
+	        e.printStackTrace();
+        } catch (IOException e) {
+	        // TODO Auto-generated catch block
+	        e.printStackTrace();
+        }
+	
+	    //TODO: Timers for recog timeout
+	
+	    // configure the audio input for the recognizer
+		AudioStreamDataSource dataSource = (AudioStreamDataSource) _cm.lookup("audioStreamDataSource");  	
+		dataSource.setInputStream(as, "ws-audiostream", sampleRate, bigEndian, bytesPerValue,encoding);
+	    
+	    // decode the audio file.
+	    //System.out.println("Decoding " + audioFileURL);
+	    RecognitionResult results = waitForResult(false);
+	    
+	
+	    System.out.println("Result: " + (results != null ? results.getText() : null));
+	    _recognizer.deallocate();
+	    return results;
+    }
     
 
 	/* (non-Javadoc)
@@ -236,4 +272,5 @@ public class SphinxRecEngine extends AbstractPoolableObject implements RecEngine
         }
     	
     }
+
 }

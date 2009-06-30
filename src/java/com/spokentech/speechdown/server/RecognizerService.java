@@ -10,6 +10,7 @@ import javax.activation.DataHandler;
 import javax.sound.sampled.AudioInputStream;
 import javax.sound.sampled.AudioSystem;
 import javax.sound.sampled.UnsupportedAudioFileException;
+import javax.sound.sampled.AudioFormat.Encoding;
 import javax.speech.recognition.GrammarException;
 
 import org.apache.commons.pool.ObjectPool;
@@ -132,5 +133,25 @@ public class RecognizerService {
         }
 	    return results;
     }
+
+	public RecognitionResult Recognize(InputStream as, String grammar, int sampleRate, boolean bigEndian, int bytesPerValue, Encoding encoding) {
+	    RecEngine rengine = null;
+        try {
+            rengine = (RecEngine) _recognizerPool.borrowObject();
+        } catch (Exception e) {
+            // TODO Auto-generated catch block
+            throw new RuntimeException(e);
+        }
+        
+        RecognitionResult results = rengine.recognize(as,grammar,sampleRate,bigEndian,bytesPerValue,encoding);
+        
+        try {
+	        _recognizerPool.returnObject(rengine);
+        } catch (Exception e) {
+	        // TODO Auto-generated catch block
+            throw new RuntimeException(e);
+        }
+	    return results;		
+	}
     
 }
