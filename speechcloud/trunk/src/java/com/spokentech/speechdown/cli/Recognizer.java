@@ -46,6 +46,11 @@ import com.sun.xml.ws.developer.JAXWSProperties;
 //import com.spokentech.speechdown.server.ws.RecRequestAttachType;
 //import com.spokentech.speechdown.server.ws.RecResponseType;
 
+/**
+ * cli program that uses the webservice api to send wav file and grammar specified on the command line.
+ * 
+ * @author Spencer Lord {@literal <}<a href="mailto:spencer@users.spokentech.com">spencer@spokentech.com</a>{@literal >}
+ */
 public class Recognizer {
     private static Logger _logger = Logger.getLogger(Recognizer.class);
     public static final String CRLF = "\r\n";

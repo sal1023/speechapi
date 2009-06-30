@@ -48,6 +48,11 @@ import com.spokentech.speechdown.common.InvalidRecognitionResultException;
 import com.spokentech.speechdown.common.RecognitionResult;
 import com.sun.xml.ws.developer.JAXWSProperties;
 
+/**
+ * Test program that uses the web services api to send audio from the mic.
+ * 
+ * @author Spencer Lord {@literal <}<a href="mailto:spencer@users.spokentech.com">spencer@spokentech.com</a>{@literal >}
+ */
 public class MicRecognizer {
     private static Logger _logger = Logger.getLogger(MicRecognizer.class);
     public static final String CRLF = "\r\n";

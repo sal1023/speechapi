@@ -2,7 +2,11 @@ package com.spokentech.speechdown.cli;
 
 import java.nio.BufferUnderflowException;
 
-
+/**
+ * Circular buffer of doubles (implemented with an array)
+ * 
+ * @author Spencer Lord {@literal <}<a href="mailto:spencer@users.spokentech.com">spencer@spokentech.com</a>{@literal >}
+ */
 public class CircularDArrayBuffer {
 
   private double[] buffer;
