@@ -1,9 +1,5 @@
 package com.spokentech.speechdown.cli;
 
-import com.spokentech.speechdown.client.SpeechAttachService;
-
-import java.io.BufferedReader;
-
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
@@ -12,11 +8,9 @@ import java.io.PipedOutputStream;
 
 import java.net.MalformedURLException;
 
-import java.io.InputStreamReader;
 import java.net.URL;
-import java.util.Map;
 
-import javax.activation.DataHandler;
+
 import javax.sound.sampled.AudioFormat;
 import javax.sound.sampled.AudioInputStream;
 import javax.sound.sampled.AudioSystem;
@@ -28,8 +22,6 @@ import javax.sound.sampled.LineUnavailableException;
 import javax.sound.sampled.TargetDataLine;
 
 import javax.xml.ws.BindingProvider;
-import javax.xml.ws.soap.MTOMFeature;
-import javax.xml.namespace.QName;
 
 import org.apache.commons.cli.CommandLine;
 import org.apache.commons.cli.CommandLineParser;
@@ -43,18 +35,20 @@ import org.apache.http.HttpResponse;
 import org.apache.http.client.ClientProtocolException;
 import org.apache.http.client.HttpClient;
 import org.apache.http.client.methods.HttpPost;
-import org.apache.http.entity.InputStreamEntity;
+
 import org.apache.http.entity.mime.MultipartEntity;
-import org.apache.http.entity.mime.content.ContentBody;
+
 import org.apache.http.entity.mime.content.InputStreamBody;
 import org.apache.http.impl.client.DefaultHttpClient;
-import org.apache.http.params.HttpParams;
+
 import org.apache.log4j.Logger;
 
-import com.spokentech.speechdown.common.InvalidRecognitionResultException;
-import com.spokentech.speechdown.common.RecognitionResult;
-import com.sun.xml.ws.developer.JAXWSProperties;
 
+/**
+ * Test program that uses the restful api to send audio from the mic.
+ * 
+ * @author Spencer Lord {@literal <}<a href="mailto:spencer@users.spokentech.com">spencer@spokentech.com</a>{@literal >}
+ */
 public class MicRecognizer2 {
     private static Logger _logger = Logger.getLogger(MicRecognizer2.class);
     public static final String CRLF = "\r\n";
@@ -198,7 +192,9 @@ public class MicRecognizer2 {
         	_logger.info("Can't find microphone");
         	throw new RuntimeException("Can't find microphone");
         }
-	
+        
+        _logger.info("Actual format: " + audioStream.getFormat());
+        
         //Setup a piped stream to get an input stream that can be used for feeding the chuck encoded post 
     	PipedOutputStream	outputStream = new PipedOutputStream();
     	PipedInputStream inputStream = null;

@@ -23,6 +23,11 @@ import org.apache.log4j.Logger;
 
 import edu.cmu.sphinx.util.LogMath;
 
+/**
+ * CLI program that removes silences from an audio file
+ * 
+ * @author Spencer Lord {@literal <}<a href="mailto:spencer@users.spokentech.com">spencer@spokentech.com</a>{@literal >}
+ */
 public class SilenceCutter {
     private static Logger _logger = Logger.getLogger(SilenceCutter.class);
     public static final String CRLF = "\r\n";

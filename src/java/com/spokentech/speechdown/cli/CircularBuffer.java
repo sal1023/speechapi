@@ -4,6 +4,11 @@ package com.spokentech.speechdown.cli;
 import java.nio.BufferOverflowException;
 import java.nio.BufferUnderflowException;
 
+/**
+ * Circular buffer
+ * 
+ * @author Spencer Lord {@literal <}<a href="mailto:spencer@users.spokentech.com">spencer@spokentech.com</a>{@literal >}
+ */
 public class CircularBuffer<T> {
 
   private T[] buffer;

@@ -27,6 +27,11 @@ import org.apache.log4j.Logger;
 
 import com.sun.xml.ws.developer.JAXWSProperties;
 
+/**
+ * CLI program that uses the web service api to synthesize audio given text string
+ * 
+ * @author Spencer Lord {@literal <}<a href="mailto:spencer@users.spokentech.com">spencer@spokentech.com</a>{@literal >}
+ */
 public class Synthesizer {
     private static Logger _logger = Logger.getLogger(Synthesizer.class);
     public static final String CRLF = "\r\n";
