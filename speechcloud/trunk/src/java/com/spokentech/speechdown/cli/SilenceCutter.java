@@ -244,7 +244,7 @@ public class SilenceCutter {
 	    			double[] tframe = tFrame.getAll();
 	    			double rms = 0.0;
 	    			if (tframe != null) {
-	    				 rms = logRootMeanSquare(tframe);
+	    				 rms = rootMeanSquare(tframe);
 	    			} else {
 	    				_logger.info("Got null for threshold frame.  so using the single current value: "+d);
 	    				rms = d;
@@ -457,7 +457,7 @@ public class SilenceCutter {
      *
      * @return the calculated log root mean square in log 10
      */
-    private static double logRootMeanSquare(double[] samples) {
+    private static double rootMeanSquare(double[] samples) {
         assert samples.length > 0;
         double sumOfSquares = 0.0f;
         double sample = 0.0;

@@ -1,13 +1,11 @@
 package com.spokentech.speechdown.cli;
 
 import com.spokentech.speechdown.client.SpeechAttachService;
-import com.spokentech.speechdown.client.SpeechAttachPortType;
-import com.spokentech.speechdown.client.RecRequestAttachType;
-import com.spokentech.speechdown.client.RecResponseType;
 
 import java.io.BufferedReader;
 
 import java.io.IOException;
+import java.io.InputStream;
 import java.io.OutputStream;
 import java.io.PipedInputStream;
 import java.io.PipedOutputStream;
@@ -40,24 +38,34 @@ import org.apache.commons.cli.HelpFormatter;
 import org.apache.commons.cli.Option;
 import org.apache.commons.cli.Options;
 import org.apache.commons.cli.ParseException;
-
-
+import org.apache.http.HttpEntity;
+import org.apache.http.HttpResponse;
+import org.apache.http.client.ClientProtocolException;
+import org.apache.http.client.HttpClient;
+import org.apache.http.client.methods.HttpPost;
+import org.apache.http.entity.InputStreamEntity;
+import org.apache.http.entity.mime.MultipartEntity;
+import org.apache.http.entity.mime.content.ContentBody;
+import org.apache.http.entity.mime.content.InputStreamBody;
+import org.apache.http.impl.client.DefaultHttpClient;
+import org.apache.http.params.HttpParams;
 import org.apache.log4j.Logger;
 
 import com.spokentech.speechdown.common.InvalidRecognitionResultException;
 import com.spokentech.speechdown.common.RecognitionResult;
 import com.sun.xml.ws.developer.JAXWSProperties;
 
-public class MicRecognizer {
-    private static Logger _logger = Logger.getLogger(MicRecognizer.class);
+public class MicRecognizer2 {
+    private static Logger _logger = Logger.getLogger(MicRecognizer2.class);
     public static final String CRLF = "\r\n";
     
-	private static  QName speechAttachQName = new QName("http://spokentech.com/speechdown", "SpeechAttachPort");
-    
+
 
     public static final String HELP_OPTION = "help";
     public static final String SERVICE_OPTION = "service";
     public static final String LIMIT_OPTION = "limit";
+    
+    private static final String defaultService = "http://localhost:8090/speechcloud/SpeechUploadServlet";
     
     private static int limit = 10000;
     
@@ -101,8 +109,7 @@ public class MicRecognizer {
         AudioInputStream audioStream = null;
     	
     	_logger.info("Starting Recogniizer ...");
-    	
-    	
+    	 	
        	// setup a shutdown hook to cleanup and send a SIP bye message even if there is a 
     	// unexpected crash (ie ctrl-c)
     	Runtime.getRuntime().addShutdownHook(new Thread() {
@@ -138,28 +145,8 @@ public class MicRecognizer {
 		}
 
     	// lookup resource server
-    	String service = line.hasOption(SERVICE_OPTION) ? line.getOptionValue(SERVICE_OPTION) : null; 
-
-    	URL serviceUrl = null;
-    	SpeechAttachService aService = null;
-    	//if url specified
-    	if (service != null) {
-    	    try {
-    	        serviceUrl = new URL(service);
- 			} catch (MalformedURLException e) {  
-    	         e.printStackTrace();  
- 			}
-    	    aService  = new SpeechAttachService(serviceUrl,speechAttachQName);    			
-    	}else {
-    	   //else (use the default url)
-    	    aService = new SpeechAttachService();
-    	}
+    	String service = line.hasOption(SERVICE_OPTION) ? line.getOptionValue(SERVICE_OPTION) : defaultService; 
     	
-    	
-    	
-    	//
-    	//
-    	//
     	
         desiredFormat = new AudioFormat ((float) sampleRate, sampleSizeInBits, channels, signed, bigEndian);
         DataLine.Info info = new DataLine.Info(TargetDataLine.class, desiredFormat);
@@ -170,6 +157,8 @@ public class MicRecognizer {
         
         _logger.info("Desired format: " + desiredFormat);
         
+        
+        // Get the audio line from the microphone (java sound api) 
     	TargetDataLine audioLine = null;
         try {
              audioLine = (TargetDataLine) AudioSystem.getLine(info);
@@ -185,51 +174,32 @@ public class MicRecognizer {
             _logger.info("microphone unavailable " + e.getMessage());
         }
  
-     
+        // open up the line from the mic (javasound)
         if (audioLine != null) {
-            if (!audioLine.isOpen()) {
-                _logger.info("open");
-                try {
-                    audioLine.open(desiredFormat, audioBufferSize);
-                } catch (LineUnavailableException e) {
-                    _logger.info("Can't open microphone " + e.getMessage());
-                    e.printStackTrace();
-                }
+        	if (!audioLine.isOpen()) {
+        		_logger.info("open");
+        		try {
+        			audioLine.open(desiredFormat, audioBufferSize);
+        		} catch (LineUnavailableException e) {
+        			_logger.info("Can't open microphone " + e.getMessage());
+        			e.printStackTrace();
+        		}
+        		audioStream = new AudioInputStream(audioLine);
 
-                audioStream = new AudioInputStream(audioLine);
+        		/* Set the frame size depending on the sample rate. */
+        		float sec = ((float) msecPerRead) / 1000.f;
+        		frameSizeInBytes =
+        			(audioStream.getFormat().getSampleSizeInBits() / 8) *
+        			(int) (sec * audioStream.getFormat().getSampleRate());
 
-
-                /* Set the frame size depending on the sample rate.
-                 */
-                float sec = ((float) msecPerRead) / 1000.f;
-                frameSizeInBytes =
-                        (audioStream.getFormat().getSampleSizeInBits() / 8) *
-                                (int) (sec * audioStream.getFormat().getSampleRate());
-
-                _logger.info("Frame size: " + frameSizeInBytes + " bytes");
-            }
- 
+        		_logger.info("Frame size: " + frameSizeInBytes + " bytes");
+        	} 
         } else {
-            _logger.info("Can't find microphone");
-            throw new RuntimeException("Can't find microphone");
+        	_logger.info("Can't find microphone");
+        	throw new RuntimeException("Can't find microphone");
         }
-        
-    	/*
-    	 *  Web service approach 1 of 3
-    	 *
-    	 *  
-    	*/
-    	//setup http steaming on the client side
-    	MTOMFeature feature = new MTOMFeature();
-    	SpeechAttachPortType port2 = aService.getSpeechAttachPort(feature);
-    	Map<String, Object> ctxt = ((BindingProvider)port2).getRequestContext();
-    	// Enable HTTP chunking mode, otherwise HttpURLConnection buffers
-    	ctxt.put(JAXWSProperties.HTTP_CLIENT_STREAMING_CHUNK_SIZE, 8192);
-        //log((BindingProvider)port);
-        
-        //Add the audio file attachment
-    	
-    	
+	
+        //Setup a piped stream to get an input stream that can be used for feeding the chuck encoded post 
     	PipedOutputStream	outputStream = new PipedOutputStream();
     	PipedInputStream inputStream = null;
         try {
@@ -238,19 +208,12 @@ public class MicRecognizer {
 	        // TODO Auto-generated catch block
 	        e3.printStackTrace();
         }
-    	
-        /*
-         * Web Service Approach 2 of 3
-         *
-         */
-    	DataHandler rdh = new DataHandler(new MyDataSource(inputStream)); 
-    	RecRequestAttachType recRequest = new RecRequestAttachType();
-    	recRequest.setAudio(rdh);
-    	
         
-    	MicRecognizer mr = new MicRecognizer();
+        //start up the microphone
+    	MicRecognizer2 mr = new MicRecognizer2();
     	mr.start(audioLine,outputStream);
     	
+    	/*
     	// Add the grammar string (read from a URL in this case)
     	StringBuilder sb = null;
     	try {
@@ -267,25 +230,71 @@ public class MicRecognizer {
     	} catch (IOException e2) {
     		_logger.info(e2.getStackTrace());
     	}
-	
     	_logger.info("Grammar: "+sb);
-    	   
-    	/*
-    	 *  *** Web Service Approach 3 of 3
-    	 *
-    	*/  
-    	recRequest.setGrammar(sb.toString()); 
+    	*/
     	
-    	//Make the Recognition request (returns the recognition results)
-    	RecResponseType recResult = port2.recognize (recRequest);
+    	
+    	// Plain old http approach    	
+    	HttpClient httpclient = new DefaultHttpClient();
+        HttpPost httppost = new HttpPost(service);
+    	
+    	//create the multipart entity
+    	MultipartEntity mpEntity = new MultipartEntity();
+    	
+    	// one part is the grammar
+        InputStreamBody grammarBody = null;
+        try {
+        	grammarBody = new InputStreamBody(grammarUrl.openStream(), "plain/text","grammar.gram");
+        } catch (IOException e1) {
+	        // TODO Auto-generated catch block
+	        e1.printStackTrace();
+        }
+    	
+        
+        // second part is the mic audio
+        InputStreamBody audioBody = new InputStreamBody(inputStream, "audio/x-wav","audio.wav");      
 
-    	try {
-    	   RecognitionResult r = RecognitionResult.constructResultFromString(recResult.getSerialized());
-    	   _logger.info("The recognition result is: "+r.getText());
-    	} catch (InvalidRecognitionResultException e) {
-    		e.printStackTrace();
-    	}
+		mpEntity.addPart("grammar", grammarBody);
+		mpEntity.addPart("audio", audioBody);
+        
+	    httppost.setEntity(mpEntity);
+    
+        
+        System.out.println("executing request " + httppost.getRequestLine());
+        HttpResponse response = null;
+        try {
+	        response = httpclient.execute(httppost);
+        } catch (ClientProtocolException e) {
+	        // TODO Auto-generated catch block
+	        e.printStackTrace();
+        } catch (IOException e) {
+	        // TODO Auto-generated catch block
+	        e.printStackTrace();
+        }
+        HttpEntity resEntity = response.getEntity();
+
+        System.out.println("----------------------------------------");
+        System.out.println(response.getStatusLine());
+        if (resEntity != null) {
+            System.out.println("Response content length: " + resEntity.getContentLength());
+            System.out.println("Chunked?: " + resEntity.isChunked());
+        }
+        if (resEntity != null) {
+            try {
+                InputStream s = resEntity.getContent();
+                int c;
+                while ((c = s.read()) != -1) {
+                    System.out.write(c);
+                }
+	            resEntity.consumeContent();
+            } catch (IOException e) {
+	            // TODO Auto-generated catch block
+	            e.printStackTrace();
+            }
+        }
     	
+        
+
  
     }
 
