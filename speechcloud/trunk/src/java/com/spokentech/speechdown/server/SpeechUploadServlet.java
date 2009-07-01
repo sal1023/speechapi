@@ -1,8 +1,10 @@
 package com.spokentech.speechdown.server;
 
 import java.io.BufferedInputStream;
+import java.io.BufferedOutputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.File;
+import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.PrintWriter;
@@ -21,6 +23,8 @@ import javax.sound.sampled.AudioSystem;
 import javax.sound.sampled.UnsupportedAudioFileException;
 
 import org.apache.commons.fileupload.FileItem;
+import org.apache.commons.fileupload.FileItemIterator;
+import org.apache.commons.fileupload.FileItemStream;
 import org.apache.commons.fileupload.FileUploadException;
 import org.apache.commons.fileupload.FileUploadBase.IOFileUploadException;
 import org.apache.commons.fileupload.disk.DiskFileItemFactory;
@@ -44,7 +48,10 @@ import com.spokentech.speechdown.common.RecognitionResult;
 public class SpeechUploadServlet extends HttpServlet {
 
 	private static Logger _logger = Logger.getLogger(SpeechUploadServlet.class);
-	/** */
+    private static final String SAMPLE_RATE_FIELD_NAME = "sampleRate";
+    private static final String BIG_ENDIAN_FIELD_NAME = "bigEndian";
+    private static final String BYTES_PER_VALUE_FIELD_NAME = "bytesPerValue";
+    private static final String ENCODING_FIELD_NAME = "encoding";
 	private DiskFileItemFactory factory;
 	private File destinationDir;
 	
@@ -96,101 +103,82 @@ public class SpeechUploadServlet extends HttpServlet {
 			response.sendRedirect(response.encodeRedirectURL("/")); // TODO: allow redirect location to be configured
 			return;
 		}
+		
+	    //set the audio format parameters to default values
+	    int sampleRate = 8000;
+	    boolean bigEndian = true;
+	    int bytesPerValue = 2;
+	    AudioFormat.Encoding encoding = AudioFormat.Encoding.PCM_SIGNED;
 
 		// Create a new file upload handler
-		ServletFileUpload upload = new ServletFileUpload(this.factory);
+		ServletFileUpload upload = new ServletFileUpload();
 
-		int count = 0;
 		InputStream audio = null;
-		InputStream grammar = null;
+		String grammarString = null;
+		RecognitionResult result = null;
+    	//TODO: grammar must be the first item processed in the iterator
 		// Parse the request
 		try {
-			List<FileItem> items = upload.parseRequest(request);
-			List<String> filenames = new LinkedList<String>();
-			for (FileItem item : items) {
+			FileItemIterator iter = upload.getItemIterator(request);
+			while (iter.hasNext()) {
+			    FileItemStream item = iter.next();
 			    String name = item.getFieldName();
-			    InputStream stream = item.getInputStream();
-			    if (name.equals("audio") ) {
-			    	audio = stream;
-			    } else if (name.equals("grammar")) {
-			    	grammar=stream;
+			    InputStream stream = item.openStream();
+
+			    if (item.isFormField()) {
+			    	String value = Streams.asString(stream);
+			        _logger.info("Form field " + name + " with value " + value + " detected.");
+			        try { 
+				        if (name.equals(SAMPLE_RATE_FIELD_NAME)) {
+				        	sampleRate = Integer.parseInt(value);
+				        } else if (name.equals(BIG_ENDIAN_FIELD_NAME)) {
+				        	bigEndian = Boolean.parseBoolean(value);
+			        	} else if (name.equals(BYTES_PER_VALUE_FIELD_NAME)) {
+				        	bytesPerValue = Integer.parseInt(value);
+		        		} else if (name.equals(ENCODING_FIELD_NAME)) {
+		        			if (value.equals(AudioFormat.Encoding.ALAW.toString())) {
+		        				encoding = AudioFormat.Encoding.ALAW;
+		        			} else if (value.equals(AudioFormat.Encoding.ULAW.toString())) {
+		        				encoding = AudioFormat.Encoding.ULAW;
+		        			} else if (value.equals(AudioFormat.Encoding.PCM_SIGNED.toString())) {
+		        				encoding = AudioFormat.Encoding.PCM_SIGNED;
+		        			} else if (value.equals(AudioFormat.Encoding.PCM_UNSIGNED.toString())) {
+		        				encoding = AudioFormat.Encoding.PCM_UNSIGNED;
+		        			} else {
+		        				_logger.warn("Unsupported encoding: "+value);
+		        			}
+				        } else {
+				        	_logger.warn("Unrecognized field "+name+ " = "+value);
+				        }
+			        } catch (Exception e) {
+			        	_logger.warn("Exception " + e.getMessage() + "ooccured while processing field name= "+name +" with value= "+value);
+			        }
+			    } else {
+			        System.out.println("File field " + name + " with file name "
+			            + item.getName() + " detected.");
+			        // Process the input stream
+				    if (name.equals("audio") ) {
+				    	audio = stream;
+				    	try {
+				    		_logger.info("recognizing audio!  Sample rate= "+sampleRate+", bigEndian= "+ bigEndian+", bytes per value= "+bytesPerValue+", encoding= "+encoding.toString());
+				    	   result = recognizerService.Recognize(audio, grammarString,sampleRate,bigEndian,bytesPerValue,encoding);
+				    	} catch (Exception e) {
+				    		e.printStackTrace();
+				    	}
+				    } else if (name.equals("grammar")) {
+						grammarString = readInputStreamAsString(stream);
+				    }
 			    }
-	
-			    _logger.info("Fileitem #"+(count++)+" FieldName:"+item.getFieldName()+ " content type: "+item.getContentType()+" item name: "+item.getName());
-				if (item.isFormField()) {
-					// TODO: log values
-			        _logger.info("Form field " + name + " with value " + Streams.asString(stream) + " detected.");
-
-				} else {
-
-					//Write to a file
-					/*
-					String filename = Long.toString(System.currentTimeMillis()) + '.' + item.getName();					
-					File file = new File(this.destinationDir, filename);
-					try {
-						item.write(file);
-						filenames.add(filename);
-					} catch (Exception e) {
-						throw new ServletException(e.getMessage(), e);
-					}
-					*/
-					
-			
-					
-				}
 			}
-			//_logger.info(audio);
-			//_logger.info(grammar);
-
-			//Use the stream. Send it to the recognizer
-			
-			String grammarString = readInputStreamAsString(grammar);
-			//AudioInputStream as = null;
-            //try {
-	        //    as = AudioSystem.getAudioInputStream(audio);
-            //} catch (UnsupportedAudioFileException e1) {
-	        //    // TODO Auto-generated catch block
-	        //    e1.printStackTrace();
-            //}
-			
-			RecognitionResult result = null;
-			try {
-			   result = recognizerService.Recognize(audio, grammarString,8000,false,2,AudioFormat.Encoding.PCM_SIGNED);
-
-			}catch (Exception e) {
-				e.printStackTrace();
-			}
-			
-			_logger.info("recognition result: "+result.getText());
-			
-			/*
-			try {
-				request.getAudio().getInputStream();
-				File f = new File("recog"+(counter++)+".wav");
-				BufferedOutputStream out = new BufferedOutputStream(new FileOutputStream(f));
-
-				BufferedInputStream in = new BufferedInputStream(request.getAudio().getInputStream());
-
-				byte[] buffer = new byte[256]; 
-				while (true) { 
-					int bytesRead = in.read(buffer);
-					//_logger.trace("Read "+ bytesRead + "bytes.");
-					if (bytesRead == -1) break; 
-					out.write(buffer, 0, bytesRead); 
-				} 
-				_logger.info("Closing streams");
-				in.close(); 
-				out.close(); 
-			} 
-			catch (Exception e) { 
-				System.out.println("upload Exception"); e.printStackTrace(); 
-				System.out.println(e); 
-			} 
-			*/
-			
-			PrintWriter out = response.getWriter();		
-			out.println(result.toString());
-			
+			PrintWriter out = response.getWriter();	
+		    if (result == null) {
+	    	   _logger.info("recognition result is null");
+				out.println("recognition result is null");
+		    } else {
+		       _logger.info("recognition result: "+result.getText());
+				out.println(result.toString());
+		    }	
+				
 			// store file list and pass control to view jsp
 			//request.setAttribute("fileUploadList", filenames);
 			//this.getServletContext().getRequestDispatcher("/speechup_result.jsp").forward(request, response);
@@ -220,8 +208,33 @@ public class SpeechUploadServlet extends HttpServlet {
 			buf.write(b);
 			result = bis.read();
 		}        
+		_logger.info(buf.toString());
 		return buf.toString();
 	}
 
+	public void writeStreamToFile(InputStream inStream, String fileName) {
+		try {
+
+			File f = new File(fileName);
+			BufferedOutputStream out = new BufferedOutputStream(new FileOutputStream(f));
+	
+			BufferedInputStream in = new BufferedInputStream(inStream);
+	
+			byte[] buffer = new byte[256]; 
+			while (true) { 
+				int bytesRead = in.read(buffer);
+				//_logger.trace("Read "+ bytesRead + "bytes.");
+				if (bytesRead == -1) break; 
+				out.write(buffer, 0, bytesRead); 
+			} 
+			_logger.info("Closing streams");
+			in.close(); 
+			out.close(); 
+		} 
+		catch (Exception e) { 
+			System.out.println("upload Exception"); e.printStackTrace(); 
+			System.out.println(e); 
+		} 
+	}
 
 }

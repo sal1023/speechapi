@@ -5,6 +5,7 @@ import java.io.InputStream;
 import java.io.OutputStream;
 import java.io.PipedInputStream;
 import java.io.PipedOutputStream;
+import java.io.UnsupportedEncodingException;
 
 import java.net.MalformedURLException;
 
@@ -20,6 +21,7 @@ import javax.sound.sampled.LineListener;
 import javax.sound.sampled.LineUnavailableException;
 
 import javax.sound.sampled.TargetDataLine;
+import javax.sound.sampled.AudioFormat.Encoding;
 
 import javax.xml.ws.BindingProvider;
 
@@ -39,9 +41,12 @@ import org.apache.http.client.methods.HttpPost;
 import org.apache.http.entity.mime.MultipartEntity;
 
 import org.apache.http.entity.mime.content.InputStreamBody;
+import org.apache.http.entity.mime.content.StringBody;
 import org.apache.http.impl.client.DefaultHttpClient;
 
 import org.apache.log4j.Logger;
+
+import com.spokentech.speechdown.common.RecognitionResult;
 
 
 /**
@@ -61,7 +66,7 @@ public class MicRecognizer2 {
     
     private static final String defaultService = "http://localhost:8090/speechcloud/SpeechUploadServlet";
     
-    private static int limit = 10000;
+    private static int limit = 100000;
     
     
     private static AudioFormat desiredFormat;
@@ -141,14 +146,12 @@ public class MicRecognizer2 {
     	// lookup resource server
     	String service = line.hasOption(SERVICE_OPTION) ? line.getOptionValue(SERVICE_OPTION) : defaultService; 
     	
-    	
         desiredFormat = new AudioFormat ((float) sampleRate, sampleSizeInBits, channels, signed, bigEndian);
         DataLine.Info info = new DataLine.Info(TargetDataLine.class, desiredFormat);
         if (!AudioSystem.isLineSupported(info)) {
             _logger.info(desiredFormat + " not supported");
             throw new RuntimeException("unsupported audio format");
         } 
-        
         _logger.info("Desired format: " + desiredFormat);
         
         
@@ -192,8 +195,6 @@ public class MicRecognizer2 {
         	_logger.info("Can't find microphone");
         	throw new RuntimeException("Can't find microphone");
         }
-        
-        _logger.info("Actual format: " + audioStream.getFormat());
         
         //Setup a piped stream to get an input stream that can be used for feeding the chuck encoded post 
     	PipedOutputStream	outputStream = new PipedOutputStream();
@@ -246,16 +247,45 @@ public class MicRecognizer2 {
 	        e1.printStackTrace();
         }
     	
-        
-        // second part is the mic audio
+        //one part is the audio
         InputStreamBody audioBody = new InputStreamBody(inputStream, "audio/x-wav","audio.wav");      
-
-		mpEntity.addPart("grammar", grammarBody);
-		mpEntity.addPart("audio", audioBody);
         
+        // get the audio format and send as form fields.  Cound not send aduio file with format included because audio files do not
+        // support mark/reset.  That is needed for stremaing using http chunk encoding on the servlet side using file upload.
+        AudioFormat format = audioStream.getFormat();
+        _logger.info("Actual format: " + format);    	
+    	StringBody sampleRate = null;
+    	StringBody bigEndian = null;
+    	StringBody bytesPerValue = null;
+    	StringBody encoding = null;
+        try {
+        	sampleRate = new StringBody(String.valueOf((int)format.getSampleRate()));
+        	bigEndian = new StringBody(String.valueOf(format.isBigEndian()));
+        	bytesPerValue =new StringBody(String.valueOf(format.getSampleSizeInBits()/8));
+        	encoding = new StringBody(format.getEncoding().toString());
+        	
+        } catch (UnsupportedEncodingException e1) {
+	        // TODO Auto-generated catch block
+	        e1.printStackTrace();
+        }
+        
+        //add the form field parts
+		mpEntity.addPart("sampleRate", sampleRate);
+		mpEntity.addPart("bigEndian", bigEndian);
+		mpEntity.addPart("bytesPerValue", bytesPerValue);
+		mpEntity.addPart("encoding", encoding);
+		
+		//add the grammar part
+		mpEntity.addPart("grammar", grammarBody);
+		
+		//add the audio part
+		mpEntity.addPart("audio", audioBody);
+		
+		
+		//set the multipart entity for the post command
 	    httppost.setEntity(mpEntity);
     
-        
+	    //execute the post command
         System.out.println("executing request " + httppost.getRequestLine());
         HttpResponse response = null;
         try {
@@ -267,6 +297,8 @@ public class MicRecognizer2 {
 	        // TODO Auto-generated catch block
 	        e.printStackTrace();
         }
+        
+        //get the response from the post
         HttpEntity resEntity = response.getEntity();
 
         System.out.println("----------------------------------------");
@@ -288,10 +320,6 @@ public class MicRecognizer2 {
 	            e.printStackTrace();
             }
         }
-    	
-        
-
- 
     }
 
     
