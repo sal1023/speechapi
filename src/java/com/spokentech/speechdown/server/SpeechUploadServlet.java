@@ -2,7 +2,9 @@ package com.spokentech.speechdown.server;
 
 import java.io.BufferedInputStream;
 import java.io.BufferedOutputStream;
+import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
+import java.io.DataOutputStream;
 import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;
@@ -17,6 +19,7 @@ import javax.servlet.ServletException;
 import javax.servlet.http.HttpServlet;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
+import javax.sound.sampled.AudioFileFormat;
 import javax.sound.sampled.AudioFormat;
 import javax.sound.sampled.AudioInputStream;
 import javax.sound.sampled.AudioSystem;
@@ -49,6 +52,7 @@ public class SpeechUploadServlet extends HttpServlet {
 
 	private static Logger _logger = Logger.getLogger(SpeechUploadServlet.class);
     private static final String SAMPLE_RATE_FIELD_NAME = "sampleRate";
+    private static final String DATA_MODE = "dataMode";
     private static final String BIG_ENDIAN_FIELD_NAME = "bigEndian";
     private static final String BYTES_PER_VALUE_FIELD_NAME = "bytesPerValue";
     private static final String ENCODING_FIELD_NAME = "encoding";
@@ -58,6 +62,12 @@ public class SpeechUploadServlet extends HttpServlet {
 	SynthesizerService synthesizerService;
 	RecognizerService recognizerService;
 
+	
+ 	private static final int	EXTERNAL_BUFFER_SIZE = 3200;
+
+	byte[]	abData = new byte[EXTERNAL_BUFFER_SIZE];
+	
+	
 	/* (non-Javadoc)
 	 * @see javax.servlet.GenericServlet#init(javax.servlet.ServletConfig)
 	 */
@@ -108,6 +118,7 @@ public class SpeechUploadServlet extends HttpServlet {
 	    int sampleRate = 8000;
 	    boolean bigEndian = true;
 	    int bytesPerValue = 2;
+	    String dataMode = "audio";
 	    AudioFormat.Encoding encoding = AudioFormat.Encoding.PCM_SIGNED;
 
 		// Create a new file upload handler
@@ -131,6 +142,8 @@ public class SpeechUploadServlet extends HttpServlet {
 			        try { 
 				        if (name.equals(SAMPLE_RATE_FIELD_NAME)) {
 				        	sampleRate = Integer.parseInt(value);
+				        }else if (name.equals(DATA_MODE)) {
+				        	dataMode = value;
 				        } else if (name.equals(BIG_ENDIAN_FIELD_NAME)) {
 				        	bigEndian = Boolean.parseBoolean(value);
 			        	} else if (name.equals(BYTES_PER_VALUE_FIELD_NAME)) {
@@ -161,7 +174,9 @@ public class SpeechUploadServlet extends HttpServlet {
 				    	audio = stream;
 				    	try {
 				    		_logger.info("recognizing audio!  Sample rate= "+sampleRate+", bigEndian= "+ bigEndian+", bytes per value= "+bytesPerValue+", encoding= "+encoding.toString());
-				    	   result = recognizerService.Recognize(audio, grammarString,sampleRate,bigEndian,bytesPerValue,encoding);
+				    	    result = recognizerService.Recognize(audio, grammarString,dataMode,sampleRate,bigEndian,bytesPerValue,encoding);
+				    		//String filename = Long.toString(System.currentTimeMillis()) + ".wav";
+				    		//writeStreamToFile2(audio,filename);
 				    	} catch (Exception e) {
 				    		e.printStackTrace();
 				    	}
@@ -212,6 +227,70 @@ public class SpeechUploadServlet extends HttpServlet {
 		return buf.toString();
 	}
 
+	
+
+	
+	public void writeStreamToFile2(InputStream inputStream, String fileName) {
+		
+	  	File outWavFile = new File(fileName);
+		ByteArrayOutputStream baos = new ByteArrayOutputStream();
+		DataOutputStream dos = new DataOutputStream(baos);
+
+    	//TODO: Assuming it is a wav file.  Should get the actual type of input file
+    	AudioFileFormat.Type outputType = null;
+    	AudioFileFormat.Type[] typesSupported = AudioSystem.getAudioFileTypes();
+    	for (AudioFileFormat.Type aTypesSupported : typesSupported) {
+    		if (aTypesSupported.getExtension().equals("wav")) {
+    			outputType =  aTypesSupported;
+    		}
+    	}
+        //AudioFormat audioFormat = audioStream.getFormat();
+		
+		_logger.info("Out of the the Loop "+baos.size());
+		//write it to the new file
+        int bitsPerSample = 16;
+        int sampleRate = 8000;
+        boolean isBigEndian = true;
+        boolean isSigned = true;
+	
+		//AudioFormat outFormat = new AudioFormat(audioFormat.getFrameRate(),audioFormat.getSampleSizeInBits(), 1, true, true);
+		//AudioInputStream ais = new AudioInputStream(bais, outFormat, outAudioData.length / audioFormat.getFrameSize());
+		//_logger.debug(audioFormat.toString());
+
+		
+	  	int nBytesRead=0;
+		while (nBytesRead != -1){  		
+
+			//read the data from the file
+			try{
+				nBytesRead = inputStream.read(abData, 0, abData.length);
+				_logger.info("Read "+nBytesRead+ " bytes");
+				if (nBytesRead >0) {
+	    			dos.write(abData, 0, nBytesRead);
+	    			_logger.info("then wrote them ");
+				}
+			}catch (IOException e){
+				e.printStackTrace();
+			}
+
+		}
+		byte[] outAudioData = baos.toByteArray();
+		ByteArrayInputStream bais = new ByteArrayInputStream(outAudioData);	  
+        AudioFormat wavFormat = new AudioFormat(sampleRate, bitsPerSample, 1, isSigned, isBigEndian);
+        AudioInputStream ais = new AudioInputStream(bais, wavFormat, outAudioData.length / wavFormat.getFrameSize());
+
+		if (AudioSystem.isFileTypeSupported(outputType, ais)) {
+			try {
+				_logger.info("writing file "+outWavFile.getCanonicalPath());
+				AudioSystem.write(ais, outputType, outWavFile);
+			} catch (IOException e) {
+				e.printStackTrace();
+			}
+		} else {
+			System.out.println("output type not supported..."); 
+		}
+	}
+	
 	public void writeStreamToFile(InputStream inStream, String fileName) {
 		try {
 

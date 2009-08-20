@@ -1,4 +1,4 @@
-package com.spokentech.speechdown.cli;
+package com.spokentech.speechdown.client.util;
 
 import java.nio.BufferUnderflowException;
 

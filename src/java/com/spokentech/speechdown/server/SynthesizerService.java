@@ -76,7 +76,8 @@ public class SynthesizerService {
 	public void startup() {
 		System.setProperty("freetts.voices", "com.sun.speech.freetts.en.us.cmu_us_kal.KevinVoiceDirectory");
 	    try {
-	    	_synthesizerPool = synthEngineFactory.createObjectPool(poolSize);
+	    	String prefix = null;  //not needed for synthesizer pool (but needed for recognizer pools)
+	    	_synthesizerPool = synthEngineFactory.createObjectPool(poolSize,prefix);
         } catch (InstantiationException e) {
 	        // TODO Auto-generated catch block
 	        e.printStackTrace();

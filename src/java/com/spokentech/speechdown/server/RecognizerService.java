@@ -1,46 +1,62 @@
 package com.spokentech.speechdown.server;
 
-
 import java.io.IOException;
 import java.io.InputStream;
-import java.net.MalformedURLException;
-import java.net.URL;
-
 import javax.activation.DataHandler;
 import javax.sound.sampled.AudioInputStream;
 import javax.sound.sampled.AudioSystem;
 import javax.sound.sampled.UnsupportedAudioFileException;
 import javax.sound.sampled.AudioFormat.Encoding;
 import javax.speech.recognition.GrammarException;
-
 import org.apache.commons.pool.ObjectPool;
 import org.apache.log4j.Logger;
 import org.jvnet.staxex.StreamingDataHandler;
-
-
 import com.spokentech.speechdown.common.RecognitionResult;
-import com.spokentech.speechdown.server.recog.AudioStreamDataSource;
-import com.spokentech.speechdown.server.recog.GrammarLocation;
-import com.spokentech.speechdown.server.recog.GrammarManager;
 import com.spokentech.speechdown.server.recog.RecEngine;
-import com.spokentech.speechdown.server.recog.SphinxRecEngineFactory;
-import com.spokentech.speechdown.server.tts.SynthEngine;
 import com.spokentech.speechdown.server.util.pool.AbstractPoolableObjectFactory;
-
-import edu.cmu.sphinx.jsapi.JSGFGrammar;
-import edu.cmu.sphinx.recognizer.Recognizer;
-import edu.cmu.sphinx.result.Result;
-import edu.cmu.sphinx.util.props.ConfigurationManager;
-
 
 public class RecognizerService {
 
     static Logger _logger = Logger.getLogger(RecognizerService.class);
-	
-    private ObjectPool _recognizerPool;
-	private int poolSize;   
-	
+    
+    static private final String AUDIO_INPUT_PREFIX = "audio-";
+    static private final String FEATURE_INPUT_PREFIX = "feature-";
+    
+    private ObjectPool _audioRecognizerPool;
+    private ObjectPool _featureRecognizerPool;
+    
+
+	private int featureInputPoolSize;   
+	private int audioInputPoolSize;   
 	private AbstractPoolableObjectFactory recEngineFactory;
+    
+	/**
+     * @return the featureInputPoolSize
+     */
+    public int getFeatureInputPoolSize() {
+    	return featureInputPoolSize;
+    }
+
+	/**
+     * @param featureInputPoolSize the featureInputPoolSize to set
+     */
+    public void setFeatureInputPoolSize(int featureInputPoolSize) {
+    	this.featureInputPoolSize = featureInputPoolSize;
+    }
+
+	/**
+     * @return the audioInputPoolSize
+     */
+    public int getAudioInputPoolSize() {
+    	return audioInputPoolSize;
+    }
+
+	/**
+     * @param audioInputPoolSize the audioInputPoolSize to set
+     */
+    public void setAudioInputPoolSize(int audioInputPoolSize) {
+    	this.audioInputPoolSize = audioInputPoolSize;
+    }
 
 	/**
      * @return the recEngineFactory
@@ -56,23 +72,11 @@ public class RecognizerService {
     	this.recEngineFactory = recEngineFactory;
     }
 
-	/**
-     * @return the poolSize
-     */
-    public int getPoolSize() {
-    	return poolSize;
-    }
-
-	/**
-     * @param poolSize the poolSize to set
-     */
-    public void setPoolSize(int poolSize) {
-    	this.poolSize = poolSize;
-    }
 
 	public void startup() {
 	   try {
-	    	_recognizerPool =  recEngineFactory.createObjectPool(poolSize);
+	    	_audioRecognizerPool =  recEngineFactory.createObjectPool(audioInputPoolSize,AUDIO_INPUT_PREFIX);
+	    	_featureRecognizerPool =  recEngineFactory.createObjectPool(featureInputPoolSize,FEATURE_INPUT_PREFIX);
         } catch (InstantiationException e) {
 	        // TODO Auto-generated catch block
 	        e.printStackTrace();
@@ -117,7 +121,7 @@ public class RecognizerService {
 	public  RecognitionResult Recognize(AudioInputStream as, String grammar) {
 	    RecEngine rengine = null;
         try {
-            rengine = (RecEngine) _recognizerPool.borrowObject();
+            rengine = (RecEngine) _audioRecognizerPool.borrowObject();
         } catch (Exception e) {
             // TODO Auto-generated catch block
             throw new RuntimeException(e);
@@ -126,7 +130,7 @@ public class RecognizerService {
         RecognitionResult results = rengine.recognize(as,grammar);
         
         try {
-	        _recognizerPool.returnObject(rengine);
+	        _audioRecognizerPool.returnObject(rengine);
         } catch (Exception e) {
 	        // TODO Auto-generated catch block
             throw new RuntimeException(e);
@@ -134,19 +138,34 @@ public class RecognizerService {
 	    return results;
     }
 
-	public RecognitionResult Recognize(InputStream as, String grammar, int sampleRate, boolean bigEndian, int bytesPerValue, Encoding encoding) {
-	    RecEngine rengine = null;
+	public RecognitionResult Recognize(InputStream as, String grammar, String dataMode, int sampleRate, boolean bigEndian, int bytesPerValue, Encoding encoding) {
+        _logger.info("Before borrow" + System.currentTimeMillis());
+        ObjectPool pool = _audioRecognizerPool;
+    	if (dataMode.equals("audio")) {
+    		pool = _audioRecognizerPool;
+    	} else if  (dataMode.equals("feature")) {
+    		pool = _featureRecognizerPool;
+    	} else {	
+    		_logger.warn("Unrecognized data stream mode: "+dataMode+"  Guessing audio stream");
+    	}
+    	
+        RecEngine rengine = null;
         try {
-            rengine = (RecEngine) _recognizerPool.borrowObject();
+
+            rengine = (RecEngine) pool.borrowObject();
+            
         } catch (Exception e) {
             // TODO Auto-generated catch block
             throw new RuntimeException(e);
         }
         
+        _logger.info("After borrow" + System.currentTimeMillis());
+	
+        
         RecognitionResult results = rengine.recognize(as,grammar,sampleRate,bigEndian,bytesPerValue,encoding);
         
         try {
-	        _recognizerPool.returnObject(rengine);
+	        pool.returnObject(rengine);
         } catch (Exception e) {
 	        // TODO Auto-generated catch block
             throw new RuntimeException(e);

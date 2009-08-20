@@ -5,6 +5,7 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.PipedInputStream;
 import java.io.PipedOutputStream;
+import java.io.UnsupportedEncodingException;
 import java.net.MalformedURLException;
 import java.net.URL;
 
@@ -31,6 +32,7 @@ import org.apache.http.client.HttpClient;
 import org.apache.http.client.methods.HttpPost;
 import org.apache.http.entity.mime.MultipartEntity;
 import org.apache.http.entity.mime.content.InputStreamBody;
+import org.apache.http.entity.mime.content.StringBody;
 import org.apache.http.impl.client.DefaultHttpClient;
 import org.apache.log4j.Logger;
 
@@ -45,7 +47,7 @@ public class RestfulRecognizerTest extends TestCase {
     
     
 
-    private static String service = "http://localhost:8090/speechcloud/SpeechUploadServlet";    
+    private static String service = "http://ec2-75-101-211-235.compute-1.amazonaws.com/speechcloud/SpeechUploadServlet";    
     private static AudioFormat desiredFormat;
     private static int sampleRate = 8000;
     private static boolean signed = true;
@@ -79,7 +81,11 @@ public class RestfulRecognizerTest extends TestCase {
 
 
 	        
-	    	File soundFile = new File("c:/work/speechcloud/etc/prompts/lookupsports.wav");	 	
+	    	File soundFile1 = new File("c:/work/speechcloud/etc/prompts/lookupsports.wav");	 	
+	    	File soundFile2 = new File("c:/work/speechcloud/etc/prompts/get_me_a_stock_quote.wav");	 	
+	    	File soundFile3 = new File("c:/work/speechcloud/etc/prompts/i_would_like_sports_news.wav");	 	
+	    	
+	    	
 	    	String grammar = "file:///work/speechcloud/etc/grammar/example.gram";
 	    	URL grammarUrl = null;
 	    	try {
@@ -88,6 +94,15 @@ public class RestfulRecognizerTest extends TestCase {
 		         e.printStackTrace();  
 			}
     		    	
+	        doRecognizeTest(soundFile1, grammarUrl);
+	        doRecognizeTest(soundFile2, grammarUrl);
+	        doRecognizeTest(soundFile3, grammarUrl);
+	    	
+	    }
+
+
+
+		private void doRecognizeTest(File soundFile1, URL grammarUrl) {
 	        desiredFormat = new AudioFormat ((float) sampleRate, sampleSizeInBits, channels, signed, bigEndian);
 	        DataLine.Info info = new DataLine.Info(TargetDataLine.class, desiredFormat);
 	        if (!AudioSystem.isLineSupported(info)) {
@@ -101,7 +116,7 @@ public class RestfulRecognizerTest extends TestCase {
 	    	// read in the sound file.
 	    	AudioInputStream	audioInputStream = null;
 	    	try {
-	    		audioInputStream = AudioSystem.getAudioInputStream(soundFile);
+	    		audioInputStream = AudioSystem.getAudioInputStream(soundFile1);
 	    	} catch (Exception e) {
 	    		e.printStackTrace();
 	    	}
@@ -123,6 +138,31 @@ public class RestfulRecognizerTest extends TestCase {
 		        e1.printStackTrace();
 	        }
 	    	
+	        
+	        // get the audio format and send as form fields.  Cound not send aduio file with format included because audio files do not
+	        // support mark/reset.  That is needed for stremaing using http chunk encoding on the servlet side using file upload.
+	        AudioFormat format = audioInputStream.getFormat();
+	        _logger.info("Actual format: " + format);    	
+	    	StringBody sampleRate = null;
+	    	StringBody bigEndian = null;
+	    	StringBody bytesPerValue = null;
+	    	StringBody encoding = null;
+	        try {
+	        	sampleRate = new StringBody(String.valueOf((int)format.getSampleRate()));
+	        	bigEndian = new StringBody(String.valueOf(format.isBigEndian()));
+	        	bytesPerValue =new StringBody(String.valueOf(format.getSampleSizeInBits()/8));
+	        	encoding = new StringBody(format.getEncoding().toString());
+	        	
+	        } catch (UnsupportedEncodingException e1) {
+		        // TODO Auto-generated catch block
+		        e1.printStackTrace();
+	        }
+	        
+	        //add the form field parts
+			mpEntity.addPart("sampleRate", sampleRate);
+			mpEntity.addPart("bigEndian", bigEndian);
+			mpEntity.addPart("bytesPerValue", bytesPerValue);
+			mpEntity.addPart("encoding", encoding);
 	        
 	        // second part is the mic audio
 	        InputStreamBody audioBody = new InputStreamBody(audioInputStream, "audio/x-wav","audio.wav");      
@@ -167,8 +207,7 @@ public class RestfulRecognizerTest extends TestCase {
 		            e.printStackTrace();
 	            }
 	        }
-	    	
-	    }
+        }
 	 
 
 
