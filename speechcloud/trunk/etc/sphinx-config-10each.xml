@@ -1,0 +1,1828 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+
+<!-- ******************************************************** -->
+<!--  Sphinx-4 Configuration file for SpeechCloud Server      -->
+<!-- ******************************************************** -->
+
+<config>
+
+    <!-- ******************************************************** -->
+    <!-- frequently tuned properties                              -->
+    <!-- ******************************************************** -->
+
+    <property name="logLevel"                    value="INFO"/>
+    <property name="logTerse"                    value="true"/>
+    <property name="showCreations"               value="false"/>
+
+    <property name="absoluteBeamWidth"           value="-1"/>
+    <property name="relativeBeamWidth"           value="1E-80"/>
+    <property name="wordInsertionProbability"    value="1E-36"/>
+    <property name="languageWeight"              value="8"/>
+    <property name="silenceInsertionProbability" value="1"/>
+
+
+	<!-- these are only needed to create the pool of recognizers.  Should be able to find a better way to create a recognizer without a grammar -->
+    <property name="grammarLocation"             value="resource:/com.spokentech.speechdown.server.RecognizerService!/../../grammar"/>
+    <property name="grammarName"                 value="example"/>
+
+
+    <!-- ******************************************************** -->
+    <!-- word recognizer configuration  #1                        -->
+    <!-- ******************************************************** -->
+
+    <component name="feature-recognizer1" type="edu.cmu.sphinx.recognizer.Recognizer">
+        <property name="decoder" value="feature-decoder1"/>
+        <!--propertylist name="monitors"-->
+            <!--item>accuracyTracker </item-->
+            <!--item>speedTracker </item-->
+            <!--item>memoryTracker </item-->
+        <!--/propertylist-->
+    </component>
+
+
+    <!-- ******************************************************** -->
+    <!-- The Decoder   configuration  #1                          -->
+    <!-- ******************************************************** -->
+
+    <component name="feature-decoder1" type="edu.cmu.sphinx.decoder.Decoder">
+        <property name="searchManager" value="feature-searchManager1"/>
+    </component>
+
+    <component name="feature-searchManager1"
+               type="edu.cmu.sphinx.decoder.search.SimpleBreadthFirstSearchManager">
+        <property name="logMath" value="logMath"/>
+        <property name="linguist" value="linguist"/>
+        <property name="pruner" value="feature-pruner1"/>
+        <property name="scorer" value="feature-scorer1"/>
+        <property name="activeListFactory" value="feature-activeListFactory1"/>
+    </component>
+
+    <component name="feature-activeListFactory1"
+               type="edu.cmu.sphinx.decoder.search.SortingActiveListFactory">
+        <property name="logMath" value="logMath"/>
+        <property name="absoluteBeamWidth" value="${absoluteBeamWidth}"/>
+        <property name="relativeBeamWidth" value="${relativeBeamWidth}"/>
+    </component>
+
+    <component name="feature-pruner1"
+               type="edu.cmu.sphinx.decoder.pruner.SimplePruner"/>
+
+    <component name="feature-scorer1"
+               type="edu.cmu.sphinx.decoder.scorer.ThreadedAcousticScorer">
+        <property name="frontend" value="feature-frontend1"/>
+        <!--SALproperty name="isCpuRelative" value="true"/-->
+        <!--SALproperty name="numThreads" value="0"/-->
+        <!--SALproperty name="minScoreablesPerThread" value="10"/-->
+        <!--SALproperty name="scoreablesKeepFeature" value="true"/-->
+    </component>
+
+
+
+    <!-- ******************************************************** -->
+    <!-- word recognizer configuration    #2                      -->
+    <!-- ******************************************************** -->
+
+    <component name="feature-recognizer2" type="edu.cmu.sphinx.recognizer.Recognizer">
+        <property name="decoder" value="feature-decoder2"/>
+    </component>
+
+    <!-- ******************************************************** -->
+    <!-- The Decoder   configuration     #2                       -->
+    <!-- ******************************************************** -->
+
+    <component name="feature-decoder2" type="edu.cmu.sphinx.decoder.Decoder">
+        <property name="searchManager" value="feature-searchManager2"/>
+    </component>
+
+    <component name="feature-searchManager2"
+               type="edu.cmu.sphinx.decoder.search.SimpleBreadthFirstSearchManager">
+        <property name="logMath" value="logMath"/>
+        <property name="linguist" value="linguist"/>
+        <property name="pruner" value="feature-pruner2"/>
+        <property name="scorer" value="feature-scorer2"/>
+        <property name="activeListFactory" value="feature-activeListFactory2"/>
+    </component>
+
+    <component name="feature-activeListFactory2"
+               type="edu.cmu.sphinx.decoder.search.SortingActiveListFactory">
+        <property name="logMath" value="logMath"/>
+        <property name="absoluteBeamWidth" value="${absoluteBeamWidth}"/>
+        <property name="relativeBeamWidth" value="${relativeBeamWidth}"/>
+    </component>
+
+    <component name="feature-pruner2"
+               type="edu.cmu.sphinx.decoder.pruner.SimplePruner"/>
+
+    <component name="feature-scorer2"
+               type="edu.cmu.sphinx.decoder.scorer.ThreadedAcousticScorer">
+        <property name="frontend" value="feature-frontend2"/>
+        <!--SALproperty name="isCpuRelative" value="true"/-->
+        <!--SALproperty name="numThreads" value="0"/-->
+        <!--SALproperty name="minScoreablesPerThread" value="10"/-->
+        <!--SALproperty name="scoreablesKeepFeature" value="true"/-->
+    </component>
+    
+    
+    <!-- ******************************************************** -->
+    <!-- word recognizer configuration    #3                      -->
+    <!-- ******************************************************** -->
+
+    <component name="feature-recognizer3" type="edu.cmu.sphinx.recognizer.Recognizer">
+        <property name="decoder" value="feature-decoder3"/>
+    </component>
+    
+
+    <!-- ******************************************************** -->
+    <!-- The Decoder   configuration  #3                          -->
+    <!-- ******************************************************** -->
+
+    <component name="feature-decoder3" type="edu.cmu.sphinx.decoder.Decoder">
+        <property name="searchManager" value="feature-searchManager3"/>
+    </component>
+
+    <component name="feature-searchManager3"
+               type="edu.cmu.sphinx.decoder.search.SimpleBreadthFirstSearchManager">
+        <property name="logMath" value="logMath"/>
+        <property name="linguist" value="linguist"/>
+        <property name="pruner" value="feature-pruner3"/>
+        <property name="scorer" value="feature-scorer3"/>
+        <property name="activeListFactory" value="feature-activeListFactory3"/>
+    </component>
+
+    <component name="feature-activeListFactory3"
+               type="edu.cmu.sphinx.decoder.search.SortingActiveListFactory">
+        <property name="logMath" value="logMath"/>
+        <property name="absoluteBeamWidth" value="${absoluteBeamWidth}"/>
+        <property name="relativeBeamWidth" value="${relativeBeamWidth}"/>
+    </component>
+
+    <component name="feature-pruner3"
+               type="edu.cmu.sphinx.decoder.pruner.SimplePruner"/>
+
+    <component name="feature-scorer3"
+               type="edu.cmu.sphinx.decoder.scorer.ThreadedAcousticScorer">
+        <property name="frontend" value="feature-frontend3"/>
+        <!--SALproperty name="isCpuRelative" value="true"/-->
+        <!--SALproperty name="numThreads" value="0"/-->
+        <!--SALproperty name="minScoreablesPerThread" value="10"/-->
+        <!--SALproperty name="scoreablesKeepFeature" value="true"/-->
+    </component>
+
+
+
+    <!-- ******************************************************** -->
+    <!-- word recognizer configuration    #4                      -->
+    <!-- ******************************************************** -->
+
+    <component name="feature-recognizer4" type="edu.cmu.sphinx.recognizer.Recognizer">
+        <property name="decoder" value="feature-decoder4"/>
+    </component>
+
+    <!-- ******************************************************** -->
+    <!-- The Decoder   configuration     #4                       -->
+    <!-- ******************************************************** -->
+
+    <component name="feature-decoder4" type="edu.cmu.sphinx.decoder.Decoder">
+        <property name="searchManager" value="feature-searchManager4"/>
+    </component>
+
+    <component name="feature-searchManager4"
+               type="edu.cmu.sphinx.decoder.search.SimpleBreadthFirstSearchManager">
+        <property name="logMath" value="logMath"/>
+        <property name="linguist" value="linguist"/>
+        <property name="pruner" value="feature-pruner4"/>
+        <property name="scorer" value="feature-scorer4"/>
+        <property name="activeListFactory" value="feature-activeListFactory4"/>
+    </component>
+
+    <component name="feature-activeListFactory4"
+               type="edu.cmu.sphinx.decoder.search.SortingActiveListFactory">
+        <property name="logMath" value="logMath"/>
+        <property name="absoluteBeamWidth" value="${absoluteBeamWidth}"/>
+        <property name="relativeBeamWidth" value="${relativeBeamWidth}"/>
+    </component>
+
+    <component name="feature-pruner4"
+               type="edu.cmu.sphinx.decoder.pruner.SimplePruner"/>
+
+    <component name="feature-scorer4"
+               type="edu.cmu.sphinx.decoder.scorer.ThreadedAcousticScorer">
+        <property name="frontend" value="feature-frontend4"/>
+        <!--SALproperty name="isCpuRelative" value="true"/-->
+        <!--SALproperty name="numThreads" value="0"/-->
+        <!--SALproperty name="minScoreablesPerThread" value="10"/-->
+        <!--SALproperty name="scoreablesKeepFeature" value="true"/-->
+    </component>
+
+    <!-- ******************************************************** -->
+    <!-- word recognizer configuration    #5                      -->
+    <!-- ******************************************************** -->
+
+    <component name="feature-recognizer5" type="edu.cmu.sphinx.recognizer.Recognizer">
+        <property name="decoder" value="feature-decoder5"/>
+    </component>
+
+
+    <!-- ******************************************************** -->
+    <!-- The Decoder   configuration  #5                          -->
+    <!-- ******************************************************** -->
+
+    <component name="feature-decoder5" type="edu.cmu.sphinx.decoder.Decoder">
+        <property name="searchManager" value="feature-searchManager5"/>
+    </component>
+
+    <component name="feature-searchManager5"
+               type="edu.cmu.sphinx.decoder.search.SimpleBreadthFirstSearchManager">
+        <property name="logMath" value="logMath"/>
+        <property name="linguist" value="linguist"/>
+        <property name="pruner" value="feature-pruner5"/>
+        <property name="scorer" value="feature-scorer5"/>
+        <property name="activeListFactory" value="feature-activeListFactory5"/>
+    </component>
+
+    <component name="feature-activeListFactory5"
+               type="edu.cmu.sphinx.decoder.search.SortingActiveListFactory">
+        <property name="logMath" value="logMath"/>
+        <property name="absoluteBeamWidth" value="${absoluteBeamWidth}"/>
+        <property name="relativeBeamWidth" value="${relativeBeamWidth}"/>
+    </component>
+
+    <component name="feature-pruner5"
+               type="edu.cmu.sphinx.decoder.pruner.SimplePruner"/>
+
+    <component name="feature-scorer5"
+               type="edu.cmu.sphinx.decoder.scorer.ThreadedAcousticScorer">
+        <property name="frontend" value="feature-frontend5"/>
+        <!--SALproperty name="isCpuRelative" value="true"/-->
+        <!--SALproperty name="numThreads" value="0"/-->
+        <!--SALproperty name="minScoreablesPerThread" value="10"/-->
+        <!--SALproperty name="scoreablesKeepFeature" value="true"/-->
+    </component>
+
+
+
+    <!-- ******************************************************** -->
+    <!-- word recognizer configuration    #6                      -->
+    <!-- ******************************************************** -->
+
+    <component name="feature-recognizer6" type="edu.cmu.sphinx.recognizer.Recognizer">
+        <property name="decoder" value="feature-decoder6"/>
+    </component>
+
+    <!-- ******************************************************** -->
+    <!-- The Decoder   configuration     #6                       -->
+    <!-- ******************************************************** -->
+
+    <component name="feature-decoder6" type="edu.cmu.sphinx.decoder.Decoder">
+        <property name="searchManager" value="feature-searchManager6"/>
+    </component>
+
+    <component name="feature-searchManager6"
+               type="edu.cmu.sphinx.decoder.search.SimpleBreadthFirstSearchManager">
+        <property name="logMath" value="logMath"/>
+        <property name="linguist" value="linguist"/>
+        <property name="pruner" value="feature-pruner6"/>
+        <property name="scorer" value="feature-scorer6"/>
+        <property name="activeListFactory" value="feature-activeListFactory6"/>
+    </component>
+
+    <component name="feature-activeListFactory6"
+               type="edu.cmu.sphinx.decoder.search.SortingActiveListFactory">
+        <property name="logMath" value="logMath"/>
+        <property name="absoluteBeamWidth" value="${absoluteBeamWidth}"/>
+        <property name="relativeBeamWidth" value="${relativeBeamWidth}"/>
+    </component>
+
+    <component name="feature-pruner6"
+               type="edu.cmu.sphinx.decoder.pruner.SimplePruner"/>
+
+    <component name="feature-scorer6"
+               type="edu.cmu.sphinx.decoder.scorer.ThreadedAcousticScorer">
+        <property name="frontend" value="feature-frontend6"/>
+        <!--SALproperty name="isCpuRelative" value="true"/-->
+        <!--SALproperty name="numThreads" value="0"/-->
+        <!--SALproperty name="minScoreablesPerThread" value="10"/-->
+        <!--SALproperty name="scoreablesKeepFeature" value="true"/-->
+    </component>
+    
+    
+    <!-- ******************************************************** -->
+    <!-- word recognizer configuration    #7                      -->
+    <!-- ******************************************************** -->
+
+    <component name="feature-recognizer7" type="edu.cmu.sphinx.recognizer.Recognizer">
+        <property name="decoder" value="feature-decoder7"/>
+    </component>
+    
+    
+        <!-- ******************************************************** -->
+    <!-- The Decoder   configuration  #7                          -->
+    <!-- ******************************************************** -->
+
+    <component name="feature-decoder7" type="edu.cmu.sphinx.decoder.Decoder">
+        <property name="searchManager" value="feature-searchManager7"/>
+    </component>
+
+    <component name="feature-searchManager7"
+               type="edu.cmu.sphinx.decoder.search.SimpleBreadthFirstSearchManager">
+        <property name="logMath" value="logMath"/>
+        <property name="linguist" value="linguist"/>
+        <property name="pruner" value="feature-pruner7"/>
+        <property name="scorer" value="feature-scorer7"/>
+        <property name="activeListFactory" value="feature-activeListFactory7"/>
+    </component>
+
+    <component name="feature-activeListFactory7"
+               type="edu.cmu.sphinx.decoder.search.SortingActiveListFactory">
+        <property name="logMath" value="logMath"/>
+        <property name="absoluteBeamWidth" value="${absoluteBeamWidth}"/>
+        <property name="relativeBeamWidth" value="${relativeBeamWidth}"/>
+    </component>
+
+    <component name="feature-pruner7"
+               type="edu.cmu.sphinx.decoder.pruner.SimplePruner"/>
+
+    <component name="feature-scorer7"
+               type="edu.cmu.sphinx.decoder.scorer.ThreadedAcousticScorer">
+        <property name="frontend" value="feature-frontend7"/>
+        <!--SALproperty name="isCpuRelative" value="true"/-->
+        <!--SALproperty name="numThreads" value="0"/-->
+        <!--SALproperty name="minScoreablesPerThread" value="10"/-->
+        <!--SALproperty name="scoreablesKeepFeature" value="true"/-->
+    </component>
+
+
+
+    <!-- ******************************************************** -->
+    <!-- word recognizer configuration    #8                      -->
+    <!-- ******************************************************** -->
+
+    <component name="feature-recognizer8" type="edu.cmu.sphinx.recognizer.Recognizer">
+        <property name="decoder" value="feature-decoder8"/>
+    </component>
+
+    <!-- ******************************************************** -->
+    <!-- The Decoder   configuration     #8                       -->
+    <!-- ******************************************************** -->
+
+    <component name="feature-decoder8" type="edu.cmu.sphinx.decoder.Decoder">
+        <property name="searchManager" value="feature-searchManager8"/>
+    </component>
+
+    <component name="feature-searchManager8"
+               type="edu.cmu.sphinx.decoder.search.SimpleBreadthFirstSearchManager">
+        <property name="logMath" value="logMath"/>
+        <property name="linguist" value="linguist"/>
+        <property name="pruner" value="feature-pruner8"/>
+        <property name="scorer" value="feature-scorer8"/>
+        <property name="activeListFactory" value="feature-activeListFactory8"/>
+    </component>
+
+    <component name="feature-activeListFactory8"
+               type="edu.cmu.sphinx.decoder.search.SortingActiveListFactory">
+        <property name="logMath" value="logMath"/>
+        <property name="absoluteBeamWidth" value="${absoluteBeamWidth}"/>
+        <property name="relativeBeamWidth" value="${relativeBeamWidth}"/>
+    </component>
+
+    <component name="feature-pruner8"
+               type="edu.cmu.sphinx.decoder.pruner.SimplePruner"/>
+
+    <component name="feature-scorer8"
+               type="edu.cmu.sphinx.decoder.scorer.ThreadedAcousticScorer">
+        <property name="frontend" value="feature-frontend8"/>
+        <!--SALproperty name="isCpuRelative" value="true"/-->
+        <!--SALproperty name="numThreads" value="0"/-->
+        <!--SALproperty name="minScoreablesPerThread" value="10"/-->
+        <!--SALproperty name="scoreablesKeepFeature" value="true"/-->
+    </component>
+    
+    
+    <!-- ******************************************************** -->
+    <!-- word recognizer configuration    #9                      -->
+    <!-- ******************************************************** -->
+
+    <component name="feature-recognizer9" type="edu.cmu.sphinx.recognizer.Recognizer">
+        <property name="decoder" value="feature-decoder9"/>
+    </component>
+    
+    
+        <!-- ******************************************************** -->
+    <!-- The Decoder   configuration  #9                          -->
+    <!-- ******************************************************** -->
+
+    <component name="feature-decoder9" type="edu.cmu.sphinx.decoder.Decoder">
+        <property name="searchManager" value="feature-searchManager9"/>
+    </component>
+
+    <component name="feature-searchManager9"
+               type="edu.cmu.sphinx.decoder.search.SimpleBreadthFirstSearchManager">
+        <property name="logMath" value="logMath"/>
+        <property name="linguist" value="linguist"/>
+        <property name="pruner" value="feature-pruner9"/>
+        <property name="scorer" value="feature-scorer9"/>
+        <property name="activeListFactory" value="feature-activeListFactory9"/>
+    </component>
+
+    <component name="feature-activeListFactory9"
+               type="edu.cmu.sphinx.decoder.search.SortingActiveListFactory">
+        <property name="logMath" value="logMath"/>
+        <property name="absoluteBeamWidth" value="${absoluteBeamWidth}"/>
+        <property name="relativeBeamWidth" value="${relativeBeamWidth}"/>
+    </component>
+
+    <component name="feature-pruner9"
+               type="edu.cmu.sphinx.decoder.pruner.SimplePruner"/>
+
+    <component name="feature-scorer9"
+               type="edu.cmu.sphinx.decoder.scorer.ThreadedAcousticScorer">
+        <property name="frontend" value="feature-frontend9"/>
+        <!--SALproperty name="isCpuRelative" value="true"/-->
+        <!--SALproperty name="numThreads" value="0"/-->
+        <!--SALproperty name="minScoreablesPerThread" value="10"/-->
+        <!--SALproperty name="scoreablesKeepFeature" value="true"/-->
+    </component>
+
+
+
+    <!-- ******************************************************** -->
+    <!-- word recognizer configuration    #10                      -->
+    <!-- ******************************************************** -->
+
+    <component name="feature-recognizer10" type="edu.cmu.sphinx.recognizer.Recognizer">
+        <property name="decoder" value="feature-decoder10"/>
+    </component>
+
+    <!-- ******************************************************** -->
+    <!-- The Decoder   configuration     #10                       -->
+    <!-- ******************************************************** -->
+
+    <component name="feature-decoder10" type="edu.cmu.sphinx.decoder.Decoder">
+        <property name="searchManager" value="feature-searchManager10"/>
+    </component>
+
+    <component name="feature-searchManager10"
+               type="edu.cmu.sphinx.decoder.search.SimpleBreadthFirstSearchManager">
+        <property name="logMath" value="logMath"/>
+        <property name="linguist" value="linguist"/>
+        <property name="pruner" value="feature-pruner10"/>
+        <property name="scorer" value="feature-scorer10"/>
+        <property name="activeListFactory" value="feature-activeListFactory10"/>
+    </component>
+
+    <component name="feature-activeListFactory10"
+               type="edu.cmu.sphinx.decoder.search.SortingActiveListFactory">
+        <property name="logMath" value="logMath"/>
+        <property name="absoluteBeamWidth" value="${absoluteBeamWidth}"/>
+        <property name="relativeBeamWidth" value="${relativeBeamWidth}"/>
+    </component>
+
+    <component name="feature-pruner10"
+               type="edu.cmu.sphinx.decoder.pruner.SimplePruner"/>
+
+    <component name="feature-scorer10"
+               type="edu.cmu.sphinx.decoder.scorer.ThreadedAcousticScorer">
+        <property name="frontend" value="feature-frontend10"/>
+        <!--SALproperty name="isCpuRelative" value="true"/-->
+        <!--SALproperty name="numThreads" value="0"/-->
+        <!--SALproperty name="minScoreablesPerThread" value="10"/-->
+        <!--SALproperty name="scoreablesKeepFeature" value="true"/-->
+    </component>
+    
+    
+    <!-- ******************************************************** -->
+    <!-- word recognizer configuration  #1                        -->
+    <!-- ******************************************************** -->
+
+    <component name="audio-recognizer1" type="edu.cmu.sphinx.recognizer.Recognizer">
+        <property name="decoder" value="audio-decoder1"/>
+        <!--propertylist name="monitors"-->
+            <!--item>accuracyTracker </item-->
+            <!--item>speedTracker </item-->
+            <!--item>memoryTracker </item-->
+        <!--/propertylist-->
+    </component>
+
+
+    <!-- ******************************************************** -->
+    <!-- The Decoder   configuration  #1                          -->
+    <!-- ******************************************************** -->
+
+    <component name="audio-decoder1" type="edu.cmu.sphinx.decoder.Decoder">
+        <property name="searchManager" value="audio-searchManager1"/>
+    </component>
+
+    <component name="audio-searchManager1"
+               type="edu.cmu.sphinx.decoder.search.SimpleBreadthFirstSearchManager">
+        <property name="logMath" value="logMath"/>
+        <property name="linguist" value="linguist"/>
+        <property name="pruner" value="audio-pruner1"/>
+        <property name="scorer" value="audio-scorer1"/>
+        <property name="activeListFactory" value="audio-activeListFactory1"/>
+    </component>
+
+    <component name="audio-activeListFactory1"
+               type="edu.cmu.sphinx.decoder.search.SortingActiveListFactory">
+        <property name="logMath" value="logMath"/>
+        <property name="absoluteBeamWidth" value="${absoluteBeamWidth}"/>
+        <property name="relativeBeamWidth" value="${relativeBeamWidth}"/>
+    </component>
+
+    <component name="audio-pruner1"
+               type="edu.cmu.sphinx.decoder.pruner.SimplePruner"/>
+
+    <component name="audio-scorer1"
+               type="edu.cmu.sphinx.decoder.scorer.ThreadedAcousticScorer">
+        <property name="frontend" value="audio-frontend1"/>
+        <!--SALproperty name="isCpuRelative" value="true"/-->
+        <!--SALproperty name="numThreads" value="0"/-->
+        <!--SALproperty name="minScoreablesPerThread" value="10"/-->
+        <!--SALproperty name="scoreablesKeepFeature" value="true"/-->
+    </component>
+
+
+
+    <!-- ******************************************************** -->
+    <!-- word recognizer configuration    #2                      -->
+    <!-- ******************************************************** -->
+
+    <component name="audio-recognizer2" type="edu.cmu.sphinx.recognizer.Recognizer">
+        <property name="decoder" value="audio-decoder2"/>
+    </component>
+
+    <!-- ******************************************************** -->
+    <!-- The Decoder   configuration     #2                       -->
+    <!-- ******************************************************** -->
+
+    <component name="audio-decoder2" type="edu.cmu.sphinx.decoder.Decoder">
+        <property name="searchManager" value="audio-searchManager2"/>
+    </component>
+
+    <component name="audio-searchManager2"
+               type="edu.cmu.sphinx.decoder.search.SimpleBreadthFirstSearchManager">
+        <property name="logMath" value="logMath"/>
+        <property name="linguist" value="linguist"/>
+        <property name="pruner" value="audio-pruner2"/>
+        <property name="scorer" value="audio-scorer2"/>
+        <property name="activeListFactory" value="audio-activeListFactory2"/>
+    </component>
+
+    <component name="audio-activeListFactory2"
+               type="edu.cmu.sphinx.decoder.search.SortingActiveListFactory">
+        <property name="logMath" value="logMath"/>
+        <property name="absoluteBeamWidth" value="${absoluteBeamWidth}"/>
+        <property name="relativeBeamWidth" value="${relativeBeamWidth}"/>
+    </component>
+
+    <component name="audio-pruner2"
+               type="edu.cmu.sphinx.decoder.pruner.SimplePruner"/>
+
+    <component name="audio-scorer2"
+               type="edu.cmu.sphinx.decoder.scorer.ThreadedAcousticScorer">
+        <property name="frontend" value="audio-frontend2"/>
+        <!--SALproperty name="isCpuRelative" value="true"/-->
+        <!--SALproperty name="numThreads" value="0"/-->
+        <!--SALproperty name="minScoreablesPerThread" value="10"/-->
+        <!--SALproperty name="scoreablesKeepFeature" value="true"/-->
+    </component>
+    
+    
+    <!-- ******************************************************** -->
+    <!-- word recognizer configuration    #3                      -->
+    <!-- ******************************************************** -->
+
+    <component name="audio-recognizer3" type="edu.cmu.sphinx.recognizer.Recognizer">
+        <property name="decoder" value="audio-decoder3"/>
+    </component>
+    
+
+    <!-- ******************************************************** -->
+    <!-- The Decoder   configuration  #3                          -->
+    <!-- ******************************************************** -->
+
+    <component name="audio-decoder3" type="edu.cmu.sphinx.decoder.Decoder">
+        <property name="searchManager" value="audio-searchManager3"/>
+    </component>
+
+    <component name="audio-searchManager3"
+               type="edu.cmu.sphinx.decoder.search.SimpleBreadthFirstSearchManager">
+        <property name="logMath" value="logMath"/>
+        <property name="linguist" value="linguist"/>
+        <property name="pruner" value="audio-pruner3"/>
+        <property name="scorer" value="audio-scorer3"/>
+        <property name="activeListFactory" value="audio-activeListFactory3"/>
+    </component>
+
+    <component name="audio-activeListFactory3"
+               type="edu.cmu.sphinx.decoder.search.SortingActiveListFactory">
+        <property name="logMath" value="logMath"/>
+        <property name="absoluteBeamWidth" value="${absoluteBeamWidth}"/>
+        <property name="relativeBeamWidth" value="${relativeBeamWidth}"/>
+    </component>
+
+    <component name="audio-pruner3"
+               type="edu.cmu.sphinx.decoder.pruner.SimplePruner"/>
+
+    <component name="audio-scorer3"
+               type="edu.cmu.sphinx.decoder.scorer.ThreadedAcousticScorer">
+        <property name="frontend" value="audio-frontend3"/>
+        <!--SALproperty name="isCpuRelative" value="true"/-->
+        <!--SALproperty name="numThreads" value="0"/-->
+        <!--SALproperty name="minScoreablesPerThread" value="10"/-->
+        <!--SALproperty name="scoreablesKeepFeature" value="true"/-->
+    </component>
+
+
+
+    <!-- ******************************************************** -->
+    <!-- word recognizer configuration    #4                      -->
+    <!-- ******************************************************** -->
+
+    <component name="audio-recognizer4" type="edu.cmu.sphinx.recognizer.Recognizer">
+        <property name="decoder" value="audio-decoder4"/>
+    </component>
+
+    <!-- ******************************************************** -->
+    <!-- The Decoder   configuration     #4                       -->
+    <!-- ******************************************************** -->
+
+    <component name="audio-decoder4" type="edu.cmu.sphinx.decoder.Decoder">
+        <property name="searchManager" value="audio-searchManager4"/>
+    </component>
+
+    <component name="audio-searchManager4"
+               type="edu.cmu.sphinx.decoder.search.SimpleBreadthFirstSearchManager">
+        <property name="logMath" value="logMath"/>
+        <property name="linguist" value="linguist"/>
+        <property name="pruner" value="audio-pruner4"/>
+        <property name="scorer" value="audio-scorer4"/>
+        <property name="activeListFactory" value="audio-activeListFactory4"/>
+    </component>
+
+    <component name="audio-activeListFactory4"
+               type="edu.cmu.sphinx.decoder.search.SortingActiveListFactory">
+        <property name="logMath" value="logMath"/>
+        <property name="absoluteBeamWidth" value="${absoluteBeamWidth}"/>
+        <property name="relativeBeamWidth" value="${relativeBeamWidth}"/>
+    </component>
+
+    <component name="audio-pruner4"
+               type="edu.cmu.sphinx.decoder.pruner.SimplePruner"/>
+
+    <component name="audio-scorer4"
+               type="edu.cmu.sphinx.decoder.scorer.ThreadedAcousticScorer">
+        <property name="frontend" value="audio-frontend4"/>
+        <!--SALproperty name="isCpuRelative" value="true"/-->
+        <!--SALproperty name="numThreads" value="0"/-->
+        <!--SALproperty name="minScoreablesPerThread" value="10"/-->
+        <!--SALproperty name="scoreablesKeepFeature" value="true"/-->
+    </component>
+
+    <!-- ******************************************************** -->
+    <!-- word recognizer configuration    #5                      -->
+    <!-- ******************************************************** -->
+
+    <component name="audio-recognizer5" type="edu.cmu.sphinx.recognizer.Recognizer">
+        <property name="decoder" value="audio-decoder5"/>
+    </component>
+
+
+    <!-- ******************************************************** -->
+    <!-- The Decoder   configuration  #5                          -->
+    <!-- ******************************************************** -->
+
+    <component name="audio-decoder5" type="edu.cmu.sphinx.decoder.Decoder">
+        <property name="searchManager" value="audio-searchManager5"/>
+    </component>
+
+    <component name="audio-searchManager5"
+               type="edu.cmu.sphinx.decoder.search.SimpleBreadthFirstSearchManager">
+        <property name="logMath" value="logMath"/>
+        <property name="linguist" value="linguist"/>
+        <property name="pruner" value="audio-pruner5"/>
+        <property name="scorer" value="audio-scorer5"/>
+        <property name="activeListFactory" value="audio-activeListFactory5"/>
+    </component>
+
+    <component name="audio-activeListFactory5"
+               type="edu.cmu.sphinx.decoder.search.SortingActiveListFactory">
+        <property name="logMath" value="logMath"/>
+        <property name="absoluteBeamWidth" value="${absoluteBeamWidth}"/>
+        <property name="relativeBeamWidth" value="${relativeBeamWidth}"/>
+    </component>
+
+    <component name="audio-pruner5"
+               type="edu.cmu.sphinx.decoder.pruner.SimplePruner"/>
+
+    <component name="audio-scorer5"
+               type="edu.cmu.sphinx.decoder.scorer.ThreadedAcousticScorer">
+        <property name="frontend" value="audio-frontend5"/>
+        <!--SALproperty name="isCpuRelative" value="true"/-->
+        <!--SALproperty name="numThreads" value="0"/-->
+        <!--SALproperty name="minScoreablesPerThread" value="10"/-->
+        <!--SALproperty name="scoreablesKeepFeature" value="true"/-->
+    </component>
+
+
+
+    <!-- ******************************************************** -->
+    <!-- word recognizer configuration    #6                      -->
+    <!-- ******************************************************** -->
+
+    <component name="audio-recognizer6" type="edu.cmu.sphinx.recognizer.Recognizer">
+        <property name="decoder" value="audio-decoder6"/>
+    </component>
+
+    <!-- ******************************************************** -->
+    <!-- The Decoder   configuration     #6                       -->
+    <!-- ******************************************************** -->
+
+    <component name="audio-decoder6" type="edu.cmu.sphinx.decoder.Decoder">
+        <property name="searchManager" value="audio-searchManager6"/>
+    </component>
+
+    <component name="audio-searchManager6"
+               type="edu.cmu.sphinx.decoder.search.SimpleBreadthFirstSearchManager">
+        <property name="logMath" value="logMath"/>
+        <property name="linguist" value="linguist"/>
+        <property name="pruner" value="audio-pruner6"/>
+        <property name="scorer" value="audio-scorer6"/>
+        <property name="activeListFactory" value="audio-activeListFactory6"/>
+    </component>
+
+    <component name="audio-activeListFactory6"
+               type="edu.cmu.sphinx.decoder.search.SortingActiveListFactory">
+        <property name="logMath" value="logMath"/>
+        <property name="absoluteBeamWidth" value="${absoluteBeamWidth}"/>
+        <property name="relativeBeamWidth" value="${relativeBeamWidth}"/>
+    </component>
+
+    <component name="audio-pruner6"
+               type="edu.cmu.sphinx.decoder.pruner.SimplePruner"/>
+
+    <component name="audio-scorer6"
+               type="edu.cmu.sphinx.decoder.scorer.ThreadedAcousticScorer">
+        <property name="frontend" value="audio-frontend6"/>
+        <!--SALproperty name="isCpuRelative" value="true"/-->
+        <!--SALproperty name="numThreads" value="0"/-->
+        <!--SALproperty name="minScoreablesPerThread" value="10"/-->
+        <!--SALproperty name="scoreablesKeepFeature" value="true"/-->
+    </component>
+    
+    
+    <!-- ******************************************************** -->
+    <!-- word recognizer configuration    #7                      -->
+    <!-- ******************************************************** -->
+
+    <component name="audio-recognizer7" type="edu.cmu.sphinx.recognizer.Recognizer">
+        <property name="decoder" value="audio-decoder7"/>
+    </component>
+    
+    
+        <!-- ******************************************************** -->
+    <!-- The Decoder   configuration  #7                          -->
+    <!-- ******************************************************** -->
+
+    <component name="audio-decoder7" type="edu.cmu.sphinx.decoder.Decoder">
+        <property name="searchManager" value="audio-searchManager7"/>
+    </component>
+
+    <component name="audio-searchManager7"
+               type="edu.cmu.sphinx.decoder.search.SimpleBreadthFirstSearchManager">
+        <property name="logMath" value="logMath"/>
+        <property name="linguist" value="linguist"/>
+        <property name="pruner" value="audio-pruner7"/>
+        <property name="scorer" value="audio-scorer7"/>
+        <property name="activeListFactory" value="audio-activeListFactory7"/>
+    </component>
+
+    <component name="audio-activeListFactory7"
+               type="edu.cmu.sphinx.decoder.search.SortingActiveListFactory">
+        <property name="logMath" value="logMath"/>
+        <property name="absoluteBeamWidth" value="${absoluteBeamWidth}"/>
+        <property name="relativeBeamWidth" value="${relativeBeamWidth}"/>
+    </component>
+
+    <component name="audio-pruner7"
+               type="edu.cmu.sphinx.decoder.pruner.SimplePruner"/>
+
+    <component name="audio-scorer7"
+               type="edu.cmu.sphinx.decoder.scorer.ThreadedAcousticScorer">
+        <property name="frontend" value="audio-frontend7"/>
+        <!--SALproperty name="isCpuRelative" value="true"/-->
+        <!--SALproperty name="numThreads" value="0"/-->
+        <!--SALproperty name="minScoreablesPerThread" value="10"/-->
+        <!--SALproperty name="scoreablesKeepFeature" value="true"/-->
+    </component>
+
+
+
+    <!-- ******************************************************** -->
+    <!-- word recognizer configuration    #8                      -->
+    <!-- ******************************************************** -->
+
+    <component name="audio-recognizer8" type="edu.cmu.sphinx.recognizer.Recognizer">
+        <property name="decoder" value="audio-decoder8"/>
+    </component>
+
+    <!-- ******************************************************** -->
+    <!-- The Decoder   configuration     #8                       -->
+    <!-- ******************************************************** -->
+
+    <component name="audio-decoder8" type="edu.cmu.sphinx.decoder.Decoder">
+        <property name="searchManager" value="audio-searchManager8"/>
+    </component>
+
+    <component name="audio-searchManager8"
+               type="edu.cmu.sphinx.decoder.search.SimpleBreadthFirstSearchManager">
+        <property name="logMath" value="logMath"/>
+        <property name="linguist" value="linguist"/>
+        <property name="pruner" value="audio-pruner8"/>
+        <property name="scorer" value="audio-scorer8"/>
+        <property name="activeListFactory" value="audio-activeListFactory8"/>
+    </component>
+
+    <component name="audio-activeListFactory8"
+               type="edu.cmu.sphinx.decoder.search.SortingActiveListFactory">
+        <property name="logMath" value="logMath"/>
+        <property name="absoluteBeamWidth" value="${absoluteBeamWidth}"/>
+        <property name="relativeBeamWidth" value="${relativeBeamWidth}"/>
+    </component>
+
+    <component name="audio-pruner8"
+               type="edu.cmu.sphinx.decoder.pruner.SimplePruner"/>
+
+    <component name="audio-scorer8"
+               type="edu.cmu.sphinx.decoder.scorer.ThreadedAcousticScorer">
+        <property name="frontend" value="audio-frontend8"/>
+        <!--SALproperty name="isCpuRelative" value="true"/-->
+        <!--SALproperty name="numThreads" value="0"/-->
+        <!--SALproperty name="minScoreablesPerThread" value="10"/-->
+        <!--SALproperty name="scoreablesKeepFeature" value="true"/-->
+    </component>
+    
+    
+    <!-- ******************************************************** -->
+    <!-- word recognizer configuration    #9                      -->
+    <!-- ******************************************************** -->
+
+    <component name="audio-recognizer9" type="edu.cmu.sphinx.recognizer.Recognizer">
+        <property name="decoder" value="audio-decoder9"/>
+    </component>
+    
+    
+        <!-- ******************************************************** -->
+    <!-- The Decoder   configuration  #9                          -->
+    <!-- ******************************************************** -->
+
+    <component name="audio-decoder9" type="edu.cmu.sphinx.decoder.Decoder">
+        <property name="searchManager" value="audio-searchManager9"/>
+    </component>
+
+    <component name="audio-searchManager9"
+               type="edu.cmu.sphinx.decoder.search.SimpleBreadthFirstSearchManager">
+        <property name="logMath" value="logMath"/>
+        <property name="linguist" value="linguist"/>
+        <property name="pruner" value="audio-pruner9"/>
+        <property name="scorer" value="audio-scorer9"/>
+        <property name="activeListFactory" value="audio-activeListFactory9"/>
+    </component>
+
+    <component name="audio-activeListFactory9"
+               type="edu.cmu.sphinx.decoder.search.SortingActiveListFactory">
+        <property name="logMath" value="logMath"/>
+        <property name="absoluteBeamWidth" value="${absoluteBeamWidth}"/>
+        <property name="relativeBeamWidth" value="${relativeBeamWidth}"/>
+    </component>
+
+    <component name="audio-pruner9"
+               type="edu.cmu.sphinx.decoder.pruner.SimplePruner"/>
+
+    <component name="audio-scorer9"
+               type="edu.cmu.sphinx.decoder.scorer.ThreadedAcousticScorer">
+        <property name="frontend" value="audio-frontend9"/>
+        <!--SALproperty name="isCpuRelative" value="true"/-->
+        <!--SALproperty name="numThreads" value="0"/-->
+        <!--SALproperty name="minScoreablesPerThread" value="10"/-->
+        <!--SALproperty name="scoreablesKeepFeature" value="true"/-->
+    </component>
+
+
+
+    <!-- ******************************************************** -->
+    <!-- word recognizer configuration    #10                      -->
+    <!-- ******************************************************** -->
+
+    <component name="audio-recognizer10" type="edu.cmu.sphinx.recognizer.Recognizer">
+        <property name="decoder" value="audio-decoder10"/>
+    </component>
+
+    <!-- ******************************************************** -->
+    <!-- The Decoder   configuration     #10                       -->
+    <!-- ******************************************************** -->
+
+    <component name="audio-decoder10" type="edu.cmu.sphinx.decoder.Decoder">
+        <property name="searchManager" value="audio-searchManager10"/>
+    </component>
+
+    <component name="audio-searchManager10"
+               type="edu.cmu.sphinx.decoder.search.SimpleBreadthFirstSearchManager">
+        <property name="logMath" value="logMath"/>
+        <property name="linguist" value="linguist"/>
+        <property name="pruner" value="audio-pruner10"/>
+        <property name="scorer" value="audio-scorer10"/>
+        <property name="activeListFactory" value="audio-activeListFactory10"/>
+    </component>
+
+    <component name="audio-activeListFactory10"
+               type="edu.cmu.sphinx.decoder.search.SortingActiveListFactory">
+        <property name="logMath" value="logMath"/>
+        <property name="absoluteBeamWidth" value="${absoluteBeamWidth}"/>
+        <property name="relativeBeamWidth" value="${relativeBeamWidth}"/>
+    </component>
+
+    <component name="audio-pruner10"
+               type="edu.cmu.sphinx.decoder.pruner.SimplePruner"/>
+
+    <component name="audio-scorer10"
+               type="edu.cmu.sphinx.decoder.scorer.ThreadedAcousticScorer">
+        <property name="frontend" value="audio-frontend10"/>
+        <!--SALproperty name="isCpuRelative" value="true"/-->
+        <!--SALproperty name="numThreads" value="0"/-->
+        <!--SALproperty name="minScoreablesPerThread" value="10"/-->
+        <!--SALproperty name="scoreablesKeepFeature" value="true"/-->
+    </component>
+
+
+    <!-- ******************************************************** -->
+    <!-- The linguist  configuration                              -->
+    <!-- ******************************************************** -->
+
+    <component name="linguist"
+               type="edu.cmu.sphinx.linguist.flat.FlatLinguist">
+        <property name="logMath" value="logMath"/>
+        <property name="grammar" value="grammar"/>
+        <property name="acousticModel" value="acousticModel"/>
+        <property name="wordInsertionProbability" value="${wordInsertionProbability}"/>
+        <property name="silenceInsertionProbability" value="${silenceInsertionProbability}"/>
+        <property name="languageWeight" value="${languageWeight}"/>
+        <property name="unitManager" value="unitManager"/>
+        <!--property name="addOutOfGrammarBranch" value="true"/-->
+        <!--property name="outOfGrammarProbability" value="1E-60"/-->
+        <!--property name="phoneInsertionProbability" value="1E-10"/-->
+        <!--property name="phoneLoopAcousticModel" value="acousticModel"/-->
+    </component>
+
+
+    <!-- ******************************************************** -->
+    <!-- The Grammar  configuration                               -->
+    <!-- ******************************************************** -->
+
+    <component name="grammar" type="edu.cmu.sphinx.jsapi.JSGFGrammar">
+        <property name="dictionary" value="dictionary"/>
+        <property name="grammarLocation" value="${grammarLocation}"/>
+        <property name="grammarName" value="${grammarName}"/>
+        <property name="logMath" value="logMath"/>
+    </component>
+
+
+
+    <!-- ******************************************************** -->
+    <!-- The Dictionary configuration                            -->
+    <!-- ******************************************************** -->
+
+    <component name="dictionary"
+               type="edu.cmu.sphinx.linguist.dictionary.FastDictionary">
+        <property name="dictionaryPath" value="resource:/edu.cmu.sphinx.model.acoustic.WSJ_8gau_13dCep_8kHz_31mel_200Hz_3500Hz.Model!/edu/cmu/sphinx/model/acoustic/WSJ_8gau_13dCep_8kHz_31mel_200Hz_3500Hz/dict/cmudict.0.6d"/>
+        <property name="fillerPath" value="resource:/edu.cmu.sphinx.model.acoustic.WSJ_8gau_13dCep_8kHz_31mel_200Hz_3500Hz.Model!/edu/cmu/sphinx/model/acoustic/WSJ_8gau_13dCep_8kHz_31mel_200Hz_3500Hz/dict/fillerdict"/>
+		<!--property name="addenda" value="resource:/org.speechforge.cairo.server.recog.sphinx.SphinxRecEngine!/grammar/addendum.dict"/-->
+        <property name="addSilEndingPronunciation" value="false"/>
+        <property name="allowMissingWords" value="false"/>
+        <property name="unitManager" value="unitManager"/>
+    </component>
+
+
+    <!-- ******************************************************** -->
+    <!-- The acoustic model configuration                         -->
+    <!-- ******************************************************** -->
+
+    <component name="acousticModel"
+               type="edu.cmu.sphinx.model.acoustic.WSJ_8gau_13dCep_8kHz_31mel_200Hz_3500Hz.Model">
+        <property name="loader" value="loader"/>
+        <property name="unitManager" value="unitManager"/>
+    </component>
+
+    <component name="loader"
+               type="edu.cmu.sphinx.model.acoustic.WSJ_8gau_13dCep_8kHz_31mel_200Hz_3500Hz.ModelLoader">
+        <property name="logMath" value="logMath"/>
+        <property name="unitManager" value="unitManager"/>
+    </component>
+    
+<!-- WSJ_8gau_13dCep_8kHz_31mel_200Hz_3500Hz WSJ_8gau_13dCep_16k_40mel_130Hz_6800Hz -->
+
+    <!-- ******************************************************** -->
+    <!-- The unit manager configuration                           -->
+    <!-- ******************************************************** -->
+
+    <component name="unitManager"
+               type="edu.cmu.sphinx.linguist.acoustic.UnitManager"/>
+
+
+    <!-- ******************************************************** -->
+    <!-- The frontend configuration                               -->
+    <!-- ******************************************************** -->
+    
+    
+    <component name="feature-frontend1" type="edu.cmu.sphinx.frontend.FrontEnd">
+        <propertylist name="pipeline">       
+            <item>feature-streamDataSource1</item>
+        </propertylist>
+    </component>
+    
+
+    <component name="feature-streamDataSource1" 
+               type="com.spokentech.speechdown.server.recog.FeatureStreamDataSource"/>
+
+ 
+
+    <!-- ******************************************************** -->
+    <!-- The frontend configuration                               -->
+    <!-- ******************************************************** -->
+
+    <component name="feature-frontend2" type="edu.cmu.sphinx.frontend.FrontEnd">
+        <propertylist name="pipeline">       
+            <item>feature-streamDataSource2</item>
+        </propertylist>
+    </component>
+    
+
+    <component name="feature-streamDataSource2" 
+               type="com.spokentech.speechdown.server.recog.FeatureStreamDataSource"/>
+
+
+   <!-- ******************************************************** -->
+    <!-- The frontend configuration #3                              -->
+    <!-- ******************************************************** -->
+
+    <component name="feature-frontend3" type="edu.cmu.sphinx.frontend.FrontEnd">
+        <propertylist name="pipeline">       
+            <item>feature-streamDataSource3</item>
+        </propertylist>
+    </component>
+    
+
+    <component name="feature-streamDataSource3" 
+               type="com.spokentech.speechdown.server.recog.FeatureStreamDataSource"/>
+
+
+    <!-- ******************************************************** -->
+    <!-- The frontend configuration                               -->
+    <!-- ******************************************************** -->
+
+    <component name="feature-frontend4" type="edu.cmu.sphinx.frontend.FrontEnd">
+        <propertylist name="pipeline">       
+            <item>feature-streamDataSource4</item>
+        </propertylist>
+    </component>
+    
+    <component name="feature-streamDataSource4" 
+                  type="com.spokentech.speechdown.server.recog.FeatureStreamDataSource"/>
+
+   
+
+   <!-- ******************************************************** -->
+    <!-- The frontend configuration                               -->
+    <!-- ******************************************************** -->
+
+    <component name="feature-frontend5" type="edu.cmu.sphinx.frontend.FrontEnd">
+        <propertylist name="pipeline">       
+            <item>feature-streamDataSource5</item>
+        </propertylist>
+    </component>
+    
+    <component name="feature-streamDataSource5" 
+                  type="com.spokentech.speechdown.server.recog.FeatureStreamDataSource"/>
+
+   
+    <!-- ******************************************************** -->
+    <!-- The frontend configuration                               -->
+    <!-- ******************************************************** -->
+
+    <component name="feature-frontend6" type="edu.cmu.sphinx.frontend.FrontEnd">
+        <propertylist name="pipeline">       
+            <item>feature-streamDataSource6</item>
+        </propertylist>
+    </component>
+    
+
+    <component name="feature-streamDataSource6" 
+               type="com.spokentech.speechdown.server.recog.FeatureStreamDataSource"/>
+
+  
+
+   <!-- ******************************************************** -->
+    <!-- The frontend configuration                               -->
+    <!-- ******************************************************** -->
+
+    <component name="feature-frontend7" type="edu.cmu.sphinx.frontend.FrontEnd">
+        <propertylist name="pipeline">       
+            <item>feature-streamDataSource7</item>
+        </propertylist>
+    </component>
+
+    <component name="feature-streamDataSource7" 
+                  type="com.spokentech.speechdown.server.recog.FeatureStreamDataSource"/>
+
+   
+
+
+    <!-- ******************************************************** -->
+    <!-- The frontend configuration                               -->
+    <!-- ******************************************************** -->
+
+    <component name="feature-frontend8" type="edu.cmu.sphinx.frontend.FrontEnd">
+        <propertylist name="pipeline">       
+            <item>feature-streamDataSource8</item>
+        </propertylist>
+    </component>
+    
+    <component name="feature-streamDataSource8" 
+                  type="com.spokentech.speechdown.server.recog.FeatureStreamDataSource"/>
+
+   
+
+   <!-- ******************************************************** -->
+    <!-- The frontend configuration                               -->
+    <!-- ******************************************************** -->
+
+    <component name="feature-frontend9" type="edu.cmu.sphinx.frontend.FrontEnd">
+        <propertylist name="pipeline">       
+            <item>feature-streamDataSource9</item>
+        </propertylist>
+    </component>
+    
+    <component name="feature-streamDataSource9" 
+                  type="com.spokentech.speechdown.server.recog.FeatureStreamDataSource"/>
+
+   
+
+    <!-- ******************************************************** -->
+    <!-- The frontend configuration                               -->
+    <!-- ******************************************************** -->
+
+    <component name="feature-frontend10" type="edu.cmu.sphinx.frontend.FrontEnd">
+        <propertylist name="pipeline">       
+            <item>feature-streamDataSource10</item>
+        </propertylist>
+    </component>
+    
+
+    <component name="feature-streamDataSource10" 
+               type="com.spokentech.speechdown.server.recog.FeatureStreamDataSource"/>
+               
+               
+               
+               
+    <!-- ******************************************************** -->
+    <!-- The frontend configuration                               -->
+    <!-- ******************************************************** -->
+
+    <component name="audio-frontend1" type="edu.cmu.sphinx.frontend.FrontEnd">
+        <propertylist name="pipeline">       
+            <item>audio-streamDataSource1</item>
+            <item>audio-speechDataRecorder1</item>
+            <item>audio-preemphasizer1</item>
+            <item>audio-dither1</item>
+            <item>audio-windower1</item>
+            <item>audio-fft1</item>
+            <item>audio-melFilterBank1</item>
+            <item>audio-dct1</item>
+            <item>audio-cmn1</item>
+            <item>audio-featureExtraction1</item>
+        </propertylist>
+    </component>
+    
+
+    <component name="audio-streamDataSource1" 
+               type="com.spokentech.speechdown.server.recog.AudioStreamDataSource"/>
+
+    <component name="audio-speechDataRecorder1"
+               type="com.spokentech.speechdown.server.recog.SpeechDataRecorder"/>
+
+
+    <component name="audio-preemphasizer1"
+               type="edu.cmu.sphinx.frontend.filter.Preemphasizer"/>
+               
+               
+    <component name="audio-dither1"
+               type="edu.cmu.sphinx.frontend.filter.Dither"/>
+
+    <component name="audio-windower1"
+               type="edu.cmu.sphinx.frontend.window.RaisedCosineWindower"/>
+
+    <component name="audio-fft1"
+               type="edu.cmu.sphinx.frontend.transform.DiscreteFourierTransform"/>
+
+    <component name="audio-melFilterBank1"
+               type="edu.cmu.sphinx.frontend.frequencywarp.MelFrequencyFilterBank">
+               <property name="minimumFrequency" value="200"/>
+               <property name="maximumFrequency" value="3500"/>
+               <property name="numberFilters" value="31"/>
+    </component>
+
+    <component name="audio-dct1"
+               type="edu.cmu.sphinx.frontend.transform.DiscreteCosineTransform"/>
+
+    <component name="audio-cmn1"
+               type="edu.cmu.sphinx.frontend.feature.LiveCMN">
+                 <property name="initialMean " value="12"/>
+               <property name="cmnWindow" value="500"/>
+               <property name="shiftWindow" value="800"/>
+    </component>             
+               
+
+    <component name="audio-featureExtraction1"
+               type="edu.cmu.sphinx.frontend.feature.DeltasFeatureExtractor"/>
+
+    <!-- ******************************************************** -->
+    <!-- The frontend configuration                               -->
+    <!-- ******************************************************** -->
+
+    <component name="audio-frontend2" type="edu.cmu.sphinx.frontend.FrontEnd">
+        <propertylist name="pipeline">       
+            <item>audio-streamDataSource2</item>
+            <item>audio-speechDataRecorder2</item>
+            <item>audio-preemphasizer2</item>
+            <item>audio-dither2</item>
+            <item>audio-windower2</item>
+            <item>audio-fft2</item>
+            <item>audio-melFilterBank2</item>
+            <item>audio-dct2</item>
+            <item>audio-cmn2</item>
+            <item>audio-featureExtraction2</item>
+        </propertylist>
+    </component>
+    
+
+    <component name="audio-streamDataSource2" 
+               type="com.spokentech.speechdown.server.recog.AudioStreamDataSource"/>
+
+    <component name="audio-speechDataRecorder2"
+               type="com.spokentech.speechdown.server.recog.SpeechDataRecorder"/>
+
+
+    <component name="audio-preemphasizer2"
+               type="edu.cmu.sphinx.frontend.filter.Preemphasizer"/>
+               
+               
+    <component name="audio-dither2"
+               type="edu.cmu.sphinx.frontend.filter.Dither"/>
+
+    <component name="audio-windower2"
+               type="edu.cmu.sphinx.frontend.window.RaisedCosineWindower"/>
+
+    <component name="audio-fft2"
+               type="edu.cmu.sphinx.frontend.transform.DiscreteFourierTransform"/>
+
+    <component name="audio-melFilterBank2"
+               type="edu.cmu.sphinx.frontend.frequencywarp.MelFrequencyFilterBank">
+               <property name="minimumFrequency" value="200"/>
+               <property name="maximumFrequency" value="3500"/>
+               <property name="numberFilters" value="31"/>
+    </component>
+
+    <component name="audio-dct2"
+               type="edu.cmu.sphinx.frontend.transform.DiscreteCosineTransform"/>
+
+    <component name="audio-cmn2"
+               type="edu.cmu.sphinx.frontend.feature.LiveCMN">
+                 <property name="initialMean " value="12"/>
+               <property name="cmnWindow" value="500"/>
+               <property name="shiftWindow" value="800"/>
+    </component>             
+               
+
+    <component name="audio-featureExtraction2"
+               type="edu.cmu.sphinx.frontend.feature.DeltasFeatureExtractor"/>
+
+
+   <!-- ******************************************************** -->
+    <!-- The frontend configuration #3                              -->
+    <!-- ******************************************************** -->
+
+    <component name="audio-frontend3" type="edu.cmu.sphinx.frontend.FrontEnd">
+        <propertylist name="pipeline">       
+            <item>audio-streamDataSource3</item>
+            <item>audio-speechDataRecorder3</item>
+            <item>audio-preemphasizer3</item>
+            <item>audio-dither3</item>
+            <item>audio-windower3</item>
+            <item>audio-fft3</item>
+            <item>audio-melFilterBank3</item>
+            <item>audio-dct3</item>
+            <item>audio-cmn3</item>
+            <item>audio-featureExtraction3</item>
+        </propertylist>
+    </component>
+    
+
+    <component name="audio-streamDataSource3" 
+               type="com.spokentech.speechdown.server.recog.AudioStreamDataSource"/>
+
+    <component name="audio-speechDataRecorder3"
+               type="com.spokentech.speechdown.server.recog.SpeechDataRecorder"/>
+
+
+    <component name="audio-preemphasizer3"
+               type="edu.cmu.sphinx.frontend.filter.Preemphasizer"/>
+               
+               
+    <component name="audio-dither3"
+               type="edu.cmu.sphinx.frontend.filter.Dither"/>
+
+    <component name="audio-windower3"
+               type="edu.cmu.sphinx.frontend.window.RaisedCosineWindower"/>
+
+    <component name="audio-fft3"
+               type="edu.cmu.sphinx.frontend.transform.DiscreteFourierTransform"/>
+
+    <component name="audio-melFilterBank3"
+               type="edu.cmu.sphinx.frontend.frequencywarp.MelFrequencyFilterBank">
+               <property name="minimumFrequency" value="200"/>
+               <property name="maximumFrequency" value="3500"/>
+               <property name="numberFilters" value="31"/>
+    </component>
+
+    <component name="audio-dct3"
+               type="edu.cmu.sphinx.frontend.transform.DiscreteCosineTransform"/>
+
+    <component name="audio-cmn3"
+               type="edu.cmu.sphinx.frontend.feature.LiveCMN">
+                 <property name="initialMean " value="12"/>
+               <property name="cmnWindow" value="500"/>
+               <property name="shiftWindow" value="800"/>
+    </component>             
+               
+
+    <component name="audio-featureExtraction3"
+               type="edu.cmu.sphinx.frontend.feature.DeltasFeatureExtractor"/>
+
+    <!-- ******************************************************** -->
+    <!-- The frontend configuration                               -->
+    <!-- ******************************************************** -->
+
+    <component name="audio-frontend4" type="edu.cmu.sphinx.frontend.FrontEnd">
+        <propertylist name="pipeline">       
+            <item>audio-streamDataSource4</item>
+            <item>audio-speechDataRecorder4</item>
+            <item>audio-preemphasizer4</item>
+            <item>audio-dither4</item>
+            <item>audio-windower4</item>
+            <item>audio-fft4</item>
+            <item>audio-melFilterBank4</item>
+            <item>audio-dct4</item>
+            <item>audio-cmn4</item>
+            <item>audio-featureExtraction4</item>
+        </propertylist>
+    </component>
+    
+
+    <component name="audio-streamDataSource4" 
+               type="com.spokentech.speechdown.server.recog.AudioStreamDataSource"/>
+
+    <component name="audio-speechDataRecorder4"
+               type="com.spokentech.speechdown.server.recog.SpeechDataRecorder"/>
+
+
+    <component name="audio-preemphasizer4"
+               type="edu.cmu.sphinx.frontend.filter.Preemphasizer"/>
+               
+               
+    <component name="audio-dither4"
+               type="edu.cmu.sphinx.frontend.filter.Dither"/>
+
+    <component name="audio-windower4"
+               type="edu.cmu.sphinx.frontend.window.RaisedCosineWindower"/>
+
+    <component name="audio-fft4"
+               type="edu.cmu.sphinx.frontend.transform.DiscreteFourierTransform"/>
+
+    <component name="audio-melFilterBank4"
+               type="edu.cmu.sphinx.frontend.frequencywarp.MelFrequencyFilterBank">
+               <property name="minimumFrequency" value="200"/>
+               <property name="maximumFrequency" value="3500"/>
+               <property name="numberFilters" value="31"/>
+    </component>
+
+    <component name="audio-dct4"
+               type="edu.cmu.sphinx.frontend.transform.DiscreteCosineTransform"/>
+
+    <component name="audio-cmn4"
+               type="edu.cmu.sphinx.frontend.feature.LiveCMN">
+                 <property name="initialMean " value="12"/>
+               <property name="cmnWindow" value="500"/>
+               <property name="shiftWindow" value="800"/>
+    </component>             
+               
+
+    <component name="audio-featureExtraction4"
+               type="edu.cmu.sphinx.frontend.feature.DeltasFeatureExtractor"/>
+
+
+
+   <!-- ******************************************************** -->
+    <!-- The frontend configuration                               -->
+    <!-- ******************************************************** -->
+
+    <component name="audio-frontend5" type="edu.cmu.sphinx.frontend.FrontEnd">
+        <propertylist name="pipeline">       
+            <item>audio-streamDataSource5</item>
+            <item>audio-speechDataRecorder5</item>
+            <item>audio-preemphasizer5</item>
+            <item>audio-dither5</item>
+            <item>audio-windower5</item>
+            <item>audio-fft5</item>
+            <item>audio-melFilterBank5</item>
+            <item>audio-dct5</item>
+            <item>audio-cmn5</item>
+            <item>audio-featureExtraction5</item>
+        </propertylist>
+    </component>
+    
+
+    <component name="audio-streamDataSource5" 
+               type="com.spokentech.speechdown.server.recog.AudioStreamDataSource"/>
+
+    <component name="audio-speechDataRecorder5"
+               type="com.spokentech.speechdown.server.recog.SpeechDataRecorder"/>
+
+
+    <component name="audio-preemphasizer5"
+               type="edu.cmu.sphinx.frontend.filter.Preemphasizer"/>
+               
+               
+    <component name="audio-dither5"
+               type="edu.cmu.sphinx.frontend.filter.Dither"/>
+
+    <component name="audio-windower5"
+               type="edu.cmu.sphinx.frontend.window.RaisedCosineWindower"/>
+
+    <component name="audio-fft5"
+               type="edu.cmu.sphinx.frontend.transform.DiscreteFourierTransform"/>
+
+    <component name="audio-melFilterBank5"
+               type="edu.cmu.sphinx.frontend.frequencywarp.MelFrequencyFilterBank">
+               <property name="minimumFrequency" value="200"/>
+               <property name="maximumFrequency" value="3500"/>
+               <property name="numberFilters" value="31"/>
+    </component>
+
+    <component name="audio-dct5"
+               type="edu.cmu.sphinx.frontend.transform.DiscreteCosineTransform"/>
+
+    <component name="audio-cmn5"
+               type="edu.cmu.sphinx.frontend.feature.LiveCMN">
+                 <property name="initialMean " value="12"/>
+               <property name="cmnWindow" value="500"/>
+               <property name="shiftWindow" value="800"/>
+    </component>             
+               
+
+    <component name="audio-featureExtraction5"
+               type="edu.cmu.sphinx.frontend.feature.DeltasFeatureExtractor"/>
+
+    <!-- ******************************************************** -->
+    <!-- The frontend configuration                               -->
+    <!-- ******************************************************** -->
+
+    <component name="audio-frontend6" type="edu.cmu.sphinx.frontend.FrontEnd">
+        <propertylist name="pipeline">       
+            <item>audio-streamDataSource6</item>
+            <item>audio-speechDataRecorder6</item>
+            <item>audio-preemphasizer6</item>
+            <item>audio-dither6</item>
+            <item>audio-windower6</item>
+            <item>audio-fft6</item>
+            <item>audio-melFilterBank6</item>
+            <item>audio-dct6</item>
+            <item>audio-cmn6</item>
+            <item>audio-featureExtraction6</item>
+        </propertylist>
+    </component>
+    
+
+    <component name="audio-streamDataSource6" 
+               type="com.spokentech.speechdown.server.recog.AudioStreamDataSource"/>
+
+    <component name="audio-speechDataRecorder6"
+               type="com.spokentech.speechdown.server.recog.SpeechDataRecorder"/>
+
+
+    <component name="audio-preemphasizer6"
+               type="edu.cmu.sphinx.frontend.filter.Preemphasizer"/>
+               
+               
+    <component name="audio-dither6"
+               type="edu.cmu.sphinx.frontend.filter.Dither"/>
+
+    <component name="audio-windower6"
+               type="edu.cmu.sphinx.frontend.window.RaisedCosineWindower"/>
+
+    <component name="audio-fft6"
+               type="edu.cmu.sphinx.frontend.transform.DiscreteFourierTransform"/>
+
+    <component name="audio-melFilterBank6"
+               type="edu.cmu.sphinx.frontend.frequencywarp.MelFrequencyFilterBank">
+               <property name="minimumFrequency" value="200"/>
+               <property name="maximumFrequency" value="3500"/>
+               <property name="numberFilters" value="31"/>
+    </component>
+
+    <component name="audio-dct6"
+               type="edu.cmu.sphinx.frontend.transform.DiscreteCosineTransform"/>
+
+    <component name="audio-cmn6"
+               type="edu.cmu.sphinx.frontend.feature.LiveCMN">
+                 <property name="initialMean " value="12"/>
+               <property name="cmnWindow" value="500"/>
+               <property name="shiftWindow" value="800"/>
+    </component>             
+               
+
+    <component name="audio-featureExtraction6"
+               type="edu.cmu.sphinx.frontend.feature.DeltasFeatureExtractor"/>
+
+
+   <!-- ******************************************************** -->
+    <!-- The frontend configuration                               -->
+    <!-- ******************************************************** -->
+
+    <component name="audio-frontend7" type="edu.cmu.sphinx.frontend.FrontEnd">
+        <propertylist name="pipeline">       
+            <item>audio-streamDataSource7</item>
+            <item>audio-speechDataRecorder7</item>
+            <item>audio-preemphasizer7</item>
+            <item>audio-dither7</item>
+            <item>audio-windower7</item>
+            <item>audio-fft7</item>
+            <item>audio-melFilterBank7</item>
+            <item>audio-dct7</item>
+            <item>audio-cmn7</item>
+            <item>audio-featureExtraction7</item>
+        </propertylist>
+    </component>
+    
+
+    <component name="audio-streamDataSource7" 
+               type="com.spokentech.speechdown.server.recog.AudioStreamDataSource"/>
+
+    <component name="audio-speechDataRecorder7"
+               type="com.spokentech.speechdown.server.recog.SpeechDataRecorder"/>
+
+
+    <component name="audio-preemphasizer7"
+               type="edu.cmu.sphinx.frontend.filter.Preemphasizer"/>
+               
+               
+    <component name="audio-dither7"
+               type="edu.cmu.sphinx.frontend.filter.Dither"/>
+
+    <component name="audio-windower7"
+               type="edu.cmu.sphinx.frontend.window.RaisedCosineWindower"/>
+
+    <component name="audio-fft7"
+               type="edu.cmu.sphinx.frontend.transform.DiscreteFourierTransform"/>
+
+    <component name="audio-melFilterBank7"
+               type="edu.cmu.sphinx.frontend.frequencywarp.MelFrequencyFilterBank">
+               <property name="minimumFrequency" value="200"/>
+               <property name="maximumFrequency" value="3500"/>
+               <property name="numberFilters" value="31"/>
+    </component>
+
+    <component name="audio-dct7"
+               type="edu.cmu.sphinx.frontend.transform.DiscreteCosineTransform"/>
+
+    <component name="audio-cmn7"
+               type="edu.cmu.sphinx.frontend.feature.LiveCMN">
+                 <property name="initialMean " value="12"/>
+               <property name="cmnWindow" value="500"/>
+               <property name="shiftWindow" value="800"/>
+    </component>             
+               
+
+    <component name="audio-featureExtraction7"
+               type="edu.cmu.sphinx.frontend.feature.DeltasFeatureExtractor"/>
+
+    <!-- ******************************************************** -->
+    <!-- The frontend configuration                               -->
+    <!-- ******************************************************** -->
+
+    <component name="audio-frontend8" type="edu.cmu.sphinx.frontend.FrontEnd">
+        <propertylist name="pipeline">       
+            <item>audio-streamDataSource8</item>
+            <item>audio-speechDataRecorder8</item>
+            <item>audio-preemphasizer8</item>
+            <item>audio-dither8</item>
+            <item>audio-windower8</item>
+            <item>audio-fft8</item>
+            <item>audio-melFilterBank8</item>
+            <item>audio-dct8</item>
+            <item>audio-cmn8</item>
+            <item>audio-featureExtraction8</item>
+        </propertylist>
+    </component>
+    
+
+    <component name="audio-streamDataSource8" 
+               type="com.spokentech.speechdown.server.recog.AudioStreamDataSource"/>
+
+    <component name="audio-speechDataRecorder8"
+               type="com.spokentech.speechdown.server.recog.SpeechDataRecorder"/>
+
+
+    <component name="audio-preemphasizer8"
+               type="edu.cmu.sphinx.frontend.filter.Preemphasizer"/>
+               
+               
+    <component name="audio-dither8"
+               type="edu.cmu.sphinx.frontend.filter.Dither"/>
+
+    <component name="audio-windower8"
+               type="edu.cmu.sphinx.frontend.window.RaisedCosineWindower"/>
+
+    <component name="audio-fft8"
+               type="edu.cmu.sphinx.frontend.transform.DiscreteFourierTransform"/>
+
+    <component name="audio-melFilterBank8"
+               type="edu.cmu.sphinx.frontend.frequencywarp.MelFrequencyFilterBank">
+               <property name="minimumFrequency" value="200"/>
+               <property name="maximumFrequency" value="3500"/>
+               <property name="numberFilters" value="31"/>
+    </component>
+
+    <component name="audio-dct8"
+               type="edu.cmu.sphinx.frontend.transform.DiscreteCosineTransform"/>
+
+    <component name="audio-cmn8"
+               type="edu.cmu.sphinx.frontend.feature.LiveCMN">
+                 <property name="initialMean " value="12"/>
+               <property name="cmnWindow" value="500"/>
+               <property name="shiftWindow" value="800"/>
+    </component>             
+               
+
+    <component name="audio-featureExtraction8"
+               type="edu.cmu.sphinx.frontend.feature.DeltasFeatureExtractor"/>
+
+
+
+   <!-- ******************************************************** -->
+    <!-- The frontend configuration                               -->
+    <!-- ******************************************************** -->
+
+    <component name="audio-frontend9" type="edu.cmu.sphinx.frontend.FrontEnd">
+        <propertylist name="pipeline">       
+            <item>audio-streamDataSource9</item>
+            <item>audio-speechDataRecorder9</item>
+            <item>audio-preemphasizer9</item>
+            <item>audio-dither9</item>
+            <item>audio-windower9</item>
+            <item>audio-fft9</item>
+            <item>audio-melFilterBank9</item>
+            <item>audio-dct9</item>
+            <item>audio-cmn9</item>
+            <item>audio-featureExtraction9</item>
+        </propertylist>
+    </component>
+    
+
+    <component name="audio-streamDataSource9" 
+               type="com.spokentech.speechdown.server.recog.AudioStreamDataSource"/>
+
+    <component name="audio-speechDataRecorder9"
+               type="com.spokentech.speechdown.server.recog.SpeechDataRecorder"/>
+
+
+    <component name="audio-preemphasizer9"
+               type="edu.cmu.sphinx.frontend.filter.Preemphasizer"/>
+               
+               
+    <component name="audio-dither9"
+               type="edu.cmu.sphinx.frontend.filter.Dither"/>
+
+    <component name="audio-windower9"
+               type="edu.cmu.sphinx.frontend.window.RaisedCosineWindower"/>
+
+    <component name="audio-fft9"
+               type="edu.cmu.sphinx.frontend.transform.DiscreteFourierTransform"/>
+
+    <component name="audio-melFilterBank9"
+               type="edu.cmu.sphinx.frontend.frequencywarp.MelFrequencyFilterBank">
+               <property name="minimumFrequency" value="200"/>
+               <property name="maximumFrequency" value="3500"/>
+               <property name="numberFilters" value="31"/>
+    </component>
+
+    <component name="audio-dct9"
+               type="edu.cmu.sphinx.frontend.transform.DiscreteCosineTransform"/>
+
+    <component name="audio-cmn9"
+               type="edu.cmu.sphinx.frontend.feature.LiveCMN">
+                 <property name="initialMean " value="12"/>
+               <property name="cmnWindow" value="500"/>
+               <property name="shiftWindow" value="800"/>
+    </component>             
+               
+
+    <component name="audio-featureExtraction9"
+               type="edu.cmu.sphinx.frontend.feature.DeltasFeatureExtractor"/>
+
+    <!-- ******************************************************** -->
+    <!-- The frontend configuration                               -->
+    <!-- ******************************************************** -->
+
+    <component name="audio-frontend10" type="edu.cmu.sphinx.frontend.FrontEnd">
+        <propertylist name="pipeline">       
+            <item>audio-streamDataSource10</item>
+            <item>audio-speechDataRecorder10</item>
+            <item>audio-preemphasizer10</item>
+            <item>audio-dither10</item>
+            <item>audio-windower10</item>
+            <item>audio-fft10</item>
+            <item>audio-melFilterBank10</item>
+            <item>audio-dct10</item>
+            <item>audio-cmn10</item>
+            <item>audio-featureExtraction10</item>
+        </propertylist>
+    </component>
+    
+
+    <component name="audio-streamDataSource10" 
+               type="com.spokentech.speechdown.server.recog.AudioStreamDataSource"/>
+
+    <component name="audio-speechDataRecorder10"
+               type="com.spokentech.speechdown.server.recog.SpeechDataRecorder"/>
+
+
+    <component name="audio-preemphasizer10"
+               type="edu.cmu.sphinx.frontend.filter.Preemphasizer"/>
+               
+               
+    <component name="audio-dither10"
+               type="edu.cmu.sphinx.frontend.filter.Dither"/>
+
+    <component name="audio-windower10"
+               type="edu.cmu.sphinx.frontend.window.RaisedCosineWindower"/>
+
+    <component name="audio-fft10"
+               type="edu.cmu.sphinx.frontend.transform.DiscreteFourierTransform"/>
+
+    <component name="audio-melFilterBank10"
+               type="edu.cmu.sphinx.frontend.frequencywarp.MelFrequencyFilterBank">
+               <property name="minimumFrequency" value="200"/>
+               <property name="maximumFrequency" value="3500"/>
+               <property name="numberFilters" value="31"/>
+    </component>
+
+    <component name="audio-dct10"
+               type="edu.cmu.sphinx.frontend.transform.DiscreteCosineTransform"/>
+
+    <component name="audio-cmn10"
+               type="edu.cmu.sphinx.frontend.feature.LiveCMN">
+                 <property name="initialMean " value="12"/>
+               <property name="cmnWindow" value="500"/>
+               <property name="shiftWindow" value="800"/>
+    </component>             
+               
+
+    <component name="audio-featureExtraction10"
+               type="edu.cmu.sphinx.frontend.feature.DeltasFeatureExtractor"/>
+
+               
+               
+
+
+    <!-- ******************************************************* -->
+    <!--  monitors                                               -->
+    <!-- ******************************************************* -->
+
+
+
+    <!-- ******************************************************* -->
+    <!--  Miscellaneous components                               -->
+    <!-- ******************************************************* -->
+
+    <component name="logMath"
+               type="edu.cmu.sphinx.util.LogMath">
+        <property name="logBase" value="1.0001"/>
+        <property name="useAddTable" value="true"/>
+    </component>
+    
+    <component name="confidenceScorer"
+               type="edu.cmu.sphinx.result.MAPConfidenceScorer">
+        <property name="languageWeight" value="${languageWeight}"/>
+    </component>
+
+</config>

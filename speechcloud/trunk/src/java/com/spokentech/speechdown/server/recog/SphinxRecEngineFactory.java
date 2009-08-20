@@ -46,10 +46,12 @@ public class SphinxRecEngineFactory extends AbstractPoolableObjectFactory {
 
     private static Logger _logger = Logger.getLogger(SphinxRecEngineFactory.class);
 
+    private  ConfigurationManager _cm;
     private GrammarManager grammarManager;
 	private String sphinxConfigFile;
     private URL sphinxConfigUrl = null;
-
+    private int id = 1;
+    private String prefixId;
 
     /**
      * @return the sphinxConfigFile
@@ -86,9 +88,8 @@ public class SphinxRecEngineFactory extends AbstractPoolableObjectFactory {
      */
     @Override
     public PoolableObject makeObject() throws Exception {
-    	_logger.info("sphinx config url "+ sphinxConfigUrl.getPath());
-        ConfigurationManager cm = new ConfigurationManager(sphinxConfigUrl);
-        return new SphinxRecEngine(cm, grammarManager);
+
+        return new SphinxRecEngine(_cm, grammarManager,prefixId, id++);
     }
 
     /**
@@ -98,9 +99,12 @@ public class SphinxRecEngineFactory extends AbstractPoolableObjectFactory {
      * @return
      * @throws InstantiationException if initializing the object pool triggers an exception.
      */
-    public  ObjectPool createObjectPool(int instances)
+    public  ObjectPool createObjectPool(int instances,String prefixId)
       throws InstantiationException {
+    	_logger.info("Creating a pool with prefix: "+prefixId+" of size: "+instances);
         
+    	this.prefixId = prefixId;
+    	this.id=1;
         if (_logger.isDebugEnabled()) {
             _logger.debug("creating new rec engine pool... instances: " + instances);
         }
@@ -125,7 +129,8 @@ public class SphinxRecEngineFactory extends AbstractPoolableObjectFactory {
        if (sphinxConfigUrl == null) {
             throw new RuntimeException("Sphinx config file not found!");
        }
-
+   	   _logger.info("sphinx config url "+ sphinxConfigUrl.getPath());
+       _cm = new ConfigurationManager(sphinxConfigUrl);
 	}
 		
 	public void shutdown() {

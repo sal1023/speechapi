@@ -71,10 +71,10 @@
     <component name="scorer"
                type="edu.cmu.sphinx.decoder.scorer.ThreadedAcousticScorer">
         <property name="frontend" value="frontend"/>
-        <!--SALproperty name="isCpuRelative" value="true"/-->
-        <!--SALproperty name="numThreads" value="0"/-->
-        <!--SALproperty name="minScoreablesPerThread" value="10"/-->
-        <!--SALproperty name="scoreablesKeepFeature" value="true"/-->
+        <property name="isCpuRelative" value="true"/>
+        <property name="numThreads" value="0"/>
+        <property name="minScoreablesPerThread" value="10"/>
+        <property name="scoreablesKeepFeature" value="true"/>
     </component>
 
 
@@ -91,10 +91,10 @@
         <property name="silenceInsertionProbability" value="${silenceInsertionProbability}"/>
         <property name="languageWeight" value="${languageWeight}"/>
         <property name="unitManager" value="unitManager"/>
-        <property name="addOutOfGrammarBranch" value="true"/>
-        <property name="outOfGrammarProbability" value="1E-60"/>
-        <property name="phoneInsertionProbability" value="1E-10"/>
-        <property name="phoneLoopAcousticModel" value="acousticModel"/>
+        <!--property name="addOutOfGrammarBranch" value="true"/-->
+        <!--property name="outOfGrammarProbability" value="1E-60"/-->
+        <!--property name="phoneInsertionProbability" value="1E-10"/-->
+        <!--property name="phoneLoopAcousticModel" value="acousticModel"/-->
     </component>
 
 
@@ -159,6 +159,7 @@
     <component name="frontend" type="edu.cmu.sphinx.frontend.FrontEnd">
         <propertylist name="pipeline">       
             <item>audioStreamDataSource</item>
+            <item>speechDataRecorder</item>
             <item>preemphasizer</item>
             <item>dither</item>
             <item>windower</item>
@@ -175,7 +176,7 @@
                type="com.spokentech.speechdown.server.recog.AudioStreamDataSource"/>
 
     <component name="speechDataRecorder"
-               type="org.speechforge.cairo.server.recog.sphinx.SpeechDataRecorder"/>
+               type="com.spokentech.speechdown.server.recog.SpeechDataRecorder"/>
 
 
     <component name="preemphasizer"

@@ -45,7 +45,7 @@ import org.apache.log4j.Logger;
  * @author Holger Brandl
  */
 
-public class AudioStreamDataSource extends BaseDataProcessor {
+public class AudioStreamDataSource extends BaseDataProcessor implements StreamDataSource {
 	private static Logger logger = Logger.getLogger(AudioStreamDataSource.class);
     /** SphinxProperty for the number of bytes to read from the InputStream each time. */
     @S4Integer(defaultValue = 3200)
@@ -71,7 +71,7 @@ public class AudioStreamDataSource extends BaseDataProcessor {
 
     private File curAudioFile;
     
-    private BufferedWriter out;
+    //private BufferedWriter out;
 
     @Override
     public void newProperties(PropertySheet ps) throws PropertyException {
@@ -106,12 +106,12 @@ public class AudioStreamDataSource extends BaseDataProcessor {
         
         
 
-            try {
-                out = new BufferedWriter(new FileWriter("c:/temp/"+System.currentTimeMillis()));
-            } catch (IOException e) {
-                // TODO Auto-generated catch block
-                e.printStackTrace();
-            }
+            //try {
+            //    out = new BufferedWriter(new FileWriter("c:/temp/"+System.currentTimeMillis()));
+            //} catch (IOException e) {
+            //    // TODO Auto-generated catch block
+            //    e.printStackTrace();
+            //}
             //        out.close();
 
     }
@@ -180,13 +180,16 @@ public class AudioStreamDataSource extends BaseDataProcessor {
      * @param inputStream the InputStream from which audio data comes
      * @param streamName  the name of the InputStream
      */
-    public void setInputStream(AudioInputStream inputStream, String streamName) {
+    public void setInputStream(InputStream inputStream, String streamName) {
         dataStream = inputStream;
         streamEndReached = false;
         utteranceEndSent = false;
         utteranceStarted = false;
 
-        AudioFormat format = inputStream.getFormat();
+        if (!(inputStream instanceof AudioInputStream)) 
+            throw new RuntimeException("Not an  audio input stream");
+
+        AudioFormat format = ((AudioInputStream) inputStream).getFormat();
         sampleRate = (int) format.getSampleRate();
         bigEndian = format.isBigEndian();
 
@@ -263,11 +266,11 @@ public class AudioStreamDataSource extends BaseDataProcessor {
             if (!utteranceStarted) {
                 utteranceStarted = true;
                 output = new DataStartSignal(sampleRate);
-                System.out.println("Sending start signal");
+                System.out.println("Sending start signal " + System.currentTimeMillis());
             } else {
                 if (dataStream != null) {
                     output = readNextFrame();
-                    System.out.println("Getting the next frame");
+                    System.out.println("Getting the next frame" + System.currentTimeMillis());
                     if (output == null) {
                         if (!utteranceEndSent) {
                             output = createDataEndSignal();
@@ -345,16 +348,16 @@ public class AudioStreamDataSource extends BaseDataProcessor {
             doubleData = DataUtil.littleEndianBytesToValues(samplesBuffer, 0, totalRead, bytesPerValue, signedData);
         }
 
-        System.out.println("Total read in this frame: "+totalRead);
-        try {
-        	for (int i=0;i<doubleData.length;i++) {
-        		out.write(i+" "+doubleData[i]);
-        		out.newLine();
-        	}
-        } catch (IOException e) {
-        	// TODO Auto-generated catch block
-        	e.printStackTrace();
-        }
+        //System.out.println("Total read in this frame: "+totalRead);
+        //try {
+        //	for (int i=0;i<doubleData.length;i++) {
+        //		out.write(i+" "+doubleData[i]);
+        //		out.newLine();
+        //	}
+        //} catch (IOException e) {
+        //	// TODO Auto-generated catch block
+        //	e.printStackTrace();
+        //}
 
         
         return new DoubleData(doubleData, sampleRate, collectTime, firstSample);
@@ -406,5 +409,7 @@ public class AudioStreamDataSource extends BaseDataProcessor {
 
         fileListeners.remove(l);
     }
+
+
 }
 

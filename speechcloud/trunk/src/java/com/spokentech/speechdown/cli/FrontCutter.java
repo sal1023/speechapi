@@ -30,8 +30,8 @@ import edu.cmu.sphinx.util.LogMath;
  * 
  * @author Spencer Lord {@literal <}<a href="mailto:spencer@users.spokentech.com">spencer@spokentech.com</a>{@literal >}
  */
-public class SilenceCutter {
-    private static Logger _logger = Logger.getLogger(SilenceCutter.class);
+public class FrontCutter {
+    private static Logger _logger = Logger.getLogger(FrontCutter.class);
     public static final String CRLF = "\r\n";
     
     

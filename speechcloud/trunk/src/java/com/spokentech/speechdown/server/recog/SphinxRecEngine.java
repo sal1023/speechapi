@@ -29,20 +29,23 @@ import edu.cmu.sphinx.util.props.PropertySheet;
 public class SphinxRecEngine extends AbstractPoolableObject implements RecEngine {
 
     private static Logger _logger = Logger.getLogger(SphinxRecEngine.class);
-
+	private StreamDataSource _dataSource;
     private Recognizer _recognizer;
     private JSGFGrammar _jsgfGrammar;
     private boolean hotword = false;       
 	private GrammarManager _grammarManager;
 	private ConfigurationManager _cm;
-	
+	private int _id;
 
 	
-    public SphinxRecEngine(ConfigurationManager cm, GrammarManager grammarManager) throws IOException, PropertyException, InstantiationException {
-        _recognizer = (Recognizer) cm.lookup("recognizer");
-        //_recognizer.allocate();
+    public SphinxRecEngine(ConfigurationManager cm, GrammarManager grammarManager,String prefixId, int id) throws IOException, PropertyException, InstantiationException {
+
+    	_logger.info("Creating a recognizer "+prefixId +"recognizer"+id);
+    	_recognizer = (Recognizer) cm.lookup(prefixId+"recognizer"+id);
+        _recognizer.allocate();
         _jsgfGrammar = (JSGFGrammar) cm.lookup("grammar");
         _cm = cm;
+        _id = id;
         _grammarManager = grammarManager;
 
         MyStateListener stateListener =  new MyStateListener();
@@ -50,17 +53,24 @@ public class SphinxRecEngine extends AbstractPoolableObject implements RecEngine
 		_recognizer.addResultListener(resultListener);
 
 		_recognizer.addStateListener(stateListener);
-        
+
+		_dataSource = (StreamDataSource) _cm.lookup(prefixId+"streamDataSource"+_id);        
     }
 	
 	public RecognitionResult recognize(InputStream as, String grammar, int sampleRate, boolean bigEndian, int bytesPerValue, Encoding encoding) {
-		_recognizer.allocate();
+		_logger.info("Using recognizer # "+_id);
+		//_recognizer.allocate();
+        
+        _logger.info("After allocate" + System.currentTimeMillis());
 		GrammarLocation grammarLocation = null;
 	    try {
 	        grammarLocation = _grammarManager.saveGrammar(grammar);
 	    } catch (IOException e) {
 	        _logger.debug(e, e);
 	    }
+        
+        _logger.info("After save grammar" + System.currentTimeMillis());
+	
 	    
 	    try {
 	        loadJSGF(_jsgfGrammar, grammarLocation);
@@ -71,12 +81,16 @@ public class SphinxRecEngine extends AbstractPoolableObject implements RecEngine
 	        // TODO Auto-generated catch block
 	        e.printStackTrace();
         }
+        
+        _logger.info("After load grammar" + System.currentTimeMillis());
 	
 	    //TODO: Timers for recog timeout
 	
 	    // configure the audio input for the recognizer
-		AudioStreamDataSource dataSource = (AudioStreamDataSource) _cm.lookup("audioStreamDataSource");  	
-		dataSource.setInputStream(as, "ws-audiostream", sampleRate, bigEndian, bytesPerValue,encoding);
+  	
+		_dataSource.setInputStream(as, "ws-audiostream", sampleRate, bigEndian, bytesPerValue,encoding);
+	    
+		_logger.info("After setting the input stream" + System.currentTimeMillis());
 	    
 	    // decode the audio file.
 	    //System.out.println("Decoding " + audioFileURL);
@@ -84,7 +98,7 @@ public class SphinxRecEngine extends AbstractPoolableObject implements RecEngine
 	    
 	
 	    System.out.println("Result: " + (results != null ? results.getText() : null));
-	    _recognizer.deallocate();
+	    //_recognizer.deallocate();
 	    return results;
     }
     
@@ -93,7 +107,8 @@ public class SphinxRecEngine extends AbstractPoolableObject implements RecEngine
      * @see com.spokentech.speechdown.server.recog.RecEngine#recognize(javax.sound.sampled.AudioInputStream, java.lang.String)
      */
 	public RecognitionResult recognize(AudioInputStream as, String grammar) {
-		_recognizer.allocate();
+		_logger.info("Using recognizer # "+_id);
+		//_recognizer.allocate();
 		GrammarLocation grammarLocation = null;
 	    try {
 	        grammarLocation = _grammarManager.saveGrammar(grammar);
@@ -114,17 +129,15 @@ public class SphinxRecEngine extends AbstractPoolableObject implements RecEngine
 	    //TODO: Timers for recog timeout
 	
 	    // configure the audio input for the recognizer
-		AudioStreamDataSource dataSource = (AudioStreamDataSource) _cm.lookup("audioStreamDataSource");  	
-		dataSource.setInputStream(as, "ws-audiostream");
-	  
-	    
+       _dataSource.setInputStream(as, "ws-audiostream");
+  
 	    // decode the audio file.
 	    //System.out.println("Decoding " + audioFileURL);
 	    RecognitionResult results = waitForResult(false);
 	    
 	
 	    System.out.println("Result: " + (results != null ? results.getText() : null));
-	    _recognizer.deallocate();
+	    //_recognizer.deallocate();
 	    return results;
 	}
     
@@ -186,8 +199,8 @@ public class SphinxRecEngine extends AbstractPoolableObject implements RecEngine
      //    if (result2clear != null) {
      //        _logger.info("waitForResult(): result2clear not null!");
      //    }
-     //} else {
-     //    _logger.info("waitForResult(): got null result from recognizer!");
+    // } else {
+    //     _logger.info("waitForResult(): got null result from recognizer!");
      //    return null;
      //}
      return new RecognitionResult(result, _jsgfGrammar.getRuleGrammar());
@@ -247,7 +260,7 @@ public class SphinxRecEngine extends AbstractPoolableObject implements RecEngine
     private class MyStateListener implements StateListener {
 
 		public void statusChanged(RecognizerState arg0) {
-	        _logger.info("Recognizer Status changed to "+arg0.toString());
+	        _logger.info("Recognizer Status changed to "+arg0.toString() +" "+System.currentTimeMillis());
 	        
         }
 

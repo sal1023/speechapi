@@ -47,7 +47,7 @@ public abstract class AbstractPoolableObjectFactory implements PoolableObjectFac
      * @param instances Number of instances to create in the pool
      * @throws InstantiationException if borrowing (or returning) an object from the pool triggers an exception.
      */
-    public abstract ObjectPool createObjectPool(int instances) throws InstantiationException;
+    public abstract ObjectPool createObjectPool(int instances, String prefixID) throws InstantiationException;
 
     /* (non-Javadoc)
      * @see org.apache.commons.pool.PoolableObjectFactory#makeObject()

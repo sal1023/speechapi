@@ -120,9 +120,9 @@ set CLASSPATH=!CLASSPATH!;%SPEECHCLOUD_HOME%\etc
 @rem -Dsun.rmi.dgc.client.gcInterval=3600000 -Dsun.rmi.dgc.server.gcInterval=3600000 
 @rem -Xms100m -Xmx200m 
 @rem -verbose:gc
-@rem "%JAVA_HOME%\bin\java" -Xmx200m  -XX:+UseConcMarkSweepGC -Dlog4j.configuration=log4j.xml -Dsun.rmi.dgc.client.gcInterval=3600000 -Dsun.rmi.dgc.server.gcInterval=3600000 %*
+@rem "%JAVA_HOME%\bin\java" -Xmx200m  -XX:+UseConcMarkSweepGC -Dlog4j.configuration=../etc/log4j.xml -Dsun.rmi.dgc.client.gcInterval=3600000 -Dsun.rmi.dgc.server.gcInterval=3600000 %*
 
-"%JAVA_HOME%\bin\java" -Dlog4j.configuration=log4j.xml  %*
+"%JAVA_HOME%\bin\java" -Dlog4j.configuration=..\etc\log4j.xml  %*
 goto exit
 
 :error

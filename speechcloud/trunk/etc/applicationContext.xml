@@ -32,8 +32,11 @@
 	      class="com.spokentech.speechdown.server.RecognizerService"
 		  init-method="startup" destroy-method="shutdown">
 		  <property name="recEngineFactory"><ref bean="recEngineFactory"/></property>
-		  <property name="poolSize">
-				<value>1</value>
+		  <property name="audioInputPoolSize">
+				<value>10</value>
+		  </property>
+		  <property name="featureInputPoolSize">
+				<value>10</value>
 		  </property>
 
 	</bean>
@@ -44,7 +47,7 @@
 		  init-method="startup" destroy-method="shutdown">
 		  <property name="synthEngineFactory"><ref bean="synthEngineFactory"/></property>
 		  <property name="poolSize">
-				<value>1</value>
+				<value>10</value>
 		  </property>
 		  <property name="promptDir">
 				<value>@applicationContext.synthesizerService.promptDir@</value>
@@ -67,7 +70,8 @@
 		  </property>
 	</bean>
 
-	<bean id="recEngineFactory" 
+	
+    <bean id="recEngineFactory" 
 	      class="com.spokentech.speechdown.server.recog.SphinxRecEngineFactory"
 		  init-method="startup" destroy-method="shutdown">
 		  <property name="grammarManager"><ref bean="grammarManager"/></property>

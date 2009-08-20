@@ -82,7 +82,7 @@ public class FreettsSynthEngineFactory extends AbstractPoolableObjectFactory {
      * @param instances
      * @return
      */
-    public  ObjectPool createObjectPool(int instances)
+    public  ObjectPool createObjectPool(int instances,String prefix)
       throws InstantiationException {
 
         if (_logger.isDebugEnabled()) {
