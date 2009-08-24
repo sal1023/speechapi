@@ -135,7 +135,7 @@ public class SpeechUploadServlet extends HttpServlet {
 			    FileItemStream item = iter.next();
 			    String name = item.getFieldName();
 			    InputStream stream = item.openStream();
-
+			    String contentType = item.getContentType();
 			    if (item.isFormField()) {
 			    	String value = Streams.asString(stream);
 			        _logger.info("Form field " + name + " with value " + value + " detected.");
@@ -174,7 +174,7 @@ public class SpeechUploadServlet extends HttpServlet {
 				    	audio = stream;
 				    	try {
 				    		_logger.info("recognizing audio!  Sample rate= "+sampleRate+", bigEndian= "+ bigEndian+", bytes per value= "+bytesPerValue+", encoding= "+encoding.toString());
-				    	    result = recognizerService.Recognize(audio, grammarString,dataMode,sampleRate,bigEndian,bytesPerValue,encoding);
+				    	    result = recognizerService.Recognize(audio, grammarString,contentType,sampleRate,bigEndian,bytesPerValue,encoding);
 				    		//String filename = Long.toString(System.currentTimeMillis()) + ".wav";
 				    		//writeStreamToFile2(audio,filename);
 				    	} catch (Exception e) {

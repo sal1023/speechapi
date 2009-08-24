@@ -29,7 +29,9 @@
             <item>speechMarker</item>
             <item>speechDataMonitor</item>
             <item>nonSpeechDataFilter</item>
+            <item>SpeechDataRecorder</item>
         </propertylist>
+        <property name="logLevel" value="FINE"/>
     </component>
 
     <!-- ******************************************************** -->
@@ -63,6 +65,12 @@
     <component name="nonSpeechDataFilter"
                type="edu.cmu.sphinx.frontend.endpoint.NonSpeechDataFilter"/>
 
+    <component name="SpeechDataRecorder"
+               type="com.spokentech.speechdown.client.sphinx.SpeechDataRecorder">
+         <property name="logLevel" value="INFO"/>
+    </component>
+    
+    
     <component name="preemphasizer"
                type="edu.cmu.sphinx.frontend.filter.Preemphasizer"/>
 
@@ -89,7 +97,7 @@
 
     <component name="microphone"
                type="com.spokentech.speechdown.client.Microphone">
-               <property name="logLevel" value="FINE"/>
+               <property name="logLevel" value="INFO"/>
                <property name="sampleRate" value="8000"/>
                <property name="bigEndian" value="false"/>
                <property name="signed" value="true"/>

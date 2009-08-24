@@ -142,11 +142,26 @@ public class MicRecognizer2 {
     	if (line.hasOption(STREAM_MODE_OPTION))
     		streamMode=line.getOptionValue(STREAM_MODE_OPTION);    	
     	
-    	if (s4Mode) {
-    		HttpRecognizer.testmic("audio",grammar, service);
+    	String mimeType = null;
+    	if ((s4Mode) && (streamMode.equals("audio"))) {
+    		mimeType = "audio/x-s4audio";
+    	} else if ((!s4Mode) && (streamMode.equals("audio"))) {
+    		mimeType = "audio/x-wav";
+    	} else if ((s4Mode) && (streamMode.equals("feature"))) {
+    		mimeType = "audio/x-s4feature";
+    	} else if ((!s4Mode) && (streamMode.equals("feature"))) {
+    		mimeType = "audio/x-wav";
+    		_logger.warn("This command line combo not supported!, s4mode= "+s4Mode+" streamMode=" +streamMode);	
+    	} else {
+    		mimeType = "audio/x-wav";
+    		_logger.warn("unrecognized comand line combo s4mode= "+s4Mode+" streamMode=" +streamMode);
+    	}
+    	
+    	if (!s4Mode) {
+    		HttpRecognizer.testmic(mimeType,grammar, service);
     	} else {
     		try {
-	            HttpRecognizer.testmic2(streamMode,grammar, service);
+	            HttpRecognizer.testmic2(mimeType,grammar, service);
             } catch (IOException e) {
 	            // TODO Auto-generated catch block
 	            e.printStackTrace();

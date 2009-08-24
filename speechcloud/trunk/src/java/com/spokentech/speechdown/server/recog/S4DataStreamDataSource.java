@@ -36,8 +36,8 @@ import java.util.List;
 import org.apache.log4j.Logger;
 
 
-public class FeatureStreamDataSource extends BaseDataProcessor implements StreamDataSource {
-	private static Logger _logger = Logger.getLogger(FeatureStreamDataSource.class);
+public class S4DataStreamDataSource extends BaseDataProcessor implements StreamDataSource {
+	private static Logger _logger = Logger.getLogger(S4DataStreamDataSource.class);
 
 
     private InputStream dataStream;

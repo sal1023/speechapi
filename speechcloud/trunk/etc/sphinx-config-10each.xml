@@ -1036,13 +1036,13 @@
     
     <component name="feature-frontend1" type="edu.cmu.sphinx.frontend.FrontEnd">
         <propertylist name="pipeline">       
-            <item>feature-streamDataSource1</item>
+            <item>identityStage1</item>
         </propertylist>
     </component>
     
 
-    <component name="feature-streamDataSource1" 
-               type="com.spokentech.speechdown.server.recog.FeatureStreamDataSource"/>
+    <component name="identityStage1" 
+               type="com.spokentech.speechdown.server.recog.IdentityStage"/>
 
  
 
@@ -1052,13 +1052,13 @@
 
     <component name="feature-frontend2" type="edu.cmu.sphinx.frontend.FrontEnd">
         <propertylist name="pipeline">       
-            <item>feature-streamDataSource2</item>
+            <item>identityStage2</item>
         </propertylist>
     </component>
     
 
-    <component name="feature-streamDataSource2" 
-               type="com.spokentech.speechdown.server.recog.FeatureStreamDataSource"/>
+    <component name="identityStage2" 
+               type="com.spokentech.speechdown.server.recog.IdentityStage"/>
 
 
    <!-- ******************************************************** -->
@@ -1067,13 +1067,13 @@
 
     <component name="feature-frontend3" type="edu.cmu.sphinx.frontend.FrontEnd">
         <propertylist name="pipeline">       
-            <item>feature-streamDataSource3</item>
+            <item>identityStage3</item>
         </propertylist>
     </component>
     
 
-    <component name="feature-streamDataSource3" 
-               type="com.spokentech.speechdown.server.recog.FeatureStreamDataSource"/>
+    <component name="identityStage3" 
+               type="com.spokentech.speechdown.server.recog.IdentityStage"/>
 
 
     <!-- ******************************************************** -->
@@ -1082,12 +1082,12 @@
 
     <component name="feature-frontend4" type="edu.cmu.sphinx.frontend.FrontEnd">
         <propertylist name="pipeline">       
-            <item>feature-streamDataSource4</item>
+            <item>identityStage4</item>
         </propertylist>
     </component>
     
-    <component name="feature-streamDataSource4" 
-                  type="com.spokentech.speechdown.server.recog.FeatureStreamDataSource"/>
+    <component name="identityStage4" 
+                  type="com.spokentech.speechdown.server.recog.IdentityStage"/>
 
    
 
@@ -1097,12 +1097,12 @@
 
     <component name="feature-frontend5" type="edu.cmu.sphinx.frontend.FrontEnd">
         <propertylist name="pipeline">       
-            <item>feature-streamDataSource5</item>
+            <item>identityStage5</item>
         </propertylist>
     </component>
     
-    <component name="feature-streamDataSource5" 
-                  type="com.spokentech.speechdown.server.recog.FeatureStreamDataSource"/>
+    <component name="identityStage5" 
+                  type="com.spokentech.speechdown.server.recog.IdentityStage"/>
 
    
     <!-- ******************************************************** -->
@@ -1111,13 +1111,13 @@
 
     <component name="feature-frontend6" type="edu.cmu.sphinx.frontend.FrontEnd">
         <propertylist name="pipeline">       
-            <item>feature-streamDataSource6</item>
+            <item>identityStage6</item>
         </propertylist>
     </component>
     
 
-    <component name="feature-streamDataSource6" 
-               type="com.spokentech.speechdown.server.recog.FeatureStreamDataSource"/>
+    <component name="identityStage6" 
+               type="com.spokentech.speechdown.server.recog.IdentityStage"/>
 
   
 
@@ -1127,12 +1127,12 @@
 
     <component name="feature-frontend7" type="edu.cmu.sphinx.frontend.FrontEnd">
         <propertylist name="pipeline">       
-            <item>feature-streamDataSource7</item>
+            <item>identityStage7</item>
         </propertylist>
     </component>
 
-    <component name="feature-streamDataSource7" 
-                  type="com.spokentech.speechdown.server.recog.FeatureStreamDataSource"/>
+    <component name="identityStage7" 
+                  type="com.spokentech.speechdown.server.recog.IdentityStage"/>
 
    
 
@@ -1143,12 +1143,12 @@
 
     <component name="feature-frontend8" type="edu.cmu.sphinx.frontend.FrontEnd">
         <propertylist name="pipeline">       
-            <item>feature-streamDataSource8</item>
+            <item>identityStage8</item>
         </propertylist>
     </component>
     
-    <component name="feature-streamDataSource8" 
-                  type="com.spokentech.speechdown.server.recog.FeatureStreamDataSource"/>
+    <component name="identityStage8" 
+                  type="com.spokentech.speechdown.server.recog.IdentityStage"/>
 
    
 
@@ -1158,12 +1158,12 @@
 
     <component name="feature-frontend9" type="edu.cmu.sphinx.frontend.FrontEnd">
         <propertylist name="pipeline">       
-            <item>feature-streamDataSource9</item>
+            <item>identityStage9</item>
         </propertylist>
     </component>
     
-    <component name="feature-streamDataSource9" 
-                  type="com.spokentech.speechdown.server.recog.FeatureStreamDataSource"/>
+    <component name="identityStage9" 
+                  type="com.spokentech.speechdown.server.recog.IdentityStage"/>
 
    
 
@@ -1173,13 +1173,13 @@
 
     <component name="feature-frontend10" type="edu.cmu.sphinx.frontend.FrontEnd">
         <propertylist name="pipeline">       
-            <item>feature-streamDataSource10</item>
+            <item>identityStage10</item>
         </propertylist>
     </component>
     
 
-    <component name="feature-streamDataSource10" 
-               type="com.spokentech.speechdown.server.recog.FeatureStreamDataSource"/>
+    <component name="identityStage10" 
+               type="com.spokentech.speechdown.server.recog.IdentityStage"/>
                
                
                
@@ -1190,7 +1190,7 @@
 
     <component name="audio-frontend1" type="edu.cmu.sphinx.frontend.FrontEnd">
         <propertylist name="pipeline">       
-            <item>audio-streamDataSource1</item>
+            <!--item>audio-streamDataSource1</item-->
             <item>audio-speechDataRecorder1</item>
             <item>audio-preemphasizer1</item>
             <item>audio-dither1</item>
@@ -1251,7 +1251,7 @@
 
     <component name="audio-frontend2" type="edu.cmu.sphinx.frontend.FrontEnd">
         <propertylist name="pipeline">       
-            <item>audio-streamDataSource2</item>
+            <!--item>audio-streamDataSource2</item-->
             <item>audio-speechDataRecorder2</item>
             <item>audio-preemphasizer2</item>
             <item>audio-dither2</item>
@@ -1313,7 +1313,7 @@
 
     <component name="audio-frontend3" type="edu.cmu.sphinx.frontend.FrontEnd">
         <propertylist name="pipeline">       
-            <item>audio-streamDataSource3</item>
+            <!--item>audio-streamDataSource3</item-->
             <item>audio-speechDataRecorder3</item>
             <item>audio-preemphasizer3</item>
             <item>audio-dither3</item>
@@ -1374,7 +1374,7 @@
 
     <component name="audio-frontend4" type="edu.cmu.sphinx.frontend.FrontEnd">
         <propertylist name="pipeline">       
-            <item>audio-streamDataSource4</item>
+            <!--item>audio-streamDataSource4</item-->
             <item>audio-speechDataRecorder4</item>
             <item>audio-preemphasizer4</item>
             <item>audio-dither4</item>
@@ -1437,7 +1437,7 @@
 
     <component name="audio-frontend5" type="edu.cmu.sphinx.frontend.FrontEnd">
         <propertylist name="pipeline">       
-            <item>audio-streamDataSource5</item>
+            <!--item>audio-streamDataSource5</item-->
             <item>audio-speechDataRecorder5</item>
             <item>audio-preemphasizer5</item>
             <item>audio-dither5</item>
@@ -1498,7 +1498,7 @@
 
     <component name="audio-frontend6" type="edu.cmu.sphinx.frontend.FrontEnd">
         <propertylist name="pipeline">       
-            <item>audio-streamDataSource6</item>
+            <!--item>audio-streamDataSource6</item-->
             <item>audio-speechDataRecorder6</item>
             <item>audio-preemphasizer6</item>
             <item>audio-dither6</item>
@@ -1560,7 +1560,7 @@
 
     <component name="audio-frontend7" type="edu.cmu.sphinx.frontend.FrontEnd">
         <propertylist name="pipeline">       
-            <item>audio-streamDataSource7</item>
+            <!--item>audio-streamDataSource7</item-->
             <item>audio-speechDataRecorder7</item>
             <item>audio-preemphasizer7</item>
             <item>audio-dither7</item>
@@ -1621,7 +1621,7 @@
 
     <component name="audio-frontend8" type="edu.cmu.sphinx.frontend.FrontEnd">
         <propertylist name="pipeline">       
-            <item>audio-streamDataSource8</item>
+            <!--item>audio-streamDataSource8</item-->
             <item>audio-speechDataRecorder8</item>
             <item>audio-preemphasizer8</item>
             <item>audio-dither8</item>
@@ -1684,7 +1684,7 @@
 
     <component name="audio-frontend9" type="edu.cmu.sphinx.frontend.FrontEnd">
         <propertylist name="pipeline">       
-            <item>audio-streamDataSource9</item>
+            <!--item>audio-streamDataSource9</item-->
             <item>audio-speechDataRecorder9</item>
             <item>audio-preemphasizer9</item>
             <item>audio-dither9</item>
@@ -1745,7 +1745,7 @@
 
     <component name="audio-frontend10" type="edu.cmu.sphinx.frontend.FrontEnd">
         <propertylist name="pipeline">       
-            <item>audio-streamDataSource10</item>
+            <!--item>audio-streamDataSource10</item-->
             <item>audio-speechDataRecorder10</item>
             <item>audio-preemphasizer10</item>
             <item>audio-dither10</item>

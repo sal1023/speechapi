@@ -155,7 +155,7 @@ public class HttpRecognizer {
 	}
 
 	
-	public  void recognizeNextUtteranceFromMic(String dataMode, URL grammarUrl, String service, MicReceiver mic) throws InstantiationException, IOException {
+	public  void recognizeNextUtteranceFromMic(String mimeType, URL grammarUrl, String service, MicReceiver mic) throws InstantiationException, IOException {
 
 
 		//Setup a piped stream to get an input stream that can be used for feeding the chunk encoded post 
@@ -206,19 +206,22 @@ public class HttpRecognizer {
         
         
         //one part is the audio
-        InputStreamBody audioBody = new InputStreamBody(inputStream, "audio/x-wav","audio.wav");      
+        InputStreamBody audioBody = new InputStreamBody(inputStream, mimeType,"audio.wav");      
         
         //parameters are fields (StringBoodys)
     	StringBody sampleRate = null;
     	StringBody bigEndian = null;
     	StringBody bytesPerValue = null;
     	StringBody encoding = null;
-    	StringBody dataStreamMode = new StringBody(dataMode);
+    	//StringBody dataStreamMode = new StringBody(dataMode);  	
+    	AudioFormat format = mic.getFormat();
+    	
         try {
-        	sampleRate = new StringBody("8000");
-        	bigEndian = new StringBody("true");
-        	bytesPerValue =new StringBody("2");
-        	encoding = new StringBody("ulaw");
+           	sampleRate = new StringBody(String.valueOf((int)format.getSampleRate()));
+        	bigEndian = new StringBody(String.valueOf(format.isBigEndian()));
+        	bytesPerValue =new StringBody(String.valueOf(format.getSampleSizeInBits()/8));
+        	encoding = new StringBody(format.getEncoding().toString());
+        	//dataStreamMode = new StringBody(dataMode);
         	
         } catch (UnsupportedEncodingException e1) {
 	        // TODO Auto-generated catch block
@@ -226,7 +229,7 @@ public class HttpRecognizer {
         }
         
         //add the form field parts
-		mpEntity.addPart("dataMode", dataStreamMode);
+		//mpEntity.addPart("dataMode", dataStreamMode);
 		mpEntity.addPart("sampleRate", sampleRate);
 		mpEntity.addPart("bigEndian", bigEndian);
 		mpEntity.addPart("bytesPerValue", bytesPerValue);
@@ -282,7 +285,7 @@ public class HttpRecognizer {
 	}
 	
 	
-	public  void recognizeNextUtterance(String dataMode, URL grammarUrl, String service, TargetDataLine audioLine) {
+	public  void recognizeNextUtterance(String mimeType, URL grammarUrl, String service, TargetDataLine audioLine) {
 
 		//Setup a piped stream to get an input stream that can be used for feeding the chunk encoded post 
     	PipedOutputStream	outputStream = new PipedOutputStream();
@@ -337,7 +340,7 @@ public class HttpRecognizer {
 
     	
         //one part is the audio
-        InputStreamBody audioBody = new InputStreamBody(inputStream, "audio/x-wav","audio.wav");      
+        InputStreamBody audioBody = new InputStreamBody(inputStream, mimeType,"audio.wav");      
         
         // get the audio format and send as form fields.  Cound not send aduio file with format included because audio files do not
         // support mark/reset.  That is needed for stremaing using http chunk encoding on the servlet side using file upload.
@@ -348,20 +351,20 @@ public class HttpRecognizer {
     	StringBody bigEndian = null;
     	StringBody bytesPerValue = null;
     	StringBody encoding = null;
-    	StringBody dataStreamMode = null;
+    	//StringBody dataStreamMode = null;
         try {
         	sampleRate = new StringBody(String.valueOf((int)format.getSampleRate()));
         	bigEndian = new StringBody(String.valueOf(format.isBigEndian()));
         	bytesPerValue =new StringBody(String.valueOf(format.getSampleSizeInBits()/8));
         	encoding = new StringBody(format.getEncoding().toString());
-        	dataStreamMode = new StringBody(dataMode);
+        	//dataStreamMode = new StringBody(dataMode);
         } catch (UnsupportedEncodingException e1) {
 	        // TODO Auto-generated catch block
 	        e1.printStackTrace();
         }
         
         //add the form field parts
-		mpEntity.addPart("dataMode", dataStreamMode);
+		//mpEntity.addPart("dataMode", dataStreamMode);
 		mpEntity.addPart("sampleRate", sampleRate);
 		mpEntity.addPart("bigEndian", bigEndian);
 		mpEntity.addPart("bytesPerValue", bytesPerValue);
@@ -415,7 +418,7 @@ public class HttpRecognizer {
         }
     }
 	
-	public   void recognizeNextUtterance(String dataMode, URL grammarUrl, String service, RtpReceiver  rtpReceiver) throws InstantiationException, IOException {
+	public   void recognizeNextUtterance(String mimeType, URL grammarUrl, String service, RtpReceiver  rtpReceiver) throws InstantiationException, IOException {
 
 		//Setup a piped stream to get an input stream that can be used for feeding the chunk encoded post 
     	PipedOutputStream	outputStream = new PipedOutputStream();
@@ -460,7 +463,7 @@ public class HttpRecognizer {
         }
     	
         //one part is the audio
-        InputStreamBody audioBody = new InputStreamBody(inputStream, "audio/x-wav","audio.wav");      
+        InputStreamBody audioBody = new InputStreamBody(inputStream, mimeType,"audio.wav");      
         
         // get the audio format and send as form fields.  Cound not send aduio file with format included because audio files do not
         // support mark/reset.  That is needed for stremaing using http chunk encoding on the servlet side using file upload.
@@ -471,7 +474,7 @@ public class HttpRecognizer {
     	StringBody bigEndian = null;
     	StringBody bytesPerValue = null;
     	StringBody encoding = null;
-    	StringBody dataStreamMode = new StringBody(dataMode);
+    	//StringBody dataStreamMode = new StringBody(dataMode);
         try {
         	boolean bigEndianFlag = false;
         	if (format.getEndian() ==  javax.media.format.AudioFormat.BIG_ENDIAN) 
@@ -486,7 +489,7 @@ public class HttpRecognizer {
         }
         
         //add the form field parts
-		mpEntity.addPart("dataMode", dataStreamMode);
+		//mpEntity.addPart("dataMode", dataStreamMode);
 		mpEntity.addPart("sampleRate", sampleRate);
 		mpEntity.addPart("bigEndian", bigEndian);
 		mpEntity.addPart("bytesPerValue", bytesPerValue);
@@ -607,16 +610,18 @@ public class HttpRecognizer {
     }
     
     
-    public static void testmic2(String dataMode, String grammar, String service) throws IOException, InstantiationException {
-        _logger.info("Using dataMode: "+dataMode);
+    public static void testmic2(String mimeType, String grammar, String service) throws IOException, InstantiationException {
+        _logger.info("Using mime type : "+mimeType);
         String configFile="c:/work/speechcloud/etc/sphinxmicfrontendonly-audio.xml";
-    	if (dataMode.equals("audio")) {
+    	if (mimeType.equals("audio/x-wav")) {
             configFile="c:/work/speechcloud/etc/sphinxmicfrontendonly-audio.xml";
-    	} else if (dataMode.equals("feature")) {
+    	} else if (mimeType.equals("audio/x-s4feature")) {
             configFile="c:/work/speechcloud/etc/sphinxmicfrontendonly-feature.xml";
+    	} else if (mimeType.equals("audio/x-s4audio")) {
+            configFile="c:/work/speechcloud/etc/sphinxmicfrontendonly-audio.xml";
     	} else {
-    		_logger.warn("Unrecognized data mode: "+dataMode+"  Guessing audio.");
-    		dataMode = "audio";
+    		_logger.warn("Unrecognized data mode: "+mimeType+"  Guessing audio/x-wav.");
+    		mimeType = "audio/x-wav";
     	}
 
     	URL grammarUrl = null;
@@ -634,19 +639,23 @@ public class HttpRecognizer {
  
         //start up the microphone
     	HttpRecognizer recog = new HttpRecognizer();
-        recog.recognizeNextUtteranceFromMic(dataMode, grammarUrl, service, micReceiver);
+        recog.recognizeNextUtteranceFromMic(mimeType, grammarUrl, service, micReceiver);
     }
     
-    public static void testmic(String dataMode, String grammar, String service) {
+    public static void testmic(String mimeType, String grammar, String service) {
  	
-    	if (dataMode.equals("audio")) {
-            
-    	} else if (dataMode.equals("feature")) {
-            _logger.warn("Feature mode is not supported with this method, trying audio data mode");
+        _logger.info("Using mime type : "+mimeType);
+ 
+        
+        if (mimeType.equals("audio/x-wav")) {
+            //ok!
+
     	} else {
-    		_logger.warn("Unrecognized data mode: "+dataMode+"  Guessing audio.");
+    		_logger.warn("Mime type not supported: "+mimeType+"  Trying to process like audio/x-wav.");
+    		mimeType = "audio/x-wav";
     	}
-		dataMode = "audio";
+
+    
     	
     	URL grammarUrl = null;
     	try {
@@ -709,7 +718,7 @@ public class HttpRecognizer {
         
         //start up the microphone
     	HttpRecognizer hr = new HttpRecognizer();
-        hr.recognizeNextUtterance(dataMode, grammarUrl, service, audioLine);
+        hr.recognizeNextUtterance(mimeType, grammarUrl, service, audioLine);
         
         //results are...
         

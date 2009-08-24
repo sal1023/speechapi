@@ -5,7 +5,9 @@ import java.io.IOException;
 import java.io.OutputStream;
 import java.util.Timer;
 import java.util.TimerTask;
-import javax.media.format.AudioFormat;
+
+import javax.sound.sampled.AudioFormat;
+
 import org.apache.log4j.Logger;
 import org.speechforge.cairo.rtp.server.sphinx.SourceAudioFormat;
 import edu.cmu.sphinx.frontend.BaseDataProcessor;
@@ -76,7 +78,8 @@ public class MicReceiver {
 	
 	
 	public AudioFormat getFormat() {
-		return SourceAudioFormat.PREFERRED_MEDIA_FORMATS[0];
+		return mic.getAudioFormat();
+
 	}
 	
 	public void startAudioTransfer(long timeout, OutputStream out, SpeechEventListener listener) throws InstantiationException, IOException {
