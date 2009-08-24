@@ -52,7 +52,7 @@
     </component>
     
     <component name="speechDataRecorder"
-               type="com.spokentech.speechdown.server.recog.SpeechDataRecorder">
+               type="com.spokentech.speechdown.client.sphinx.SpeechDataRecorder">
                    <property name="logLevel" value="FINE"/>
     </component>
        

@@ -16,6 +16,8 @@ import com.spokentech.speechdown.common.RecognitionResult;
 import com.spokentech.speechdown.server.util.pool.AbstractPoolableObject;
 
 import edu.cmu.sphinx.decoder.ResultListener;
+import edu.cmu.sphinx.frontend.DataProcessor;
+import edu.cmu.sphinx.frontend.FrontEnd;
 import edu.cmu.sphinx.jsapi.JSGFGrammar;
 import edu.cmu.sphinx.recognizer.Recognizer;
 import edu.cmu.sphinx.recognizer.RecognizerState;
@@ -29,7 +31,8 @@ import edu.cmu.sphinx.util.props.PropertySheet;
 public class SphinxRecEngine extends AbstractPoolableObject implements RecEngine {
 
     private static Logger _logger = Logger.getLogger(SphinxRecEngine.class);
-	private StreamDataSource _dataSource;
+
+	private FrontEnd _fe;
     private Recognizer _recognizer;
     private JSGFGrammar _jsgfGrammar;
     private boolean hotword = false;       
@@ -54,10 +57,10 @@ public class SphinxRecEngine extends AbstractPoolableObject implements RecEngine
 
 		_recognizer.addStateListener(stateListener);
 
-		_dataSource = (StreamDataSource) _cm.lookup(prefixId+"streamDataSource"+_id);        
+		_fe = (FrontEnd)_cm.lookup(prefixId+"frontend"+_id);        
     }
 	
-	public RecognitionResult recognize(InputStream as, String grammar, int sampleRate, boolean bigEndian, int bytesPerValue, Encoding encoding) {
+	public RecognitionResult recognize(InputStream as, String mimeType, String grammar, int sampleRate, boolean bigEndian, int bytesPerValue, Encoding encoding) {
 		_logger.info("Using recognizer # "+_id);
 		//_recognizer.allocate();
         
@@ -88,7 +91,22 @@ public class SphinxRecEngine extends AbstractPoolableObject implements RecEngine
 	
 	    // configure the audio input for the recognizer
   	
-		_dataSource.setInputStream(as, "ws-audiostream", sampleRate, bigEndian, bytesPerValue,encoding);
+
+		 StreamDataSource dataSource = null;
+		 String parts[] = mimeType.split("/");
+		 if (parts[1].equals("x-s4audio")) {
+			 dataSource = new S4DataStreamDataSource();
+		 } else if (parts[1].equals("x-s4feature")) {
+			 dataSource = new S4DataStreamDataSource();
+		 } else if (parts[1].equals("x-wav")) {
+			 dataSource = new AudioStreamDataSource();
+		 } else {
+			 _logger.warn("Unrecognized mime type: "+mimeType + " Trying to process as audio/x-wav");
+			 dataSource = new AudioStreamDataSource();
+		 }
+		 System.out.println("-----> "+mimeType+ " "+parts[1]);
+		 _fe.setDataSource((DataProcessor) dataSource);
+		 dataSource.setInputStream(as, "ws-audiostream", sampleRate, bigEndian, bytesPerValue,encoding);
 	    
 		_logger.info("After setting the input stream" + System.currentTimeMillis());
 	    
@@ -129,7 +147,9 @@ public class SphinxRecEngine extends AbstractPoolableObject implements RecEngine
 	    //TODO: Timers for recog timeout
 	
 	    // configure the audio input for the recognizer
-       _dataSource.setInputStream(as, "ws-audiostream");
+		StreamDataSource dataSource = new AudioStreamDataSource();
+	    _fe.setDataSource((DataProcessor) dataSource);
+        dataSource.setInputStream(as, "ws-audiostream");
   
 	    // decode the audio file.
 	    //System.out.println("Decoding " + audioFileURL);

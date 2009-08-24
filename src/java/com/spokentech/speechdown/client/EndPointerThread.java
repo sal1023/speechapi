@@ -73,7 +73,7 @@ class EndPointerThread extends Thread {
 
     	AudioFormat	format = aline.getFormat();
     	double startThreshold = 200.0;
-       	double endThreshold = 35.0;
+       	double endThreshold = 50.0;
     	int thresholdFrameSize = 20; //in ms
     	int tFrameSize = (int)(((float) thresholdFrameSize)*format.getSampleRate()/1000.0);
     	CircularDArrayBuffer tFrame = new CircularDArrayBuffer(tFrameSize);

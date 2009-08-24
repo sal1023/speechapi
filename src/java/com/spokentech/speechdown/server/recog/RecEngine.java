@@ -11,6 +11,6 @@ public interface RecEngine {
 
 	public RecognitionResult recognize(AudioInputStream as, String grammar);
 	
-	public RecognitionResult recognize(InputStream as, String grammar, int sampleRate, boolean bigEndian, int bytesPerValue, AudioFormat.Encoding encoding);
+	public RecognitionResult recognize(InputStream as, String mimeType, String grammar, int sampleRate, boolean bigEndian, int bytesPerValue, AudioFormat.Encoding encoding);
 
 }

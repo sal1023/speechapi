@@ -77,19 +77,20 @@ public class SpeechDataRecorder extends BaseDataProcessor {
      */
     @Override
     public Data getData() throws DataProcessingException {
+
       
         Data data = getPredecessor().getData();
         if (data instanceof SpeechStartSignal) {
-            _logger.debug("*************** SpeechStartSignal encountered!");
+            _logger.info("RECORDER*************** SpeechStartSignal encountered!");
         } else if (data instanceof SpeechEndSignal) {
-            _logger.debug("*************** SpeechEndSignal encountered!");
+            _logger.info("RECORDER*************** SpeechEndSignal encountered!");
         } else if (data instanceof DataStartSignal) {
             isInUtterance = true;
             baos = new ByteArrayOutputStream();
             dos = new DataOutputStream(baos);
-            _logger.debug("<<<<<<<<<<<<<<< DataStartSignal encountered!");
+            _logger.info("RECORDER<<<<<<<<<<<<<<< DataStartSignal encountered!");
         } else if (data instanceof DataEndSignal) {
-            _logger.debug(">>>>>>>>>>>>>>> DataEndSignal encountered!");
+            _logger.info("RECORDER>>>>>>>>>>>>>>> DataEndSignal encountered!");
             stopRecordingData(data);
         }
         
@@ -145,7 +146,7 @@ public class SpeechDataRecorder extends BaseDataProcessor {
         //audio format parameters
         int bitsPerSample = 16;
         int sampleRate = 8000;
-        boolean isBigEndian = false;
+        boolean isBigEndian = true;
         boolean isSigned = true;
 
         
@@ -154,8 +155,8 @@ public class SpeechDataRecorder extends BaseDataProcessor {
         AudioFileFormat.Type outputType = getTargetType("wav");
         String wavName = dumpFilePath + getNextFreeIndex(dumpFilePath) + ".wav";
         
-        _logger.debug("created audio Format Object "+wavFormat.toString());
-        _logger.debug("filename:" + wavName);
+        _logger.info("created audio Format Object "+wavFormat.toString());
+        _logger.info("filename:" + wavName);
 
         byte[] abAudioData = baos.toByteArray();
         ByteArrayInputStream bais = new ByteArrayInputStream(abAudioData);

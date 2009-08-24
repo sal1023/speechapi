@@ -519,7 +519,7 @@ public class Microphone extends BaseDataProcessor {
          * @return an Data object containing the audio data
          */
         private Data readData(Utterance utterance) throws IOException {
-        	logger.info("************");
+
 
             // Read the next chunk of data from the TargetDataLine.
             byte[] data = new byte[frameSizeInBytes];
@@ -530,6 +530,8 @@ public class Microphone extends BaseDataProcessor {
 
             int numBytesRead = audioStream.read(data, 0, data.length);
 
+        	//logger.info("channels: "+channels+" "+numBytesRead+" "+frameSizeInBytes+" "+bigEndian);
+            
             //  notify the waiters upon start
             if (!started) {
                 synchronized (this) {
@@ -567,11 +569,9 @@ public class Microphone extends BaseDataProcessor {
             double[] samples;
 
             if (bigEndian) {
-            	//System.out.println("BIGENDIAN");
                 samples = DataUtil.bytesToValues
                         (data, 0, data.length, sampleSizeInBytes, signed);
             } else {
-               	//System.out.println("LITTLEENDIAN");
                 samples = DataUtil.littleEndianBytesToValues
                         (data, 0, data.length, sampleSizeInBytes, signed);
             }
@@ -581,8 +581,9 @@ public class Microphone extends BaseDataProcessor {
             }
             //logger.info("++++++++++++++++++++++++++++read in "+samples.length+" samples");
             //for (double d: samples) {
-            //   logger.info(String.valueOf(d));            	
+            //   System.out.println(d);            	
             //}
+
 
             return (new DoubleData
                     (samples, (int) audioStream.getFormat().getSampleRate(),
@@ -642,6 +643,12 @@ public class Microphone extends BaseDataProcessor {
 
         if (!utteranceEndReached) {
             output = audioList.remove();
+            /*if (output instanceof DoubleData) {
+	            DoubleData d = (DoubleData) output;
+	            for (double dd : d.getValues()) {
+	            	System.out.println("dd "+dd);
+	            }
+            }*/
             if (output instanceof DataEndSignal) {
                 utteranceEndReached = true;
             }

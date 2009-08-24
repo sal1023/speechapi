@@ -138,15 +138,18 @@ public class RecognizerService {
 	    return results;
     }
 
-	public RecognitionResult Recognize(InputStream as, String grammar, String dataMode, int sampleRate, boolean bigEndian, int bytesPerValue, Encoding encoding) {
-        _logger.info("Before borrow" + System.currentTimeMillis());
+	public RecognitionResult Recognize(InputStream as, String grammar, String mimeType, int sampleRate, boolean bigEndian, int bytesPerValue, Encoding encoding) {
+
+		_logger.debug("Before borrow" + System.currentTimeMillis());
+		
         ObjectPool pool = _audioRecognizerPool;
-    	if (dataMode.equals("audio")) {
+    	if ((mimeType.equals("audio/x-wav")) ||
+	        (mimeType.equals("audio/x-s4audio"))) {
     		pool = _audioRecognizerPool;
-    	} else if  (dataMode.equals("feature")) {
+    	} else if (mimeType.equals("audio/x-s4feature")) {
     		pool = _featureRecognizerPool;
-    	} else {	
-    		_logger.warn("Unrecognized data stream mode: "+dataMode+"  Guessing audio stream");
+    	} else {
+    		_logger.warn("Unrecognized mimeType: "+mimeType);  
     	}
     	
         RecEngine rengine = null;
@@ -159,10 +162,10 @@ public class RecognizerService {
             throw new RuntimeException(e);
         }
         
-        _logger.info("After borrow" + System.currentTimeMillis());
+        _logger.debug("After borrow" + System.currentTimeMillis());
 	
         
-        RecognitionResult results = rengine.recognize(as,grammar,sampleRate,bigEndian,bytesPerValue,encoding);
+        RecognitionResult results = rengine.recognize(as,mimeType,grammar,sampleRate,bigEndian,bytesPerValue,encoding);
         
         try {
 	        pool.returnObject(rengine);

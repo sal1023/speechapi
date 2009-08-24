@@ -60,7 +60,7 @@ public class AudioStreamDataSource extends BaseDataProcessor implements StreamDa
 
     protected InputStream dataStream;
     protected int sampleRate;
-    protected int bytesPerRead;
+    protected int bytesPerRead = PROP_BYTES_PER_READ_DEFAULT;
     protected int bytesPerValue;
     private long totalValuesRead;
     protected boolean bigEndian;
@@ -225,6 +225,8 @@ public class AudioStreamDataSource extends BaseDataProcessor implements StreamDa
         streamEndReached = false;
         utteranceEndSent = false;
         utteranceStarted = false;
+        
+        System.out.println("inputstream "+inputStream);
 
         //AudioFormat format = inputStream.getFormat();
         this.sampleRate = sampleRate; 
@@ -252,6 +254,7 @@ public class AudioStreamDataSource extends BaseDataProcessor implements StreamDa
      *          if there is a data processing error
      */
     public Data getData() throws DataProcessingException {
+    	System.out.println("in getdata");
         getTimer().start();
         Data output = null;
         if (streamEndReached) {
@@ -260,22 +263,22 @@ public class AudioStreamDataSource extends BaseDataProcessor implements StreamDa
                 // sample number should be 'totalValuesRead - 1'
                 output = createDataEndSignal();
                 utteranceEndSent = true;
-                System.out.println("Sending end signal");
+                //System.out.println("Sending end signal");
             }
         } else {
             if (!utteranceStarted) {
                 utteranceStarted = true;
                 output = new DataStartSignal(sampleRate);
-                System.out.println("Sending start signal " + System.currentTimeMillis());
+                //System.out.println("Sending start signal "));
             } else {
                 if (dataStream != null) {
                     output = readNextFrame();
-                    System.out.println("Getting the next frame" + System.currentTimeMillis());
+                    System.out.println("Getting the next frame");
                     if (output == null) {
                         if (!utteranceEndSent) {
                             output = createDataEndSignal();
                             utteranceEndSent = true;
-                            System.out.println(".. but was null, sending end signal2");
+                            //System.out.println(".. but was null, sending end signal2");
                         }
                     }
                 }
@@ -292,7 +295,7 @@ public class AudioStreamDataSource extends BaseDataProcessor implements StreamDa
         //        fileListener.audioFileProcFinished(curAudioFile);
 
     	long d = getDuration();
-    	System.out.println("End signal duration: "+d);
+    	//System.out.println("End signal duration: "+d);
         return new DataEndSignal(d);
     }
 
@@ -348,7 +351,7 @@ public class AudioStreamDataSource extends BaseDataProcessor implements StreamDa
             doubleData = DataUtil.littleEndianBytesToValues(samplesBuffer, 0, totalRead, bytesPerValue, signedData);
         }
 
-        //System.out.println("Total read in this frame: "+totalRead);
+        System.out.println("Total read in this frame: "+totalRead);
         //try {
         //	for (int i=0;i<doubleData.length;i++) {
         //		out.write(i+" "+doubleData[i]);
@@ -359,7 +362,7 @@ public class AudioStreamDataSource extends BaseDataProcessor implements StreamDa
         //	e.printStackTrace();
         //}
 
-        
+        System.out.println("writing double data,  "+ doubleData.length+ " values"+doubleData[0]+ " "+doubleData[doubleData.length-1]);
         return new DoubleData(doubleData, sampleRate, collectTime, firstSample);
     }
 

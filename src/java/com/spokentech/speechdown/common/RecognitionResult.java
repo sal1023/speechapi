@@ -151,14 +151,18 @@ public class RecognitionResult {
      */
     @Override
     public String toString() {
-        StringBuilder sb = new StringBuilder(_text);
-        if (_ruleMatches != null) {
-            for (RuleMatch ruleMatch : _ruleMatches) {
-                sb.append('<').append(ruleMatch.getRule());
-                sb.append(':').append(ruleMatch.getTag()).append('>');
-            }
-        }
-        return sb.toString();
+    	if (_text != null) {
+	        StringBuilder sb = new StringBuilder(_text);
+	        if (_ruleMatches != null) {
+	            for (RuleMatch ruleMatch : _ruleMatches) {
+	                sb.append('<').append(ruleMatch.getRule());
+	                sb.append(':').append(ruleMatch.getTag()).append('>');
+	            }
+	        }
+	        return sb.toString();
+    	} else {
+    		return ("null text result");
+    	}
     }
 
     
