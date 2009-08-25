@@ -167,7 +167,7 @@ public class SpeechUploadServlet extends HttpServlet {
 			        	_logger.warn("Exception " + e.getMessage() + "ooccured while processing field name= "+name +" with value= "+value);
 			        }
 			    } else {
-			        System.out.println("File field " + name + " with file name "
+			        _logger.debug("File field " + name + " with file name "
 			            + item.getName() + " detected.");
 			        // Process the input stream
 				    if (name.equals("audio") ) {
@@ -287,7 +287,7 @@ public class SpeechUploadServlet extends HttpServlet {
 				e.printStackTrace();
 			}
 		} else {
-			System.out.println("output type not supported..."); 
+			_logger.warn("output type not supported..."); 
 		}
 	}
 	
@@ -311,8 +311,8 @@ public class SpeechUploadServlet extends HttpServlet {
 			out.close(); 
 		} 
 		catch (Exception e) { 
-			System.out.println("upload Exception"); e.printStackTrace(); 
-			System.out.println(e); 
+			_logger.warn("upload Exception"); e.printStackTrace(); 
+			e.printStackTrace();
 		} 
 	}
 

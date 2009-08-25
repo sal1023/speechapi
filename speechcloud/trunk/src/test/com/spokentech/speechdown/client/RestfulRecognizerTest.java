@@ -47,7 +47,8 @@ public class RestfulRecognizerTest extends TestCase {
     
     
 
-    private static String service = "http://ec2-75-101-211-235.compute-1.amazonaws.com/speechcloud/SpeechUploadServlet";    
+    //private static String service = "http://ec2-75-101-211-235.compute-1.amazonaws.com/speechcloud/SpeechUploadServlet";  
+    private static String service = "http://localhost:8090/speechcloud/SpeechUploadServlet";    
     private static AudioFormat desiredFormat;
     private static int sampleRate = 8000;
     private static boolean signed = true;
@@ -84,6 +85,9 @@ public class RestfulRecognizerTest extends TestCase {
 	    	File soundFile1 = new File("c:/work/speechcloud/etc/prompts/lookupsports.wav");	 	
 	    	File soundFile2 = new File("c:/work/speechcloud/etc/prompts/get_me_a_stock_quote.wav");	 	
 	    	File soundFile3 = new File("c:/work/speechcloud/etc/prompts/i_would_like_sports_news.wav");	 	
+	    	File soundFile4 = new File("c:/temp/38.wav");	 	
+	    	File soundFile5 = new File("c:/temp/38.wav");	 	
+	    	File soundFile6 = new File("c:/temp/38.wav");	 	
 	    	
 	    	
 	    	String grammar = "file:///work/speechcloud/etc/grammar/example.gram";
@@ -97,7 +101,11 @@ public class RestfulRecognizerTest extends TestCase {
 	        doRecognizeTest(soundFile1, grammarUrl);
 	        doRecognizeTest(soundFile2, grammarUrl);
 	        doRecognizeTest(soundFile3, grammarUrl);
+	        doRecognizeTest(soundFile4, grammarUrl);
+	        doRecognizeTest(soundFile5, grammarUrl);
+	        doRecognizeTest(soundFile6, grammarUrl);
 	    	
+
 	    }
 
 

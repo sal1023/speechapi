@@ -95,14 +95,14 @@ public class SpeechDataStreamer  extends Thread{
     
     public void run() {
 
-    	System.out.println("start stream pulling");
+    	_logger.debug("start stream pulling");
     	boolean moreData = true;
     	while (moreData) {
 
     		Data data = frontEnd.getData();
     		showSignals(data);
     		showData(data);
-    		//System.out.println("SDS: "+data);
+    		//_logger.debug("SDS: "+data);
  
     		if (data != null) {
     			try {

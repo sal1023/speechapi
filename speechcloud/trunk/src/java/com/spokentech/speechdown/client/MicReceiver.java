@@ -63,7 +63,7 @@ public class MicReceiver {
         //    throw new RuntimeException("Sphinx config file not found!");
         //}
         //cm = new ConfigurationManager(sphinxConfigUrl);
-        System.out.println("config: "+s4ConfigFile);
+        _logger.debug("config: "+s4ConfigFile);
         cm = new ConfigurationManager(s4ConfigFile);
 	}
 	

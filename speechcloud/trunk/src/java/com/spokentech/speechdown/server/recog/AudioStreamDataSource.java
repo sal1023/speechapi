@@ -46,7 +46,7 @@ import org.apache.log4j.Logger;
  */
 
 public class AudioStreamDataSource extends BaseDataProcessor implements StreamDataSource {
-	private static Logger logger = Logger.getLogger(AudioStreamDataSource.class);
+	private static Logger _logger = Logger.getLogger(AudioStreamDataSource.class);
     /** SphinxProperty for the number of bytes to read from the InputStream each time. */
     @S4Integer(defaultValue = 3200)
     public static final String PROP_BYTES_PER_READ = "bytesPerRead";
@@ -226,7 +226,7 @@ public class AudioStreamDataSource extends BaseDataProcessor implements StreamDa
         utteranceEndSent = false;
         utteranceStarted = false;
         
-        System.out.println("inputstream "+inputStream);
+        _logger.debug("inputstream "+inputStream);
 
         //AudioFormat format = inputStream.getFormat();
         this.sampleRate = sampleRate; 
@@ -254,7 +254,6 @@ public class AudioStreamDataSource extends BaseDataProcessor implements StreamDa
      *          if there is a data processing error
      */
     public Data getData() throws DataProcessingException {
-    	System.out.println("in getdata");
         getTimer().start();
         Data output = null;
         if (streamEndReached) {
@@ -273,7 +272,7 @@ public class AudioStreamDataSource extends BaseDataProcessor implements StreamDa
             } else {
                 if (dataStream != null) {
                     output = readNextFrame();
-                    System.out.println("Getting the next frame");
+                    _logger.debug("Getting the next frame");
                     if (output == null) {
                         if (!utteranceEndSent) {
                             output = createDataEndSignal();
@@ -351,7 +350,7 @@ public class AudioStreamDataSource extends BaseDataProcessor implements StreamDa
             doubleData = DataUtil.littleEndianBytesToValues(samplesBuffer, 0, totalRead, bytesPerValue, signedData);
         }
 
-        System.out.println("Total read in this frame: "+totalRead);
+        _logger.debug("Total read in this frame: "+totalRead);
         //try {
         //	for (int i=0;i<doubleData.length;i++) {
         //		out.write(i+" "+doubleData[i]);
@@ -362,13 +361,13 @@ public class AudioStreamDataSource extends BaseDataProcessor implements StreamDa
         //	e.printStackTrace();
         //}
 
-        System.out.println("writing double data,  "+ doubleData.length+ " values"+doubleData[0]+ " "+doubleData[doubleData.length-1]);
+        _logger.debug("writing double data,  "+ doubleData.length+ " values"+doubleData[0]+ " "+doubleData[doubleData.length-1]);
         return new DoubleData(doubleData, sampleRate, collectTime, firstSample);
     }
 
 
     private void closeDataStream() throws IOException {
-    	System.out.println("Closing data stream");
+    	_logger.debug("Closing data stream");
         streamEndReached = true;
         if (dataStream != null) {
             dataStream.close();

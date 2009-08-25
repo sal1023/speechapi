@@ -115,7 +115,7 @@ public class HttpRecognizer {
                 }
             }
         }
-    	System.out.println("Speech started!");
+    	_logger.info("Speech started!");
     	
     	int nBytesRead=0;
     	while (nBytesRead != -1){  		
@@ -150,7 +150,7 @@ public class HttpRecognizer {
 				e.printStackTrace();
 			}
 		} else {
-			System.out.println("output type not supported..."); 
+			_logger.info("output type not supported..."); 
 		}
 	}
 
@@ -191,18 +191,7 @@ public class HttpRecognizer {
 	        e1.printStackTrace();
         }
     	
-     	//now wait for a start speech event
-        speechStarted = false;
-		while (!speechStarted) {
-            synchronized (this) {        
-                try {
-                    this.wait(1000);
-                } catch (InterruptedException e) {
-                	_logger.debug("Interrupt Excepton while waiting for tts to complete");
-                }
-            }
-        }
-    	System.out.println("Speech started!");
+
         
         
         //one part is the audio
@@ -244,7 +233,18 @@ public class HttpRecognizer {
 		//set the multipart entity for the post command
 	    httppost.setEntity(mpEntity);
 
-    	
+     	//now wait for a start speech event
+        speechStarted = false;
+		while (!speechStarted) {
+            synchronized (this) {        
+                try {
+                    this.wait(1000);
+                } catch (InterruptedException e) {
+                	_logger.debug("Interrupt Excepton while waiting for tts to complete");
+                }
+            }
+        }
+    	_logger.info("Speech started!");
 
 	    
 	    //execute the post command
@@ -323,19 +323,7 @@ public class HttpRecognizer {
 	        // TODO Auto-generated catch block
 	        e1.printStackTrace();
         }
-    	
-     	//now wait for a start speech event
-        speechStarted = false;
-		while (!speechStarted) {
-            synchronized (this) {        
-                try {
-                    this.wait(1000);
-                } catch (InterruptedException e) {
-                	_logger.debug("Interrupt Excepton while waiting for tts to complete");
-                }
-            }
-        }
-    	System.out.println("Speech started!");
+
     	
 
     	
@@ -380,6 +368,21 @@ public class HttpRecognizer {
 		//set the multipart entity for the post command
 	    httppost.setEntity(mpEntity);
 
+	    
+    	
+     	//now wait for a start speech event
+        speechStarted = false;
+		while (!speechStarted) {
+            synchronized (this) {        
+                try {
+                    this.wait(1000);
+                } catch (InterruptedException e) {
+                	_logger.debug("Interrupt Excepton while waiting for tts to complete");
+                }
+            }
+        }
+    	_logger.info("Speech started!");
+	    
 
 	    //execute the post command
         _logger.info("executing request " + httppost.getRequestLine());
@@ -516,7 +519,7 @@ public class HttpRecognizer {
                 }
             }
         }
-    	System.out.println("Speech started!");
+    	_logger.info("Speech started!");
     	
 	    //execute the post command
         _logger.info("executing request " + httppost.getRequestLine());
