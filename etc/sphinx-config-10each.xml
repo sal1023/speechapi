@@ -1042,7 +1042,7 @@
     
 
     <component name="identityStage1" 
-               type="com.spokentech.speechdown.server.recog.IdentityStage"/>
+               type="com.spokentech.speechdown.common.sphinx.IdentityStage"/>
 
  
 
@@ -1058,7 +1058,7 @@
     
 
     <component name="identityStage2" 
-               type="com.spokentech.speechdown.server.recog.IdentityStage"/>
+               type="com.spokentech.speechdown.common.sphinx.IdentityStage"/>
 
 
    <!-- ******************************************************** -->
@@ -1073,7 +1073,7 @@
     
 
     <component name="identityStage3" 
-               type="com.spokentech.speechdown.server.recog.IdentityStage"/>
+               type="com.spokentech.speechdown.common.sphinx.IdentityStage"/>
 
 
     <!-- ******************************************************** -->
@@ -1087,7 +1087,7 @@
     </component>
     
     <component name="identityStage4" 
-                  type="com.spokentech.speechdown.server.recog.IdentityStage"/>
+                  type="com.spokentech.speechdown.common.sphinx.IdentityStage"/>
 
    
 
@@ -1102,7 +1102,7 @@
     </component>
     
     <component name="identityStage5" 
-                  type="com.spokentech.speechdown.server.recog.IdentityStage"/>
+                  type="com.spokentech.speechdown.common.sphinx.IdentityStage"/>
 
    
     <!-- ******************************************************** -->
@@ -1117,7 +1117,7 @@
     
 
     <component name="identityStage6" 
-               type="com.spokentech.speechdown.server.recog.IdentityStage"/>
+               type="com.spokentech.speechdown.common.sphinx.IdentityStage"/>
 
   
 
@@ -1132,7 +1132,7 @@
     </component>
 
     <component name="identityStage7" 
-                  type="com.spokentech.speechdown.server.recog.IdentityStage"/>
+                  type="com.spokentech.speechdown.common.sphinx.IdentityStage"/>
 
    
 
@@ -1148,7 +1148,7 @@
     </component>
     
     <component name="identityStage8" 
-                  type="com.spokentech.speechdown.server.recog.IdentityStage"/>
+                  type="com.spokentech.speechdown.common.sphinx.IdentityStage"/>
 
    
 
@@ -1163,7 +1163,7 @@
     </component>
     
     <component name="identityStage9" 
-                  type="com.spokentech.speechdown.server.recog.IdentityStage"/>
+                  type="com.spokentech.speechdown.common.sphinx.IdentityStage"/>
 
    
 
@@ -1179,7 +1179,7 @@
     
 
     <component name="identityStage10" 
-               type="com.spokentech.speechdown.server.recog.IdentityStage"/>
+               type="com.spokentech.speechdown.common.sphinx.IdentityStage"/>
                
                
                
@@ -1200,9 +1200,14 @@
             <item>audio-dct1</item>
             <item>audio-cmn1</item>
             <item>audio-featureExtraction1</item>
+            <item>audio-identityStage1</item>
         </propertylist>
     </component>
     
+
+    <component name="audio-identityStage1" 
+               type="com.spokentech.speechdown.common.sphinx.IdentityStage"/>
+
 
     <component name="audio-streamDataSource1" 
                type="com.spokentech.speechdown.server.recog.AudioStreamDataSource"/>
@@ -1261,9 +1266,13 @@
             <item>audio-dct2</item>
             <item>audio-cmn2</item>
             <item>audio-featureExtraction2</item>
+            <!--item>audio-identityStage2</item-->
         </propertylist>
     </component>
     
+
+    <component name="audio-identityStage2" 
+               type="com.spokentech.speechdown.common.sphinx.IdentityStage"/>
 
     <component name="audio-streamDataSource2" 
                type="com.spokentech.speechdown.server.recog.AudioStreamDataSource"/>
@@ -1323,9 +1332,13 @@
             <item>audio-dct3</item>
             <item>audio-cmn3</item>
             <item>audio-featureExtraction3</item>
+            <!--item>audio-identityStage3</item-->
         </propertylist>
     </component>
     
+
+    <component name="audio-identityStage3" 
+               type="com.spokentech.speechdown.common.sphinx.IdentityStage"/>
 
     <component name="audio-streamDataSource3" 
                type="com.spokentech.speechdown.server.recog.AudioStreamDataSource"/>
@@ -1384,8 +1397,13 @@
             <item>audio-dct4</item>
             <item>audio-cmn4</item>
             <item>audio-featureExtraction4</item>
+                        <!--item>audio-identityStage4</item-->
         </propertylist>
     </component>
+
+
+    <component name="audio-identityStage4" 
+               type="com.spokentech.speechdown.common.sphinx.IdentityStage"/>
     
 
     <component name="audio-streamDataSource4" 
@@ -1447,8 +1465,13 @@
             <item>audio-dct5</item>
             <item>audio-cmn5</item>
             <item>audio-featureExtraction5</item>
+                        <!--item>audio-identityStage5</item-->
         </propertylist>
     </component>
+
+
+    <component name="audio-identityStage5" 
+               type="com.spokentech.speechdown.common.sphinx.IdentityStage"/>
     
 
     <component name="audio-streamDataSource5" 
@@ -1508,9 +1531,15 @@
             <item>audio-dct6</item>
             <item>audio-cmn6</item>
             <item>audio-featureExtraction6</item>
+                        <!--item>audio-identityStage6</item-->
         </propertylist>
     </component>
     
+
+
+    <component name="audio-identityStage6" 
+               type="com.spokentech.speechdown.common.sphinx.IdentityStage"/>
+
 
     <component name="audio-streamDataSource6" 
                type="com.spokentech.speechdown.server.recog.AudioStreamDataSource"/>
@@ -1570,9 +1599,15 @@
             <item>audio-dct7</item>
             <item>audio-cmn7</item>
             <item>audio-featureExtraction7</item>
+                        <!--item>audio-identityStage7</item-->
         </propertylist>
     </component>
     
+
+
+    <component name="audio-identityStage7" 
+               type="com.spokentech.speechdown.common.sphinx.IdentityStage"/>
+
 
     <component name="audio-streamDataSource7" 
                type="com.spokentech.speechdown.server.recog.AudioStreamDataSource"/>
@@ -1631,9 +1666,15 @@
             <item>audio-dct8</item>
             <item>audio-cmn8</item>
             <item>audio-featureExtraction8</item>
+                        <!--item>audio-identityStage8</item-->
         </propertylist>
     </component>
     
+
+
+    <component name="audio-identityStage8" 
+               type="com.spokentech.speechdown.common.sphinx.IdentityStage"/>
+
 
     <component name="audio-streamDataSource8" 
                type="com.spokentech.speechdown.server.recog.AudioStreamDataSource"/>
@@ -1694,9 +1735,15 @@
             <item>audio-dct9</item>
             <item>audio-cmn9</item>
             <item>audio-featureExtraction9</item>
+                        <!--item>audio-identityStage9</item-->
         </propertylist>
     </component>
     
+
+
+    <component name="audio-identityStage9" 
+               type="com.spokentech.speechdown.common.sphinx.IdentityStage"/>
+
 
     <component name="audio-streamDataSource9" 
                type="com.spokentech.speechdown.server.recog.AudioStreamDataSource"/>
@@ -1755,9 +1802,15 @@
             <item>audio-dct10</item>
             <item>audio-cmn10</item>
             <item>audio-featureExtraction10</item>
+            <!--item>audio-identityStage10</item-->
         </propertylist>
     </component>
     
+
+
+    <component name="audio-identityStage10" 
+               type="com.spokentech.speechdown.common.sphinx.IdentityStage"/>
+
 
     <component name="audio-streamDataSource10" 
                type="com.spokentech.speechdown.server.recog.AudioStreamDataSource"/>

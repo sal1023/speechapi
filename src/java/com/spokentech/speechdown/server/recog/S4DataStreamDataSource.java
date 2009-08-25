@@ -113,7 +113,7 @@ public class S4DataStreamDataSource extends BaseDataProcessor implements StreamD
             
             
             if (output == null) {
-                System.out.println("data is null");
+                _logger.debug("data is null");
                 try {
                     closeDataStream();
                 } catch (IOException e) {
@@ -125,7 +125,7 @@ public class S4DataStreamDataSource extends BaseDataProcessor implements StreamD
                showData(output);
             }
         } else {
-            System.out.println("datastream is null");
+            _logger.debug("datastream is null");
         }
    
 
@@ -161,7 +161,7 @@ public class S4DataStreamDataSource extends BaseDataProcessor implements StreamD
     }
 
     private void closeDataStream() throws IOException {
-    	System.out.println("Closing data stream");
+    	_logger.debug("Closing data stream");
         if (dataStream != null) {
             dataStream.close();
         }

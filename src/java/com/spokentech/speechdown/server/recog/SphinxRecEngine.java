@@ -45,7 +45,9 @@ public class SphinxRecEngine extends AbstractPoolableObject implements RecEngine
 
     	_logger.info("Creating a recognizer "+prefixId +"recognizer"+id);
     	_recognizer = (Recognizer) cm.lookup(prefixId+"recognizer"+id);
-        _recognizer.allocate();
+       
+    	//SAL (comment)
+    	_recognizer.allocate();
         _jsgfGrammar = (JSGFGrammar) cm.lookup("grammar");
         _cm = cm;
         _id = id;
@@ -62,6 +64,7 @@ public class SphinxRecEngine extends AbstractPoolableObject implements RecEngine
 	
 	public RecognitionResult recognize(InputStream as, String mimeType, String grammar, int sampleRate, boolean bigEndian, int bytesPerValue, Encoding encoding) {
 		_logger.info("Using recognizer # "+_id);
+	    //SAL
 		//_recognizer.allocate();
         
         _logger.info("After allocate" + System.currentTimeMillis());
@@ -72,7 +75,7 @@ public class SphinxRecEngine extends AbstractPoolableObject implements RecEngine
 	        _logger.debug(e, e);
 	    }
         
-        _logger.info("After save grammar" + System.currentTimeMillis());
+        _logger.debug("After save grammar" + System.currentTimeMillis());
 	
 	    
 	    try {
@@ -104,18 +107,19 @@ public class SphinxRecEngine extends AbstractPoolableObject implements RecEngine
 			 _logger.warn("Unrecognized mime type: "+mimeType + " Trying to process as audio/x-wav");
 			 dataSource = new AudioStreamDataSource();
 		 }
-		 System.out.println("-----> "+mimeType+ " "+parts[1]);
+	     _logger.debug("-----> "+mimeType+ " "+parts[1]);
 		 _fe.setDataSource((DataProcessor) dataSource);
 		 dataSource.setInputStream(as, "ws-audiostream", sampleRate, bigEndian, bytesPerValue,encoding);
 	    
 		_logger.info("After setting the input stream" + System.currentTimeMillis());
 	    
 	    // decode the audio file.
-	    //System.out.println("Decoding " + audioFileURL);
+	    //_logger.debug("Decoding " + audioFileURL);
 	    RecognitionResult results = waitForResult(false);
 	    
 	
-	    System.out.println("Result: " + (results != null ? results.getText() : null));
+	    _logger.info("Result: " + (results != null ? results.getText() : null));
+	    //SAL
 	    //_recognizer.deallocate();
 	    return results;
     }
@@ -126,6 +130,7 @@ public class SphinxRecEngine extends AbstractPoolableObject implements RecEngine
      */
 	public RecognitionResult recognize(AudioInputStream as, String grammar) {
 		_logger.info("Using recognizer # "+_id);
+	    //SAL
 		//_recognizer.allocate();
 		GrammarLocation grammarLocation = null;
 	    try {
@@ -152,11 +157,12 @@ public class SphinxRecEngine extends AbstractPoolableObject implements RecEngine
         dataSource.setInputStream(as, "ws-audiostream");
   
 	    // decode the audio file.
-	    //System.out.println("Decoding " + audioFileURL);
+	    //_logger.debug("Decoding " + audioFileURL);
 	    RecognitionResult results = waitForResult(false);
 	    
 	
-	    System.out.println("Result: " + (results != null ? results.getText() : null));
+	    _logger.info("Result: " + (results != null ? results.getText() : null));
+	    //SAL
 	    //_recognizer.deallocate();
 	    return results;
 	}

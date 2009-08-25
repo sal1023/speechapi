@@ -31,20 +31,25 @@
             <item>nonSpeechDataFilter</item>
             <item>speechDataRecorder</item>
             <item>preemphasizer</item>
-            <!--item>dither</item-->
+            <item>dither</item>
             <item>windower</item>
             <item>fft</item>
             <item>melFilterBank</item>
             <item>dct</item>
             <item>cmn</item>
             <item>featureExtraction</item>
-
+            <!--item>identityStage</item-->
         </propertylist>
     </component>
 
     <!-- ******************************************************** -->
     <!-- The frontend pipelines                                   -->
     <!-- ******************************************************** -->
+
+    <component name="identityStage" 
+                  type="com.spokentech.speechdown.common.sphinx.IdentityStage"/>
+
+
 
     <component name="dataBlocker" type="edu.cmu.sphinx.frontend.DataBlocker">
         <!--<property name="blockSizeMs" value="10"/>-->
@@ -88,16 +93,26 @@
     <component name="fft"
             type="edu.cmu.sphinx.frontend.transform.DiscreteFourierTransform">
     </component>
-
+    
+    
+    
     <component name="melFilterBank"
-        type="edu.cmu.sphinx.frontend.frequencywarp.MelFrequencyFilterBank">
+               type="edu.cmu.sphinx.frontend.frequencywarp.MelFrequencyFilterBank">
+               <property name="minimumFrequency" value="200"/>
+               <property name="maximumFrequency" value="3500"/>
+               <property name="numberFilters" value="31"/>
     </component>
 
     <component name="dct"
-            type="edu.cmu.sphinx.frontend.transform.DiscreteCosineTransform"/>
+               type="edu.cmu.sphinx.frontend.transform.DiscreteCosineTransform"/>
 
-    <component name="liveCMN"
-               type="edu.cmu.sphinx.frontend.feature.LiveCMN"/>
+    <component name="cmn"
+               type="edu.cmu.sphinx.frontend.feature.LiveCMN">
+                 <property name="initialMean " value="12"/>
+               <property name="cmnWindow" value="500"/>
+               <property name="shiftWindow" value="800"/>
+    </component>  
+    
 
     <component name="featureExtraction"
                type="edu.cmu.sphinx.frontend.feature.DeltasFeatureExtractor"/>
