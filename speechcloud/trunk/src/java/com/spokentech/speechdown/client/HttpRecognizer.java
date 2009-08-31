@@ -1,5 +1,6 @@
 package com.spokentech.speechdown.client;
 
+import java.io.BufferedInputStream;
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.DataOutputStream;
@@ -42,6 +43,8 @@ import org.apache.log4j.Logger;
 import org.speechforge.cairo.rtp.server.RTPStreamReplicator;
 
 import com.spokentech.speechdown.client.rtp.RtpReceiver;
+import com.spokentech.speechdown.common.InvalidRecognitionResultException;
+import com.spokentech.speechdown.common.RecognitionResult;
 
 
 /**
@@ -155,7 +158,7 @@ public class HttpRecognizer {
 	}
 
 	
-	public  void recognizeNextUtteranceFromMic(String mimeType, URL grammarUrl, String service, MicReceiver mic) throws InstantiationException, IOException {
+	public  RecognitionResult recognizeNextUtteranceFromMic(String mimeType, URL grammarUrl, String service, MicReceiver mic) throws InstantiationException, IOException {
 
 
 		//Setup a piped stream to get an input stream that can be used for feeding the chunk encoded post 
@@ -269,23 +272,27 @@ public class HttpRecognizer {
         	_logger.info("Response content length: " + resEntity.getContentLength());
         	_logger.info("Chunked?: " + resEntity.isChunked());
         }
+        RecognitionResult r = null;
         if (resEntity != null) {
             try {
                 InputStream s = resEntity.getContent();
-                int c;
-                while ((c = s.read()) != -1) {
-                    System.out.write(c);
-                }
+                String result = readInputStreamAsString(s);
+                _logger.info(result);
+                r = RecognitionResult.constructResultFromString(result);
 	            resEntity.consumeContent();
             } catch (IOException e) {
 	            // TODO Auto-generated catch block
 	            e.printStackTrace();
+            } catch (InvalidRecognitionResultException e) {
+	            // TODO Auto-generated catch block
+	            e.printStackTrace();
             }
         }
+		return r;
 	}
 	
 	
-	public  void recognizeNextUtterance(String mimeType, URL grammarUrl, String service, TargetDataLine audioLine) {
+	public  RecognitionResult recognizeNextUtterance(String mimeType, URL grammarUrl, String service, TargetDataLine audioLine) {
 
 		//Setup a piped stream to get an input stream that can be used for feeding the chunk encoded post 
     	PipedOutputStream	outputStream = new PipedOutputStream();
@@ -406,22 +413,26 @@ public class HttpRecognizer {
         	_logger.info("Response content length: " + resEntity.getContentLength());
         	_logger.info("Chunked?: " + resEntity.isChunked());
         }
+        RecognitionResult r = null;
         if (resEntity != null) {
             try {
                 InputStream s = resEntity.getContent();
-                int c;
-                while ((c = s.read()) != -1) {
-                    System.out.write(c);
-                }
+                String result = readInputStreamAsString(s);
+                _logger.info(result);
+                r = RecognitionResult.constructResultFromString(result);
 	            resEntity.consumeContent();
             } catch (IOException e) {
 	            // TODO Auto-generated catch block
 	            e.printStackTrace();
+            } catch (InvalidRecognitionResultException e) {
+	            // TODO Auto-generated catch block
+	            e.printStackTrace();
             }
         }
+		return r;
     }
 	
-	public   void recognizeNextUtterance(String mimeType, URL grammarUrl, String service, RtpReceiver  rtpReceiver) throws InstantiationException, IOException {
+	public RecognitionResult recognizeNextUtterance(String mimeType, URL grammarUrl, String service, RtpReceiver  rtpReceiver) throws InstantiationException, IOException {
 
 		//Setup a piped stream to get an input stream that can be used for feeding the chunk encoded post 
     	PipedOutputStream	outputStream = new PipedOutputStream();
@@ -543,19 +554,24 @@ public class HttpRecognizer {
         	_logger.info("Response content length: " + resEntity.getContentLength());
         	_logger.info("Chunked?: " + resEntity.isChunked());
         }
+
+        RecognitionResult r = null;
         if (resEntity != null) {
             try {
                 InputStream s = resEntity.getContent();
-                int c;
-                while ((c = s.read()) != -1) {
-                    System.out.write(c);
-                }
+                String result = readInputStreamAsString(s);
+                _logger.info(result);
+                r = RecognitionResult.constructResultFromString(result);
 	            resEntity.consumeContent();
             } catch (IOException e) {
 	            // TODO Auto-generated catch block
 	            e.printStackTrace();
+            } catch (InvalidRecognitionResultException e) {
+	            // TODO Auto-generated catch block
+	            e.printStackTrace();
             }
         }
+		return r;
     }
 	
     public class MySpeechEventListener implements SpeechEventListener {
@@ -731,7 +747,19 @@ public class HttpRecognizer {
     }
 
 
-    
+	public  String readInputStreamAsString(InputStream in) throws IOException {
+
+		BufferedInputStream bis = new BufferedInputStream(in);
+		ByteArrayOutputStream buf = new ByteArrayOutputStream();
+		int result = bis.read();
+		while(result != -1) {
+			byte b = (byte)result;
+			buf.write(b);
+			result = bis.read();
+		}        
+		_logger.debug(buf.toString());
+		return buf.toString();
+	}
     
 
     

@@ -1,6 +1,10 @@
 package com.spokentech.speechdown.server;
 
 import java.io.File;
+
+import javax.sound.sampled.AudioFileFormat;
+import javax.sound.sampled.AudioFormat;
+
 import org.apache.commons.pool.ObjectPool;
 import org.apache.log4j.Logger;
 import com.spokentech.speechdown.server.tts.SynthEngine;
@@ -88,9 +92,9 @@ public class SynthesizerService {
 		
 	}
 
-    public String ttsURL(String text) {
+    public String ttsURL(String text, AudioFormat format, AudioFileFormat.Type fileType) {
  
-    	File ttsFile = ttsFile(text);
+    	File ttsFile = ttsFile(text,format,fileType);
         
         String url = prefix+ttsFile.getName();
         
@@ -98,7 +102,7 @@ public class SynthesizerService {
         return url;
     }
 
-    public File ttsFile(String text) {
+    public File ttsFile(String text, AudioFormat format, AudioFileFormat.Type fileType) {
         SynthEngine synth = null;
         // borrow prompt generator
         try {
@@ -109,7 +113,7 @@ public class SynthesizerService {
         }
 
         // generate prompt
-        File ttsFile = synth.generateAudio(text, promptDir);
+        File ttsFile = synth.generateAudio(text, promptDir,format,fileType);
         
         try {
         	_synthesizerPool.returnObject(synth);

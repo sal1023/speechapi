@@ -52,6 +52,28 @@
 		<url-pattern>/SpeechUploadServlet</url-pattern>
 	</servlet-mapping>
 	
+	
+	 
+    <!--The download servlet for using straightforward http protocol -->    
+
+	<servlet>
+		<servlet-name>SpeechDownloadServlet</servlet-name>
+		<servlet-class>com.spokentech.speechdown.server.SpeechDownloadServlet</servlet-class>
+		<init-param>
+			<param-name>tempDir</param-name>
+			<param-value>/TEMP/speechup/tempdir</param-value>
+		</init-param>
+		<init-param>
+			<param-name>destinationDir</param-name>
+			<param-value>/TEMP/speechup/destdir</param-value>
+		</init-param>
+	</servlet>
+	<servlet-mapping>
+		<servlet-name>SpeechDownloadServlet</servlet-name>
+		<url-pattern>/SpeechDownloadServlet</url-pattern>
+	</servlet-mapping>
+	
+	
 	<session-config>
         <session-timeout>60</session-timeout>
     </session-config>

@@ -1,6 +1,10 @@
 package com.spokentech.speechdown.server.tts;
 
 import java.io.File;
+import java.io.OutputStream;
+
+import javax.sound.sampled.AudioFileFormat;
+import javax.sound.sampled.AudioFormat;
 
 public interface SynthEngine {
 
@@ -11,6 +15,8 @@ public interface SynthEngine {
 	 * @return the generated prompt file.
 	 * @throws IllegalArgumentException if the directory specified is not a directory.
 	 */
-	public File generateAudio(String text, File dir) throws IllegalArgumentException;
+	public File generateAudio(String text, File dir, AudioFormat format, AudioFileFormat.Type fileType) throws IllegalArgumentException;
+	
+	public File generateAudio(String text, OutputStream stream, AudioFormat format, AudioFileFormat.Type fileType) throws IllegalArgumentException;
 
 }

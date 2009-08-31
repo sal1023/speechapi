@@ -28,6 +28,11 @@ import edu.cmu.sphinx.util.props.ConfigurationManager;
 import com.spokentech.speechdown.client.SpeechEventListenerDecorator;
 import com.spokentech.speechdown.client.sphinx.SpeechDataMonitor;
 
+/**
+ * receives audio from an rtp channel and sends to outputstream.
+ *
+ * @author Spencer Lord {@literal <}<a href="mailto:slord@users.sourceforge.net">slord@users.sourceforge.net</a>{@literal >}
+ */
 public class RtpReceiver {
 	
     private static Logger _logger = Logger.getLogger(RtpReceiver.class);
