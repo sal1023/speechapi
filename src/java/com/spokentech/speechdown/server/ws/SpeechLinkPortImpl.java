@@ -1,7 +1,11 @@
 
 package com.spokentech.speechdown.server.ws;
 
+import java.io.File;
+
 import javax.jws.WebService;
+import javax.sound.sampled.AudioFileFormat;
+import javax.sound.sampled.AudioFormat;
 
 import org.apache.log4j.Logger;
 
@@ -86,7 +90,15 @@ public class SpeechLinkPortImpl implements SpeechLinkPortType{
 	public String synthesize(String prompt) {
 		_logger.info("Got a (link) synthesize request: "+prompt);
 		 
-        String result=synthesizerService.ttsURL(prompt);
+		//TODO: add format and filetype to the wsdl
+	    int sampleRate = 8000;
+	    boolean signed = true;
+	    boolean bigEndian = true;
+	    int channels = 1;
+	    int sampleSizeInBits = 16;
+		AudioFormat format = new AudioFormat ((float) sampleRate, sampleSizeInBits, channels, signed, bigEndian);
+		
+        String result=synthesizerService.ttsURL(prompt,format,AudioFileFormat.Type.AU);
         return result;
 
 	}

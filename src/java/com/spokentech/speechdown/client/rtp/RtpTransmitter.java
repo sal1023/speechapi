@@ -17,7 +17,6 @@ import com.spokentech.speechdown.client.PromptPlayListener;
 /**
  * Sends audio files down an RTP channel.
  *
- * @author Niels Godfredsen {@literal <}<a href="mailto:ngodfredsen@users.sourceforge.net">ngodfredsen@users.sourceforge.net</a>{@literal >}
  * @author Spencer Lord {@literal <}<a href="mailto:slord@users.sourceforge.net">slord@users.sourceforge.net</a>{@literal >}
  */
 public class RtpTransmitter {

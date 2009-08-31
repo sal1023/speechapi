@@ -1,0 +1,1 @@
+call mvn deploy:deploy-file -Durl=scp://www.speechforge.org/home/webadmin/speechforge.org/html/repository -DrepositoryId=speechforge-repository -DgroupId="com.spokentech" -DartifactId=speechcloud-cli -Dversion=SNAPSHOT -Dpackaging=jar -Dfile="lib\speechcloud-cli.jar"

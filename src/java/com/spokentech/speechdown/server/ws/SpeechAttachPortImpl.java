@@ -9,6 +9,8 @@ import javax.activation.FileDataSource;
 
 import com.sun.xml.ws.developer.StreamingAttachment;
 
+import javax.sound.sampled.AudioFileFormat;
+import javax.sound.sampled.AudioFormat;
 import javax.xml.ws.BindingType;
 import javax.xml.ws.soap.SOAPBinding;
 
@@ -87,7 +89,14 @@ public class SpeechAttachPortImpl implements SpeechAttachPortType {
 	public SynthResponseAttachType synthesize(String prompt) {
 		_logger.info("Got a (attach) synthesize request: "+prompt);
 		 
-        File ttsFile = synthesizerService.ttsFile(prompt);
+		//TODO: add format and filetype to the wsdl
+	    int sampleRate = 8000;
+	    boolean signed = true;
+	    boolean bigEndian = true;
+	    int channels = 1;
+	    int sampleSizeInBits = 16;
+		AudioFormat format = new AudioFormat ((float) sampleRate, sampleSizeInBits, channels, signed, bigEndian);
+        File ttsFile = synthesizerService.ttsFile(prompt,format,AudioFileFormat.Type.AU);
        
         DataHandler dh = new DataHandler(new FileDataSource(ttsFile));
         

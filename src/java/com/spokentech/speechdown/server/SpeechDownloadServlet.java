@@ -4,11 +4,14 @@ import java.io.BufferedInputStream;
 import java.io.BufferedOutputStream;
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
+import java.io.DataInputStream;
 import java.io.DataOutputStream;
 import java.io.File;
+import java.io.FileInputStream;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
+import java.io.OutputStream;
 import java.io.PrintWriter;
 import java.util.Enumeration;
 import java.util.LinkedList;
@@ -48,19 +51,19 @@ import com.spokentech.speechdown.common.RecognitionResult;
  * @author nielsgodfredsen
  */
 @SuppressWarnings("serial")
-public class SpeechUploadServlet extends HttpServlet {
+public class SpeechDownloadServlet extends HttpServlet {
 
-	private static Logger _logger = Logger.getLogger(SpeechUploadServlet.class);
+	private static Logger _logger = Logger.getLogger(SpeechDownloadServlet.class);
     private static final String SAMPLE_RATE_FIELD_NAME = "sampleRate";
-    private static final String DATA_MODE = "dataMode";
+    private static final String TEXT = "text";
     private static final String BIG_ENDIAN_FIELD_NAME = "bigEndian";
     private static final String BYTES_PER_VALUE_FIELD_NAME = "bytesPerValue";
     private static final String ENCODING_FIELD_NAME = "encoding";
+    private static final String MIME_TYPE = "mimeType";
 	private DiskFileItemFactory factory;
 	private File destinationDir;
 	
 	SynthesizerService synthesizerService;
-	RecognizerService recognizerService;
 
 	
  	private static final int	EXTERNAL_BUFFER_SIZE = 3200;
@@ -89,8 +92,7 @@ public class SpeechUploadServlet extends HttpServlet {
 
 		ApplicationContext context = WebApplicationContextUtils.getWebApplicationContext(getServletContext());
 		synthesizerService = (SynthesizerService)context.getBean("synthesizerService");
-		recognizerService = (RecognizerService)context.getBean("recognizerService");
-		
+	
 	}
 
 	/* (non-Javadoc)
@@ -106,26 +108,18 @@ public class SpeechUploadServlet extends HttpServlet {
 	        _logger.info(key + " -- " + request.getHeader(key));
 	      }
 
-		
-		// Check that we have a file upload request
-		if (!ServletFileUpload.isMultipartContent(request)) {
-			_logger.info("redirecting to / because not multipart content");
-			response.sendRedirect(response.encodeRedirectURL("/")); // TODO: allow redirect location to be configured
-			return;
-		}
-		
 	    //set the audio format parameters to default values
 	    int sampleRate = 8000;
 	    boolean bigEndian = true;
 	    int bytesPerValue = 2;
+	    String text = "";
 	    AudioFormat.Encoding encoding = AudioFormat.Encoding.PCM_SIGNED;
-
+	    AudioFileFormat.Type fileFormat = AudioFileFormat.Type.AU; 
+	    
 		// Create a new file upload handler
 		ServletFileUpload upload = new ServletFileUpload();
 
-		InputStream audio = null;
-		String grammarString = null;
-		RecognitionResult result = null;
+
     	//TODO: grammar must be the first item processed in the iterator
 		// Parse the request
 		try {
@@ -141,11 +135,20 @@ public class SpeechUploadServlet extends HttpServlet {
 			        try { 
 				        if (name.equals(SAMPLE_RATE_FIELD_NAME)) {
 				        	sampleRate = Integer.parseInt(value);
-
+				        }else if (name.equals(TEXT)) {
+				        	text = value;
 				        } else if (name.equals(BIG_ENDIAN_FIELD_NAME)) {
 				        	bigEndian = Boolean.parseBoolean(value);
 			        	} else if (name.equals(BYTES_PER_VALUE_FIELD_NAME)) {
 				        	bytesPerValue = Integer.parseInt(value);
+		        		} else if (name.equals(MIME_TYPE)) {
+		        			if (value.equals("audio/x-wav")) {
+		        				fileFormat = AudioFileFormat.Type.WAVE; 
+		        			} else if (value.equals("audio/x-au")) {
+		        				fileFormat = AudioFileFormat.Type.AU; 
+		        			} else {
+		        				_logger.warn("Unsupported fileformat: "+value);
+		        			}
 		        		} else if (name.equals(ENCODING_FIELD_NAME)) {
 		        			if (value.equals(AudioFormat.Encoding.ALAW.toString())) {
 		        				encoding = AudioFormat.Encoding.ALAW;
@@ -165,32 +168,44 @@ public class SpeechUploadServlet extends HttpServlet {
 			        	_logger.warn("Exception " + e.getMessage() + "ooccured while processing field name= "+name +" with value= "+value);
 			        }
 			    } else {
-			        _logger.debug("File field " + name + " with file name "
-			            + item.getName() + " detected.");
-			        // Process the input stream
-				    if (name.equals("audio") ) {
-				    	audio = stream;
-				    	try {
-				    		_logger.info("recognizing audio!  Sample rate= "+sampleRate+", bigEndian= "+ bigEndian+", bytes per value= "+bytesPerValue+", encoding= "+encoding.toString());
-				    	    result = recognizerService.Recognize(audio, grammarString,contentType,sampleRate,bigEndian,bytesPerValue,encoding);
-				    		//String filename = Long.toString(System.currentTimeMillis()) + ".wav";
-				    		//writeStreamToFile2(audio,filename);
-				    	} catch (Exception e) {
-				    		e.printStackTrace();
-				    	}
-				    } else if (name.equals("grammar")) {
-						grammarString = readInputStreamAsString(stream);
-				    }
+			        _logger.debug("File field " + name + " with file name " + item.getName() + " detected.");
 			    }
 			}
-			PrintWriter out = response.getWriter();	
-		    if (result == null) {
-	    	   _logger.info("recognition result is null");
-				out.println("recognition result is null");
-		    } else {
-		       _logger.info("recognition result: "+result.getText());
-				out.println(result.toString());
-		    }	
+			
+			
+
+		    //encoding, samplerate,bytes per samplesize, channels, framesize,framerate,bigendianflag
+	        AudioFormat format = new AudioFormat(encoding, sampleRate, 8, 1, 8, 8000, bigEndian);
+			//run the synthesizer
+			File f =  null;
+	    	try {
+	    		_logger.info("sythesizing audio!  Sample rate= "+sampleRate+", bigEndian= "+ bigEndian+", bytes per value= "+bytesPerValue+", encoding= "+encoding.toString());
+	    	     f = synthesizerService.ttsFile(text,format,fileFormat);
+	    	} catch (Exception e) {
+	    		e.printStackTrace();
+	    	}
+	    	
+	    	
+	    	//TODO: Get a stream in the first place (no need to go to a file first)
+	    	//take the output file and put in the response stream
+			OutputStream out = response.getOutputStream();
+			response.setContentType("audio/x-wav");
+			response.setHeader("Content-Disposition", "attachment; filename=synthesized.wav'");			
+			response.setHeader("Transfer-coding","chunked");
+			
+	        DataInputStream in = new DataInputStream(new FileInputStream(f));
+	        
+		  	byte[] buf = new byte[4 * 1024];  // 4K buffer
+		  	int bytesRead;
+		  	while ((bytesRead = in.read(buf)) != -1) {
+		  		out.write(buf, 0, bytesRead);
+		  	}
+
+	        in.close();
+	        out.flush();
+	        out.close();
+
+			
 				
 			// store file list and pass control to view jsp
 			//request.setAttribute("fileUploadList", filenames);
@@ -203,6 +218,9 @@ public class SpeechUploadServlet extends HttpServlet {
 		}
 	}
 
+	
+
+	
 	/* (non-Javadoc)
 	 * @see javax.servlet.http.HttpServlet#doGet(javax.servlet.http.HttpServletRequest, javax.servlet.http.HttpServletResponse)
 	 */
