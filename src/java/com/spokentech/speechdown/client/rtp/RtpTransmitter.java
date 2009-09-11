@@ -2,11 +2,13 @@ package com.spokentech.speechdown.client.rtp;
 
 import java.io.File;
 import java.io.IOException;
+import java.io.InputStream;
 import java.net.InetAddress;
 import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.LinkedBlockingQueue;
 
 import javax.media.rtp.InvalidSessionAddressException;
+import javax.sound.sampled.AudioFormat;
 
 import org.apache.log4j.Logger;
 import org.speechforge.cairo.rtp.AudioFormats;
@@ -40,6 +42,16 @@ public class RtpTransmitter {
     private int _remotePort;
     private AudioFormats _af;
     
+    
+    //TODO: Should tie in the format to the audio formats in the constructor _af
+    private static int sampleRate = 8000;
+    private static boolean bigEndian = true;
+    private static boolean signed = true;    
+    private static int channels = 1;
+    private static int sampleSizeInBits = 16;
+    private  String fileType ="audio/x-au";
+    private AudioFormat format;
+    
     /**
      * TODOC
      * @param localPort 
@@ -51,6 +63,8 @@ public class RtpTransmitter {
         _remoteAddress = remoteAddress;
         _remotePort = remotePort;
         _af = af;
+        
+        format = new AudioFormat ((float) sampleRate, sampleSizeInBits, channels, signed, bigEndian);
     }
 
     private boolean init() throws InvalidSessionAddressException, IOException {
@@ -67,6 +81,22 @@ public class RtpTransmitter {
         _promptPlayer.shutdown();
     }
 
+    public AudioFormat getFormat() {
+        return format;
+    }
+    
+    public String getFileType() {
+        return fileType;
+    }
+    
+    public synchronized int queueAudio(InputStream stream, PromptPlayListener listener) throws InvalidSessionAddressException, IOException {
+
+        int state = _state;
+        _logger.warn("queueing streams not implemented yet");
+    	return state;
+    }
+    
+    
     public synchronized int queueAudio(File promptFile, PromptPlayListener listener)
       throws InvalidSessionAddressException, IOException {
 
@@ -185,6 +215,11 @@ public class RtpTransmitter {
         public void shutdown() {
             _run = false;
         }
+        
+        
+
+        
+        
     }
 
     private static class PromptPlay {
