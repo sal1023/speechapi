@@ -35,13 +35,11 @@
 	<property name="mime4j.jar" value="${lib.dir}/apache-mime4j-0.5.jar" />
 	<property name="httpclient.jar" value="${lib.dir}/httpclient-4.0-beta2.jar" />
 	<property name="httpcore.jar" value="${lib.dir}/httpcore-4.0.jar" />
-	<property name="cairo-rtp.jar" value="${lib.dir}/cairo-rtp-SNAPSHOT.jar" />
-	
+	<property name="cairo-rtp.jar" value="${lib.dir}/cairo-rtp-SNAPSHOT.jar" />	
 
 	<property name="sphinx4.jar" value="${lib.dir}/sphinx4.jar" />
 	<property name="WSJ_8gau_13dCep_8kHz_31mel_200Hz_3500Hz.jar"  value="${lib.dir}/WSJ_8gau_13dCep_8kHz_31mel_200Hz_3500Hz.jar" />
 	<property name="WSJ_8gau_13dCep_16k_40mel_130Hz_6800Hz.jar"  value="${lib.dir}/WSJ_8gau_13dCep_16k_40mel_130Hz_6800Hz.jar" />
-		
 	
     <property name="servlet-api.jar" value="${catalina.home}/lib/servlet-api.jar" />
 	<property name="commons-logging.jar" value="${lib.dir}/commons-logging.jar" />
@@ -50,10 +48,7 @@
 	<property name="jstl.jar" value="${catalina.home}/webapps/examples/WEB-INF/lib/jstl.jar" />
 	<property name="standard.jar" value="${catalina.home}/webapps/examples/WEB-INF/lib/standard.jar" />
 	
-	
-
 	<property name="verbose" value="true" />
-	
 
 	<property name="appserver.home" value="C:/thirdparty/apache-tomcat-6.0.14" />
 	<property name="appserver.lib" value="${appserver.home}/lib" />
@@ -61,8 +56,6 @@
 	<property name="tomcat.manager.url" value="http://localhost:8090/manager" />
 	<property name="tomcat.manager.username" value="tomcat" />
 	<property name="tomcat.manager.password" value="s3cret" />
-
-
 
 	<property name="pkg.server" value="com.spokentech.speechdown.server" />
 	<property name="server.wsdl.location" value="${basedir}/etc/"/>
@@ -103,8 +96,6 @@
 		<classpath refid="jaxws.classpath" />
 	</taskdef>
 	
-
-
 	<taskdef name="wsimport" classname="com.sun.tools.ws.ant.WsImport">
 		<classpath refid="jaxws.classpath" />
 	</taskdef>
@@ -113,7 +104,6 @@
 		<mkdir dir="${build.home}" />
 		<mkdir dir="${build.classes.home}" />
 		<mkdir dir="${build.client.classes.home}" />
-		<mkdir dir="${build.cli.classes.home}" />
 		<mkdir dir="${build.generated.home}" />
 		<mkdir dir="${build.war.home}/WEB-INF" />
 	</target>
@@ -176,7 +166,8 @@
 				destdir="${build.client.classes.home}"
 	            sourcedestdir="${build.generated.home}"
 				package="com.spokentech.speechdown.client"
-				wsdl="http://${catalina.host}:${catalina.port}/${ant.project.name}/speechlink?wsdl">
+				wsdl="file:///${server.wsdl.location}/speechlink.wsdl">
+
 		</wsimport>
 	    <wsimport
 				debug="true"
@@ -185,10 +176,13 @@
      	        sourcedestdir="${build.generated.home}"
 				destdir="${build.client.classes.home}"
 				package="com.spokentech.speechdown.client"
-				wsdl="http://${catalina.host}:${catalina.port}/${ant.project.name}/speechattach?wsdl">
+				wsdl="file:///${server.wsdl.location}/speechattach.wsdl">
+
 		</wsimport>
 	</target>
-
+	<!--wsdl="http://${catalina.host}:${catalina.port}/${ant.project.name}/speechattach?wsdl"-->
+	<!--wsdl="http://${catalina.host}:${catalina.port}/${ant.project.name}/speechlink?wsdl"-->
+				
 	<target name="client" depends="generate-client">
 		<javac
 				fork="true"
@@ -198,6 +192,17 @@
 			<classpath refid="jaxws.classpath" />
 		</javac>
 	</target>
+
+    <target name="compile-client">
+      <echo message="compile-client" />
+      <javac srcdir="src/java"
+        destdir="${build.classes.home}"
+        classpathref="jaxws.classpath"
+        includes="client/**, common/**"
+        debug="on"
+        failonerror="true"/>
+    </target>
+
 
 	<target name="run">
 		<java fork="true" classname="com.spokentech.speechdown.client.SpeechServiceClient">
@@ -209,66 +214,12 @@
 		</java>
 	</target>
 	
-	
    <target name="jar-client" depends="client">
-        <jar destfile="${bin_dir}/SpeechCloudCLI.jar"
-             manifest="${basedir}/etc/speechCloudCLI.Manifest"
+        <jar destfile="${basedir}/lib//speechcloud-client.jar"
              basedir="${build.client.classes.home}"
-             includes="edu/cmu/sphinx/demo/hellodigits/**"
              filesonly="true"
              compress="true"/>
     </target>
-    
-    
-    <!-- ============================================================== -->
-	<!-- CLI tasks - for building the command line interface clients.   -->
-	<!-- ============================================================== -->
-   <target name="generate-cli" depends="setup">
-		<wsimport
-				debug="true"
-				verbose="${verbose}"
-				keep="true"
-				destdir="${build.cli.classes.home}"
-				sourcedestdir="${build.generated.home}"
-				package="com.spokentech.speechdown.client"
-				wsdl="http://${catalina.host}:${catalina.port}/${ant.project.name}/speechlink?wsdl">
-		</wsimport>
-	    <wsimport
-				debug="true"
-				verbose="${verbose}"
-				keep="true"
-				destdir="${build.cli.classes.home}"
-				sourcedestdir="${build.generated.home}"
-				package="com.spokentech.speechdown.client"
-				wsdl="http://${catalina.host}:${catalina.port}/${ant.project.name}/speechattach?wsdl">
-		</wsimport>
-	</target>
-
-	<target name="cli" depends="generate-cli">
-		<javac
-				fork="true"
-				srcdir="${basedir}/src/java"
-				destdir="${build.cli.classes.home}"
-				includes="**/cli/**,**/common/**,**/client/**">
-			<classpath refid="jaxws.classpath" />
-		</javac>
-	</target>
-	
-	
-   <target name="jar-cli" depends="cli">
-        <jar destfile="${basedir}/lib/speechcloud-cli.jar"
-             basedir="${build.cli.classes.home}"
-             filesonly="true"
-             compress="true"/>
-    </target>
-    
-    
-
-	<target name="help">
-		<echo message="server:				Builds and deploys the service endpoint WAR" />
-		<echo message="client:				Builds the client" />
-		<echo message="run:					Runs the client" />
-	</target>
 
 	<target name="deploy">
 		<copy file="${build.war.home}/${war.filename}" todir="${catalina.home}/webapps" />
@@ -318,16 +269,6 @@
     </target>
     
     
-    <target name="compile-client">
-      <echo message="compile-client" />
-      <javac srcdir="src/java"
-        destdir="${build.classes.home}"
-        classpathref="jaxws.classpath"
-        includes="client/**, common/**"
-        debug="on"
-        failonerror="true"/>
-    </target>
-
 
     <!-- generates portable artifacts WSDL-to-Java (wsimport) -->
     <!-- uses binding customizations to specify where artifacts go -->
@@ -388,5 +329,11 @@
 		<list url="${tomcat.manager.url}" username="${tomcat.manager.username}" password="${tomcat.manager.password}" />
 	</target>
 	<!-- End Tomcat tasks -->
+
+	<target name="help">
+		<echo message="server:				Builds and deploys the service endpoint WAR" />
+		<echo message="client:				Builds the client" />
+		<echo message="run:					Runs the client" />
+	</target>
 
 </project>

@@ -114,6 +114,7 @@ public class SynthesizerService {
 
         // generate prompt
         File ttsFile = synth.generateAudio(text, promptDir,format,fileType);
+        _logger.info("********** "+promptDir.getAbsolutePath() );
         
         try {
         	_synthesizerPool.returnObject(synth);
