@@ -1,19 +1,14 @@
 package com.spokentech.speechdown.client;
 
+import java.io.BufferedInputStream;
+import java.io.BufferedOutputStream;
 import java.io.File;
+import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 
 import java.io.UnsupportedEncodingException;
-import java.net.MalformedURLException;
-import java.net.URL;
-
 import javax.sound.sampled.AudioFormat;
-import javax.sound.sampled.AudioInputStream;
-import javax.sound.sampled.AudioSystem;
-import javax.sound.sampled.DataLine;
-
-import javax.sound.sampled.TargetDataLine;
 
 import org.apache.http.HttpEntity;
 import org.apache.http.HttpResponse;
@@ -21,23 +16,21 @@ import org.apache.http.client.ClientProtocolException;
 import org.apache.http.client.HttpClient;
 import org.apache.http.client.methods.HttpPost;
 import org.apache.http.entity.mime.MultipartEntity;
-import org.apache.http.entity.mime.content.InputStreamBody;
 import org.apache.http.entity.mime.content.StringBody;
 import org.apache.http.impl.client.DefaultHttpClient;
 import org.apache.log4j.Logger;
 
-import com.spokentech.speechdown.cli.MicRecognizer2;
 
 import junit.framework.TestCase;
 
 public class RestfulSynthesizerTest extends TestCase {
 
-    private static Logger _logger = Logger.getLogger(MicRecognizer2.class);
+    private static Logger _logger = Logger.getLogger(RestfulSynthesizerTest.class);
     public static final String CRLF = "\r\n";
     
     
 
-    //private static String service = "http://ec2-75-101-211-235.compute-1.amazonaws.com/speechcloud/SpeechUploadServlet";  
+    //private static String service = "http://ec2-67-202-5-50.compute-1.amazonaws.com/speechcloud/SpeechUploadServlet";  
     private static String service = "http://localhost:8090/speechcloud/SpeechDownloadServlet";    
     private static AudioFormat format;
     private static int sampleRate = 8000;
@@ -54,10 +47,10 @@ public class RestfulSynthesizerTest extends TestCase {
 
 
 
-	    public void testRecognize1() {
+	    public void testSynthesis() {
 
 	    	
-	    	_logger.info("Starting Recogniizer ...");
+	    	_logger.info("Starting Synthesis test ...");
 	    	 	
 	       	// setup a shutdown hook to cleanup and send a SIP bye message even if there is a 
 	    	// unexpected crash (ie ctrl-c)
@@ -69,15 +62,15 @@ public class RestfulSynthesizerTest extends TestCase {
 	        
     
     		    	
-	        doSynthesisTest("this is a only a test");
-	        doSynthesisTest("To be or not to be, that is the question.");
-	        doSynthesisTest("A man, a plan, a canal, panama");
-	        doSynthesisTest("If a server wants to start sending a response before knowing its total length (like with long script output), it might use the simple chunked transfer-encoding, which breaks the complete response into smaller chunks and sends them in series. ");
+	        doSynthesisTest("this is a only a test","1.wav");
+	        doSynthesisTest("To be or not to be, that is the question.","2.wav");
+	        doSynthesisTest("A man, a plan, a canal, panama","3.wav");
+	        doSynthesisTest("If a server wants to start sending a response before knowing its total length (like with long script output), it might use the simple chunked transfer-encoding, which breaks the complete response into smaller chunks and sends them in series. ","4.wav");
 	
 
 	    }
 
-		private void doSynthesisTest(String text) {
+		private void doSynthesisTest(String text, String outFileName) {
 			
 	    	// Plain old http approach    	
 	    	HttpClient httpclient = new DefaultHttpClient();
@@ -98,12 +91,14 @@ public class RestfulSynthesizerTest extends TestCase {
 	    	StringBody bytesPerValue = null;
 	    	StringBody encoding = null;
 	    	StringBody mime = null;
+	    	StringBody textb = null;
 	        try {
 	        	sampleRate = new StringBody(String.valueOf((int)format.getSampleRate()));
 	        	bigEndian = new StringBody(String.valueOf(format.isBigEndian()));
 	        	bytesPerValue =new StringBody(String.valueOf(format.getSampleSizeInBits()/8));
 	        	encoding = new StringBody(format.getEncoding().toString());
-	        	mime = new StringBody("audio/x-au");
+	        	mime = new StringBody("audio/x-wav");
+	        	textb = new StringBody(text);
 	        } catch (UnsupportedEncodingException e1) {
 		        // TODO Auto-generated catch block
 		        e1.printStackTrace();
@@ -115,7 +110,8 @@ public class RestfulSynthesizerTest extends TestCase {
 			mpEntity.addPart("bytesPerValue", bytesPerValue);
 			mpEntity.addPart("encoding", encoding);
 			mpEntity.addPart("mimeType", mime);
-	        
+			mpEntity.addPart("text", textb);
+			
 	        httppost.setEntity(mpEntity);
 	    
 	        
@@ -139,21 +135,49 @@ public class RestfulSynthesizerTest extends TestCase {
 	            System.out.println("Chunked?: " + resEntity.isChunked());
 
 	        }
+	        
 	        if (resEntity != null) {
-	            try {
-	                InputStream s = resEntity.getContent();
-	                int c;
-	                while ((c = s.read()) != -1) {
-	                    System.out.write(c);
-	                }
 
-		            resEntity.consumeContent();
-	            } catch (IOException e) {
-		            // TODO Auto-generated catch block
-		            e.printStackTrace();
-	            }
+	            InputStream in = null;
+                try {
+	                in = resEntity.getContent();
+                } catch (IllegalStateException e) {
+	                // TODO Auto-generated catch block
+	                e.printStackTrace();
+                } catch (IOException e) {
+	                // TODO Auto-generated catch block
+	                e.printStackTrace();
+                }
+	        	writeStreamToFile(in,outFileName);
 	        }
+	        
+	        
+	        
         }
 
+		public void writeStreamToFile(InputStream inStream, String fileName) {
+			try {
+
+				File f = new File(fileName);
+				BufferedOutputStream out = new BufferedOutputStream(new FileOutputStream(f));
+		
+				BufferedInputStream in = new BufferedInputStream(inStream);
+		
+				byte[] buffer = new byte[256]; 
+				while (true) { 
+					int bytesRead = in.read(buffer);
+					//_logger.trace("Read "+ bytesRead + "bytes.");
+					if (bytesRead == -1) break; 
+					out.write(buffer, 0, bytesRead); 
+				} 
+				_logger.info("Closing streams");
+				in.close(); 
+				out.close(); 
+			} 
+			catch (Exception e) { 
+				_logger.warn("upload Exception"); e.printStackTrace(); 
+				e.printStackTrace();
+			} 
+		}
 
 }

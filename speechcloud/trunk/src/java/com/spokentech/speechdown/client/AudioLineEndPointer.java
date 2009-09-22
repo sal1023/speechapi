@@ -13,13 +13,13 @@ import com.spokentech.speechdown.client.util.CircularDArrayBuffer;
 
 
 /** This Thread records audio, and caches them in an audio buffer. */
-class EndPointerThread extends Thread {
+class AudioLineEndPointer extends Thread {
 	
 	private static int CONSECUTIVE_LOWS_NEEDED_FOR_ENDSPEECH = 40;
 	private static int CONSECUTIVE_HIGHS_NEEDED_FOR_STARTSPEECH = 20;
     private static boolean signed = true;
 
-	private static Logger _logger = Logger.getLogger(EndPointerThread.class);
+	private static Logger _logger = Logger.getLogger(AudioLineEndPointer.class);
 	
     private long totalSamplesRead = 0;
 
@@ -32,7 +32,7 @@ class EndPointerThread extends Thread {
      *
      * @param name the name of the thread
      */
-    public EndPointerThread(String name, TargetDataLine audioLine, OutputStream outputStream, SpeechEventListener listener) {
+    public AudioLineEndPointer(String name, TargetDataLine audioLine, OutputStream outputStream, SpeechEventListener listener) {
         super(name);
         aline = audioLine;
         ostream = outputStream;
@@ -57,7 +57,6 @@ class EndPointerThread extends Thread {
 		aline.drain();
 		aline.close();
 		//m_bRecording = false;
-
 
     }
 

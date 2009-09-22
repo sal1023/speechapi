@@ -149,6 +149,7 @@
 			<webinf dir="${build.war.home}/WEB-INF" includes="*.xml" />
 			<zipfileset dir="etc/prompts" prefix="prompts" />
 			<zipfileset dir="etc/grammar" prefix="grammar" />
+			<!--zipfileset dir="etc/lm" prefix="lm" /-->
 			<zipfileset dir="${basedir}/etc" prefix="WEB-INF/wsdl" includes="*.wsdl, *.xsd" />
 			<zipfileset dir="${basedir}/etc" prefix="WEB-INF/classes" includes="log4j.xml" />
 			<classes dir="${build.classes.home}" />

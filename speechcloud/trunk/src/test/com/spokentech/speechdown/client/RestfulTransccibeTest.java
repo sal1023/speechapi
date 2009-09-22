@@ -31,9 +31,9 @@ import org.apache.log4j.Logger;
 
 import junit.framework.TestCase;
 
-public class RestfulRecognizerTest extends TestCase {
+public class RestfulTransccibeTest extends TestCase {
 
-    private static Logger _logger = Logger.getLogger(RestfulRecognizerTest.class);
+    private static Logger _logger = Logger.getLogger(RestfulTransccibeTest.class);
     public static final String CRLF = "\r\n";
     
     
@@ -63,31 +63,25 @@ public class RestfulRecognizerTest extends TestCase {
 	    	
 	    	_logger.info("Starting Recogniizer ...");
 
-	        
+	    	File soundFile0 = new File("c:/work/speechcloud/etc/prompts/cubanson.wav");
+	    	//File soundFile0 = new File("c:/work/speechcloud/etc/prompts/fabfour.wav");
 	    	File soundFile1 = new File("c:/work/speechcloud/etc/prompts/lookupsports.wav");	 	
 	    	File soundFile2 = new File("c:/work/speechcloud/etc/prompts/get_me_a_stock_quote.wav");	 	
 	    	File soundFile3 = new File("c:/work/speechcloud/etc/prompts/i_would_like_sports_news.wav");	 	
 	    	//File soundFile4 = new File("c:/temp/38.wav");	 	
 	    	
 	    	
-	    	String grammar = "file:///work/speechcloud/etc/grammar/example.gram";
-	    	URL grammarUrl = null;
-	    	try {
-	    		grammarUrl = new URL(grammar);
-			} catch (MalformedURLException e) {  
-		         e.printStackTrace();  
-			}
-    		    	
-	        doRecognizeTest(soundFile1, grammarUrl, false);
-	        doRecognizeTest(soundFile2, grammarUrl, false);
-	        doRecognizeTest(soundFile3, grammarUrl, false);
-	        doRecognizeTest(soundFile1, grammarUrl, true);
-	        doRecognizeTest(soundFile2, grammarUrl, true);
-	        doRecognizeTest(soundFile3, grammarUrl, true);
+
+    		
+	        doTranscribeTest(soundFile0);
+	        //doTranscribeTest(soundFile1);
+	        doTranscribeTest(soundFile2);
+	        doTranscribeTest(soundFile3);
+
 	    }
 
 
-		private void doRecognizeTest(File soundFile1, URL grammarUrl, boolean lmflg) {
+		private void doTranscribeTest(File soundFile1) {
 	        desiredFormat = new AudioFormat ((float) sampleRate, sampleSizeInBits, channels, signed, bigEndian);
 	        DataLine.Info info = new DataLine.Info(TargetDataLine.class, desiredFormat);
 	        if (!AudioSystem.isLineSupported(info)) {
@@ -114,14 +108,6 @@ public class RestfulRecognizerTest extends TestCase {
 	    	//create the multipart entity
 	    	MultipartEntity mpEntity = new MultipartEntity();
 	    	
-	    	// one part is the grammar
-	        InputStreamBody grammarBody = null;
-	        try {
-	        	grammarBody = new InputStreamBody(grammarUrl.openStream(), "plain/text","grammar.gram");
-	        } catch (IOException e1) {
-		        // TODO Auto-generated catch block
-		        e1.printStackTrace();
-	        }
 	    	
 	        
 	        // get the audio format and send as form fields.  Cound not send aduio file with format included because audio files do not
@@ -133,12 +119,16 @@ public class RestfulRecognizerTest extends TestCase {
 	    	StringBody bytesPerValue = null;
 	    	StringBody encoding = null;
 	    	StringBody lmFlag = null;
+	    	StringBody  recMode = null;
+	    	
 	        try {
 	        	sampleRate = new StringBody(String.valueOf((int)format.getSampleRate()));
 	        	bigEndian = new StringBody(String.valueOf(format.isBigEndian()));
+	        	//bigEndian = new StringBody(String.valueOf(Boolean.FALSE));
 	        	bytesPerValue =new StringBody(String.valueOf(format.getSampleSizeInBits()/8));
 	        	encoding = new StringBody(format.getEncoding().toString());
-	        	lmFlag = new StringBody(String.valueOf(lmflg));
+	        	lmFlag = new StringBody(String.valueOf(Boolean.TRUE));
+	        	recMode = new StringBody("transcript");
 	        } catch (UnsupportedEncodingException e1) {
 		        // TODO Auto-generated catch block
 		        e1.printStackTrace();
@@ -150,12 +140,12 @@ public class RestfulRecognizerTest extends TestCase {
 			mpEntity.addPart("bytesPerValue", bytesPerValue);
 			mpEntity.addPart("encoding", encoding);
 			mpEntity.addPart("lmFlag", lmFlag);
+			mpEntity.addPart("recMode", recMode);
 			
 			
 	        // second part is the mic audio
 	        InputStreamBody audioBody = new InputStreamBody(audioInputStream, "audio/x-wav","audio.wav");      
 
-			mpEntity.addPart("grammar", grammarBody);
 			mpEntity.addPart("audio", audioBody);
 	        
 	        httppost.setEntity(mpEntity);

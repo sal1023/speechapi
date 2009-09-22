@@ -105,7 +105,7 @@ public class SpeechDownloadServlet extends HttpServlet {
 		Enumeration hnames = request.getHeaderNames();
 	    while (hnames.hasMoreElements()) {
 	        String key = (String) hnames.nextElement();
-	        _logger.info(key + " -- " + request.getHeader(key));
+	        _logger.debug(key + " -- " + request.getHeader(key));
 	      }
 
 	    //set the audio format parameters to default values
@@ -131,7 +131,7 @@ public class SpeechDownloadServlet extends HttpServlet {
 			    String contentType = item.getContentType();
 			    if (item.isFormField()) {
 			    	String value = Streams.asString(stream);
-			        _logger.info("Form field " + name + " with value " + value + " detected.");
+			        _logger.debug("Form field " + name + " with value " + value + " detected.");
 			        try { 
 				        if (name.equals(SAMPLE_RATE_FIELD_NAME)) {
 				        	sampleRate = Integer.parseInt(value);
@@ -179,7 +179,7 @@ public class SpeechDownloadServlet extends HttpServlet {
 			//run the synthesizer
 			File f =  null;
 	    	try {
-	    		_logger.info("sythesizing audio!  Sample rate= "+sampleRate+", bigEndian= "+ bigEndian+", bytes per value= "+bytesPerValue+", encoding= "+encoding.toString());
+	    		_logger.debug("sythesizing audio!  Sample rate= "+sampleRate+", bigEndian= "+ bigEndian+", bytes per value= "+bytesPerValue+", encoding= "+encoding.toString());
 	    	     f = synthesizerService.ttsFile(text,format,fileFormat);
 	    	} catch (Exception e) {
 	    		e.printStackTrace();
@@ -239,7 +239,7 @@ public class SpeechDownloadServlet extends HttpServlet {
 			buf.write(b);
 			result = bis.read();
 		}        
-		_logger.info(buf.toString());
+		_logger.debug(buf.toString());
 		return buf.toString();
 	}
 
@@ -262,7 +262,7 @@ public class SpeechDownloadServlet extends HttpServlet {
     	}
         //AudioFormat audioFormat = audioStream.getFormat();
 		
-		_logger.info("Out of the the Loop "+baos.size());
+		_logger.debug("Out of the the Loop "+baos.size());
 		//write it to the new file
         int bitsPerSample = 16;
         int sampleRate = 8000;
@@ -280,10 +280,10 @@ public class SpeechDownloadServlet extends HttpServlet {
 			//read the data from the file
 			try{
 				nBytesRead = inputStream.read(abData, 0, abData.length);
-				_logger.info("Read "+nBytesRead+ " bytes");
+				_logger.debug("Read "+nBytesRead+ " bytes");
 				if (nBytesRead >0) {
 	    			dos.write(abData, 0, nBytesRead);
-	    			_logger.info("then wrote them ");
+	    			_logger.debug("then wrote them ");
 				}
 			}catch (IOException e){
 				e.printStackTrace();
@@ -297,7 +297,7 @@ public class SpeechDownloadServlet extends HttpServlet {
 
 		if (AudioSystem.isFileTypeSupported(outputType, ais)) {
 			try {
-				_logger.info("writing file "+outWavFile.getCanonicalPath());
+				_logger.debug("writing file "+outWavFile.getCanonicalPath());
 				AudioSystem.write(ais, outputType, outWavFile);
 			} catch (IOException e) {
 				e.printStackTrace();
@@ -322,7 +322,7 @@ public class SpeechDownloadServlet extends HttpServlet {
 				if (bytesRead == -1) break; 
 				out.write(buffer, 0, bytesRead); 
 			} 
-			_logger.info("Closing streams");
+			_logger.debug("Closing streams");
 			in.close(); 
 			out.close(); 
 		} 

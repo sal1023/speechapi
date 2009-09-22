@@ -366,7 +366,7 @@ public class AudioStreamDataSource extends BaseDataProcessor implements StreamDa
     }
 
 
-    private void closeDataStream() throws IOException {
+    public void closeDataStream() throws IOException {
     	_logger.debug("Closing data stream");
         streamEndReached = true;
         if (dataStream != null) {

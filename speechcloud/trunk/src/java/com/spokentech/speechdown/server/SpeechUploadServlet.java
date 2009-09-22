@@ -9,10 +9,10 @@ import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
+import java.io.OutputStream;
 import java.io.PrintWriter;
 import java.util.Enumeration;
-import java.util.LinkedList;
-import java.util.List;
+
 
 import javax.servlet.ServletConfig;
 import javax.servlet.ServletException;
@@ -23,9 +23,7 @@ import javax.sound.sampled.AudioFileFormat;
 import javax.sound.sampled.AudioFormat;
 import javax.sound.sampled.AudioInputStream;
 import javax.sound.sampled.AudioSystem;
-import javax.sound.sampled.UnsupportedAudioFileException;
 
-import org.apache.commons.fileupload.FileItem;
 import org.apache.commons.fileupload.FileItemIterator;
 import org.apache.commons.fileupload.FileItemStream;
 import org.apache.commons.fileupload.FileUploadException;
@@ -51,11 +49,14 @@ import com.spokentech.speechdown.common.RecognitionResult;
 public class SpeechUploadServlet extends HttpServlet {
 
 	private static Logger _logger = Logger.getLogger(SpeechUploadServlet.class);
-    private static final String SAMPLE_RATE_FIELD_NAME = "sampleRate";
+    private static final String LANGUAGE_MODEL_FLAG = "lmFlag";
+    private static final String REC_MODE = "recMode";
+	private static final String SAMPLE_RATE_FIELD_NAME = "sampleRate";
     private static final String DATA_MODE = "dataMode";
     private static final String BIG_ENDIAN_FIELD_NAME = "bigEndian";
     private static final String BYTES_PER_VALUE_FIELD_NAME = "bytesPerValue";
     private static final String ENCODING_FIELD_NAME = "encoding";
+
 	private DiskFileItemFactory factory;
 	private File destinationDir;
 	
@@ -103,7 +104,7 @@ public class SpeechUploadServlet extends HttpServlet {
 		Enumeration hnames = request.getHeaderNames();
 	    while (hnames.hasMoreElements()) {
 	        String key = (String) hnames.nextElement();
-	        _logger.info(key + " -- " + request.getHeader(key));
+	        _logger.debug(key + " -- " + request.getHeader(key));
 	      }
 
 		
@@ -117,6 +118,8 @@ public class SpeechUploadServlet extends HttpServlet {
 	    //set the audio format parameters to default values
 	    int sampleRate = 8000;
 	    boolean bigEndian = true;
+	    boolean lmFlag = false;
+	    String recMode = "normal";
 	    int bytesPerValue = 2;
 	    AudioFormat.Encoding encoding = AudioFormat.Encoding.PCM_SIGNED;
 
@@ -126,6 +129,7 @@ public class SpeechUploadServlet extends HttpServlet {
 		InputStream audio = null;
 		String grammarString = null;
 		RecognitionResult result = null;
+		String textResult = null;
     	//TODO: grammar must be the first item processed in the iterator
 		// Parse the request
 		try {
@@ -137,11 +141,14 @@ public class SpeechUploadServlet extends HttpServlet {
 			    String contentType = item.getContentType();
 			    if (item.isFormField()) {
 			    	String value = Streams.asString(stream);
-			        _logger.info("Form field " + name + " with value " + value + " detected.");
+			        _logger.debug("Form field " + name + " with value " + value + " detected.");
 			        try { 
 				        if (name.equals(SAMPLE_RATE_FIELD_NAME)) {
 				        	sampleRate = Integer.parseInt(value);
-
+			        	} else if (name.equals(REC_MODE)) {
+				        	recMode = value;
+				        } else if (name.equals(LANGUAGE_MODEL_FLAG)) {
+				        	lmFlag = Boolean.parseBoolean(value);
 				        } else if (name.equals(BIG_ENDIAN_FIELD_NAME)) {
 				        	bigEndian = Boolean.parseBoolean(value);
 			        	} else if (name.equals(BYTES_PER_VALUE_FIELD_NAME)) {
@@ -167,14 +174,53 @@ public class SpeechUploadServlet extends HttpServlet {
 			    } else {
 			        _logger.debug("File field " + name + " with file name "
 			            + item.getName() + " detected.");
+
+			        
 			        // Process the input stream
 				    if (name.equals("audio") ) {
 				    	audio = stream;
 				    	try {
-				    		_logger.info("recognizing audio!  Sample rate= "+sampleRate+", bigEndian= "+ bigEndian+", bytes per value= "+bytesPerValue+", encoding= "+encoding.toString());
-				    	    result = recognizerService.Recognize(audio, grammarString,contentType,sampleRate,bigEndian,bytesPerValue,encoding);
-				    		//String filename = Long.toString(System.currentTimeMillis()) + ".wav";
-				    		//writeStreamToFile2(audio,filename);
+				    		_logger.debug("recognizing audio!  Sample rate= "+sampleRate+", bigEndian= "+ bigEndian+", bytes per value= "+bytesPerValue+", encoding= "+encoding.toString());
+				    		if (recMode.equals("transcript")) {
+						        
+								PrintWriter out = response.getWriter();	
+				    			//OutputStream out = response.getOutputStream();
+				    			response.setContentType("text/plain");
+				    			//response.setHeader("Content-Disposition", "attachment; filename=results.txt'");			
+				    			response.setHeader("Transfer-coding","chunked");
+					    		if (lmFlag) {
+					    			textResult = recognizerService.Transcribe(audio,contentType,sampleRate,bigEndian,bytesPerValue,encoding,out);
+					    		} else {
+							        _logger.debug("recognition result is null");
+								    out.println("recognition result is null");
+					    		}
+				    		//} else if (recMode.equals("hotword")) {
+				    		//} else if (recMode.equals("normal")) {
+				    		} else {
+
+					    		if (lmFlag) {
+					    			textResult = recognizerService.Recognize(audio,contentType,sampleRate,bigEndian,bytesPerValue,encoding);
+					    		} else {
+					    	        result = recognizerService.Recognize(audio, grammarString,contentType,sampleRate,bigEndian,bytesPerValue,encoding);
+					    	        if (result == null) {
+					    	        	textResult = null;
+					    	        }else {
+					    	        	textResult = result.toString();
+					    	        }
+					    	    }
+					    		
+								PrintWriter out = response.getWriter();	
+							    if (textResult == null) {
+						    	   _logger.debug("recognition result is null");
+									out.println("recognition result is null");
+							    } else {
+							       _logger.debug(textResult);
+									out.println(textResult);
+							    }	
+					    		
+					    	    //String filename = Long.toString(System.currentTimeMillis()) + ".wav";
+					    		//writeStreamToFile2(audio,filename);
+				    		}
 				    	} catch (Exception e) {
 				    		e.printStackTrace();
 				    	}
@@ -183,14 +229,7 @@ public class SpeechUploadServlet extends HttpServlet {
 				    }
 			    }
 			}
-			PrintWriter out = response.getWriter();	
-		    if (result == null) {
-	    	   _logger.info("recognition result is null");
-				out.println("recognition result is null");
-		    } else {
-		       _logger.info("recognition result: "+result.getText());
-				out.println(result.toString());
-		    }	
+
 				
 			// store file list and pass control to view jsp
 			//request.setAttribute("fileUploadList", filenames);
@@ -221,7 +260,7 @@ public class SpeechUploadServlet extends HttpServlet {
 			buf.write(b);
 			result = bis.read();
 		}        
-		_logger.info(buf.toString());
+		_logger.debug(buf.toString());
 		return buf.toString();
 	}
 
@@ -244,7 +283,7 @@ public class SpeechUploadServlet extends HttpServlet {
     	}
         //AudioFormat audioFormat = audioStream.getFormat();
 		
-		_logger.info("Out of the the Loop "+baos.size());
+		_logger.debug("Out of the the Loop "+baos.size());
 		//write it to the new file
         int bitsPerSample = 16;
         int sampleRate = 8000;
@@ -262,10 +301,10 @@ public class SpeechUploadServlet extends HttpServlet {
 			//read the data from the file
 			try{
 				nBytesRead = inputStream.read(abData, 0, abData.length);
-				_logger.info("Read "+nBytesRead+ " bytes");
+				_logger.debug("Read "+nBytesRead+ " bytes");
 				if (nBytesRead >0) {
 	    			dos.write(abData, 0, nBytesRead);
-	    			_logger.info("then wrote them ");
+	    			_logger.debug("then wrote them ");
 				}
 			}catch (IOException e){
 				e.printStackTrace();
@@ -279,7 +318,7 @@ public class SpeechUploadServlet extends HttpServlet {
 
 		if (AudioSystem.isFileTypeSupported(outputType, ais)) {
 			try {
-				_logger.info("writing file "+outWavFile.getCanonicalPath());
+				_logger.debug("writing file "+outWavFile.getCanonicalPath());
 				AudioSystem.write(ais, outputType, outWavFile);
 			} catch (IOException e) {
 				e.printStackTrace();
@@ -304,7 +343,7 @@ public class SpeechUploadServlet extends HttpServlet {
 				if (bytesRead == -1) break; 
 				out.write(buffer, 0, bytesRead); 
 			} 
-			_logger.info("Closing streams");
+			_logger.debug("Closing streams");
 			in.close(); 
 			out.close(); 
 		} 
