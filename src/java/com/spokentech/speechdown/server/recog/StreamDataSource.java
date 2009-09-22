@@ -38,5 +38,7 @@ public interface StreamDataSource {
 	 *          if there is a data processing error
 	 */
 	public Data getData() throws DataProcessingException;
+	
+    public void closeDataStream() throws IOException;
 
 }

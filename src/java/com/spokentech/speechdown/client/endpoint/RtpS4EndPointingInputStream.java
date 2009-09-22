@@ -1,4 +1,4 @@
-package com.spokentech.speechdown.client.rtp;
+package com.spokentech.speechdown.client.endpoint;
 
 import static org.speechforge.cairo.jmf.JMFUtil.CONTENT_DESCRIPTOR_RAW;
 
@@ -6,8 +6,6 @@ import java.io.IOException;
 import java.io.OutputStream;
 import java.io.UnsupportedEncodingException;
 import java.net.URL;
-import java.util.Timer;
-import java.util.TimerTask;
 
 import javax.media.Processor;
 import javax.media.format.AudioFormat;
@@ -25,7 +23,6 @@ import org.speechforge.cairo.rtp.server.sphinx.SourceAudioFormat;
 
 import edu.cmu.sphinx.util.props.ConfigurationManager;
 import com.spokentech.speechdown.client.SpeechEventListener;
-import com.spokentech.speechdown.client.SpeechEventListenerDecorator;
 import com.spokentech.speechdown.client.sphinx.SpeechDataMonitor;
 
 /**
@@ -33,31 +30,37 @@ import com.spokentech.speechdown.client.sphinx.SpeechDataMonitor;
  *
  * @author Spencer Lord {@literal <}<a href="mailto:slord@users.sourceforge.net">slord@users.sourceforge.net</a>{@literal >}
  */
-public class RtpReceiver {
+public class RtpS4EndPointingInputStream extends EndPointingInputStreamBase implements EndPointingInputStream {
 	
-    private static Logger _logger = Logger.getLogger(RtpReceiver.class);
-
-    public static final short WAITING_FOR_SPEECH = 0;
-    public static final short SPEECH_IN_PROGRESS = 1;
-    public static final short COMPLETE = 2;
-    volatile short _state = COMPLETE;
+    private static Logger _logger = Logger.getLogger(RtpS4EndPointingInputStream.class);
 
 	private int id;
 	private RawAudioProcessor _rawAudioProcessor;
 	private RawAudioTransferHandler _rawAudioTransferHandler;
 	private ConfigurationManager cm;
-	
-	private SpeechEventListener _listener;
-	
+
     private RTPStreamReplicator _replicator;
     private Processor _processor;
 	
-	private /*static*/ Timer _timer = new Timer();
-    TimerTask _noInputTimeoutTask;
-	 
 	private String s4ConfigFile = "/config/sphinx-config.xml";
 	
+	private String mimeType;
+	
+	/**
+     * @return the mimeType
+     */
+    public String getMimeType() {
+    	return mimeType;
+    }
 
+
+	/**
+     * @param mimeType the mimeType to set
+     */
+    public void setMimeType(String mimeType) {
+    	this.mimeType = mimeType;
+    }
+	
     /**
      * @return the s4ConfigFile
      */
@@ -75,7 +78,7 @@ public class RtpReceiver {
 
 
 	public void init() {
-	    URL sphinxConfigUrl = RtpReceiver.class.getResource(s4ConfigFile);
+	    URL sphinxConfigUrl = RtpS4EndPointingInputStream.class.getResource(s4ConfigFile);
         if (sphinxConfigUrl == null) {
             throw new RuntimeException("Sphinx config file not found!");
         }
@@ -86,19 +89,29 @@ public class RtpReceiver {
 		_logger.info("Setting up the stream");
         Validate.notNull(replicator, "Null replicator!");
         _replicator = replicator;
+        setupPipedStream();
 	}
 
+	/* (non-Javadoc)
+     * @see com.spokentech.speechdown.client.rtp.EndPointingReceiver#shutdownStream()
+     */
 	public void shutdownStream() {
 		//TODO:
 		_logger.info("Shutdown stream not implemented!");
 	}
 	
 	
-	public AudioFormat getFormat() {
+	/* (non-Javadoc)
+     * @see com.spokentech.speechdown.client.rtp.EndPointingReceiver#getFormat()
+     */
+	public AudioFormat getFormat2() {
 		return SourceAudioFormat.PREFERRED_MEDIA_FORMATS[0];
 	}
 	
-	public void startAudioTransfer(long timeout, OutputStream out, SpeechEventListener listener) throws InstantiationException, IOException {
+	/* (non-Javadoc)
+     * @see com.spokentech.speechdown.client.rtp.EndPointingReceiver#startAudioTransfer(long, java.io.OutputStream, com.spokentech.speechdown.client.SpeechEventListener)
+     */
+	public void startAudioTransfer(long timeout, SpeechEventListener listener) throws InstantiationException, IOException {
 
 		_listener = new Listener(listener);
 
@@ -170,8 +183,9 @@ public class RtpReceiver {
 		}
 	}
 
-	
-	
+    /* (non-Javadoc)
+     * @see com.spokentech.speechdown.client.rtp.EndPointingReceiver#stopAudioTransfer()
+     */
     public synchronized void stopAudioTransfer() {
         if (_processor != null) {
           _logger.debug("Closing processor...");
@@ -188,11 +202,8 @@ public class RtpReceiver {
     }
 	
 	
-    /**
-     * Starts the input timers which trigger no-input-timeout if speech has not started after the specified time.
-     * @param noInputTimeout the amount of time to wait, in milliseconds, before triggering a no-input-timeout. 
-     * @return {@code true} if input timers were started or {@code false} if speech has already started.
-     * @throws IllegalStateException if recognition is not in progress or if the input timers have already been started.
+    /* (non-Javadoc)
+     * @see com.spokentech.speechdown.client.rtp.EndPointingReceiver#startInputTimers(long)
      */
     public synchronized boolean startInputTimers(long noInputTimeout) throws IllegalStateException {
         if (noInputTimeout <= 0) {
@@ -213,76 +224,12 @@ public class RtpReceiver {
 
         return startInputTimers;
     }
-	
-    private class NoInputTimeoutTask extends TimerTask {
 
-        /* (non-Javadoc)
-         * @see java.util.TimerTask#run()
-         */
-        @Override
-        public void run() {
-            synchronized (RtpReceiver.this) {
-                _noInputTimeoutTask = null;
-                if (_state == WAITING_FOR_SPEECH) {
-                    _state = COMPLETE;
-                    stopAudioTransfer();
-                    if (_listener != null) {
-                    	_listener.noInputTimeout();
-                    }
-                }
-            }
-        }
-        
+
+	@Override
+    public javax.sound.sampled.AudioFormat getFormat1() {
+	    // TODO Auto-generated method stub
+	    return null;
     }
 
-	   private class Listener extends SpeechEventListenerDecorator {
-
-	        /**
-	         * TODOC
-	         * @param recogListener
-	         */
-	        public Listener(SpeechEventListener speechEventListener) {
-	            super(speechEventListener);
-	        }
-
-	        /* (non-Javadoc)
-	         * @see org.speechforge.cairo.server.recog.RecogListener#speechStarted()
-	         */
-	        @Override
-	        public void speechStarted() {
-	            _logger.debug("speechStarted()");
-
-	            synchronized (RtpReceiver.this) {
-	                if (_state == WAITING_FOR_SPEECH) {
-	                    _state = SPEECH_IN_PROGRESS;
-	                }
-	                if (_noInputTimeoutTask != null) {
-	                    _noInputTimeoutTask.cancel();
-	                    _noInputTimeoutTask = null;
-	                }
-	            }
-	            super.speechStarted();
-	        }
-
-	        public void speechEnded() {
-	            _logger.debug("speechEnded()");
-	            synchronized (RtpReceiver.this) {
-	            	stopAudioTransfer();
-	            	_state = COMPLETE;
-	            }
-	            super.speechEnded();
-	        }
-
-	        public void noInputTimeout() {
-	            _logger.debug("no input timeout()");
-	            synchronized (RtpReceiver.this) {
-	            	stopAudioTransfer();
-	            	_state = COMPLETE;
-	            }	   
-	            super.noInputTimeout();
-	        }
-
-	    }
-	
-	
 }

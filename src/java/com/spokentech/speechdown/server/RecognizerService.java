@@ -2,6 +2,9 @@ package com.spokentech.speechdown.server;
 
 import java.io.IOException;
 import java.io.InputStream;
+import java.io.OutputStream;
+import java.io.PrintWriter;
+
 import javax.activation.DataHandler;
 import javax.sound.sampled.AudioInputStream;
 import javax.sound.sampled.AudioSystem;
@@ -19,15 +22,72 @@ public class RecognizerService {
 
     static Logger _logger = Logger.getLogger(RecognizerService.class);
     
-    static private final String AUDIO_INPUT_PREFIX = "audio-";
-    static private final String FEATURE_INPUT_PREFIX = "feature-";
+    static private final String AUDIO_INPUT_GRAMMAR_PREFIX = "audio-";
+    static private final String FEATURE_INPUT_GRAMMAR_PREFIX = "feature-";
+    static private final String AUDIO_INPUT_LM_PREFIX = "audio-lm-";
+    static private final String FEATURE_INPUT_LM_PREFIX = "feature-lm-";
+    static private final String AUDIO_INPUT_LM_WITH_EP_PREFIX = "audio-lm-ep-";
     
     private ObjectPool _audioRecognizerPool;
     private ObjectPool _featureRecognizerPool;
     
-
+    private ObjectPool _audioLmRecognizerPool;
+    private ObjectPool _featureLmRecognizerPool;
+    
+    private ObjectPool _audioLmEpRecognizerPool;
+    
 	private int featureInputPoolSize;   
-	private int audioInputPoolSize;   
+	private int audioInputPoolSize;
+	
+	private int featureLMInputPoolSize;   
+	private int audioLMInputPoolSize;
+	
+	private int audioLMEPInputPoolSize; 
+	
+	/**
+     * @return the audioLMEPInputPoolSize
+     */
+    public int getAudioLMEPInputPoolSize() {
+    	return audioLMEPInputPoolSize;
+    }
+
+	/**
+     * @param audioLMEPInputPoolSize the audioLMEPInputPoolSize to set
+     */
+    public void setAudioLMEPInputPoolSize(int audioLMEPInputPoolSize) {
+    	this.audioLMEPInputPoolSize = audioLMEPInputPoolSize;
+    }
+
+	/**
+     * @return the featureLMInputPoolSize
+     */
+    public int getFeatureLMInputPoolSize() {
+    	return featureLMInputPoolSize;
+    }
+
+	/**
+     * @param featureLMInputPoolSize the featureLMInputPoolSize to set
+     */
+    public void setFeatureLMInputPoolSize(int featureLMInputPoolSize) {
+    	this.featureLMInputPoolSize = featureLMInputPoolSize;
+    }
+
+	/**
+     * @return the audioLMInputPoolSize
+     */
+    public int getAudioLMInputPoolSize() {
+    	return audioLMInputPoolSize;
+    }
+
+	/**
+     * @param audioLMInputPoolSize the audioLMInputPoolSize to set
+     */
+    public void setAudioLMInputPoolSize(int audioLMInputPoolSize) {
+    	this.audioLMInputPoolSize = audioLMInputPoolSize;
+    }
+
+
+  
 	private AbstractPoolableObjectFactory recEngineFactory;
     
 	/**
@@ -75,8 +135,11 @@ public class RecognizerService {
 
 	public void startup() {
 	   try {
-	    	_audioRecognizerPool =  recEngineFactory.createObjectPool(audioInputPoolSize,AUDIO_INPUT_PREFIX);
-	    	_featureRecognizerPool =  recEngineFactory.createObjectPool(featureInputPoolSize,FEATURE_INPUT_PREFIX);
+	    	_audioRecognizerPool =  recEngineFactory.createObjectPool(audioInputPoolSize,AUDIO_INPUT_GRAMMAR_PREFIX);
+	    	_featureRecognizerPool =  recEngineFactory.createObjectPool(featureInputPoolSize,FEATURE_INPUT_GRAMMAR_PREFIX);
+	    	_audioLmRecognizerPool =  recEngineFactory.createObjectPool(audioLMInputPoolSize,AUDIO_INPUT_LM_PREFIX);
+	    	_featureLmRecognizerPool =  recEngineFactory.createObjectPool(featureLMInputPoolSize,FEATURE_INPUT_LM_PREFIX);
+	    	_audioLmEpRecognizerPool =  recEngineFactory.createObjectPool(audioLMEPInputPoolSize,AUDIO_INPUT_LM_WITH_EP_PREFIX);
         } catch (InstantiationException e) {
 	        // TODO Auto-generated catch block
 	        e.printStackTrace();
@@ -138,6 +201,7 @@ public class RecognizerService {
 	    return results;
     }
 
+	//grammar method
 	public RecognitionResult Recognize(InputStream as, String grammar, String mimeType, int sampleRate, boolean bigEndian, int bytesPerValue, Encoding encoding) {
 
 		_logger.debug("Before borrow" + System.currentTimeMillis());
@@ -175,5 +239,78 @@ public class RecognizerService {
         }
 	    return results;		
 	}
+
+	
+	//language model method (no grammar)
+	public String Recognize(InputStream as, String mimeType, int sampleRate, boolean bigEndian, int bytesPerValue, Encoding encoding) {
+
+		_logger.debug("Before borrow" + System.currentTimeMillis());
+		
+        ObjectPool pool = _audioRecognizerPool;
+    	if ((mimeType.equals("audio/x-wav")) ||
+	        (mimeType.equals("audio/x-s4audio"))) {
+    		pool = _audioLmRecognizerPool;
+    	} else if (mimeType.equals("audio/x-s4feature")) {
+    		pool = _featureLmRecognizerPool;
+    	} else {
+    		_logger.warn("Unrecognized mimeType: "+mimeType);  
+    	}
+    	
+        RecEngine rengine = null;
+        try {
+
+            rengine = (RecEngine) pool.borrowObject();
+            
+        } catch (Exception e) {
+            // TODO Auto-generated catch block
+            throw new RuntimeException(e);
+        }
+        
+        _logger.debug("After borrow" + System.currentTimeMillis());
+	
+        
+        String results = rengine.recognize(as,mimeType,sampleRate,bigEndian,bytesPerValue,encoding);
+        
+        try {
+	        pool.returnObject(rengine);
+        } catch (Exception e) {
+	        // TODO Auto-generated catch block
+            throw new RuntimeException(e);
+        }
+	    return results;	
+    }
+
+	public String Transcribe(InputStream audio, String mimeType, int sampleRate, boolean bigEndian,
+            int bytesPerValue, Encoding encoding, PrintWriter out) {
+		_logger.debug("Before borrow" + System.currentTimeMillis());
+		
+        ObjectPool pool = _audioLmEpRecognizerPool;
+    	if (!mimeType.equals("audio/x-wav")) {
+    		_logger.warn("Unrecognized mimeType: "+mimeType);  
+    	}
+    	
+        RecEngine rengine = null;
+        try {
+
+            rengine = (RecEngine) pool.borrowObject();
+            
+        } catch (Exception e) {
+            // TODO Auto-generated catch block
+            throw new RuntimeException(e);
+        }
+        
+        _logger.debug("After borrow" + System.currentTimeMillis());
+	
+        
+        String results = rengine.transcribe(audio,mimeType,sampleRate,bigEndian,bytesPerValue,encoding,out);
+        
+        try {
+	        pool.returnObject(rengine);
+        } catch (Exception e) {
+	        // TODO Auto-generated catch block
+            throw new RuntimeException(e);
+        }
+	    return results;	
+    }
     
 }

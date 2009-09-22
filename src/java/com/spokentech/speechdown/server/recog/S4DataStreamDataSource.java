@@ -160,7 +160,7 @@ public class S4DataStreamDataSource extends BaseDataProcessor implements StreamD
         }
     }
 
-    private void closeDataStream() throws IOException {
+    public void closeDataStream() throws IOException {
     	_logger.debug("Closing data stream");
         if (dataStream != null) {
             dataStream.close();

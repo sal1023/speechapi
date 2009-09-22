@@ -33,12 +33,20 @@
 		  init-method="startup" destroy-method="shutdown">
 		  <property name="recEngineFactory"><ref bean="recEngineFactory"/></property>
 		  <property name="audioInputPoolSize">
-				<value>10</value>
+				<value>5</value>
 		  </property>
 		  <property name="featureInputPoolSize">
-				<value>10</value>
+				<value>5</value>
 		  </property>
-
+		  <property name="audioLMInputPoolSize">
+				<value>1</value>
+		  </property>
+		  <property name="featureLMInputPoolSize">
+				<value>1</value>
+		  </property>
+		  <property name="audioLMEPInputPoolSize">
+				<value>1</value>
+		  </property>
 	</bean>
 	
 	
