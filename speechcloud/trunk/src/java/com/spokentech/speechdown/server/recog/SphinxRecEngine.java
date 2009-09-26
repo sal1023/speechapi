@@ -227,7 +227,7 @@ public class SphinxRecEngine extends AbstractPoolableObject implements RecEngine
 	}
 	
 	//Recognize using language mode
-    public String recognize(InputStream as, String mimeType, int sampleRate, boolean bigEndian, int bytesPerValue, Encoding encoding) {
+    public RecognitionResult recognize(InputStream as, String mimeType, int sampleRate, boolean bigEndian, int bytesPerValue, Encoding encoding) {
 		_logger.info("Using recognizer # "+_id);
 	    //SAL
 		//_recognizer.allocate();
@@ -242,7 +242,13 @@ public class SphinxRecEngine extends AbstractPoolableObject implements RecEngine
 	    _logger.info("Result: " + (r != null ? r.getBestFinalResultNoFiller() : null));
 	    //SAL
 	    //_recognizer.deallocate();
-	    return r.getBestResultNoFiller();
+	    
+	    if (r != null) {
+	       RecognitionResult results = new RecognitionResult(r.getBestResultNoFiller());
+	       return results;
+	    } else {
+	    	return null;
+	    }
     }
     
     

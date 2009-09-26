@@ -42,14 +42,14 @@ public class SpeechDataStreamer  extends Thread{
     private void showSignals(Data data) {
 
         if (data instanceof SpeechStartSignal) {
-            _logger.info("<<<<<<<<<<<<<<< SpeechStartSignal encountered!");
+            _logger.debug("streamer <<<<<<<<<<<<<<< SpeechStartSignal encountered!");
         } else if (data instanceof SpeechEndSignal) {
-            _logger.info("streamer <<<<<<<<<<<<<<< SpeechEndSignal encountered!");
+            _logger.debug("streamer <<<<<<<<<<<<<<< SpeechEndSignal encountered!");
         } else if (data instanceof DataStartSignal) {
-            _logger.info("streamer <<<<<<<<<<<<<<< DataStartSignal encountered!");
+            _logger.debug("streamer <<<<<<<<<<<<<<< DataStartSignal encountered!");
             infoDataStartSignal((DataStartSignal) data);
         } else if (data instanceof DataEndSignal) {
-            _logger.info("streamer >>>>>>>>>>>>>>> DataEndSignal encountered!");
+            _logger.debug("streamer >>>>>>>>>>>>>>> DataEndSignal encountered!");
         }
 
     }
@@ -69,14 +69,14 @@ public class SpeechDataStreamer  extends Thread{
         	DoubleData dd = (DoubleData) data;
         	double[] d = dd.getValues();
 
-        	_logger.info(dd.toString());
-        	_logger.info("Sending " + d.length + " values.  "+d[0]+ " "+d[d.length-1]);
+        	_logger.debug(dd.toString());
+        	_logger.debug("Sending " + d.length + " values.  "+d[0]+ " "+d[d.length-1]);
         } else if (data instanceof FloatData) {
         	FloatData fd = (FloatData) data;
-        	_logger.info("FloatData: " + fd.getSampleRate() + "Hz, first sample #: " +
+        	_logger.debug("FloatData: " + fd.getSampleRate() + "Hz, first sample #: " +
                     fd.getFirstSampleNumber() + ", collect time: " + fd.getCollectTime());
         	float[] d = fd.getValues();
-        	_logger.info("Sending " + d.length + " values.");
+        	_logger.debug("Sending " + d.length + " values.");
         	//for (float val: d) {
         	//	_logger.info(val);
         	//}

@@ -104,6 +104,9 @@ public class MicS4EndPointingInputStream extends EndPointingInputStreamBase impl
 		
 		mic.initialize();
 		mic.startRecording();
+		if (timeout > 0)
+			startInputTimers(timeout);
+		
 		_state = WAITING_FOR_SPEECH;
 	}
 

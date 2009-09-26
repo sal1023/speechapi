@@ -2,6 +2,8 @@ package com.spokentech.speechdown.client.endpoint;
 
 import java.io.File;
 import java.io.IOException;
+import java.io.InputStream;
+
 import javax.sound.sampled.AudioFormat;
 import javax.sound.sampled.AudioInputStream;
 import javax.sound.sampled.AudioSystem;
@@ -10,7 +12,7 @@ import org.apache.log4j.Logger;
 
 import com.spokentech.speechdown.client.SpeechEventListener;
 
-public class FileS4EndPointingInputStream extends EndPointingInputStreamBase implements EndPointingInputStream {
+public class FileS4EndPointingInputStream implements EndPointingInputStream {
 	
     private static Logger _logger = Logger.getLogger(FileS4EndPointingInputStream.class);
 
@@ -106,6 +108,12 @@ public class FileS4EndPointingInputStream extends EndPointingInputStreamBase imp
 
     public void setMimeType(String mimeType) {
     	delegate.setMimeType(mimeType);
+    }
+
+
+	@Override
+    public InputStream getInputStream() {
+	    return delegate.getInputStream();
     }
 
 	
