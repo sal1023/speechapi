@@ -82,17 +82,22 @@ public class HttpRecognizer {
     	
 	}
 	
-	public RecognitionResult recognize(AudioInputStream audioInputStream, Type type, URL grammarUrl, boolean lmflg) {
-		AudioFormat desiredFormat = new AudioFormat ((float) sampleRate, sampleSizeInBits, channels, signed, bigEndian);
-        DataLine.Info info = new DataLine.Info(TargetDataLine.class, desiredFormat);
-        if (!AudioSystem.isLineSupported(info)) {
-            _logger.info(desiredFormat + " not supported");
-            throw new RuntimeException("unsupported audio format");
-        } 
-        
-        _logger.info("Desired format: " + desiredFormat);
 
-    	// Plain old http approach    	
+
+	
+	public RecognitionResult recognize(AudioInputStream audioInputStream, Type type, URL grammarUrl, boolean lmflg) {
+
+		
+        // get the audio format and send as form fields.  Cound not send aduio file with format included because audio files do not
+        // support mark/reset.  That is needed for stremaing using http chunk encoding on the servlet side using file upload.
+        AudioFormat format = audioInputStream.getFormat();
+		
+
+    	return recognize(audioInputStream, format, type, grammarUrl, lmflg);
+    }
+
+	public RecognitionResult recognize(InputStream inputStream, AudioFormat format, Type type, URL grammarUrl, boolean lmflg) {
+	    // Plain old http approach    	
     	HttpClient httpclient = new DefaultHttpClient();
         HttpPost httppost = new HttpPost(service);
     	
@@ -111,9 +116,7 @@ public class HttpRecognizer {
 	        }
         }
 
-        // get the audio format and send as form fields.  Cound not send aduio file with format included because audio files do not
-        // support mark/reset.  That is needed for stremaing using http chunk encoding on the servlet side using file upload.
-        AudioFormat format = audioInputStream.getFormat();
+
         _logger.info("Actual format: " + format);    	
     	StringBody sampleRate = null;
     	StringBody bigEndian = null;
@@ -149,7 +152,7 @@ public class HttpRecognizer {
 		} else {
 			_logger.warn("unhanlded format type "+type.getExtension());
 		}
-        InputStreamBody audioBody = new InputStreamBody(audioInputStream, mimeType,fname);      
+        InputStreamBody audioBody = new InputStreamBody(inputStream, mimeType,fname);      
 
         if (!lmflg)
         	mpEntity.addPart("grammar", grammarBody);

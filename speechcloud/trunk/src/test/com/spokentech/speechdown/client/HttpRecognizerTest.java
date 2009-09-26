@@ -176,7 +176,7 @@ public class HttpRecognizerTest extends TestCase {
 	    }
 
 	    
-	    public void testRecognizeStream() {
+	    public void testRecognizeAudioStream() {
 	    	System.out.println("Starting Stream Test ...");
 	    	
 	    	
@@ -211,6 +211,45 @@ public class HttpRecognizerTest extends TestCase {
 	    	
 	    }
 	     
+	    public void testRecognizeStreamWithFormatParamater() {
+	    	System.out.println("Starting Input Stream with format parameter Test ...");
+	    	
+
+			
+	    	
+	    	// Get a stream for the test
+	    	AudioInputStream	audioInputStream = null;
+	    	Type type = null;
+	    	try {
+	    		audioInputStream = AudioSystem.getAudioInputStream(soundFile1);
+	    		type = AudioSystem.getAudioFileFormat(soundFile1).getType();
+	    	} catch (Exception e) {
+	    		e.printStackTrace();
+	    	}
+	        AudioFormat format = audioInputStream.getFormat();
+	        
+	        
+	    	//run the test
+	    	boolean lmflg = true;
+	    	RecognitionResult r = recog.recognize(audioInputStream, format, type, null, lmflg);
+	    	System.out.println("lm result: "+r.getText());
+	    	
+	    	// Get a stream for the test
+	    	try {
+	    		audioInputStream = AudioSystem.getAudioInputStream(soundFile2);
+	    		type = AudioSystem.getAudioFileFormat(soundFile1).getType();
+	    	} catch (Exception e) {
+	    		e.printStackTrace();
+	    	}
+	    	format = audioInputStream.getFormat();
+	    	
+	    	//run the test
+	    	lmflg = false;
+	    	r = recog.recognize(audioInputStream, format, type, grammarUrl, lmflg);
+	    	System.out.println("grammar result: "+r.getText());	    	
+	    	
+	    	
+	    }
 	     
 	    public void xxxtestRecognizeStreamEP() {	    	
 	    	System.out.println("Starting EP Stream Test ...");
