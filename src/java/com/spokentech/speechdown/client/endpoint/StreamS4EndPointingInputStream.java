@@ -112,8 +112,10 @@ public class StreamS4EndPointingInputStream extends EndPointingInputStreamBase i
 		
 		SpeechDataStreamer sds = new SpeechDataStreamer();
 		sds.startStreaming(frontEnd, outputStream);
-
-
+		
+		if (timeout > 0)
+			startInputTimers(timeout);
+		
 		_state = WAITING_FOR_SPEECH;
 	}
 

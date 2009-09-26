@@ -242,7 +242,7 @@ public class RecognizerService {
 
 	
 	//language model method (no grammar)
-	public String Recognize(InputStream as, String mimeType, int sampleRate, boolean bigEndian, int bytesPerValue, Encoding encoding) {
+	public RecognitionResult Recognize(InputStream as, String mimeType, int sampleRate, boolean bigEndian, int bytesPerValue, Encoding encoding) {
 
 		_logger.debug("Before borrow" + System.currentTimeMillis());
 		
@@ -269,7 +269,7 @@ public class RecognizerService {
         _logger.debug("After borrow" + System.currentTimeMillis());
 	
         
-        String results = rengine.recognize(as,mimeType,sampleRate,bigEndian,bytesPerValue,encoding);
+        RecognitionResult results = rengine.recognize(as,mimeType,sampleRate,bigEndian,bytesPerValue,encoding);
         
         try {
 	        pool.returnObject(rengine);

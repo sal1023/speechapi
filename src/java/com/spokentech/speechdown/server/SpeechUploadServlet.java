@@ -199,24 +199,22 @@ public class SpeechUploadServlet extends HttpServlet {
 				    		} else {
 
 					    		if (lmFlag) {
-					    			textResult = recognizerService.Recognize(audio,contentType,sampleRate,bigEndian,bytesPerValue,encoding);
+					    			result = recognizerService.Recognize(audio,contentType,sampleRate,bigEndian,bytesPerValue,encoding);
 					    		} else {
 					    	        result = recognizerService.Recognize(audio, grammarString,contentType,sampleRate,bigEndian,bytesPerValue,encoding);
-					    	        if (result == null) {
-					    	        	textResult = null;
-					    	        }else {
-					    	        	textResult = result.toString();
-					    	        }
+
 					    	    }
-					    		
+
 								PrintWriter out = response.getWriter();	
-							    if (textResult == null) {
-						    	   _logger.debug("recognition result is null");
+								if (result == null) {
+									textResult = null;
+									_logger.debug("recognition result is null");
 									out.println("recognition result is null");
-							    } else {
-							       _logger.debug(textResult);
+								}else {
+									textResult = result.toString();
+									_logger.debug(textResult);
 									out.println(textResult);
-							    }	
+								}
 					    		
 					    	    //String filename = Long.toString(System.currentTimeMillis()) + ".wav";
 					    		//writeStreamToFile2(audio,filename);

@@ -56,8 +56,18 @@ public class RecognitionResult {
     private String _text;
     private List<RuleMatch> _ruleMatches;
 
+    private boolean noGrammar = false;
     
     /**
+     * @return the noGrammar
+     */
+    public boolean isNoGrammar() {
+    	return noGrammar;
+    }
+
+
+
+	/**
      * TODOC
      */
     public RecognitionResult() { 
@@ -66,6 +76,19 @@ public class RecognitionResult {
     }
     
 
+    
+    /**
+     * TODOC
+     * @param rawResult
+     * @throws NullPointerException
+     */
+    public RecognitionResult(String textResult) {
+    	noGrammar = true;
+        _text = textResult;
+        _ruleGrammar = null;
+        commonInit();
+    }
+    
     /**
      * TODOC
      * @param rawResult
@@ -74,6 +97,7 @@ public class RecognitionResult {
     public RecognitionResult(String textResult, RuleGrammar ruleGrammar) throws NullPointerException {
         _text = textResult;
         _ruleGrammar = ruleGrammar;
+        noGrammar = false;
         commonInit();
     }
 
@@ -91,6 +115,7 @@ public class RecognitionResult {
     public void setNewResult(Result r, RuleGrammar ruleGrammar) {
         _rawResult = r;
         _ruleGrammar =ruleGrammar;
+        noGrammar = false;
         if (_rawResult != null) {
             _text = _rawResult.getBestFinalResultNoFiller();
             commonInit();
