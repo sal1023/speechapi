@@ -42,6 +42,8 @@ public class S4DataStreamDataSource extends BaseDataProcessor implements StreamD
 
     private InputStream dataStream;
     private ObjectInputStream s;
+    private long totalValues = 0;
+    private long sampleRate;
 
 
     @Override
@@ -130,6 +132,8 @@ public class S4DataStreamDataSource extends BaseDataProcessor implements StreamD
    
 
         getTimer().stop();
+        totalValues = totalValues + getDataLength(output);
+        
         return output;
     }
 
@@ -137,6 +141,7 @@ public class S4DataStreamDataSource extends BaseDataProcessor implements StreamD
 
         if (data instanceof SpeechStartSignal) {
             _logger.info("<<<<<<<<<<<<<<< SpeechStartSignal encountered!");
+            sampleRate = getSampleRate(data);
         } else if (data instanceof SpeechEndSignal) {
             _logger.info("<<<<<<<<<<<<<<< SpeechEndSignal encountered!");
         } else if (data instanceof DataStartSignal) {
@@ -148,16 +153,44 @@ public class S4DataStreamDataSource extends BaseDataProcessor implements StreamD
     }
     
     
+    private long getSampleRate(Data data) {
+    	long sampleRate = 0;
+        if (data instanceof DoubleData) {
+        	DoubleData dd = (DoubleData) data;
+
+        	sampleRate = dd.getSampleRate();
+        } else if (data instanceof FloatData) {
+        	FloatData fd = (FloatData) data;
+
+        	sampleRate = fd.getSampleRate();
+        }
+        return sampleRate;
+    } 
+    private long getDataLength(Data data) {
+    	long len = 0;
+        if (data instanceof DoubleData) {
+        	DoubleData dd = (DoubleData) data;
+        	len = dd.getValues().length;
+        } else if (data instanceof FloatData) {
+        	FloatData fd = (FloatData) data;
+        	len = fd.getValues().length;
+        }
+        return len;
+    }
+        
     private void showData(Data data) {
 
+    	long len = 0;
         if (data instanceof DoubleData) {
         	DoubleData dd = (DoubleData) data;
         	_logger.info(dd.toString());
         } else if (data instanceof FloatData) {
         	FloatData fd = (FloatData) data;
+        	len = fd.getValues().length;
         	_logger.info("FloatData: " + fd.getSampleRate() + "Hz, first sample #: " +
                     fd.getFirstSampleNumber() + ", collect time: " + fd.getCollectTime());
         }
+
     }
 
     public void closeDataStream() throws IOException {
@@ -165,6 +198,11 @@ public class S4DataStreamDataSource extends BaseDataProcessor implements StreamD
         if (dataStream != null) {
             dataStream.close();
         }
+    }
+
+	@Override
+    public long getLengthInMs() {
+	    return (1000*totalValues)/sampleRate;
     }
 
 }

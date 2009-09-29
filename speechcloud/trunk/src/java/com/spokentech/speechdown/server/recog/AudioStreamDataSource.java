@@ -68,6 +68,7 @@ public class AudioStreamDataSource extends BaseDataProcessor implements StreamDa
     private boolean streamEndReached = false;
     private boolean utteranceEndSent = false;
     private boolean utteranceStarted = false;
+    private long totalValues = 0;
 
     private File curAudioFile;
     
@@ -185,6 +186,7 @@ public class AudioStreamDataSource extends BaseDataProcessor implements StreamDa
         streamEndReached = false;
         utteranceEndSent = false;
         utteranceStarted = false;
+        totalValues = 0;
 
         if (!(inputStream instanceof AudioInputStream)) 
             throw new RuntimeException("Not an  audio input stream");
@@ -225,6 +227,8 @@ public class AudioStreamDataSource extends BaseDataProcessor implements StreamDa
         streamEndReached = false;
         utteranceEndSent = false;
         utteranceStarted = false;
+        totalValues = 0;
+
         
         _logger.debug("inputstream "+inputStream);
 
@@ -351,6 +355,7 @@ public class AudioStreamDataSource extends BaseDataProcessor implements StreamDa
         }
 
         _logger.debug("Total read in this frame: "+totalRead);
+        totalValues = totalValues + doubleData.length;
         //try {
         //	for (int i=0;i<doubleData.length;i++) {
         //		out.write(i+" "+doubleData[i]);
@@ -410,6 +415,13 @@ public class AudioStreamDataSource extends BaseDataProcessor implements StreamDa
             return;
 
         fileListeners.remove(l);
+    }
+
+
+	@Override
+    public long getLengthInMs() {
+
+	    return (1000*totalValues)/sampleRate;
     }
 
 
