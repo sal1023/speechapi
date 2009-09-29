@@ -15,26 +15,26 @@
     <property name="logTerse"                    value="true"/>
     <property name="showCreations"               value="false"/>
 
-    <property name="absoluteBeamWidth"           value="-1"/>
+    <property name="absoluteBeamWidth"           value="25000"/>
     <property name="relativeBeamWidth"           value="1E-80"/>
 
-    <property name="absoluteBeamWidth2"  value="500"/>
+    <property name="absoluteBeamWidth2"  value="25000"/>
     <property name="relativeBeamWidth2"  value="1E-80"/>
     <property name="absoluteWordBeamWidth2" value="20"/>
     <property name="relativeWordBeamWidth2" value="1E-60"/>
     
-    <property name="wordInsertionProbability"    value="1E-36"/>
-    <property name="languageWeight"              value="8"/>
+    <property name="wordInsertionProbability"    value="0.7"/>
+    <property name="languageWeight"              value="7"/>
     <property name="silenceInsertionProbability" value="1"/>
 
     <property name="lmwordInsertionProbability" value="0.7"/>
-    <property name="lmlanguageWeight" value="10.5"/>
+    <property name="lmlanguageWeight" value="7"/>
     <property name="lmsilenceInsertionProbability" value=".1"/>
 
     <property name="speechClassifierThreshold" value="13"/>
     
     
-    <property name="languageModelFile"          value="file:\\\C:\work\models\lm\lm_giga_64k_vp_3gram.arpa.DMP"/>
+    <property name="languageModelFile"          value="file:///home/eli/Desktop/lm/lm_giga_64k_vp_3gram/64k/lm_giga_64k_vp_3gram.arpa.DMP"/>
 
 	<!-- these are only needed to create the pool of recognizers.  Should be able to find a better way to create a recognizer without a grammar -->
     <property name="grammarLocation"             value="resource:/com.spokentech.speechdown.server.RecognizerService!/../../grammar"/>
@@ -144,9 +144,9 @@
 
     <component name="dictionary" type="edu.cmu.sphinx.linguist.dictionary.FastDictionary">
         <property name="dictionaryPath"
-              value="file:///work/models/dict/cmudict.0.7a"/>
+              value="file:///home/eli/nlp/metrocave/mcmodel/etc/cmudict.0.7a"/>
         <property name="fillerPath"
-              value="file:///work/models/dict/mcmodel.filler"/>
+              value="file:///home/eli/nlp/metrocave/mcmodel/etc/mcmodel.filler"/>
         <property name="addSilEndingPronunciation" value="false"/>
         <property name="wordReplacement" value="&lt;sil&gt;"/>
         <property name="unitManager" value="unitManager"/>
@@ -179,9 +179,9 @@
         <property name="logMath" value="logMath"/>
         <property name="unitManager" value="unitManager"/>
         <property name="propertiesFile"
-              value="file:///C:/work/models/am/model2.props" />
-        <property name="dataLocation" value="file:///C:/work/models/am/mcmodel.cd_cont_4000"/>
-        <property name="modelDefinition" value="file:///C:/work/models/am/mcmodel.cd_cont_4000/mdef"/>
+              value="file:///home/eli/nlp/cairo/bkup/sphinx4/models/acoustic/mcmodel/model2.props" />
+        <property name="dataLocation" value="file:///home/eli/nlp/metrocave/mcmodel/model_parameters/mcmodel.cd_cont_8000"/>
+        <property name="modelDefinition" value="file:///home/eli/nlp/metrocave/mcmodel/model_parameters/mcmodel.cd_cont_8000/mdef"/>
     </component>
 
     
