@@ -134,9 +134,15 @@ public class SphinxRecEngine extends AbstractPoolableObject implements RecEngine
 	    
 		_logger.debug("After setting the input stream" + System.currentTimeMillis());
 	    
+		long  start = System.nanoTime();
 	    // decode the audio file.
 	    //_logger.debug("Decoding " + audioFileURL);
 		Result r = _recognizer.recognize();
+		long stop = System.nanoTime();
+		long wall = (stop - start)/1000000;
+		long streamLen = dataSource.getLengthInMs();
+		double ratio = (double)wall/(double)streamLen;
+		_logger.info(ratio+ "  Wall time "+ wall+ " stream length "+ streamLen);
 	    return r;
     }
     

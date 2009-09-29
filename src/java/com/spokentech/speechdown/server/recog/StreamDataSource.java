@@ -40,5 +40,7 @@ public interface StreamDataSource {
 	public Data getData() throws DataProcessingException;
 	
     public void closeDataStream() throws IOException;
+    
+    public long getLengthInMs();
 
 }
