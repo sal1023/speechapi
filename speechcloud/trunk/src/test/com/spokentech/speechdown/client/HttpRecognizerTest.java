@@ -115,11 +115,12 @@ public class HttpRecognizerTest extends TestCase {
 	    	System.out.println("Starting File Test ...");
 	        String fname = "c:/work/speechcloud/etc/prompts/lookupsports.wav"; 	
 	    	boolean lmflg = true;
-	    	RecognitionResult r = recog.recognize(fname, grammarUrl, lmflg);
+	    	boolean doEndpointing = true;
+	    	RecognitionResult r = recog.recognize(fname, grammarUrl, lmflg, doEndpointing);
 	    	System.out.println("lm result: "+r.getText());
 	    	
 	    	lmflg = false;
-	    	r = recog.recognize(fname, grammarUrl, lmflg);
+	    	r = recog.recognize(fname, grammarUrl, lmflg, doEndpointing);
 	    	System.out.println("grammar result: "+r.getText());
 	    }
 	     
@@ -192,7 +193,8 @@ public class HttpRecognizerTest extends TestCase {
 
 	    	//run the test
 	    	boolean lmflg = true;
-	    	RecognitionResult r = recog.recognize(audioInputStream, type, null, lmflg);
+	    	boolean doEndpointing = true;
+	    	RecognitionResult r = recog.recognize(audioInputStream, type, null, lmflg, doEndpointing);
 	    	System.out.println("lm result: "+r.getText());
 	    	
 	    	// Get a stream for the test
@@ -205,7 +207,7 @@ public class HttpRecognizerTest extends TestCase {
 	    	
 	    	//run the test
 	    	lmflg = false;
-	    	r = recog.recognize(audioInputStream, type, grammarUrl, lmflg);
+	    	r = recog.recognize(audioInputStream, type, grammarUrl, lmflg, doEndpointing);
 	    	System.out.println("grammar result: "+r.getText());	    	
 	    	
 	    	
@@ -231,7 +233,8 @@ public class HttpRecognizerTest extends TestCase {
 	        
 	    	//run the test
 	    	boolean lmflg = true;
-	    	RecognitionResult r = recog.recognize(audioInputStream, format, type, null, lmflg);
+	    	boolean doEndpointing = true;
+	    	RecognitionResult r = recog.recognize(audioInputStream, format, type, null, lmflg,doEndpointing);
 	    	System.out.println("lm result: "+r.getText());
 	    	
 	    	// Get a stream for the test
@@ -245,7 +248,7 @@ public class HttpRecognizerTest extends TestCase {
 	    	
 	    	//run the test
 	    	lmflg = false;
-	    	r = recog.recognize(audioInputStream, format, type, grammarUrl, lmflg);
+	    	r = recog.recognize(audioInputStream, format, type, grammarUrl, lmflg,doEndpointing);
 	    	System.out.println("grammar result: "+r.getText());	    	
 	    	
 	    	
@@ -390,13 +393,13 @@ public class HttpRecognizerTest extends TestCase {
 	        	_logger.info("Can't find microphone");
 	        	throw new RuntimeException("Can't find microphone");
 	        }
-	    	
+	    	boolean doEndpointing = true;
 	    	boolean lmflg = true;
-	    	RecognitionResult r = recog.recognize(audioLine, grammarUrl, lmflg);
+	    	RecognitionResult r = recog.recognize(audioLine, grammarUrl, lmflg, doEndpointing);
 	    	System.out.println("lm result: "+r.getText());	        
 	    	
 	        lmflg = false;
-	        r = recog.recognize(audioLine, grammarUrl, lmflg);
+	        r = recog.recognize(audioLine, grammarUrl, lmflg,doEndpointing);
 	        System.out.println("grammar result: "+r.getText());
 	    	
 	    }
