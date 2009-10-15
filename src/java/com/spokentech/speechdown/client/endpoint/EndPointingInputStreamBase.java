@@ -1,3 +1,8 @@
+/**
+ * 
+ *
+ * @author Spencer Lord {@literal <}<a href="mailto:spencer@spokentech.com">spencer@spokentech.com</a>{@literal >}
+ */
 package com.spokentech.speechdown.client.endpoint;
 
 import java.io.IOException;
@@ -12,6 +17,10 @@ import org.apache.log4j.Logger;
 import com.spokentech.speechdown.client.SpeechEventListener;
 import com.spokentech.speechdown.client.SpeechEventListenerDecorator;
 
+// TODO: Auto-generated Javadoc
+/**
+ * The Class EndPointingInputStreamBase.  Abstract class implements common methods
+ */
 public abstract class EndPointingInputStreamBase implements EndPointingInputStream {
 	
     private static Logger _logger = Logger.getLogger(EndPointingInputStreamBase.class);
@@ -30,6 +39,10 @@ public abstract class EndPointingInputStreamBase implements EndPointingInputStre
 	protected PipedOutputStream	outputStream;
 	protected PipedInputStream inputStream;
 	
+	/**
+	 * Setup piped stream.  The piped stream is used internally to readt the input stream andcheck for enpoints and pipe it back out to the user of the 
+	 * endpointed audio stream
+	 */
 	protected void setupPipedStream() {
 		outputStream = new PipedOutputStream();
 	    try {
@@ -40,10 +53,16 @@ public abstract class EndPointingInputStreamBase implements EndPointingInputStre
 	    }
 	}
 	
+	/* (non-Javadoc)
+	 * @see com.spokentech.speechdown.client.endpoint.EndPointingInputStream#getInputStream()
+	 */
 	public InputStream getInputStream() {
 		return inputStream;
 	}
 	
+    /**
+     * The Class NoInputTimeoutTask.
+     */
     public class NoInputTimeoutTask extends TimerTask {
 
         /* (non-Javadoc)
@@ -65,12 +84,16 @@ public abstract class EndPointingInputStreamBase implements EndPointingInputStre
         
     }
 
-	   protected class Listener extends SpeechEventListenerDecorator {
+   /**
+   	 * The Class Listener.
+   	 */
+   	protected class Listener extends SpeechEventListenerDecorator {
 
 	        /**
-	         * TODOC
-	         * @param recogListener
-	         */
+        	 * TODOC.
+        	 * 
+        	 * @param speechEventListener the speech event listener
+        	 */
 	        public Listener(SpeechEventListener speechEventListener) {
 	            super(speechEventListener);
 	        }
@@ -94,7 +117,10 @@ public abstract class EndPointingInputStreamBase implements EndPointingInputStre
 	            super.speechStarted();
 	        }
 
-	        public void speechEnded() {
+	        /* (non-Javadoc)
+        	 * @see com.spokentech.speechdown.client.SpeechEventListenerDecorator#speechEnded()
+        	 */
+        	public void speechEnded() {
 	            _logger.debug("speechEnded()");
 	            synchronized (EndPointingInputStreamBase.this) {
 	            	stopAudioTransfer();
@@ -103,7 +129,10 @@ public abstract class EndPointingInputStreamBase implements EndPointingInputStre
 	            super.speechEnded();
 	        }
 
-	        public void noInputTimeout() {
+	        /* (non-Javadoc)
+        	 * @see com.spokentech.speechdown.client.SpeechEventListenerDecorator#noInputTimeout()
+        	 */
+        	public void noInputTimeout() {
 	            _logger.debug("no input timeout()");
 	            synchronized (EndPointingInputStreamBase.this) {
 	            	stopAudioTransfer();
@@ -116,19 +145,20 @@ public abstract class EndPointingInputStreamBase implements EndPointingInputStre
 
 	   
 	    /**
-	     * Converts a little-endian byte array into an array of doubles. Each consecutive bytes of a float are converted
-	     * into a double, and becomes the next element in the double array. The number of bytes in the double is specified
-	     * as an argument. The size of the returned array is (data.length/bytesPerValue).
-	     *
-	     * @param data          a byte array
-	     * @param offset        which byte to start from
-	     * @param length        how many bytes to convert
-	     * @param bytesPerValue the number of bytes per value
-	     * @param signedData    whether the data is signed
-	     * @return a double array, or <code>null</code> if byteArray is of zero length
-	     * @throws java.lang.ArrayIndexOutOfBoundsException
-	     *
-	     */
+    	 * Converts a little-endian byte array into an array of doubles. Each consecutive bytes of a float are converted
+    	 * into a double, and becomes the next element in the double array. The number of bytes in the double is specified
+    	 * as an argument. The size of the returned array is (data.length/bytesPerValue).
+    	 * 
+    	 * @param data          a byte array
+    	 * @param offset        which byte to start from
+    	 * @param length        how many bytes to convert
+    	 * @param bytesPerValue the number of bytes per value
+    	 * @param signedData    whether the data is signed
+    	 * 
+    	 * @return a double array, or <code>null</code> if byteArray is of zero length
+    	 * 
+    	 * @throws java.lang.ArrayIndexOutOfBoundsException     	 * @throws ArrayIndexOutOfBoundsException the array index out of bounds exception
+    	 */
 	   public static final double[] littleEndianBytesToValues(byte[] data,
 	    		int offset,
 	    		int length,
@@ -169,19 +199,20 @@ public abstract class EndPointingInputStreamBase implements EndPointingInputStre
 	    
 
 	    /**
-	     * Converts a big-endian byte array into an array of doubles. Each consecutive bytes in the byte array are converted
-	     * into a double, and becomes the next element in the double array. The size of the returned array is
-	     * (length/bytesPerValue). Currently, only 1 byte (8-bit) or 2 bytes (16-bit) samples are supported.
-	     *
-	     * @param byteArray     a byte array
-	     * @param offset        which byte to start from
-	     * @param length        how many bytes to convert
-	     * @param bytesPerValue the number of bytes per value
-	     * @param signedData    whether the data is signed
-	     * @return a double array, or <code>null</code> if byteArray is of zero length
-	     * @throws java.lang.ArrayIndexOutOfBoundsException
-	     *
-	     */
+    	 * Converts a big-endian byte array into an array of doubles. Each consecutive bytes in the byte array are converted
+    	 * into a double, and becomes the next element in the double array. The size of the returned array is
+    	 * (length/bytesPerValue). Currently, only 1 byte (8-bit) or 2 bytes (16-bit) samples are supported.
+    	 * 
+    	 * @param byteArray     a byte array
+    	 * @param offset        which byte to start from
+    	 * @param length        how many bytes to convert
+    	 * @param bytesPerValue the number of bytes per value
+    	 * @param signedData    whether the data is signed
+    	 * 
+    	 * @return a double array, or <code>null</code> if byteArray is of zero length
+    	 * 
+    	 * @throws java.lang.ArrayIndexOutOfBoundsException     	 * @throws ArrayIndexOutOfBoundsException the array index out of bounds exception
+    	 */
 	    public static final double[] bytesToValues(byte[] byteArray,
 	    		int offset,
 	    		int length,
@@ -217,13 +248,13 @@ public abstract class EndPointingInputStreamBase implements EndPointingInputStre
 	    }
 
 	    /**
-	     * Returns the logarithm base 10 of the root mean square of the
-	     * given samples.
-	     *
-	     * @param samples the samples
-	     *
-	     * @return the calculated log root mean square in log 10
-	     */
+    	 * Returns the logarithm base 10 of the root mean square of the
+    	 * given samples.
+    	 * 
+    	 * @param samples the samples
+    	 * 
+    	 * @return the calculated log root mean square in log 10
+    	 */
 	    public static double rootMeanSquare(double[] samples) {
 	        assert samples.length > 0;
 	        double sumOfSquares = 0.0f;

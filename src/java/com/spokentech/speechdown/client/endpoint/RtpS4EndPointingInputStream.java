@@ -1,3 +1,9 @@
+/**
+ * This class will read on a rtp stream and stream out only the audio between start and end speech.  
+ * It use Sphinx4 frontend to do the endpointing. 
+ *
+ * @author Spencer Lord {@literal <}<a href="mailto:spencer@spokentech.com">spencer@spokentech.com</a>{@literal >}
+ */
 package com.spokentech.speechdown.client.endpoint;
 
 import static org.speechforge.cairo.jmf.JMFUtil.CONTENT_DESCRIPTOR_RAW;
@@ -25,9 +31,10 @@ import edu.cmu.sphinx.util.props.ConfigurationManager;
 import com.spokentech.speechdown.client.SpeechEventListener;
 import com.spokentech.speechdown.client.sphinx.SpeechDataMonitor;
 
+// TODO: Auto-generated Javadoc
 /**
- * receives audio from an rtp channel and sends to outputstream.
- *
+ * receives audio from an rtp channel and sends to outputstream (after doing endpointing)
+ * 
  * @author Spencer Lord {@literal <}<a href="mailto:slord@users.sourceforge.net">slord@users.sourceforge.net</a>{@literal >}
  */
 public class RtpS4EndPointingInputStream extends EndPointingInputStreamBase implements EndPointingInputStream {
@@ -47,21 +54,27 @@ public class RtpS4EndPointingInputStream extends EndPointingInputStreamBase impl
 	private String mimeType;
 	
 	/**
-     * @return the mimeType
-     */
+	 * Gets the mime type.
+	 * 
+	 * @return the mimeType
+	 */
     public String getMimeType() {
     	return mimeType;
     }
 
 
 	/**
-     * @param mimeType the mimeType to set
-     */
+	 * Sets the mime type.
+	 * 
+	 * @param mimeType the mimeType to set
+	 */
     public void setMimeType(String mimeType) {
     	this.mimeType = mimeType;
     }
 	
     /**
+     * Gets the s4 config file.
+     * 
      * @return the s4ConfigFile
      */
     public String getS4ConfigFile() {
@@ -70,13 +83,18 @@ public class RtpS4EndPointingInputStream extends EndPointingInputStreamBase impl
 
 
 	/**
-     * @param configFile the s4ConfigFile to set
-     */
+	 * Sets the s4 config file.
+	 * 
+	 * @param configFile the s4ConfigFile to set
+	 */
     public void setS4ConfigFile(String configFile) {
     	s4ConfigFile = configFile;
     }
 
 
+	/**
+	 * Inits the.
+	 */
 	public void init() {
 	    URL sphinxConfigUrl = RtpS4EndPointingInputStream.class.getResource(s4ConfigFile);
         if (sphinxConfigUrl == null) {
@@ -85,6 +103,11 @@ public class RtpS4EndPointingInputStream extends EndPointingInputStreamBase impl
         cm = new ConfigurationManager(sphinxConfigUrl);
 	}
 	
+	/**
+	 * Sets the up stream.
+	 * 
+	 * @param replicator the new up stream
+	 */
 	public void setupStream(RTPStreamReplicator replicator) {
 		_logger.info("Setting up the stream");
         Validate.notNull(replicator, "Null replicator!");
@@ -95,6 +118,9 @@ public class RtpS4EndPointingInputStream extends EndPointingInputStreamBase impl
 	/* (non-Javadoc)
      * @see com.spokentech.speechdown.client.rtp.EndPointingReceiver#shutdownStream()
      */
+	/**
+	 * Shutdown stream.
+	 */
 	public void shutdownStream() {
 		//TODO:
 		_logger.info("Shutdown stream not implemented!");
@@ -226,6 +252,9 @@ public class RtpS4EndPointingInputStream extends EndPointingInputStreamBase impl
     }
 
 
+	/* (non-Javadoc)
+	 * @see com.spokentech.speechdown.client.endpoint.EndPointingInputStream#getFormat1()
+	 */
 	@Override
     public javax.sound.sampled.AudioFormat getFormat1() {
 	    // TODO Auto-generated method stub

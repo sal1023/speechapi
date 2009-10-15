@@ -1,3 +1,9 @@
+/**
+ * This class will read audio from the mic and stream out only the audio between start and end speech.  
+ * It use Sphinx4 frontend to do the endpointing. 
+ *
+ * @author Spencer Lord {@literal <}<a href="mailto:spencer@spokentech.com">spencer@spokentech.com</a>{@literal >}
+ */
 package com.spokentech.speechdown.client.endpoint;
 
 import java.io.IOException;
@@ -13,6 +19,11 @@ import com.spokentech.speechdown.client.sphinx.SpeechDataMonitor;
 import com.spokentech.speechdown.client.sphinx.SpeechDataStreamer;
 
 
+// TODO: Auto-generated Javadoc
+/**
+ * The Class MicS4EndPointingInputStream.  This class will read audio from the mic and stream out only the audio between start and end speech.  
+ * It use Sphinx4 frontend to do the endpointing. 
+ */
 public class MicS4EndPointingInputStream extends EndPointingInputStreamBase implements EndPointingInputStream {
 	
     private static Logger _logger = Logger.getLogger(MicS4EndPointingInputStream.class);
@@ -29,21 +40,27 @@ public class MicS4EndPointingInputStream extends EndPointingInputStreamBase impl
 	private String mimeType;
 	
 	/**
-     * @return the mimeType
-     */
+	 * Gets the mime type.
+	 * 
+	 * @return the mimeType
+	 */
     public String getMimeType() {
     	return mimeType;
     }
 
 
 	/**
-     * @param mimeType the mimeType to set
-     */
+	 * Sets the mime type.
+	 * 
+	 * @param mimeType the mimeType to set
+	 */
     public void setMimeType(String mimeType) {
     	this.mimeType = mimeType;
     }
 	
     /**
+     * Gets the s4 config file.
+     * 
      * @return the s4ConfigFile
      */
     public String getS4ConfigFile() {
@@ -52,13 +69,18 @@ public class MicS4EndPointingInputStream extends EndPointingInputStreamBase impl
 
 
 	/**
-     * @param configFile the s4ConfigFile to set
-     */
+	 * Sets the s4 config file.
+	 * 
+	 * @param configFile the s4ConfigFile to set
+	 */
     public void setS4ConfigFile(String configFile) {
     	s4ConfigFile = configFile;
     }
 
 
+	/**
+	 * Inits the.
+	 */
 	public void init() {
 	    //URL sphinxConfigUrl = MicReceiver.class.getResource(s4ConfigFile);
         //if (sphinxConfigUrl == null) {
@@ -69,11 +91,17 @@ public class MicS4EndPointingInputStream extends EndPointingInputStreamBase impl
         cm = new ConfigurationManager(s4ConfigFile);
 	}
 	
+	/**
+	 * Setup stream.
+	 */
 	public void setupStream() {
 		_logger.info("Setting up the stream");
         setupPipedStream();
 	}
 
+	/**
+	 * Shutdown stream.
+	 */
 	public void shutdownStream() {
 		//TODO:
 		_logger.info("Shutdown stream not implemented!");
@@ -81,6 +109,9 @@ public class MicS4EndPointingInputStream extends EndPointingInputStreamBase impl
 	
 
 	
+	/* (non-Javadoc)
+	 * @see com.spokentech.speechdown.client.endpoint.EndPointingInputStream#startAudioTransfer(long, com.spokentech.speechdown.client.SpeechEventListener)
+	 */
 	public void startAudioTransfer(long timeout, SpeechEventListener listener) throws InstantiationException, IOException {
 
 		_listener = new Listener(listener);
@@ -112,6 +143,9 @@ public class MicS4EndPointingInputStream extends EndPointingInputStreamBase impl
 
 	
 	
+    /* (non-Javadoc)
+     * @see com.spokentech.speechdown.client.endpoint.EndPointingInputStream#stopAudioTransfer()
+     */
     public synchronized void stopAudioTransfer() {
     	_logger.info("Stopping mic");
     	mic.stopRecording();
@@ -122,8 +156,11 @@ public class MicS4EndPointingInputStream extends EndPointingInputStreamBase impl
 	
     /**
      * Starts the input timers which trigger no-input-timeout if speech has not started after the specified time.
-     * @param noInputTimeout the amount of time to wait, in milliseconds, before triggering a no-input-timeout. 
+     * 
+     * @param noInputTimeout the amount of time to wait, in milliseconds, before triggering a no-input-timeout.
+     * 
      * @return {@code true} if input timers were started or {@code false} if speech has already started.
+     * 
      * @throws IllegalStateException if recognition is not in progress or if the input timers have already been started.
      */
     public synchronized boolean startInputTimers(long noInputTimeout) throws IllegalStateException {
@@ -148,12 +185,18 @@ public class MicS4EndPointingInputStream extends EndPointingInputStreamBase impl
     }
 
 
+	/* (non-Javadoc)
+	 * @see com.spokentech.speechdown.client.endpoint.EndPointingInputStream#getFormat1()
+	 */
 	@Override
     public AudioFormat getFormat1() {
 		return mic.getAudioFormat();
     }
 
 
+	/* (non-Javadoc)
+	 * @see com.spokentech.speechdown.client.endpoint.EndPointingInputStream#getFormat2()
+	 */
 	@Override
     public javax.media.format.AudioFormat getFormat2() {
 	    // TODO Auto-generated method stub

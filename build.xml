@@ -25,7 +25,7 @@
 	<property name="war.filename" value="${name}.war" />
 
 	<property name="lib.dir" value="${basedir}/lib" />
-	<property name="freetts.jar" value="${lib.dir}/freetts-1.2.1.jar" />
+	<property name="freetts.jar" value="${lib.dir}/freetts-SNAPSHOT.jar" />
 	<property name="log4j.jar" value="${lib.dir}/log4j-1.2.14.jar" />
 	<property name="spring.jar" value="${lib.dir}/spring-2.5.5.jar" />
 	<property name="commons-pool.jar" value="${lib.dir}/commons-pool-1.3.jar" />
@@ -136,7 +136,7 @@
 	<target name="create-war" depends="compile-server">
 	
 		<filter token="applicationContext.recognizerService.baseGrammarDir" value="c:/temp" />
-		<filter token="applicationContext.recognizerService.sphinxConfigFile" value="file:///${catalina.home}/webapps/${ant.project.name}/WEB-INF/sphinx-config-10each.xml" />
+		<filter token="applicationContext.recognizerService.sphinxConfigFile" value="file:///${catalina.home}/webapps/${ant.project.name}/WEB-INF/sphinx-config-2pools.xml" />
 		<filter token="applicationContext.synthesizerService.prefix" value="http://${catalina.host}:${catalina.port}/${ant.project.name}/prompts/" />
 		<filter token="applicationContext.synthesizerService.promptDir" value="${catalina.home}/webapps/${ant.project.name}/prompts" />
 		<copy todir="${build.war.home}/WEB-INF" overwrite="true" filtering="true">
