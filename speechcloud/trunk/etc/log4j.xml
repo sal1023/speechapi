@@ -24,7 +24,7 @@
       <category name="com.spokentech.speechdown.server">
     <priority value="debug"/>
   </category>
-  <category name="org.speechforge.cairo.rtp.server.sphinx.SpeechDataMonitor">
+  <category name="com.spokentech.speechdown.client">
     <priority value="debug"/>
   </category>
 
