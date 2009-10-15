@@ -19,6 +19,7 @@ import org.apache.log4j.Logger;
 
 import com.spokentech.speechdown.common.RecognitionResult;
 import com.spokentech.speechdown.common.SpeechEventListener;
+import com.spokentech.speechdown.common.sphinx.AudioStreamDataSource;
 import com.spokentech.speechdown.common.sphinx.SpeechDataMonitor;
 import com.spokentech.speechdown.server.util.pool.AbstractPoolableObject;
 

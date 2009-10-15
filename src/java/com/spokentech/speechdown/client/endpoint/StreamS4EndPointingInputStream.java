@@ -18,8 +18,8 @@ import edu.cmu.sphinx.frontend.FrontEnd;
 import edu.cmu.sphinx.util.props.ConfigurationManager;
 import com.spokentech.speechdown.client.sphinx.SpeechDataStreamer;
 import com.spokentech.speechdown.common.SpeechEventListener;
+import com.spokentech.speechdown.common.sphinx.AudioStreamDataSource;
 import com.spokentech.speechdown.common.sphinx.SpeechDataMonitor;
-import com.spokentech.speechdown.server.recog.AudioStreamDataSource;
 
 import com.spokentech.speechdown.server.recog.StreamDataSource;
 
@@ -142,7 +142,7 @@ public class StreamS4EndPointingInputStream extends EndPointingInputStreamBase i
 		
 		dataSource.setInputStream((InputStream)stream, "ws-audiostream", (int)stream.getFormat().getSampleRate(), stream.getFormat().isBigEndian(), stream.getFormat().getSampleSizeInBits()/8,stream.getFormat().getEncoding());
  		
-		
+		_logger.info("Starting audio trasnfer");
 		SpeechDataStreamer sds = new SpeechDataStreamer();
 		sds.startStreaming(frontEnd, outputStream);
 		

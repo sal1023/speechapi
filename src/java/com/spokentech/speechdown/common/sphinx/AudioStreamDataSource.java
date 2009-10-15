@@ -9,7 +9,7 @@
  * WARRANTIES.
  *
  */
-package com.spokentech.speechdown.server.recog;
+package com.spokentech.speechdown.common.sphinx;
 
 import edu.cmu.sphinx.frontend.*;
 import edu.cmu.sphinx.frontend.util.AudioFileProcessListener;
@@ -31,6 +31,8 @@ import java.net.URL;
 import java.util.ArrayList;
 import java.util.List;
 import org.apache.log4j.Logger;
+
+import com.spokentech.speechdown.server.recog.StreamDataSource;
 
 
 /**

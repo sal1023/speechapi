@@ -88,6 +88,7 @@ public class SpeechDataStreamer  extends Thread{
     	this.frontEnd = frontEnd;
     	this.out = out;
         this.dout = new ObjectOutputStream(out);
+    	_logger.info("startStreaming...");
         start();
     }
 

@@ -58,7 +58,7 @@
     </component>
     
     <component name="speechDataMonitor"
-               type="com.spokentech.speechdown.client.sphinx.SpeechDataMonitor">
+               type="com.spokentech.speechdown.common.sphinx.SpeechDataMonitor">
         <property name="logLevel" value="FINE"/>
     </component>
     

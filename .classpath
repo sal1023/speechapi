@@ -44,5 +44,6 @@
 	<classpathentry kind="lib" path="lib/cairo-rtp-SNAPSHOT.jar"/>
 	<classpathentry kind="lib" path="lib/en_us.jar"/>
 	<classpathentry kind="lib" path="lib/freetts-SNAPSHOT.jar"/>
+	<classpathentry kind="lib" path="etc"/>
 	<classpathentry kind="output" path="target/eclipse"/>
 </classpath>

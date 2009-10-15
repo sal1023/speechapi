@@ -38,13 +38,37 @@ import com.spokentech.speechdown.client.endpoint.FileS4EndPointingInputStream2;
 import com.spokentech.speechdown.client.endpoint.StreamEndPointingInputStream;
 import com.spokentech.speechdown.client.endpoint.StreamS4EndPointingInputStream;
 import com.spokentech.speechdown.common.RecognitionResult;
+import com.spokentech.speechdown.common.SpeechEventListener;
 
 
 import junit.framework.TestCase;
 
 public class HttpRecognizerTest extends TestCase {
 
-    private static Logger _logger = Logger.getLogger(HttpRecognizerTest.class);
+    public class Listener implements SpeechEventListener {
+
+	    @Override
+	    public void noInputTimeout() {
+		    // TODO Auto-generated method stub
+
+	    }
+
+	    @Override
+	    public void speechEnded() {
+		    // TODO Auto-generated method stub
+
+	    }
+
+	    @Override
+	    public void speechStarted() {
+		    // TODO Auto-generated method stub
+
+	    }
+
+    }
+
+
+	private static Logger _logger = Logger.getLogger(HttpRecognizerTest.class);
     public static final String CRLF = "\r\n";
     
     
