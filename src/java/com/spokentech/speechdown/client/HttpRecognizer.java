@@ -100,7 +100,7 @@ public class HttpRecognizer {
 	 * 
 	 * @return the recognition result
 	 */
-	public RecognitionResult recognize(String  fileName, URL grammarUrl, boolean lmflg) {
+	public RecognitionResult recognize(String  fileName, URL grammarUrl, boolean lmflg, boolean doEndpointing) {
 		
 		
     	File soundFile = new File(fileName);	 
@@ -115,7 +115,7 @@ public class HttpRecognizer {
     	} catch (Exception e) {
     		e.printStackTrace();
     	}
-    	return recognize(audioInputStream, type, grammarUrl, lmflg);
+    	return recognize(audioInputStream, type, grammarUrl, lmflg, doEndpointing);
     	
 	}
 	
@@ -131,12 +131,12 @@ public class HttpRecognizer {
 	 * 
 	 * @return the recognition result
 	 */
-	public RecognitionResult recognize(AudioInputStream audioInputStream, Type type, URL grammarUrl, boolean lmflg) {
+	public RecognitionResult recognize(AudioInputStream audioInputStream, Type type, URL grammarUrl, boolean lmflg, boolean doEndpointing) {
         // get the audio format and send as form fields.  Cound not send aduio file with format included because audio files do not
         // support mark/reset.  That is needed for stremaing using http chunk encoding on the servlet side using file upload.
         AudioFormat format = audioInputStream.getFormat();
 		
-    	return recognize(audioInputStream, format, type, grammarUrl, lmflg);
+    	return recognize(audioInputStream, format, type, grammarUrl, lmflg, doEndpointing);
     }
 
 	/**
@@ -150,7 +150,7 @@ public class HttpRecognizer {
 	 * 
 	 * @return the recognition result
 	 */
-	public RecognitionResult recognize(InputStream inputStream, AudioFormat format, Type type, URL grammarUrl, boolean lmflg) {
+	public RecognitionResult recognize(InputStream inputStream, AudioFormat format, Type type, URL grammarUrl, boolean lmflg, boolean doEndpointing) {
 	    // Plain old http approach    	
     	HttpClient httpclient = new DefaultHttpClient();
         HttpPost httppost = new HttpPost(service);
@@ -177,12 +177,14 @@ public class HttpRecognizer {
     	StringBody bytesPerValue = null;
     	StringBody encoding = null;
     	StringBody lmFlag = null;
+    	StringBody endpointFlag = null;
         try {
         	sampleRate = new StringBody(String.valueOf((int)format.getSampleRate()));
         	bigEndian = new StringBody(String.valueOf(format.isBigEndian()));
         	bytesPerValue =new StringBody(String.valueOf(format.getSampleSizeInBits()/8));
         	encoding = new StringBody(format.getEncoding().toString());
         	lmFlag = new StringBody(String.valueOf(lmflg));
+        	endpointFlag = new StringBody(String.valueOf(doEndpointing));
         } catch (UnsupportedEncodingException e1) {
 	        // TODO Auto-generated catch block
 	        e1.printStackTrace();
@@ -194,7 +196,8 @@ public class HttpRecognizer {
 		mpEntity.addPart(HttpCommandFields.BYTES_PER_VALUE_FIELD_NAME, bytesPerValue);
 		mpEntity.addPart(HttpCommandFields.ENCODING_FIELD_NAME, encoding);
 		mpEntity.addPart(HttpCommandFields.LANGUAGE_MODEL_FLAG, lmFlag);
-
+		mpEntity.addPart(HttpCommandFields.ENDPOINTING_FLAG, endpointFlag);
+		
 		String mimeType = null;
 		String fname = null;
 		if (type == AudioFileFormat.Type.WAVE) {
@@ -268,7 +271,7 @@ public class HttpRecognizer {
 	 * 
 	 * @return the recognition result
 	 */
-	public  RecognitionResult recognize(TargetDataLine audioLine, URL grammarUrl, boolean lmflg) {
+	public  RecognitionResult recognize(TargetDataLine audioLine, URL grammarUrl, boolean lmflg, boolean doEndpointing) {
 
         
         //create the thread and start it
@@ -307,6 +310,7 @@ public class HttpRecognizer {
     	StringBody bytesPerValue = null;
     	StringBody encoding = null;
     	StringBody lmFlag = null;
+    	StringBody endpointFlag = null;
     	//StringBody dataStreamMode = null;
         try {
         	sampleRate = new StringBody(String.valueOf((int)format.getSampleRate()));
@@ -314,6 +318,7 @@ public class HttpRecognizer {
         	bytesPerValue =new StringBody(String.valueOf(format.getSampleSizeInBits()/8));
         	encoding = new StringBody(format.getEncoding().toString());
         	lmFlag = new StringBody(String.valueOf(lmflg));
+        	endpointFlag = new StringBody(String.valueOf(doEndpointing));
         	//dataStreamMode = new StringBody(dataMode);
         } catch (UnsupportedEncodingException e1) {
 	        // TODO Auto-generated catch block
@@ -322,11 +327,12 @@ public class HttpRecognizer {
         
         //add the form field parts
 		//mpEntity.addPart("dataMode", dataStreamMode);
-		mpEntity.addPart("sampleRate", sampleRate);
-		mpEntity.addPart("bigEndian", bigEndian);
-		mpEntity.addPart("bytesPerValue", bytesPerValue);
-		mpEntity.addPart("encoding", encoding);
-		mpEntity.addPart("lmFlag", lmFlag);
+		mpEntity.addPart(HttpCommandFields.SAMPLE_RATE_FIELD_NAME, sampleRate);
+		mpEntity.addPart(HttpCommandFields.BIG_ENDIAN_FIELD_NAME, bigEndian);
+		mpEntity.addPart(HttpCommandFields.BYTES_PER_VALUE_FIELD_NAME, bytesPerValue);
+		mpEntity.addPart(HttpCommandFields.ENCODING_FIELD_NAME, encoding);
+		mpEntity.addPart(HttpCommandFields.LANGUAGE_MODEL_FLAG, lmFlag);
+		mpEntity.addPart(HttpCommandFields.ENDPOINTING_FLAG, endpointFlag);
 		
 		//add the grammar part
 		mpEntity.addPart("grammar", grammarBody);
