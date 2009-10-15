@@ -140,14 +140,14 @@ public class S4DataStreamDataSource extends BaseDataProcessor implements StreamD
     private void showSignals(Data data) {
 
         if (data instanceof SpeechStartSignal) {
-            _logger.info("<<<<<<<<<<<<<<< SpeechStartSignal encountered!");
-            sampleRate = getSampleRate(data);
+            _logger.debug("<<<<<<<<<<<<<<< SpeechStartSignal encountered!");
         } else if (data instanceof SpeechEndSignal) {
-            _logger.info("<<<<<<<<<<<<<<< SpeechEndSignal encountered!");
+            _logger.debug("<<<<<<<<<<<<<<< SpeechEndSignal encountered!");
         } else if (data instanceof DataStartSignal) {
-            _logger.info("<<<<<<<<<<<<<<< DataStartSignal encountered!");
+             sampleRate = getSampleRate(data);
+            _logger.debug("<<<<<<<<<<<<<<< DataStartSignal encountered!");
         } else if (data instanceof DataEndSignal) {
-            _logger.info(">>>>>>>>>>>>>>> DataEndSignal encountered!");
+            _logger.debug(">>>>>>>>>>>>>>> DataEndSignal encountered!");
         }
 
     }
@@ -183,11 +183,11 @@ public class S4DataStreamDataSource extends BaseDataProcessor implements StreamD
     	long len = 0;
         if (data instanceof DoubleData) {
         	DoubleData dd = (DoubleData) data;
-        	_logger.info(dd.toString());
+        	_logger.debug(dd.toString());
         } else if (data instanceof FloatData) {
         	FloatData fd = (FloatData) data;
         	len = fd.getValues().length;
-        	_logger.info("FloatData: " + fd.getSampleRate() + "Hz, first sample #: " +
+        	_logger.debug("FloatData: " + fd.getSampleRate() + "Hz, first sample #: " +
                     fd.getFirstSampleNumber() + ", collect time: " + fd.getCollectTime());
         }
 
@@ -202,7 +202,11 @@ public class S4DataStreamDataSource extends BaseDataProcessor implements StreamD
 
 	@Override
     public long getLengthInMs() {
-	    return (1000*totalValues)/sampleRate;
+		if (sampleRate == 0) {
+			return 0;
+	    } else {
+	       return (1000*totalValues)/sampleRate;
+	    }
     }
 
 }

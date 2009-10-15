@@ -39,6 +39,7 @@ import org.springframework.web.context.support.WebApplicationContextUtils;
 
 import com.spokentech.speechdown.common.RecognitionResult;
 
+import com.spokentech.speechdown.common.HttpCommandFields;
 
 /**
  * Servlet for uploading audio for speech recognition processing.
@@ -49,13 +50,7 @@ import com.spokentech.speechdown.common.RecognitionResult;
 public class SpeechUploadServlet extends HttpServlet {
 
 	private static Logger _logger = Logger.getLogger(SpeechUploadServlet.class);
-    private static final String LANGUAGE_MODEL_FLAG = "lmFlag";
-    private static final String REC_MODE = "recMode";
-	private static final String SAMPLE_RATE_FIELD_NAME = "sampleRate";
-    private static final String DATA_MODE = "dataMode";
-    private static final String BIG_ENDIAN_FIELD_NAME = "bigEndian";
-    private static final String BYTES_PER_VALUE_FIELD_NAME = "bytesPerValue";
-    private static final String ENCODING_FIELD_NAME = "encoding";
+
 
 	private DiskFileItemFactory factory;
 	private File destinationDir;
@@ -119,7 +114,8 @@ public class SpeechUploadServlet extends HttpServlet {
 	    int sampleRate = 8000;
 	    boolean bigEndian = true;
 	    boolean lmFlag = false;
-	    String recMode = "normal";
+	    boolean continuous = false;
+	    boolean doEndpointing = false;
 	    int bytesPerValue = 2;
 	    AudioFormat.Encoding encoding = AudioFormat.Encoding.PCM_SIGNED;
 
@@ -143,17 +139,19 @@ public class SpeechUploadServlet extends HttpServlet {
 			    	String value = Streams.asString(stream);
 			        _logger.debug("Form field " + name + " with value " + value + " detected.");
 			        try { 
-				        if (name.equals(SAMPLE_RATE_FIELD_NAME)) {
+				        if (name.equals(HttpCommandFields.SAMPLE_RATE_FIELD_NAME)) {
 				        	sampleRate = Integer.parseInt(value);
-			        	} else if (name.equals(REC_MODE)) {
-				        	recMode = value;
-				        } else if (name.equals(LANGUAGE_MODEL_FLAG)) {
+			        	} else if (name.equals(HttpCommandFields.CONTINUOUS_FLAG)) {
+				        	continuous  = Boolean.parseBoolean(value);
+			        	} else if (name.equals(HttpCommandFields.ENDPOINTING_FLAG)) {
+				        	doEndpointing  = Boolean.parseBoolean(value);
+				        } else if (name.equals(HttpCommandFields.LANGUAGE_MODEL_FLAG)) {
 				        	lmFlag = Boolean.parseBoolean(value);
-				        } else if (name.equals(BIG_ENDIAN_FIELD_NAME)) {
+				        } else if (name.equals(HttpCommandFields.BIG_ENDIAN_FIELD_NAME)) {
 				        	bigEndian = Boolean.parseBoolean(value);
-			        	} else if (name.equals(BYTES_PER_VALUE_FIELD_NAME)) {
+			        	} else if (name.equals(HttpCommandFields.BYTES_PER_VALUE_FIELD_NAME)) {
 				        	bytesPerValue = Integer.parseInt(value);
-		        		} else if (name.equals(ENCODING_FIELD_NAME)) {
+		        		} else if (name.equals(HttpCommandFields.ENCODING_FIELD_NAME)) {
 		        			if (value.equals(AudioFormat.Encoding.ALAW.toString())) {
 		        				encoding = AudioFormat.Encoding.ALAW;
 		        			} else if (value.equals(AudioFormat.Encoding.ULAW.toString())) {
@@ -181,7 +179,8 @@ public class SpeechUploadServlet extends HttpServlet {
 				    	audio = stream;
 				    	try {
 				    		_logger.debug("recognizing audio!  Sample rate= "+sampleRate+", bigEndian= "+ bigEndian+", bytes per value= "+bytesPerValue+", encoding= "+encoding.toString());
-				    		if (recMode.equals("transcript")) {
+				    		_logger.debug("continuous: "+continuous+" lmflag: "+lmFlag+ " endpointing: "+doEndpointing);
+				    		if (continuous) {
 						        
 								PrintWriter out = response.getWriter();	
 				    			//OutputStream out = response.getOutputStream();
@@ -194,14 +193,12 @@ public class SpeechUploadServlet extends HttpServlet {
 							        _logger.debug("recognition result is null");
 								    out.println("recognition result is null");
 					    		}
-				    		//} else if (recMode.equals("hotword")) {
-				    		//} else if (recMode.equals("normal")) {
 				    		} else {
 
 					    		if (lmFlag) {
-					    			result = recognizerService.Recognize(audio,contentType,sampleRate,bigEndian,bytesPerValue,encoding);
+					    			result = recognizerService.Recognize(audio,contentType,sampleRate,bigEndian,bytesPerValue,encoding,doEndpointing);
 					    		} else {
-					    	        result = recognizerService.Recognize(audio, grammarString,contentType,sampleRate,bigEndian,bytesPerValue,encoding);
+					    	        result = recognizerService.Recognize(audio, grammarString,contentType,sampleRate,bigEndian,bytesPerValue,encoding,doEndpointing);
 
 					    	    }
 

@@ -1,3 +1,9 @@
+/**
+ * This class will read on a audio stream and stream out only the audio between start and end speech.  
+ * 
+ *
+ * @author Spencer Lord {@literal <}<a href="mailto:spencer@spokentech.com">spencer@spokentech.com</a>{@literal >}
+ */
 package com.spokentech.speechdown.client.endpoint;
 
 import java.io.IOException;
@@ -17,6 +23,10 @@ import com.spokentech.speechdown.server.recog.AudioStreamDataSource;
 
 import com.spokentech.speechdown.server.recog.StreamDataSource;
 
+// TODO: Auto-generated Javadoc
+/**
+ * The Class StreamEndPointingInputStream.  This class will read on a audio stream and stream out only the audio between start and end speech.  
+ */
 public class StreamEndPointingInputStream extends EndPointingInputStreamBase implements EndPointingInputStream {
 	
     private static Logger _logger = Logger.getLogger(StreamEndPointingInputStream.class);
@@ -28,37 +38,55 @@ public class StreamEndPointingInputStream extends EndPointingInputStreamBase imp
 	private String mimeType;
 	
 	/**
-     * @return the mimeType
-     */
+	 * Gets the mime type.
+	 * 
+	 * @return the mimeType
+	 */
     public String getMimeType() {
     	return mimeType;
     }
 
 	/**
-     * @param mimeType the mimeType to set
-     */
+	 * Sets the mime type.
+	 * 
+	 * @param mimeType the mimeType to set
+	 */
     public void setMimeType(String mimeType) {
     	this.mimeType = mimeType;
     }
 
 
+	/**
+	 * Sets the up stream.
+	 * 
+	 * @param stream the new up stream
+	 */
 	public void setupStream(AudioInputStream stream) {
 		_logger.info("Setting up the stream");
 		this.stream = stream;
         setupPipedStream();
 	}
 
+	/**
+	 * Inits the.
+	 */
 	public void init() {
 
 	}
 	
 
+	/**
+	 * Shutdown stream.
+	 */
 	public void shutdownStream() {
 		//TODO:
 		_logger.info("Shutdown stream not implemented!");
 	}
 	
 	
+	/* (non-Javadoc)
+	 * @see com.spokentech.speechdown.client.endpoint.EndPointingInputStream#startAudioTransfer(long, com.spokentech.speechdown.client.SpeechEventListener)
+	 */
 	public void startAudioTransfer(long timeout, SpeechEventListener listener) throws InstantiationException, IOException {
 
 		_listener = new Listener(listener);
@@ -74,6 +102,9 @@ public class StreamEndPointingInputStream extends EndPointingInputStreamBase imp
 
 	
 	
+    /* (non-Javadoc)
+     * @see com.spokentech.speechdown.client.endpoint.EndPointingInputStream#stopAudioTransfer()
+     */
     public synchronized void stopAudioTransfer() {
     	_logger.info("Stopping stream");
     	if (ep != null) {
@@ -86,8 +117,11 @@ public class StreamEndPointingInputStream extends EndPointingInputStreamBase imp
 	
     /**
      * Starts the input timers which trigger no-input-timeout if speech has not started after the specified time.
-     * @param noInputTimeout the amount of time to wait, in milliseconds, before triggering a no-input-timeout. 
+     * 
+     * @param noInputTimeout the amount of time to wait, in milliseconds, before triggering a no-input-timeout.
+     * 
      * @return {@code true} if input timers were started or {@code false} if speech has already started.
+     * 
      * @throws IllegalStateException if recognition is not in progress or if the input timers have already been started.
      */
     public synchronized boolean startInputTimers(long noInputTimeout) throws IllegalStateException {
@@ -112,6 +146,9 @@ public class StreamEndPointingInputStream extends EndPointingInputStreamBase imp
     }
 
 
+	/* (non-Javadoc)
+	 * @see com.spokentech.speechdown.client.endpoint.EndPointingInputStream#getFormat1()
+	 */
 	@Override
     public AudioFormat getFormat1() {
 	    // TODO Auto-generated method stub
@@ -119,6 +156,9 @@ public class StreamEndPointingInputStream extends EndPointingInputStreamBase imp
     }
 
 
+	/* (non-Javadoc)
+	 * @see com.spokentech.speechdown.client.endpoint.EndPointingInputStream#getFormat2()
+	 */
 	@Override
     public javax.media.format.AudioFormat getFormat2() {
 	    // TODO Auto-generated method stub

@@ -25,6 +25,7 @@ package com.spokentech.speechdown.server.tts;
 
 
 import java.io.File;
+import java.io.IOException;
 import java.io.OutputStream;
 
 import javax.sound.sampled.AudioFileFormat;
@@ -38,6 +39,8 @@ import com.sun.speech.freetts.Voice;
 import com.sun.speech.freetts.VoiceManager;
 import com.sun.speech.freetts.audio.AudioPlayer;
 import com.sun.speech.freetts.audio.SingleFileAudioPlayer;
+
+
 
 /**
  * Generates speech prompt files using the FreeTTS text-to-speech engine.
@@ -83,7 +86,12 @@ public class FreettsSynthEngine extends AbstractPoolableObject implements SynthE
         ap.setAudioFormat(format);
         _voice.setAudioPlayer(ap);
         _voice.speak(text);
-        ap.close();
+        try {
+	        ap.close();
+        } catch (IOException e) {
+	        // TODO Auto-generated catch block
+	        e.printStackTrace();
+        }
         _voice.setAudioPlayer(null);
 
         promptFile = new File(dir, promptName + "."+fileType.getExtension());

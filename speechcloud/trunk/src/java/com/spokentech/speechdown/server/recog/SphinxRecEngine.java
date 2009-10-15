@@ -18,13 +18,19 @@ import org.apache.log4j.Logger;
 import com.spokentech.speechdown.common.RecognitionResult;
 import com.spokentech.speechdown.server.util.pool.AbstractPoolableObject;
 
+import edu.cmu.sphinx.decoder.Decoder;
 import edu.cmu.sphinx.decoder.ResultListener;
+
+import edu.cmu.sphinx.decoder.scorer.AbstractScorer;
+import edu.cmu.sphinx.decoder.search.SearchManager;
 import edu.cmu.sphinx.frontend.DataProcessor;
 import edu.cmu.sphinx.frontend.FrontEnd;
 import edu.cmu.sphinx.jsapi.JSGFGrammar;
+import edu.cmu.sphinx.linguist.flat.FlatLinguist;
+import edu.cmu.sphinx.linguist.lextree.LexTreeLinguist;
 import edu.cmu.sphinx.recognizer.Recognizer;
-import edu.cmu.sphinx.recognizer.RecognizerState;
 import edu.cmu.sphinx.recognizer.StateListener;
+import edu.cmu.sphinx.recognizer.Recognizer.State;
 import edu.cmu.sphinx.result.Result;
 import edu.cmu.sphinx.util.props.ConfigurationManager;
 import edu.cmu.sphinx.util.props.PropertyException;
@@ -35,14 +41,21 @@ public class SphinxRecEngine extends AbstractPoolableObject implements RecEngine
 
     private static Logger _logger = Logger.getLogger(SphinxRecEngine.class);
 
-	private FrontEnd _fe;
+    private Decoder  _decoder;
+    private AbstractScorer  _scorer;
+    private SearchManager  _jsgfSearchManager;
+    private SearchManager  _lmSearchManager;
+	private FrontEnd _audioFe;
+	private FrontEnd _audioEpFe;
+	private FrontEnd _featureFe;
     private Recognizer _recognizer;
     private JSGFGrammar _jsgfGrammar;
     private boolean hotword = false;       
 	private GrammarManager _grammarManager;
 	private ConfigurationManager _cm;
 	private int _id;
-	private boolean grammarManagerConfigured;
+	private FlatLinguist _flatlingust;
+	private LexTreeLinguist _lexTreelingust;
 	
     public SphinxRecEngine(ConfigurationManager cm, GrammarManager grammarManager,String prefixId, int id) throws IOException, PropertyException, InstantiationException {
 
@@ -51,17 +64,16 @@ public class SphinxRecEngine extends AbstractPoolableObject implements RecEngine
        
     	//SAL (comment)
     	_recognizer.allocate();
-    	
 
-    	if (prefixId.endsWith("lm")) {
-    		grammarManagerConfigured = false;
-    	} else {
-        	grammarManagerConfigured = true;	
-	        _jsgfGrammar = (JSGFGrammar) cm.lookup("grammar");
-	        _cm = cm;
-	        _id = id;
-	        _grammarManager = grammarManager;
-    	}
+
+	    _jsgfGrammar = (JSGFGrammar) cm.lookup("grammar");
+	    _grammarManager = grammarManager;
+
+    	
+        _cm = cm;
+        _id = id;
+		_scorer = (AbstractScorer)_cm.lookup(prefixId+"scorer"+id);
+
 
         MyStateListener stateListener =  new MyStateListener();
         MyResultListener resultListener = new MyResultListener();
@@ -69,19 +81,62 @@ public class SphinxRecEngine extends AbstractPoolableObject implements RecEngine
 
 		_recognizer.addStateListener(stateListener);
 
-		_fe = (FrontEnd)_cm.lookup(prefixId+"frontend"+_id);        
+		_audioFe = (FrontEnd)_cm.lookup(prefixId+"audio-frontend"+_id);
+		_featureFe = (FrontEnd)_cm.lookup(prefixId+"feature-frontend"+_id);
+		_audioEpFe = (FrontEnd)_cm.lookup(prefixId+"audio-ep-frontend"+_id);
+		
+		//_jsgfSearchManager = (SearchManager)_cm.lookup(prefixId+"jsgfSearchManager"+_id);
+		//_jsgfSearchManager.allocate();
+		//_lmSearchManager = (SearchManager)_cm.lookup(prefixId+"lmSearchManager"+_id);
+		//_lmSearchManager.allocate();
+		
+		//_lexTreelingust = (LexTreeLinguist)_cm.lookup("lexTreeLinguist");
+		//_flatlingust = (FlatLinguist)_cm.lookup("flatLinguist");
+		
+		//_decoder = (Decoder)_cm.lookup(prefixId+"decoder"+_id);
+		
+
     }
+    
+    
 	
-	public RecognitionResult recognize(InputStream as, String mimeType, String grammar, int sampleRate, boolean bigEndian, int bytesPerValue, Encoding encoding) {
+	//Recognize using language mode
+    public RecognitionResult recognize(InputStream as, String mimeType, int sampleRate, boolean bigEndian, 
+    	                               int bytesPerValue, Encoding encoding, boolean doEndpointing) {
 		_logger.info("Using recognizer # "+_id);
 	    //SAL
 		//_recognizer.allocate();
         _logger.debug("After allocate" + System.currentTimeMillis());
         
-        if (!grammarManagerConfigured)
-        	_logger.warn("Can not use a language model sphinx engine to do a grammar recognition request");
-        //TODO throw an exception
         
+        //set the search manager in real time (to the one configured for language models)
+        //_decoder.setSearchManager(_lmSearchManager);
+        
+	    Result r = doRecognize(as, mimeType, sampleRate, bigEndian, bytesPerValue, encoding, doEndpointing);
+
+	    _logger.info("Result: " + (r != null ? r.getBestFinalResultNoFiller() : null));
+	    //SAL
+	    //_recognizer.deallocate();
+	    
+	    if (r != null) {
+	       RecognitionResult results = new RecognitionResult(r.getBestResultNoFiller());
+	       return results;
+	    } else {
+	    	return null;
+	    }
+    }
+	//recognize using a grammar
+	public RecognitionResult recognize(InputStream as, String mimeType, String grammar, int sampleRate, 
+			                           boolean bigEndian, int bytesPerValue, Encoding encoding, boolean doEndpointing) {
+		_logger.info("Using recognizer # "+_id);
+	    //SAL
+		//_recognizer.allocate();
+        _logger.debug("After allocate" + System.currentTimeMillis());
+        
+        //set the search manager in real time (to the one configured for jsgf grammars)
+        //_decoder.setSearchManager(_jsgfSearchManager);
+		//_jsgfSearchManager.allocate();
+		
 		GrammarLocation grammarLocation = null;
 	    try {
 	        grammarLocation = _grammarManager.saveGrammar(grammar);
@@ -102,7 +157,7 @@ public class SphinxRecEngine extends AbstractPoolableObject implements RecEngine
         }
         _logger.debug("After load grammar" + System.currentTimeMillis());
  
-	    Result r = doRecognize(as, mimeType, sampleRate, bigEndian, bytesPerValue, encoding);
+	    Result r = doRecognize(as, mimeType, sampleRate, bigEndian, bytesPerValue, encoding,doEndpointing);
 	    
 	    RecognitionResult results = new RecognitionResult(r, _jsgfGrammar.getRuleGrammar());
 	    _logger.info("Result: " + (results != null ? results.getText() : null));
@@ -112,24 +167,46 @@ public class SphinxRecEngine extends AbstractPoolableObject implements RecEngine
     }
 
 	private Result doRecognize(InputStream as, String mimeType, int sampleRate, boolean bigEndian,
-            int bytesPerValue, Encoding encoding) {
+            int bytesPerValue, Encoding encoding, boolean doEndpointing) {
 	    //TODO: Timers for recog timeout
+		
+		FrontEnd fe = null;
 	
 	    // configure the audio input for the recognizer
   		 StreamDataSource dataSource = null;
 		 String parts[] = mimeType.split("/");
 		 if (parts[1].equals("x-s4audio")) {
 			 dataSource = new S4DataStreamDataSource();
+			 if (doEndpointing) {
+				 fe = _audioEpFe;
+			 } else {
+				 fe = _audioFe;
+		     }
 		 } else if (parts[1].equals("x-s4feature")) {
 			 dataSource = new S4DataStreamDataSource();
+			 if (doEndpointing) {
+				 _logger.warn("Endpointing not supported for feature streams");
+			 }
 		 } else if (parts[1].equals("x-wav")) {
 			 dataSource = new AudioStreamDataSource();
+			 if (doEndpointing) {
+				 fe = _audioEpFe;
+			 } else {
+				 fe = _audioFe;
+		     }
 		 } else {
 			 _logger.warn("Unrecognized mime type: "+mimeType + " Trying to process as audio/x-wav");
 			 dataSource = new AudioStreamDataSource();
 		 }
+		 
 	     _logger.debug("-----> "+mimeType+ " "+parts[1]);
-		 _fe.setDataSource((DataProcessor) dataSource);
+
+	     //set the first stage of the front end
+		 fe.setDataSource((DataProcessor) dataSource);
+		 
+		 // set the front end in the scorer in realtime
+		 _scorer.setFrontEnd(fe);
+	     
 		 dataSource.setInputStream(as, "ws-audiostream", sampleRate, bigEndian, bytesPerValue,encoding);
 	    
 		_logger.debug("After setting the input stream" + System.currentTimeMillis());
@@ -146,26 +223,53 @@ public class SphinxRecEngine extends AbstractPoolableObject implements RecEngine
 	    return r;
     }
     
+	@Override
+    public String transcribe(InputStream as, String mimeType, int sampleRate, boolean bigEndian,
+            int bytesPerValue, Encoding encoding, PrintWriter out) {
+		
+		_logger.info("Using recognizer # "+_id);
+	    //SAL
+		//_recognizer.allocate();
+        _logger.debug("After allocate" + System.currentTimeMillis());
+        
+
+	    String r = doTranscribe(as, mimeType, sampleRate, bigEndian, bytesPerValue, encoding, out);
+
+	    //SAL
+	    //_recognizer.deallocate();
+	    return r;
+
+    }
 	
 	private String doTranscribe(InputStream as, String mimeType, int sampleRate, boolean bigEndian,
             int bytesPerValue, Encoding encoding, PrintWriter out) {
 	    //TODO: Timers for recog timeout
 	
+		
+		FrontEnd fe = null;
 	    // configure the audio input for the recognizer
   		 StreamDataSource dataSource = null;
 		 String parts[] = mimeType.split("/");
 		 if (parts[1].equals("x-s4audio")) {
 			 dataSource = new S4DataStreamDataSource();
+			 fe = _audioEpFe;
 		 } else if (parts[1].equals("x-s4feature")) {
+			 _logger.warn("Feature mode Endpointing not for continuous recognition mode");
 			 dataSource = new S4DataStreamDataSource();
 		 } else if (parts[1].equals("x-wav")) {
 			 dataSource = new AudioStreamDataSource();
+			 fe = _audioEpFe;
 		 } else {
 			 _logger.warn("Unrecognized mime type: "+mimeType + " Trying to process as audio/x-wav");
 			 dataSource = new AudioStreamDataSource();
 		 }
 	     _logger.debug("-----> "+mimeType+ " "+parts[1]);
-		 _fe.setDataSource((DataProcessor) dataSource);
+	     //set the first stage of the front end
+		 fe.setDataSource((DataProcessor) dataSource);
+		 
+		 // set the front end in the scorer in realtime
+		 _scorer.setFrontEnd(fe);
+		 
 		 dataSource.setInputStream(as, "ws-audiostream", sampleRate, bigEndian, bytesPerValue,encoding);
 	    
 		_logger.debug("After setting the input stream" + System.currentTimeMillis());
@@ -189,106 +293,28 @@ public class SphinxRecEngine extends AbstractPoolableObject implements RecEngine
     }
 	
 
+    
+
+
+	
+	
+	
 	/* (non-Javadoc)
      * @see com.spokentech.speechdown.server.recog.RecEngine#recognize(javax.sound.sampled.AudioInputStream, java.lang.String)
      */
-	//recognize using a grammar
+	//recognize using a grammar (the SOAP method) 
+	//TODO: Re-write
 	public RecognitionResult recognize(AudioInputStream as, String grammar) {
-		_logger.info("Using recognizer # "+_id);
-	    //SAL
-		//_recognizer.allocate();
-		GrammarLocation grammarLocation = null;
-	    try {
-	        grammarLocation = _grammarManager.saveGrammar(grammar);
-	    } catch (IOException e) {
-	        _logger.debug(e, e);
-	    }
-	    
-	    try {
-	        loadJSGF(_jsgfGrammar, grammarLocation);
-        } catch (GrammarException e) {
-	        // TODO Auto-generated catch block
-	        e.printStackTrace();
-        } catch (IOException e) {
-	        // TODO Auto-generated catch block
-	        e.printStackTrace();
-        }
-	
-	    //TODO: Timers for recog timeout
-	
-	    // configure the audio input for the recognizer
-		StreamDataSource dataSource = new AudioStreamDataSource();
-	    _fe.setDataSource((DataProcessor) dataSource);
-        dataSource.setInputStream(as, "ws-audiostream");
-  
-	    // decode the audio file.
-	    //_logger.debug("Decoding " + audioFileURL);
-		Result r = _recognizer.recognize();
-	    
-	    RecognitionResult results = new RecognitionResult(r, _jsgfGrammar.getRuleGrammar());
-	    _logger.info("Result: " + (results != null ? results.getText() : null));
-	    //SAL
-	    //_recognizer.deallocate();
-	    return results;
+	    return null;
 	}
-	
-	//Recognize using language mode
-    public RecognitionResult recognize(InputStream as, String mimeType, int sampleRate, boolean bigEndian, int bytesPerValue, Encoding encoding) {
-		_logger.info("Using recognizer # "+_id);
-	    //SAL
-		//_recognizer.allocate();
-        _logger.debug("After allocate" + System.currentTimeMillis());
-        
-        if (!grammarManagerConfigured)
-        	_logger.warn("Can not use a language model sphinx engine to do a grammar recognition request");
-        //TODO throw an exception
-
-	    Result r = doRecognize(as, mimeType, sampleRate, bigEndian, bytesPerValue, encoding);
-
-	    _logger.info("Result: " + (r != null ? r.getBestFinalResultNoFiller() : null));
-	    //SAL
-	    //_recognizer.deallocate();
-	    
-	    if (r != null) {
-	       RecognitionResult results = new RecognitionResult(r.getBestResultNoFiller());
-	       return results;
-	    } else {
-	    	return null;
-	    }
-    }
-    
-    
-	@Override
-    public String transcribe(InputStream as, String mimeType, int sampleRate, boolean bigEndian,
-            int bytesPerValue, Encoding encoding, PrintWriter out) {
-		
-		_logger.info("Using recognizer # "+_id);
-	    //SAL
-		//_recognizer.allocate();
-        _logger.debug("After allocate" + System.currentTimeMillis());
-        
-        if (!grammarManagerConfigured)
-        	_logger.warn("Can not use a language model sphinx engine to do a grammar recognition request");
-        //TODO throw an exception
-
-        
-	    String r = doTranscribe(as, mimeType, sampleRate, bigEndian, bytesPerValue, encoding, out);
-
-	    //SAL
-	    //_recognizer.deallocate();
-	    return r;
-
-    }
-
-
     
 	
 	   /**
-  * TODOC
-  * @param grammarLocation
-  * @throws IOException
-  * @throws GrammarException
-  */
+	  * TODOC
+	  * @param grammarLocation
+	  * @throws IOException
+	  * @throws GrammarException
+	  */
  public synchronized void loadJSGF(JSGFGrammar jsgfGrammar, GrammarLocation grammarLocation) throws IOException, GrammarException {
      jsgfGrammar.setBaseURL(grammarLocation.getBaseURL());
      try {
@@ -390,7 +416,7 @@ public class SphinxRecEngine extends AbstractPoolableObject implements RecEngine
     
     private class MyStateListener implements StateListener {
 
-		public void statusChanged(RecognizerState arg0) {
+		public void statusChanged(State  arg0) {
 	        _logger.debug("Recognizer Status changed to "+arg0.toString() +" "+System.currentTimeMillis());
 	        
         }
@@ -399,6 +425,7 @@ public class SphinxRecEngine extends AbstractPoolableObject implements RecEngine
 	        _logger.debug("StateListener New properties called");
 	        
         }
+
     	
     }
     private class MyResultListener implements ResultListener {
