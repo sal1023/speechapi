@@ -20,7 +20,7 @@
  * Contact: ngodfredsen@users.sourceforge.net
  *
  */
-package com.spokentech.speechdown.client.sphinx;
+package com.spokentech.speechdown.common.sphinx;
 
 import edu.cmu.sphinx.frontend.BaseDataProcessor;
 import edu.cmu.sphinx.frontend.Data;
@@ -32,7 +32,7 @@ import edu.cmu.sphinx.frontend.endpoint.SpeechStartSignal;
 
 import org.apache.log4j.Logger;
 
-import com.spokentech.speechdown.client.SpeechEventListener;
+import com.spokentech.speechdown.common.SpeechEventListener;
 
 
 /**
@@ -46,6 +46,8 @@ public class SpeechDataMonitor extends BaseDataProcessor {
     private static Logger _logger = Logger.getLogger(SpeechDataMonitor.class);
 
     private SpeechEventListener _speechEventListener = null;
+    
+    private boolean endFlag = false;
 
     /**
      * TODOC
@@ -64,11 +66,19 @@ public class SpeechDataMonitor extends BaseDataProcessor {
      */
     @Override
     public Data getData() throws DataProcessingException {
+    	//if (endFlag) {
+    	//	endFlag = false;
+    	//	long duration = 0;
+    	//	DataEndSignal end = new DataEndSignal(duration);
+    	//	return end;
+    	//}
         Data data = getPredecessor().getData();
         if (data instanceof SpeechStartSignal) {
             broadcastSpeechStartSignal();
+
         } else if (data instanceof SpeechEndSignal) {
             broadcastSpeechEndSignal();
+            //endFlag = true;
         } else if (data instanceof DataStartSignal) {
             _logger.debug("<<<<<<<<<<<<<<< DataStartSignal encountered!");
         } else if (data instanceof DataEndSignal) {

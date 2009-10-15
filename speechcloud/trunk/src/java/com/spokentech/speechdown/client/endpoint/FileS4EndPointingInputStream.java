@@ -16,7 +16,7 @@ import javax.sound.sampled.AudioSystem;
 import javax.sound.sampled.AudioFileFormat.Type;
 import org.apache.log4j.Logger;
 
-import com.spokentech.speechdown.client.SpeechEventListener;
+import com.spokentech.speechdown.common.SpeechEventListener;
 
 // TODO: Auto-generated Javadoc
 /**

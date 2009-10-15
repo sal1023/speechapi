@@ -8,8 +8,8 @@ import javax.sound.sampled.TargetDataLine;
 
 import org.apache.log4j.Logger;
 
-import com.spokentech.speechdown.client.SpeechEventListener;
 import com.spokentech.speechdown.client.util.CircularDArrayBuffer;
+import com.spokentech.speechdown.common.SpeechEventListener;
 
 
 

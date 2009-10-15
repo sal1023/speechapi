@@ -10,7 +10,7 @@ import java.io.IOException;
 import java.io.InputStream;
 
 
-import com.spokentech.speechdown.client.SpeechEventListener;
+import com.spokentech.speechdown.common.SpeechEventListener;
 
 // TODO: Auto-generated Javadoc
 /**

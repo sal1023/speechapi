@@ -28,8 +28,8 @@ import org.speechforge.cairo.rtp.server.sphinx.SourceAudioFormat;
 
 
 import edu.cmu.sphinx.util.props.ConfigurationManager;
-import com.spokentech.speechdown.client.SpeechEventListener;
-import com.spokentech.speechdown.client.sphinx.SpeechDataMonitor;
+import com.spokentech.speechdown.common.SpeechEventListener;
+import com.spokentech.speechdown.common.sphinx.SpeechDataMonitor;
 
 // TODO: Auto-generated Javadoc
 /**
