@@ -315,7 +315,7 @@
     </component>
 
     <component name="grammar-speechDataMonitor1"
-               type="org.speechforge.cairo.rtp.server.sphinx.SpeechDataMonitor"/>
+               type="com.spokentech.speechdown.common.sphinx.SpeechDataMonitor"/>
 
     <component name="grammar-speechMarker1"
                type="edu.cmu.sphinx.frontend.endpoint.SpeechMarker" >
@@ -483,7 +483,7 @@
     </component>
 
     <component name="grammar-speechDataMonitor2"
-               type="org.speechforge.cairo.rtp.server.sphinx.SpeechDataMonitor"/>
+               type="com.spokentech.speechdown.common.sphinx.SpeechDataMonitor"/>
 
     <component name="grammar-speechMarker2"
                type="edu.cmu.sphinx.frontend.endpoint.SpeechMarker" >
@@ -674,7 +674,7 @@
     </component>
 
     <component name="lm-speechDataMonitor1"
-               type="org.speechforge.cairo.rtp.server.sphinx.SpeechDataMonitor"/>
+               type="com.spokentech.speechdown.common.sphinx.SpeechDataMonitor"/>
 
     <component name="lm-speechMarker1"
                type="edu.cmu.sphinx.frontend.endpoint.SpeechMarker" >
@@ -850,7 +850,7 @@
     </component>
 
     <component name="lm-speechDataMonitor2"
-               type="org.speechforge.cairo.rtp.server.sphinx.SpeechDataMonitor"/>
+               type="com.spokentech.speechdown.common.sphinx.SpeechDataMonitor"/>
 
     <component name="lm-speechMarker2"
                type="edu.cmu.sphinx.frontend.endpoint.SpeechMarker" >

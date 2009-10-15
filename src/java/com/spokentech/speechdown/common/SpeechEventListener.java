@@ -1,4 +1,4 @@
-package com.spokentech.speechdown.client;
+package com.spokentech.speechdown.common;
 
 public interface SpeechEventListener {
 	

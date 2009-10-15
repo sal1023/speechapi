@@ -14,8 +14,8 @@ import java.util.TimerTask;
 
 import org.apache.log4j.Logger;
 
-import com.spokentech.speechdown.client.SpeechEventListener;
 import com.spokentech.speechdown.client.SpeechEventListenerDecorator;
+import com.spokentech.speechdown.common.SpeechEventListener;
 
 // TODO: Auto-generated Javadoc
 /**

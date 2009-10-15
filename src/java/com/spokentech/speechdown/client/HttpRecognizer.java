@@ -40,6 +40,7 @@ import org.apache.log4j.Logger;
 import com.spokentech.speechdown.client.endpoint.EndPointingInputStream;
 import com.spokentech.speechdown.common.InvalidRecognitionResultException;
 import com.spokentech.speechdown.common.RecognitionResult;
+import com.spokentech.speechdown.common.SpeechEventListener;
 
 // TODO: Auto-generated Javadoc
 /**

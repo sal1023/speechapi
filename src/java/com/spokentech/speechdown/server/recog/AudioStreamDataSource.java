@@ -266,13 +266,13 @@ public class AudioStreamDataSource extends BaseDataProcessor implements StreamDa
                 // sample number should be 'totalValuesRead - 1'
                 output = createDataEndSignal();
                 utteranceEndSent = true;
-                //System.out.println("Sending end signal");
+                System.out.println("Sending end signal");
             }
         } else {
             if (!utteranceStarted) {
                 utteranceStarted = true;
                 output = new DataStartSignal(sampleRate);
-                //System.out.println("Sending start signal "));
+                System.out.println("Sending start signal ");
             } else {
                 if (dataStream != null) {
                     output = readNextFrame();
@@ -374,9 +374,9 @@ public class AudioStreamDataSource extends BaseDataProcessor implements StreamDa
     public void closeDataStream() throws IOException {
     	_logger.debug("Closing data stream");
         streamEndReached = true;
-        if (dataStream != null) {
-            dataStream.close();
-        }
+        //if (dataStream != null) {
+        //    dataStream.close();
+        //}
     }
 
 

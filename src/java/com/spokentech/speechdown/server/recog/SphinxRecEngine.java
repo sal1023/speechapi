@@ -6,6 +6,8 @@ import java.io.OutputStream;
 import java.io.PrintWriter;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Timer;
+import java.util.TimerTask;
 
 import javax.sound.sampled.AudioInputStream;
 import javax.sound.sampled.AudioFormat.Encoding;
@@ -16,6 +18,8 @@ import javax.speech.recognition.RuleParse;
 import org.apache.log4j.Logger;
 
 import com.spokentech.speechdown.common.RecognitionResult;
+import com.spokentech.speechdown.common.SpeechEventListener;
+import com.spokentech.speechdown.common.sphinx.SpeechDataMonitor;
 import com.spokentech.speechdown.server.util.pool.AbstractPoolableObject;
 
 import edu.cmu.sphinx.decoder.Decoder;
@@ -40,6 +44,11 @@ import edu.cmu.sphinx.util.props.PropertySheet;
 public class SphinxRecEngine extends AbstractPoolableObject implements RecEngine {
 
     private static Logger _logger = Logger.getLogger(SphinxRecEngine.class);
+    
+	public static final short WAITING_FOR_SPEECH = 0;
+	public static final short SPEECH_IN_PROGRESS = 1;
+	public static final short COMPLETE = 2;
+	protected volatile short _state = COMPLETE;
 
     private Decoder  _decoder;
     private AbstractScorer  _scorer;
@@ -56,6 +65,12 @@ public class SphinxRecEngine extends AbstractPoolableObject implements RecEngine
 	private int _id;
 	private FlatLinguist _flatlingust;
 	private LexTreeLinguist _lexTreelingust;
+	private SpeechDataMonitor _speechDataMonitor;
+	
+	protected /*static*/ Timer _timer = new Timer();
+	protected TimerTask _noInputTimeoutTask;
+	
+	protected StreamDataSource _dataSource = null;
 	
     public SphinxRecEngine(ConfigurationManager cm, GrammarManager grammarManager,String prefixId, int id) throws IOException, PropertyException, InstantiationException {
 
@@ -84,6 +99,8 @@ public class SphinxRecEngine extends AbstractPoolableObject implements RecEngine
 		_audioFe = (FrontEnd)_cm.lookup(prefixId+"audio-frontend"+_id);
 		_featureFe = (FrontEnd)_cm.lookup(prefixId+"feature-frontend"+_id);
 		_audioEpFe = (FrontEnd)_cm.lookup(prefixId+"audio-ep-frontend"+_id);
+		
+	    _speechDataMonitor = (SpeechDataMonitor) _cm.lookup(prefixId+"speechDataMonitor"+_id);
 		
 		//_jsgfSearchManager = (SearchManager)_cm.lookup(prefixId+"jsgfSearchManager"+_id);
 		//_jsgfSearchManager.allocate();
@@ -173,22 +190,22 @@ public class SphinxRecEngine extends AbstractPoolableObject implements RecEngine
 		FrontEnd fe = null;
 	
 	    // configure the audio input for the recognizer
-  		 StreamDataSource dataSource = null;
+
 		 String parts[] = mimeType.split("/");
 		 if (parts[1].equals("x-s4audio")) {
-			 dataSource = new S4DataStreamDataSource();
+			 _dataSource = new S4DataStreamDataSource();
 			 if (doEndpointing) {
 				 fe = _audioEpFe;
 			 } else {
 				 fe = _audioFe;
 		     }
 		 } else if (parts[1].equals("x-s4feature")) {
-			 dataSource = new S4DataStreamDataSource();
+			 _dataSource = new S4DataStreamDataSource();
 			 if (doEndpointing) {
 				 _logger.warn("Endpointing not supported for feature streams");
 			 }
 		 } else if (parts[1].equals("x-wav")) {
-			 dataSource = new AudioStreamDataSource();
+			 _dataSource = new AudioStreamDataSource();
 			 if (doEndpointing) {
 				 fe = _audioEpFe;
 			 } else {
@@ -196,18 +213,27 @@ public class SphinxRecEngine extends AbstractPoolableObject implements RecEngine
 		     }
 		 } else {
 			 _logger.warn("Unrecognized mime type: "+mimeType + " Trying to process as audio/x-wav");
-			 dataSource = new AudioStreamDataSource();
+			 _dataSource = new AudioStreamDataSource();
 		 }
+		 if (doEndpointing) {
+			SpeechEventListener listener = new Listener();
+			if (_speechDataMonitor != null) {
+				_speechDataMonitor.setSpeechEventListener(listener);
+			}
+			//TODO: start the timer
+			//_noInputTimeoutTask = new TimerTask(30000);
+		 }
+
 		 
 	     _logger.debug("-----> "+mimeType+ " "+parts[1]);
 
 	     //set the first stage of the front end
-		 fe.setDataSource((DataProcessor) dataSource);
+		 fe.setDataSource((DataProcessor) _dataSource);
 		 
 		 // set the front end in the scorer in realtime
 		 _scorer.setFrontEnd(fe);
 	     
-		 dataSource.setInputStream(as, "ws-audiostream", sampleRate, bigEndian, bytesPerValue,encoding);
+		 _dataSource.setInputStream(as, "ws-audiostream", sampleRate, bigEndian, bytesPerValue,encoding);
 	    
 		_logger.debug("After setting the input stream" + System.currentTimeMillis());
 	    
@@ -217,12 +243,22 @@ public class SphinxRecEngine extends AbstractPoolableObject implements RecEngine
 		Result r = _recognizer.recognize();
 		long stop = System.nanoTime();
 		long wall = (stop - start)/1000000;
-		long streamLen = dataSource.getLengthInMs();
+		long streamLen = _dataSource.getLengthInMs();
 		double ratio = (double)wall/(double)streamLen;
 		_logger.info(ratio+ "  Wall time "+ wall+ " stream length "+ streamLen);
 	    return r;
     }
     
+	public void stopAudioTransfer() {
+		 try {
+		        _dataSource.closeDataStream();
+	     } catch (IOException e) {
+		        // TODO Auto-generated catch block
+		        e.printStackTrace();
+	     }
+	}
+	
+	
 	@Override
     public String transcribe(InputStream as, String mimeType, int sampleRate, boolean bigEndian,
             int bytesPerValue, Encoding encoding, PrintWriter out) {
@@ -291,12 +327,6 @@ public class SphinxRecEngine extends AbstractPoolableObject implements RecEngine
         }
 	    return totalResult;
     }
-	
-
-    
-
-
-	
 	
 	
 	/* (non-Javadoc)
@@ -443,6 +473,66 @@ public class SphinxRecEngine extends AbstractPoolableObject implements RecEngine
         }
     	
     }
+    /**
+   	 * The Class Listener.
+   	 */
+   	protected class Listener implements SpeechEventListener {
 
 
+	        @Override
+	        public void speechStarted() {
+	            _logger.debug("speechStarted()");
+
+	            synchronized (SphinxRecEngine.this) {
+	                if (_state == WAITING_FOR_SPEECH) {
+	                    _state = SPEECH_IN_PROGRESS;
+	                }
+	                if (_noInputTimeoutTask != null) {
+	                    _noInputTimeoutTask.cancel();
+	                    _noInputTimeoutTask = null;
+	                }
+	            }
+	        }
+	        
+        	public void speechEnded() {
+	            _logger.debug("speechEnded()");
+	            synchronized (SphinxRecEngine.this) {
+	            	stopAudioTransfer();
+	            	_state = COMPLETE;
+	            }
+
+	        }
+
+        	public void noInputTimeout() {
+	            _logger.debug("no input timeout()");
+	            synchronized (SphinxRecEngine.this) {
+	            	stopAudioTransfer();
+	            	_state = COMPLETE;
+	            }	   
+
+	        }
+
+	    }
+
+    /**
+     * The Class NoInputTimeoutTask.
+     */
+    public class NoInputTimeoutTask extends TimerTask {
+
+        /* (non-Javadoc)
+         * @see java.util.TimerTask#run()
+         */
+        @Override
+        public void run() {
+            synchronized (SphinxRecEngine.this) {
+                _noInputTimeoutTask = null;
+                if (_state == WAITING_FOR_SPEECH) {
+                    _state = COMPLETE;
+                    stopAudioTransfer();
+
+                }
+            }
+        }
+        
+    }
 }

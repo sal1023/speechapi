@@ -24,9 +24,11 @@ package com.spokentech.speechdown.client;
 
 import org.apache.log4j.Logger;
 
+import com.spokentech.speechdown.common.SpeechEventListener;
+
 
 /**
- * Delegates method calls to an underlying {@link com.spokentech.speechdown.client.recog.SpeechEventListener} implementation.
+ * Delegates method calls to an underlying {@link com.spokentech.speechdown.common.recog.SpeechEventListener} implementation.
  * Can be subclassed to intercept calls to the decorated object.
  *
  * @author Niels Godfredsen {@literal <}<a href="mailto:ngodfredsen@users.sourceforge.net">ngodfredsen@users.sourceforge.net</a>{@literal >}

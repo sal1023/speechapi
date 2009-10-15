@@ -6,8 +6,8 @@ import javax.sound.sampled.AudioFormat;
 import javax.sound.sampled.AudioInputStream;
 import org.apache.log4j.Logger;
 
-import com.spokentech.speechdown.client.SpeechEventListener;
 import com.spokentech.speechdown.client.util.CircularDArrayBuffer;
+import com.spokentech.speechdown.common.SpeechEventListener;
 
 /** This Thread records audio, and caches them in an audio buffer. */
 class AudioStreamEndPointer extends Thread {

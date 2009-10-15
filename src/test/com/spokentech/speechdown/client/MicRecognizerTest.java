@@ -1,0 +1,175 @@
+package com.spokentech.speechdown.client;
+
+import java.io.File;
+import java.io.IOException;
+import java.io.InputStream;
+
+import java.io.UnsupportedEncodingException;
+import java.net.MalformedURLException;
+import java.net.URL;
+
+
+import javax.sound.sampled.AudioFormat;
+import javax.sound.sampled.AudioInputStream;
+import javax.sound.sampled.AudioSystem;
+import javax.sound.sampled.DataLine;
+import javax.sound.sampled.LineEvent;
+import javax.sound.sampled.LineListener;
+import javax.sound.sampled.LineUnavailableException;
+
+import javax.sound.sampled.TargetDataLine;
+import javax.sound.sampled.AudioFileFormat.Type;
+
+
+import org.apache.http.HttpEntity;
+import org.apache.http.HttpResponse;
+import org.apache.http.client.ClientProtocolException;
+import org.apache.http.client.HttpClient;
+import org.apache.http.client.methods.HttpPost;
+import org.apache.http.entity.mime.MultipartEntity;
+import org.apache.http.entity.mime.content.InputStreamBody;
+import org.apache.http.entity.mime.content.StringBody;
+import org.apache.http.impl.client.DefaultHttpClient;
+import org.apache.log4j.Logger;
+
+import com.spokentech.speechdown.client.endpoint.EndPointingInputStream;
+import com.spokentech.speechdown.client.endpoint.FileS4EndPointingInputStream;
+import com.spokentech.speechdown.client.endpoint.FileS4EndPointingInputStream2;
+import com.spokentech.speechdown.client.endpoint.StreamEndPointingInputStream;
+import com.spokentech.speechdown.client.endpoint.StreamS4EndPointingInputStream;
+import com.spokentech.speechdown.common.RecognitionResult;
+
+
+import junit.framework.TestCase;
+
+public class MicRecognizerTest extends TestCase {
+
+    private static Logger _logger = Logger.getLogger(MicRecognizerTest.class);
+    public static final String CRLF = "\r\n";
+    
+    
+
+    //private static String service = "http://ec2-67-202-5-50.compute-1.amazonaws.com/speechcloud/SpeechUploadServlet";  
+    private static String service = "http://localhost:8090/speechcloud/SpeechUploadServlet";    
+    private static AudioFormat desiredFormat;
+    private static int sampleRate = 8000;
+    private static boolean signed = true;
+    private static boolean bigEndian = true;
+    private static int channels = 1;
+    private static int sampleSizeInBits = 16;
+    
+    private static int audioBufferSize = 160000;
+    private static int msecPerRead = 10;
+    private static int frameSizeInBytes;
+    
+	private String grammar = "file:///work/speechcloud/etc/grammar/example.gram";    
+	URL grammarUrl = null;
+	HttpRecognizer recog;
+	
+	File soundFile1 = new File("c:/work/speechcloud/etc/prompts/lookupsports.wav");	 	
+	File soundFile2 = new File("c:/work/speechcloud/etc/prompts/get_me_a_stock_quote.wav");	 	
+	File soundFile3 = new File("c:/work/speechcloud/etc/prompts/i_would_like_sports_news.wav");	 	
+
+	
+    String wav = "audio/x-wav";
+    String s4feature = "audio/x-s4feature";
+    String s4audio = "audio/x-s4audio";
+    
+    
+    String audioConfigFile="c:/work/speechcloud/etc/sphinxfrontendonly-audio.xml";
+    String featureConfigFile="c:/work/speechcloud/etc/sphinxfrontendonly-feature.xml";
+
+    public String configForMime(String mimeType) {
+    	String configFile = null;
+    	if (mimeType.equals(wav)) {
+            configFile=audioConfigFile;
+    	} else if (mimeType.equals(s4feature)) {
+            configFile=featureConfigFile;
+    	} else if (mimeType.equals(s4audio)) {
+            configFile=audioConfigFile;
+    	} else {
+    		_logger.warn("Unrecognized data mode: "+mimeType+"  Guessing audio/x-wav.");
+    		mimeType = "audio/x-wav";
+    	}
+    	return configFile;
+    }
+    
+    
+    
+	
+	
+	     protected void setUp() {
+		    	recog = new HttpRecognizer();
+		    	recog.setService(service);
+
+		    	try {
+		    		grammarUrl = new URL(grammar);
+				} catch (MalformedURLException e) {  
+			         e.printStackTrace();  
+				}		    
+	     }
+
+	 
+	    
+	    public void testMicInput() {
+	    	
+	        desiredFormat = new AudioFormat ((float) sampleRate, sampleSizeInBits, channels, signed, bigEndian);
+	        DataLine.Info info = new DataLine.Info(TargetDataLine.class, desiredFormat);
+	        if (!AudioSystem.isLineSupported(info)) {
+	            _logger.info(desiredFormat + " not supported");
+	            throw new RuntimeException("unsupported audio format");
+	        } 
+	        System.out.println("Desired format: " + desiredFormat);
+
+	        
+	        // Get the audio line from the microphone (java sound api) 
+	    	TargetDataLine audioLine = null;
+	        try {
+	             audioLine = (TargetDataLine) AudioSystem.getLine(info);
+	            /* Add a line listener that just traces
+	             * the line states.
+	             */
+	            audioLine.addLineListener(new LineListener() {
+	                public void update(LineEvent event) {
+	                    _logger.info("line listener " + event);
+	                }
+	            });
+	        } catch (LineUnavailableException e) {
+	            _logger.info("microphone unavailable " + e.getMessage());
+	        }
+	 
+	        // open up the line from the mic (javasound)
+	        if (audioLine != null) {
+	        	if (!audioLine.isOpen()) {
+	        		_logger.info("open");
+	        		try {
+	        			audioLine.open(desiredFormat, audioBufferSize);
+	        		} catch (LineUnavailableException e) {
+	        			_logger.info("Can't open microphone " + e.getMessage());
+	        			e.printStackTrace();
+	        		}  
+	        	} 
+	        } else {
+	        	_logger.info("Can't find microphone");
+	        	throw new RuntimeException("Can't find microphone");
+	        }
+	    	boolean doEndpointing = true;
+	    	boolean lmflg = true;
+	    	//RecognitionResult r = recog.recognize(audioLine, grammarUrl, lmflg, doEndpointing);
+	    	//System.out.println("lm result: "+r.getText());	        
+	    	
+	        lmflg = false;
+	        RecognitionResult r = recog.recognize(audioLine, grammarUrl, lmflg,doEndpointing);
+	        System.out.println("grammar result: "+r.getText());
+	    	
+	    }
+	    
+
+
+
+
+	    
+}
+
+
+

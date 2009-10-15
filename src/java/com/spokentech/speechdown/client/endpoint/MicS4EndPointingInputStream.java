@@ -14,9 +14,9 @@ import edu.cmu.sphinx.frontend.DataProcessor;
 import edu.cmu.sphinx.frontend.FrontEnd;
 import edu.cmu.sphinx.util.props.ConfigurationManager;
 import com.spokentech.speechdown.client.Microphone;
-import com.spokentech.speechdown.client.SpeechEventListener;
-import com.spokentech.speechdown.client.sphinx.SpeechDataMonitor;
 import com.spokentech.speechdown.client.sphinx.SpeechDataStreamer;
+import com.spokentech.speechdown.common.SpeechEventListener;
+import com.spokentech.speechdown.common.sphinx.SpeechDataMonitor;
 
 
 // TODO: Auto-generated Javadoc
