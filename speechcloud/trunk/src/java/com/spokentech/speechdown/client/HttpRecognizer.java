@@ -438,6 +438,7 @@ public class HttpRecognizer {
     	StringBody bytesPerValue = null;
     	StringBody encoding = null;
     	StringBody lmFlag = null;
+    	StringBody endpointFlag = null;
     	//StringBody dataStreamMode = new StringBody(dataMode);  	
     	AudioFormat format = epStream.getFormat1();
     	
@@ -447,8 +448,7 @@ public class HttpRecognizer {
         	bytesPerValue =new StringBody(String.valueOf(format.getSampleSizeInBits()/8));
         	encoding = new StringBody(format.getEncoding().toString());
         	lmFlag = new StringBody(String.valueOf(lmflg));
-        	//dataStreamMode = new StringBody(dataMode);
-        	
+           	endpointFlag = new StringBody(String.valueOf(Boolean.FALSE));
         } catch (UnsupportedEncodingException e1) {
 	        // TODO Auto-generated catch block
 	        e1.printStackTrace();
@@ -456,11 +456,15 @@ public class HttpRecognizer {
         
         //add the form field parts
 		//mpEntity.addPart("dataMode", dataStreamMode);
-		mpEntity.addPart("sampleRate", sampleRate);
-		mpEntity.addPart("bigEndian", bigEndian);
-		mpEntity.addPart("bytesPerValue", bytesPerValue);
-		mpEntity.addPart("encoding", encoding);
-		mpEntity.addPart("lmFlag", lmFlag);
+
+		mpEntity.addPart(HttpCommandFields.SAMPLE_RATE_FIELD_NAME, sampleRate);
+		mpEntity.addPart(HttpCommandFields.BIG_ENDIAN_FIELD_NAME, bigEndian);
+		mpEntity.addPart(HttpCommandFields.BYTES_PER_VALUE_FIELD_NAME, bytesPerValue);
+		mpEntity.addPart(HttpCommandFields.ENCODING_FIELD_NAME, encoding);
+		mpEntity.addPart(HttpCommandFields.LANGUAGE_MODEL_FLAG, lmFlag);
+		mpEntity.addPart(HttpCommandFields.ENDPOINTING_FLAG, endpointFlag);
+	
+		
 		
 		//add the grammar part
 		mpEntity.addPart("grammar", grammarBody);

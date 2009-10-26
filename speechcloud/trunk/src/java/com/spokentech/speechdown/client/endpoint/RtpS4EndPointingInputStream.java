@@ -151,7 +151,7 @@ public class RtpS4EndPointingInputStream extends EndPointingInputStreamBase impl
 			speechDataMonitor.setSpeechEventListener(listener);
 		}
 
-		Object primaryInput = cm.lookup("primaryInput"+id);
+		Object primaryInput = cm.lookup("primaryInput");
 
 		if (primaryInput instanceof RawAudioProcessor) {
 			_rawAudioProcessor = (RawAudioProcessor) primaryInput;

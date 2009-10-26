@@ -189,6 +189,8 @@
 				fork="true"
 				srcdir="${basedir}/src/java"
 				destdir="${build.client.classes.home}"
+				debug="on"
+                debuglevel="lines,vars,source" 
 				includes="**/client/**,**/common/**">
 			<classpath refid="jaxws.classpath" />
 		</javac>
@@ -201,6 +203,7 @@
         classpathref="jaxws.classpath"
         includes="client/**, common/**"
         debug="on"
+        debuglevel="lines,vars,source" 
         failonerror="true"/>
     </target>
 

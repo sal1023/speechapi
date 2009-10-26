@@ -12,8 +12,9 @@ import org.apache.log4j.Logger;
 
 import edu.cmu.sphinx.frontend.DataProcessor;
 import edu.cmu.sphinx.frontend.FrontEnd;
+import edu.cmu.sphinx.frontend.util.Microphone;
 import edu.cmu.sphinx.util.props.ConfigurationManager;
-import com.spokentech.speechdown.client.Microphone;
+
 import com.spokentech.speechdown.client.sphinx.SpeechDataStreamer;
 import com.spokentech.speechdown.common.SpeechEventListener;
 import com.spokentech.speechdown.common.sphinx.SpeechDataMonitor;
@@ -36,9 +37,22 @@ public class MicS4EndPointingInputStream extends EndPointingInputStreamBase impl
 
 	private String s4ConfigFile = "/config/sphinx-config.xml";
 	
+	private AudioFormat desiredFormat;
 
 	private String mimeType;
 	
+	
+	
+	
+	
+	public MicS4EndPointingInputStream(String configFile, AudioFormat desiredFormat, String mimeType) {
+	    super();
+	    s4ConfigFile = configFile;
+	    this.desiredFormat = desiredFormat;
+	    this.mimeType = mimeType;
+    }
+
+
 	/**
 	 * Gets the mime type.
 	 * 
@@ -46,6 +60,22 @@ public class MicS4EndPointingInputStream extends EndPointingInputStreamBase impl
 	 */
     public String getMimeType() {
     	return mimeType;
+    }
+
+	
+	/**
+     * @return the desiredFormat
+     */
+    public AudioFormat getDesiredFormat() {
+    	return desiredFormat;
+    }
+
+
+	/**
+     * @param desiredFormat the desiredFormat to set
+     */
+    public void setDesiredFormat(AudioFormat desiredFormat) {
+    	this.desiredFormat = desiredFormat;
     }
 
 
@@ -125,16 +155,39 @@ public class MicS4EndPointingInputStream extends EndPointingInputStreamBase impl
 			speechDataMonitor.setSpeechEventListener(_listener);
 		}
 
-		FrontEnd frontEnd = (FrontEnd) cm.lookup("frontEnd");		
- 		Microphone mic = new Microphone();		
- 		frontEnd.setDataSource((DataProcessor) mic);
-		frontEnd.initialize();
 		
+		
+		int sampleRate = (int)desiredFormat.getSampleRate();
+		int sampleSizeInBits = desiredFormat.getSampleSizeInBits();
+		int channels = desiredFormat.getChannels();
+        boolean bigEndian = desiredFormat.isBigEndian();
+        boolean signed = true;
+        boolean closeBetweenUtterances = true;
+        int msecsPerread = 10;
+        boolean keepLastAudio = false;
+        String stereoToMono = "average";
+        int selectedChannel = 0;
+        String selectedMixerIndex = "default";
+        
+		FrontEnd frontEnd = (FrontEnd) cm.lookup("frontEnd");	
+		//mic = (Microphone) cm.lookup("microphone");
+		//int sampleRate, int bitsPerSample, int channels,
+        //boolean bigEndian, boolean signed, boolean closeBetweenUtterances, int msecPerRead, boolean keepLastAudio,
+        //String stereoToMono, int selectedChannel, String selectedMixerIndex) {
+		_logger.info("FORMAT" + (int)desiredFormat.getSampleRate() +","+desiredFormat.getSampleSizeInBits()+","+desiredFormat.getChannels()+","+ desiredFormat.isBigEndian());
+        AudioFormat a  = new AudioFormat((float) sampleRate, sampleSizeInBits, channels, signed, bigEndian);
+        _logger.info("FORMAT: "+a);
+
+    	mic = new Microphone(sampleRate, sampleSizeInBits, channels , bigEndian , signed, closeBetweenUtterances , msecsPerread,keepLastAudio, stereoToMono ,selectedChannel ,selectedMixerIndex);		
+		mic.initialize();
+    	frontEnd.setDataSource((DataProcessor) mic);
+		frontEnd.initialize();
+
+		mic.startRecording();
 		SpeechDataStreamer sds = new SpeechDataStreamer();
 		sds.startStreaming(frontEnd, outputStream);
 		
-		mic.initialize();
-		mic.startRecording();
+
 		if (timeout > 0)
 			startInputTimers(timeout);
 		
@@ -190,7 +243,7 @@ public class MicS4EndPointingInputStream extends EndPointingInputStreamBase impl
 	 */
 	@Override
     public AudioFormat getFormat1() {
-		return mic.getAudioFormat();
+		return desiredFormat;
     }
 
 
