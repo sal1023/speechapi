@@ -133,6 +133,7 @@ public class S4DataStreamDataSource extends BaseDataProcessor implements StreamD
 
         getTimer().stop();
         totalValues = totalValues + getDataLength(output);
+        //_logger.info("Total read in this frame: "+totalValues);
         
         return output;
     }
@@ -142,9 +143,10 @@ public class S4DataStreamDataSource extends BaseDataProcessor implements StreamD
         if (data instanceof SpeechStartSignal) {
             _logger.debug("<<<<<<<<<<<<<<< SpeechStartSignal encountered!");
         } else if (data instanceof SpeechEndSignal) {
+        	
             _logger.debug("<<<<<<<<<<<<<<< SpeechEndSignal encountered!");
         } else if (data instanceof DataStartSignal) {
-             sampleRate = getSampleRate(data);
+
             _logger.debug("<<<<<<<<<<<<<<< DataStartSignal encountered!");
         } else if (data instanceof DataEndSignal) {
             _logger.debug(">>>>>>>>>>>>>>> DataEndSignal encountered!");
@@ -190,7 +192,8 @@ public class S4DataStreamDataSource extends BaseDataProcessor implements StreamD
         	_logger.debug("FloatData: " + fd.getSampleRate() + "Hz, first sample #: " +
                     fd.getFirstSampleNumber() + ", collect time: " + fd.getCollectTime());
         }
-
+        if (sampleRate == 0)
+           sampleRate = getSampleRate(data);
     }
 
     public void closeDataStream() throws IOException {
