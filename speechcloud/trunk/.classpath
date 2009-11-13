@@ -25,8 +25,6 @@
 	<classpathentry kind="var" path="JAXWS_HOME/lib/sjsxp.jar"/>
 	<classpathentry kind="var" path="JAXWS_HOME/lib/stax-ex.jar"/>
 	<classpathentry kind="var" path="JAXWS_HOME/lib/streambuffer.jar"/>
-	<classpathentry kind="var" path="SPHINX4_HOME/lib/WSJ_8gau_13dCep_8kHz_31mel_200Hz_3500Hz.jar"/>
-	<classpathentry kind="var" path="SPHINX4_HOME/lib/sphinx4.jar"/>
 	<classpathentry kind="lib" path="lib/commons-lang-2.3.jar"/>
 	<classpathentry kind="lib" path="lib/commons-cli-1.0.jar"/>
 	<classpathentry kind="lib" path="lib/commons-fileupload-1.2.1.jar"/>
@@ -45,5 +43,7 @@
 	<classpathentry kind="lib" path="lib/en_us.jar"/>
 	<classpathentry kind="lib" path="lib/freetts-SNAPSHOT.jar"/>
 	<classpathentry kind="lib" path="etc"/>
+	<classpathentry kind="lib" path="lib/sphinx4.jar"/>
+	<classpathentry kind="var" path="OPENMARY_HOME/java/mary-common.jar"/>
 	<classpathentry kind="output" path="target/eclipse"/>
 </classpath>

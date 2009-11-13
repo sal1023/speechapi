@@ -61,16 +61,23 @@ public class RestfulSynthesizerTest extends TestCase {
 	    	});
 	        
     
-    		    	
-	        doSynthesisTest("this is a only a test","1.wav");
-	        doSynthesisTest("To be or not to be, that is the question.","2.wav");
-	        doSynthesisTest("A man, a plan, a canal, panama","3.wav");
-	        doSynthesisTest("If a server wants to start sending a response before knowing its total length (like with long script output), it might use the simple chunked transfer-encoding, which breaks the complete response into smaller chunks and sends them in series. ","4.wav");
+    		String voice = "jmk-arctic";
+    		 voice = "slt-arctic";
+    		 voice = "hmm-slt";
+    		 voice = "hmm-jmk";
+    		 voice = "hmm-bdl";
+    		 //voice = "bdl-arctic";
+    		 //voice = "misspelled";
+    		 
+	        doSynthesisTest("this is a only a test","1.mpeg",voice);
+	        doSynthesisTest("To be or not to be, that is the question.","2.mpeg",voice);
+	        doSynthesisTest("A man, a plan, a canal, panama","3.mpeg",voice);
+	        doSynthesisTest("If a server wants to start sending a response before knowing its total length (like with long script output), it might use the simple chunked transfer-encoding, which breaks the complete response into smaller chunks and sends them in series. ","4.mpeg",voice);
 	
 
 	    }
 
-		private void doSynthesisTest(String text, String outFileName) {
+		private void doSynthesisTest(String text, String outFileName,String voice) {
 			
 	    	// Plain old http approach    	
 	    	HttpClient httpclient = new DefaultHttpClient();
@@ -92,13 +99,15 @@ public class RestfulSynthesizerTest extends TestCase {
 	    	StringBody encoding = null;
 	    	StringBody mime = null;
 	    	StringBody textb = null;
+	    	StringBody voiceb = null;
 	        try {
 	        	sampleRate = new StringBody(String.valueOf((int)format.getSampleRate()));
 	        	bigEndian = new StringBody(String.valueOf(format.isBigEndian()));
 	        	bytesPerValue =new StringBody(String.valueOf(format.getSampleSizeInBits()/8));
 	        	encoding = new StringBody(format.getEncoding().toString());
-	        	mime = new StringBody("audio/x-wav");
+	        	mime = new StringBody("audio/mpeg");
 	        	textb = new StringBody(text);
+	        	voiceb = new StringBody(voice);
 	        } catch (UnsupportedEncodingException e1) {
 		        // TODO Auto-generated catch block
 		        e1.printStackTrace();
@@ -111,7 +120,7 @@ public class RestfulSynthesizerTest extends TestCase {
 			mpEntity.addPart("encoding", encoding);
 			mpEntity.addPart("mimeType", mime);
 			mpEntity.addPart("text", textb);
-			
+			mpEntity.addPart("voice", voiceb);
 	        httppost.setEntity(mpEntity);
 	    
 	        

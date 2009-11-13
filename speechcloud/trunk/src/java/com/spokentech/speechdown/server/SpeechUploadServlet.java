@@ -116,6 +116,8 @@ public class SpeechUploadServlet extends HttpServlet {
 	    boolean lmFlag = false;
 	    boolean continuous = false;
 	    boolean doEndpointing = false;
+	    boolean cmnBatch = false;
+
 	    int bytesPerValue = 2;
 	    AudioFormat.Encoding encoding = AudioFormat.Encoding.PCM_SIGNED;
 
@@ -143,6 +145,8 @@ public class SpeechUploadServlet extends HttpServlet {
 				        	sampleRate = Integer.parseInt(value);
 			        	} else if (name.equals(HttpCommandFields.CONTINUOUS_FLAG)) {
 				        	continuous  = Boolean.parseBoolean(value);
+			        	} else if (name.equals(HttpCommandFields.CMN_BATCH)) {
+				        	cmnBatch  = Boolean.parseBoolean(value);
 			        	} else if (name.equals(HttpCommandFields.ENDPOINTING_FLAG)) {
 				        	doEndpointing  = Boolean.parseBoolean(value);
 				        } else if (name.equals(HttpCommandFields.LANGUAGE_MODEL_FLAG)) {
@@ -196,9 +200,9 @@ public class SpeechUploadServlet extends HttpServlet {
 				    		} else {
 
 					    		if (lmFlag) {
-					    			result = recognizerService.Recognize(audio,contentType,sampleRate,bigEndian,bytesPerValue,encoding,doEndpointing);
+					    			result = recognizerService.Recognize(audio,contentType,sampleRate,bigEndian,bytesPerValue,encoding,doEndpointing,cmnBatch);
 					    		} else {
-					    	        result = recognizerService.Recognize(audio, grammarString,contentType,sampleRate,bigEndian,bytesPerValue,encoding,doEndpointing);
+					    	        result = recognizerService.Recognize(audio, grammarString,contentType,sampleRate,bigEndian,bytesPerValue,encoding,doEndpointing,cmnBatch);
 
 					    	    }
 

@@ -42,7 +42,9 @@ import org.apache.log4j.Logger;
 import org.springframework.context.ApplicationContext;
 import org.springframework.web.context.support.WebApplicationContextUtils;
 
+import com.spokentech.speechdown.common.HttpCommandFields;
 import com.spokentech.speechdown.common.RecognitionResult;
+import com.spokentech.speechdown.server.tts.MarySynthesizerService;
 
 
 /**
@@ -54,12 +56,14 @@ import com.spokentech.speechdown.common.RecognitionResult;
 public class SpeechDownloadServlet extends HttpServlet {
 
 	private static Logger _logger = Logger.getLogger(SpeechDownloadServlet.class);
-    private static final String SAMPLE_RATE_FIELD_NAME = "sampleRate";
-    private static final String TEXT = "text";
-    private static final String BIG_ENDIAN_FIELD_NAME = "bigEndian";
-    private static final String BYTES_PER_VALUE_FIELD_NAME = "bytesPerValue";
-    private static final String ENCODING_FIELD_NAME = "encoding";
-    private static final String MIME_TYPE = "mimeType";
+    //private static final String SAMPLE_RATE_FIELD_NAME = "sampleRate";
+    //private static final String TEXT = "text";
+    //private static final String BIG_ENDIAN_FIELD_NAME = "bigEndian";
+    //private static final String BYTES_PER_VALUE_FIELD_NAME = "bytesPerValue";
+    //private static final String ENCODING_FIELD_NAME = "encoding";
+    //private static final String MIME_TYPE = "mimeType";
+    
+    
 	private DiskFileItemFactory factory;
 	private File destinationDir;
 	
@@ -113,8 +117,10 @@ public class SpeechDownloadServlet extends HttpServlet {
 	    boolean bigEndian = true;
 	    int bytesPerValue = 2;
 	    String text = "";
+	    String voice = "";
+	    String mime = "audio/x-wav";
 	    AudioFormat.Encoding encoding = AudioFormat.Encoding.PCM_SIGNED;
-	    AudioFileFormat.Type fileFormat = AudioFileFormat.Type.AU; 
+	    //AudioFileFormat.Type fileFormat = AudioFileFormat.Type.AU; 
 	    
 		// Create a new file upload handler
 		ServletFileUpload upload = new ServletFileUpload();
@@ -133,23 +139,20 @@ public class SpeechDownloadServlet extends HttpServlet {
 			    	String value = Streams.asString(stream);
 			        _logger.debug("Form field " + name + " with value " + value + " detected.");
 			        try { 
-				        if (name.equals(SAMPLE_RATE_FIELD_NAME)) {
+				        if (name.equals(HttpCommandFields.SAMPLE_RATE_FIELD_NAME)) {
 				        	sampleRate = Integer.parseInt(value);
-				        }else if (name.equals(TEXT)) {
+				        }else if (name.equals(HttpCommandFields.TEXT)) {
 				        	text = value;
-				        } else if (name.equals(BIG_ENDIAN_FIELD_NAME)) {
+				        }else if (name.equals(HttpCommandFields.VOICE_NAME)) {
+				        	voice = value;
+				        } else if (name.equals(HttpCommandFields.BIG_ENDIAN_FIELD_NAME)) {
 				        	bigEndian = Boolean.parseBoolean(value);
-			        	} else if (name.equals(BYTES_PER_VALUE_FIELD_NAME)) {
+			        	} else if (name.equals(HttpCommandFields.BYTES_PER_VALUE_FIELD_NAME)) {
 				        	bytesPerValue = Integer.parseInt(value);
-		        		} else if (name.equals(MIME_TYPE)) {
-		        			if (value.equals("audio/x-wav")) {
-		        				fileFormat = AudioFileFormat.Type.WAVE; 
-		        			} else if (value.equals("audio/x-au")) {
-		        				fileFormat = AudioFileFormat.Type.AU; 
-		        			} else {
-		        				_logger.warn("Unsupported fileformat: "+value);
-		        			}
-		        		} else if (name.equals(ENCODING_FIELD_NAME)) {
+		        		} else if (name.equals(HttpCommandFields.MIME_TYPE)) {
+		        			mime = value;
+		        
+		        		} else if (name.equals(HttpCommandFields.ENCODING_FIELD_NAME)) {
 		        			if (value.equals(AudioFormat.Encoding.ALAW.toString())) {
 		        				encoding = AudioFormat.Encoding.ALAW;
 		        			} else if (value.equals(AudioFormat.Encoding.ULAW.toString())) {
@@ -178,9 +181,15 @@ public class SpeechDownloadServlet extends HttpServlet {
 	        AudioFormat format = new AudioFormat(encoding, sampleRate, 8, 1, 8, 8000, bigEndian);
 			//run the synthesizer
 			File f =  null;
+			
+			response.setContentType("audio/x-wav");
+			response.setHeader("Content-Disposition", "attachment; filename=synthesized.wav'");			
+			response.setHeader("Transfer-coding","chunked");
+			
 	    	try {
 	    		_logger.debug("sythesizing audio!  Sample rate= "+sampleRate+", bigEndian= "+ bigEndian+", bytes per value= "+bytesPerValue+", encoding= "+encoding.toString());
-	    	     f = synthesizerService.ttsFile(text,format,fileFormat);
+	    	     //f = synthesizerService.ttsFile(text,format,fileFormat);
+	    	     synthesizerService.streamTTS(text,format,mime,voice,response.getOutputStream());
 	    	} catch (Exception e) {
 	    		e.printStackTrace();
 	    	}
@@ -189,19 +198,8 @@ public class SpeechDownloadServlet extends HttpServlet {
 	    	//TODO: Get a stream in the first place (no need to go to a file first)
 	    	//take the output file and put in the response stream
 			OutputStream out = response.getOutputStream();
-			response.setContentType("audio/x-wav");
-			response.setHeader("Content-Disposition", "attachment; filename=synthesized.wav'");			
-			response.setHeader("Transfer-coding","chunked");
-			
-	        DataInputStream in = new DataInputStream(new FileInputStream(f));
-	        
-		  	byte[] buf = new byte[4 * 1024];  // 4K buffer
-		  	int bytesRead;
-		  	while ((bytesRead = in.read(buf)) != -1) {
-		  		out.write(buf, 0, bytesRead);
-		  	}
 
-	        in.close();
+
 	        out.flush();
 	        out.close();
 

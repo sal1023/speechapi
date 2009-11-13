@@ -20,6 +20,7 @@ import org.apache.log4j.Logger;
 import com.spokentech.speechdown.common.RecognitionResult;
 import com.spokentech.speechdown.common.SpeechEventListener;
 import com.spokentech.speechdown.common.sphinx.AudioStreamDataSource;
+import com.spokentech.speechdown.common.sphinx.IdentityStage;
 import com.spokentech.speechdown.common.sphinx.SpeechDataMonitor;
 import com.spokentech.speechdown.server.util.pool.AbstractPoolableObject;
 
@@ -28,8 +29,22 @@ import edu.cmu.sphinx.decoder.ResultListener;
 
 import edu.cmu.sphinx.decoder.scorer.AbstractScorer;
 import edu.cmu.sphinx.decoder.search.SearchManager;
+import edu.cmu.sphinx.frontend.DataBlocker;
 import edu.cmu.sphinx.frontend.DataProcessor;
 import edu.cmu.sphinx.frontend.FrontEnd;
+import edu.cmu.sphinx.frontend.endpoint.NonSpeechDataFilter;
+import edu.cmu.sphinx.frontend.endpoint.SpeechClassifier;
+import edu.cmu.sphinx.frontend.endpoint.SpeechMarker;
+import edu.cmu.sphinx.frontend.feature.BatchCMN;
+import edu.cmu.sphinx.frontend.feature.DeltasFeatureExtractor;
+import edu.cmu.sphinx.frontend.feature.LDA;
+import edu.cmu.sphinx.frontend.feature.LiveCMN;
+import edu.cmu.sphinx.frontend.filter.Dither;
+import edu.cmu.sphinx.frontend.filter.Preemphasizer;
+import edu.cmu.sphinx.frontend.frequencywarp.MelFrequencyFilterBank;
+import edu.cmu.sphinx.frontend.transform.DiscreteCosineTransform;
+import edu.cmu.sphinx.frontend.transform.DiscreteFourierTransform;
+import edu.cmu.sphinx.frontend.window.RaisedCosineWindower;
 import edu.cmu.sphinx.jsapi.JSGFGrammar;
 import edu.cmu.sphinx.linguist.flat.FlatLinguist;
 import edu.cmu.sphinx.linguist.lextree.LexTreeLinguist;
@@ -55,9 +70,9 @@ public class SphinxRecEngine extends AbstractPoolableObject implements RecEngine
     private AbstractScorer  _scorer;
     private SearchManager  _jsgfSearchManager;
     private SearchManager  _lmSearchManager;
-	private FrontEnd _audioFe;
-	private FrontEnd _audioEpFe;
-	private FrontEnd _featureFe;
+	//private FrontEnd _audioFe;
+	//private FrontEnd _audioEpFe;
+	//private FrontEnd _featureFe;
     private Recognizer _recognizer;
     private JSGFGrammar _jsgfGrammar;
     private boolean hotword = false;       
@@ -97,11 +112,11 @@ public class SphinxRecEngine extends AbstractPoolableObject implements RecEngine
 
 		_recognizer.addStateListener(stateListener);
 
-		_audioFe = (FrontEnd)_cm.lookup(prefixId+"audio-frontend"+_id);
-		_featureFe = (FrontEnd)_cm.lookup(prefixId+"feature-frontend"+_id);
-		_audioEpFe = (FrontEnd)_cm.lookup(prefixId+"audio-ep-frontend"+_id);
+		//_audioFe = (FrontEnd)_cm.lookup(prefixId+"audio-frontend"+_id);
+		//_featureFe = (FrontEnd)_cm.lookup(prefixId+"feature-frontend"+_id);
+		//_audioEpFe = (FrontEnd)_cm.lookup(prefixId+"audio-ep-frontend"+_id);
 		
-	    _speechDataMonitor = (SpeechDataMonitor) _cm.lookup(prefixId+"speechDataMonitor"+_id);
+	    //_speechDataMonitor = (SpeechDataMonitor) _cm.lookup(prefixId+"speechDataMonitor"+_id);
 		
 		//_jsgfSearchManager = (SearchManager)_cm.lookup(prefixId+"jsgfSearchManager"+_id);
 		//_jsgfSearchManager.allocate();
@@ -120,7 +135,7 @@ public class SphinxRecEngine extends AbstractPoolableObject implements RecEngine
 	
 	//Recognize using language mode
     public RecognitionResult recognize(InputStream as, String mimeType, int sampleRate, boolean bigEndian, 
-    	                               int bytesPerValue, Encoding encoding, boolean doEndpointing) {
+    	                               int bytesPerValue, Encoding encoding, boolean doEndpointing, boolean cmnBatch) {
 		_logger.info("Using recognizer # "+_id);
 	    //SAL
 		//_recognizer.allocate();
@@ -130,7 +145,7 @@ public class SphinxRecEngine extends AbstractPoolableObject implements RecEngine
         //set the search manager in real time (to the one configured for language models)
         //_decoder.setSearchManager(_lmSearchManager);
         
-	    Result r = doRecognize(as, mimeType, sampleRate, bigEndian, bytesPerValue, encoding, doEndpointing);
+	    Result r = doRecognize(as, mimeType, sampleRate, bigEndian, bytesPerValue, encoding, doEndpointing, cmnBatch);
 
 	    _logger.info("Result: " + (r != null ? r.getBestFinalResultNoFiller() : null));
 	    //SAL
@@ -145,7 +160,7 @@ public class SphinxRecEngine extends AbstractPoolableObject implements RecEngine
     }
 	//recognize using a grammar
 	public RecognitionResult recognize(InputStream as, String mimeType, String grammar, int sampleRate, 
-			                           boolean bigEndian, int bytesPerValue, Encoding encoding, boolean doEndpointing) {
+			                           boolean bigEndian, int bytesPerValue, Encoding encoding, boolean doEndpointing, boolean cmnBatch) {
 		_logger.info("Using recognizer # "+_id);
 	    //SAL
 		//_recognizer.allocate();
@@ -175,7 +190,7 @@ public class SphinxRecEngine extends AbstractPoolableObject implements RecEngine
         }
         _logger.debug("After load grammar" + System.currentTimeMillis());
  
-	    Result r = doRecognize(as, mimeType, sampleRate, bigEndian, bytesPerValue, encoding,doEndpointing);
+	    Result r = doRecognize(as, mimeType, sampleRate, bigEndian, bytesPerValue, encoding,doEndpointing,  cmnBatch);
 	    
 	    RecognitionResult results = new RecognitionResult(r, _jsgfGrammar.getRuleGrammar());
 	    _logger.info("Result: " + (results != null ? results.getText() : null));
@@ -185,7 +200,7 @@ public class SphinxRecEngine extends AbstractPoolableObject implements RecEngine
     }
 
 	private Result doRecognize(InputStream as, String mimeType, int sampleRate, boolean bigEndian,
-            int bytesPerValue, Encoding encoding, boolean doEndpointing) {
+            int bytesPerValue, Encoding encoding, boolean doEndpointing, boolean cmnBatch) {
 	    //TODO: Timers for recog timeout
 		
 		FrontEnd fe = null;
@@ -195,32 +210,22 @@ public class SphinxRecEngine extends AbstractPoolableObject implements RecEngine
 		 String parts[] = mimeType.split("/");
 		 if (parts[1].equals("x-s4audio")) {
 			 _dataSource = new S4DataStreamDataSource();
-			 if (doEndpointing) {
-				 fe = _audioEpFe;
-			 } else {
-				 fe = _audioFe;
-		     }
+			 fe = createAudioFrontend(doEndpointing,cmnBatch);
 		 } else if (parts[1].equals("x-s4feature")) {
 			 _dataSource = new S4DataStreamDataSource();
+			 fe = createFeatureFrontend();
 			 if (doEndpointing) {
 				 _logger.warn("Endpointing not supported for feature streams");
 			 }
 		 } else if (parts[1].equals("x-wav")) {
 			 _dataSource = new AudioStreamDataSource();
-			 if (doEndpointing) {
-				 fe = _audioEpFe;
-			 } else {
-				 fe = _audioFe;
-		     }
+			 fe = createAudioFrontend(doEndpointing,cmnBatch);
 		 } else {
 			 _logger.warn("Unrecognized mime type: "+mimeType + " Trying to process as audio/x-wav");
 			 _dataSource = new AudioStreamDataSource();
+			 fe = createAudioFrontend(doEndpointing,cmnBatch);
 		 }
 		 if (doEndpointing) {
-			SpeechEventListener listener = new Listener();
-			if (_speechDataMonitor != null) {
-				_speechDataMonitor.setSpeechEventListener(listener);
-			}
 			//TODO: start the timer
 			//_noInputTimeoutTask = new TimerTask(30000);
 		 }
@@ -247,6 +252,7 @@ public class SphinxRecEngine extends AbstractPoolableObject implements RecEngine
 		long streamLen = _dataSource.getLengthInMs();
 		double ratio = (double)wall/(double)streamLen;
 		_logger.info(ratio+ "  Wall time "+ wall+ " stream length "+ streamLen);
+		fe=null;
 	    return r;
     }
     
@@ -289,16 +295,17 @@ public class SphinxRecEngine extends AbstractPoolableObject implements RecEngine
 		 String parts[] = mimeType.split("/");
 		 if (parts[1].equals("x-s4audio")) {
 			 dataSource = new S4DataStreamDataSource();
-			 fe = _audioEpFe;
+			 fe = createAudioFrontend(true,false);
 		 } else if (parts[1].equals("x-s4feature")) {
 			 _logger.warn("Feature mode Endpointing not for continuous recognition mode");
 			 dataSource = new S4DataStreamDataSource();
 		 } else if (parts[1].equals("x-wav")) {
 			 dataSource = new AudioStreamDataSource();
-			 fe = _audioEpFe;
+			 fe = createAudioFrontend(true,false);
 		 } else {
 			 _logger.warn("Unrecognized mime type: "+mimeType + " Trying to process as audio/x-wav");
 			 dataSource = new AudioStreamDataSource();
+			 fe = createAudioFrontend(true,false);
 		 }
 	     _logger.debug("-----> "+mimeType+ " "+parts[1]);
 	     //set the first stage of the front end
@@ -326,6 +333,7 @@ public class SphinxRecEngine extends AbstractPoolableObject implements RecEngine
             //resultList.add(result);
     
         }
+        fe = null;
 	    return totalResult;
     }
 	
@@ -536,4 +544,52 @@ public class SphinxRecEngine extends AbstractPoolableObject implements RecEngine
         }
         
     }
+    
+    
+    
+    private FrontEnd createFeatureFrontend() {
+    	   ArrayList<DataProcessor> components = new ArrayList <DataProcessor>();
+    	   components.add (new IdentityStage ());
+    	   FrontEnd fe = new FrontEnd (components);
+    	   return fe;   	
+    }
+
+    
+    private FrontEnd createAudioFrontend(boolean endpointing, boolean batchCMN) {
+    	
+ 	   ArrayList<DataProcessor> components = new ArrayList <DataProcessor>();
+	   components.add (new DataBlocker());
+	   if (endpointing) {
+		  components.add (new SpeechClassifier());
+	      components.add (new SpeechMarker());
+	      components.add (new NonSpeechDataFilter());
+	      SpeechDataMonitor mon = new SpeechDataMonitor();
+		  components.add (mon);
+		  SpeechEventListener listener = new Listener();
+		  mon.setSpeechEventListener(listener);
+	   }
+
+	   components.add (new Preemphasizer());
+	   components.add (new Dither());
+	   components.add (new RaisedCosineWindower());
+	   components.add (new DiscreteFourierTransform());
+	   components.add (new MelFrequencyFilterBank((double)133.0,(double)3500.0,31));
+
+	   components.add (new DiscreteCosineTransform());
+	   if (batchCMN) {
+	      components.add (new BatchCMN());
+	   } else {
+	      components.add (new LiveCMN(12,500,800));
+	   }
+	   
+	   components.add (new DeltasFeatureExtractor());
+	   components.add (new LDA());
+	   	   
+	   FrontEnd fe = new FrontEnd (components);
+	   return fe;   
+    }
+
+ 
+
+
 }

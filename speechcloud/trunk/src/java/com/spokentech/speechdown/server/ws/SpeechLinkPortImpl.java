@@ -10,10 +10,12 @@ import javax.sound.sampled.AudioFormat;
 import org.apache.log4j.Logger;
 
 import com.spokentech.speechdown.server.RecognizerService;
-import com.spokentech.speechdown.server.SynthesizerService;
+import com.spokentech.speechdown.server.PoolingSynthesizerService;
 import com.spokentech.speechdown.server.RecRequestLinkType;
 import com.spokentech.speechdown.server.RecResponseType;
 import com.spokentech.speechdown.server.SpeechLinkPortType; 
+import com.spokentech.speechdown.server.SynthesizerService;
+import com.spokentech.speechdown.server.tts.MarySynthesizerService;
 
 
 @WebService(
@@ -98,7 +100,7 @@ public class SpeechLinkPortImpl implements SpeechLinkPortType{
 	    int sampleSizeInBits = 16;
 		AudioFormat format = new AudioFormat ((float) sampleRate, sampleSizeInBits, channels, signed, bigEndian);
 		
-        String result=synthesizerService.ttsURL(prompt,format,AudioFileFormat.Type.AU);
+        String result=synthesizerService.ttsURL(prompt,format,"audio/x-au");
         return result;
 
 	}

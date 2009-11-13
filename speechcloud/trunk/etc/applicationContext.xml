@@ -39,17 +39,16 @@
 	
 	
 	<bean id="synthesizerService" 
-	      class="com.spokentech.speechdown.server.SynthesizerService"
+	      class="com.spokentech.speechdown.server.tts.MarySynthesizerService"
 		  init-method="startup" destroy-method="shutdown">
-		  <property name="synthEngineFactory"><ref bean="synthEngineFactory"/></property>
-		  <property name="poolSize">
-				<value>10</value>
-		  </property>
 		  <property name="promptDir">
 				<value>@applicationContext.synthesizerService.promptDir@</value>
 		  </property>
 		  <property name="prefix">
 				<value>@applicationContext.synthesizerService.prefix@</value>
+		  </property>
+		  <property name="maryDir">
+				<value>c:\thirdparty\MARY TTS</value>
 		  </property>
 
 	</bean>

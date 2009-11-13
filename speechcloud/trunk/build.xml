@@ -38,9 +38,10 @@
 	<property name="cairo-rtp.jar" value="${lib.dir}/cairo-rtp-SNAPSHOT.jar" />	
 
 	<property name="sphinx4.jar" value="${lib.dir}/sphinx4.jar" />
-	<property name="WSJ_8gau_13dCep_8kHz_31mel_200Hz_3500Hz.jar"  value="${lib.dir}/WSJ_8gau_13dCep_8kHz_31mel_200Hz_3500Hz.jar" />
-	<property name="WSJ_8gau_13dCep_16k_40mel_130Hz_6800Hz.jar"  value="${lib.dir}/WSJ_8gau_13dCep_16k_40mel_130Hz_6800Hz.jar" />
 	
+	<property name="mary-common.jar" value="${lib.dir}/mary-common.jar" />
+	
+
     <property name="servlet-api.jar" value="${catalina.home}/lib/servlet-api.jar" />
 	<property name="commons-logging.jar" value="${lib.dir}/commons-logging.jar" />
 	<property name="commons-fileupload.jar" value="${lib.dir}/commons-fileupload-1.2.1.jar" />
@@ -82,10 +83,10 @@
 		<pathelement	location="${httpcore.jar}" />
 		<!--pathelement	location="${jstl.jar}" /-->
 	    <!--pathelement	location="${standard.jar}" /-->
+	    
+		<pathelement	location="${mary-common.jar}" />
 		
-		
-		<pathelement	location="${WSJ_8gau_13dCep_8kHz_31mel_200Hz_3500Hz.jar}" />
-		<pathelement	location="${WSJ_8gau_13dCep_16k_40mel_130Hz_6800Hz.jar}" />
+
 		<fileset dir="${jaxws.home}/lib">
 			<include name="*.jar" />
 			<exclude name="j2ee.jar" />
