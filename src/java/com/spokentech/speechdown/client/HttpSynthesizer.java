@@ -25,6 +25,8 @@ import org.apache.http.entity.mime.content.StringBody;
 import org.apache.http.impl.client.DefaultHttpClient;
 import org.apache.log4j.Logger;
 
+import com.spokentech.speechdown.common.HttpCommandFields;
+
 
 /**
  * The Class HttpSynthesizer is a lightweight java client to do speech recognition.  You need to have the url of server the nsimply make 
@@ -79,7 +81,7 @@ public class HttpSynthesizer {
      * 
      * @return the input stream
      */
-    public InputStream  synthesize(String text,  AudioFormat format, String mimeType) {
+    public InputStream  synthesize(String text,  AudioFormat format, String mimeType, String voiceName) {
 		
     	// Plain old http approach    	
     	HttpClient httpclient = new DefaultHttpClient();
@@ -98,23 +100,31 @@ public class HttpSynthesizer {
     	StringBody bytesPerValue = null;
     	StringBody encoding = null;
     	StringBody mime = null;
+    	StringBody voice = null;
+    	StringBody textBody = null;
         try {
         	sampleRate = new StringBody(String.valueOf((int)format.getSampleRate()));
         	bigEndian = new StringBody(String.valueOf(format.isBigEndian()));
         	bytesPerValue =new StringBody(String.valueOf(format.getSampleSizeInBits()/8));
         	encoding = new StringBody(format.getEncoding().toString());
-        	mime = new StringBody("audio/x-au");
+        	mime = new StringBody(mimeType);
+         	voice = new StringBody(voiceName);
+          	textBody = new StringBody(text);
+
         } catch (UnsupportedEncodingException e1) {
 	        // TODO Auto-generated catch block
 	        e1.printStackTrace();
         }
         
         //add the form field parts
-		mpEntity.addPart("sampleRate", sampleRate);
-		mpEntity.addPart("bigEndian", bigEndian);
-		mpEntity.addPart("bytesPerValue", bytesPerValue);
-		mpEntity.addPart("encoding", encoding);
-		mpEntity.addPart("mimeType", mime);
+		mpEntity.addPart(HttpCommandFields.SAMPLE_RATE_FIELD_NAME, sampleRate);
+		mpEntity.addPart(HttpCommandFields.BIG_ENDIAN_FIELD_NAME, bigEndian);
+		mpEntity.addPart(HttpCommandFields.BYTES_PER_VALUE_FIELD_NAME, bytesPerValue);
+		mpEntity.addPart(HttpCommandFields.ENCODING_FIELD_NAME, encoding);
+		mpEntity.addPart(HttpCommandFields.MIME_TYPE, mime);
+		mpEntity.addPart(HttpCommandFields.VOICE_NAME, voice);
+		mpEntity.addPart(HttpCommandFields.TEXT, textBody);
+        
         
         httppost.setEntity(mpEntity);
     

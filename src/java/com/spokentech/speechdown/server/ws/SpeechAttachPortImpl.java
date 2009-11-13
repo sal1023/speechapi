@@ -18,12 +18,14 @@ import org.apache.log4j.Logger;
 
 import com.spokentech.speechdown.common.RecognitionResult;
 import com.spokentech.speechdown.server.RecognizerService;
-import com.spokentech.speechdown.server.SynthesizerService;
+import com.spokentech.speechdown.server.PoolingSynthesizerService;
 
 import com.spokentech.speechdown.server.RecRequestAttachType;
 import com.spokentech.speechdown.server.RecResponseType;
 import com.spokentech.speechdown.server.SynthResponseAttachType;
 import com.spokentech.speechdown.server.SpeechAttachPortType; 
+import com.spokentech.speechdown.server.SynthesizerService;
+import com.spokentech.speechdown.server.tts.MarySynthesizerService;
 
 
 @WebService(
@@ -96,12 +98,12 @@ public class SpeechAttachPortImpl implements SpeechAttachPortType {
 	    int channels = 1;
 	    int sampleSizeInBits = 16;
 		AudioFormat format = new AudioFormat ((float) sampleRate, sampleSizeInBits, channels, signed, bigEndian);
-        File ttsFile = synthesizerService.ttsFile(prompt,format,AudioFileFormat.Type.AU);
+        //File ttsFile = synthesizerService.ttsFile(prompt,format,AudioFileFormat.Type.AU);
        
-        DataHandler dh = new DataHandler(new FileDataSource(ttsFile));
+        //DataHandler dh = new DataHandler(new FileDataSource(ttsFile));
         
         SynthResponseAttachType result= new SynthResponseAttachType();
-        result.setAudio(dh);
+        //result.setAudio(dh);
         return result;
 	}
 	

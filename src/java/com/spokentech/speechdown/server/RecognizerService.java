@@ -132,7 +132,7 @@ public class RecognizerService {
 
 	//grammar method
 	public RecognitionResult Recognize(InputStream as, String grammar, String mimeType, int sampleRate, boolean bigEndian, 
-			                           int bytesPerValue, Encoding encoding, boolean doEndpointing) {
+			                           int bytesPerValue, Encoding encoding, boolean doEndpointing, boolean cmnBatch) {
 
 		_logger.debug("Before borrow" + System.currentTimeMillis());
 		
@@ -151,7 +151,7 @@ public class RecognizerService {
         _logger.debug("After borrow" + System.currentTimeMillis());
 	
         
-        RecognitionResult results = rengine.recognize(as,mimeType,grammar,sampleRate,bigEndian,bytesPerValue,encoding,doEndpointing);
+        RecognitionResult results = rengine.recognize(as,mimeType,grammar,sampleRate,bigEndian,bytesPerValue,encoding,doEndpointing, cmnBatch);
         
         try {
         	_grammarRecognizerPool.returnObject(rengine);
@@ -165,7 +165,7 @@ public class RecognizerService {
 	
 	//language model method (no grammar)
 	public RecognitionResult Recognize(InputStream as, String mimeType, int sampleRate, boolean bigEndian, 
-			                           int bytesPerValue, Encoding encoding, boolean doEndpointing) {
+			                           int bytesPerValue, Encoding encoding, boolean doEndpointing, boolean cmnBatch) {
 		_logger.debug("Before borrow" + System.currentTimeMillis());
 		
         RecEngine rengine = null;
@@ -181,7 +181,7 @@ public class RecognizerService {
         _logger.debug("After borrow" + System.currentTimeMillis());
 	
         
-        RecognitionResult results = rengine.recognize(as,mimeType,sampleRate,bigEndian,bytesPerValue,encoding, doEndpointing);
+        RecognitionResult results = rengine.recognize(as,mimeType,sampleRate,bigEndian,bytesPerValue,encoding, doEndpointing, cmnBatch);
         
         try {
         	_lmRecognizerPool.returnObject(rengine);

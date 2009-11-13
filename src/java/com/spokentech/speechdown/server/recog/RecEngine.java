@@ -12,9 +12,9 @@ public interface RecEngine {
 
 	public RecognitionResult recognize(AudioInputStream as, String grammar);
 	
-	public RecognitionResult recognize(InputStream as, String mimeType, String grammar, int sampleRate, boolean bigEndian, int bytesPerValue, AudioFormat.Encoding encoding, boolean doEndpointing);
+	public RecognitionResult recognize(InputStream as, String mimeType, String grammar, int sampleRate, boolean bigEndian, int bytesPerValue, AudioFormat.Encoding encoding, boolean doEndpointing, boolean cmnBatch);
 
-	public RecognitionResult recognize(InputStream as, String mimeType, int sampleRate, boolean bigEndian, int bytesPerValue, AudioFormat.Encoding encoding, boolean doEndpointing);
+	public RecognitionResult recognize(InputStream as, String mimeType, int sampleRate, boolean bigEndian, int bytesPerValue, AudioFormat.Encoding encoding, boolean doEndpointing, boolean cmnBatch);
 
 	public String transcribe(InputStream as, String mimeType, int sampleRate, boolean bigEndian, int bytesPerValue, AudioFormat.Encoding encoding, PrintWriter out);
 
