@@ -72,8 +72,8 @@ public class HttpRecognizerTest extends TestCase {
     public static final String CRLF = "\r\n";
     
    
-    private static String service = "http://ec2-75-101-188-39.compute-1.amazonaws.com/speechcloud/SpeechUploadServlet";  
-    //private static String service = "http://localhost:8090/speechcloud/SpeechUploadServlet";    
+    //private static String service = "http://ec2-75-101-188-39.compute-1.amazonaws.com/speechcloud/SpeechUploadServlet";  
+    private static String service = "http://localhost:8090/speechcloud/SpeechUploadServlet";    
     private static AudioFormat desiredFormat;
     private static int sampleRate = 8000;
     private static boolean signed = true;

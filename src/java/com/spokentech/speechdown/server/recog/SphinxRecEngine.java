@@ -46,6 +46,7 @@ import edu.cmu.sphinx.frontend.transform.DiscreteCosineTransform;
 import edu.cmu.sphinx.frontend.transform.DiscreteFourierTransform;
 import edu.cmu.sphinx.frontend.window.RaisedCosineWindower;
 import edu.cmu.sphinx.jsapi.JSGFGrammar;
+import edu.cmu.sphinx.linguist.acoustic.tiedstate.Sphinx3Loader;
 import edu.cmu.sphinx.linguist.flat.FlatLinguist;
 import edu.cmu.sphinx.linguist.lextree.LexTreeLinguist;
 import edu.cmu.sphinx.recognizer.Recognizer;
@@ -66,10 +67,12 @@ public class SphinxRecEngine extends AbstractPoolableObject implements RecEngine
 	public static final short COMPLETE = 2;
 	protected volatile short _state = COMPLETE;
 
+	private Sphinx3Loader _loader;
     private Decoder  _decoder;
     private AbstractScorer  _scorer;
     private SearchManager  _jsgfSearchManager;
     private SearchManager  _lmSearchManager;
+	private FrontEnd fe = null;
 	//private FrontEnd _audioFe;
 	//private FrontEnd _audioEpFe;
 	//private FrontEnd _featureFe;
@@ -100,7 +103,7 @@ public class SphinxRecEngine extends AbstractPoolableObject implements RecEngine
 	    _jsgfGrammar = (JSGFGrammar) cm.lookup("grammar");
 	    _grammarManager = grammarManager;
 
-    	
+    	_loader = (Sphinx3Loader) cm.lookup("loader");
         _cm = cm;
         _id = id;
 		_scorer = (AbstractScorer)_cm.lookup(prefixId+"scorer"+id);
@@ -203,27 +206,27 @@ public class SphinxRecEngine extends AbstractPoolableObject implements RecEngine
             int bytesPerValue, Encoding encoding, boolean doEndpointing, boolean cmnBatch) {
 	    //TODO: Timers for recog timeout
 		
-		FrontEnd fe = null;
+
 	
 	    // configure the audio input for the recognizer
 
 		 String parts[] = mimeType.split("/");
 		 if (parts[1].equals("x-s4audio")) {
 			 _dataSource = new S4DataStreamDataSource();
-			 fe = createAudioFrontend(doEndpointing,cmnBatch);
+			 fe = createAudioFrontend(doEndpointing,cmnBatch,(DataProcessor)_dataSource);
 		 } else if (parts[1].equals("x-s4feature")) {
 			 _dataSource = new S4DataStreamDataSource();
-			 fe = createFeatureFrontend();
+			 fe = createFeatureFrontend((DataProcessor)_dataSource);
 			 if (doEndpointing) {
 				 _logger.warn("Endpointing not supported for feature streams");
 			 }
 		 } else if (parts[1].equals("x-wav")) {
 			 _dataSource = new AudioStreamDataSource();
-			 fe = createAudioFrontend(doEndpointing,cmnBatch);
+			 fe = createAudioFrontend(doEndpointing,cmnBatch,(DataProcessor)_dataSource);
 		 } else {
 			 _logger.warn("Unrecognized mime type: "+mimeType + " Trying to process as audio/x-wav");
 			 _dataSource = new AudioStreamDataSource();
-			 fe = createAudioFrontend(doEndpointing,cmnBatch);
+			 fe = createAudioFrontend(doEndpointing,cmnBatch,(DataProcessor)_dataSource);
 		 }
 		 if (doEndpointing) {
 			//TODO: start the timer
@@ -235,6 +238,7 @@ public class SphinxRecEngine extends AbstractPoolableObject implements RecEngine
 
 	     //set the first stage of the front end
 		 fe.setDataSource((DataProcessor) _dataSource);
+
 		 
 		 // set the front end in the scorer in realtime
 		 _scorer.setFrontEnd(fe);
@@ -295,17 +299,17 @@ public class SphinxRecEngine extends AbstractPoolableObject implements RecEngine
 		 String parts[] = mimeType.split("/");
 		 if (parts[1].equals("x-s4audio")) {
 			 dataSource = new S4DataStreamDataSource();
-			 fe = createAudioFrontend(true,false);
+			 fe = createAudioFrontend(true,false,(DataProcessor) dataSource);
 		 } else if (parts[1].equals("x-s4feature")) {
 			 _logger.warn("Feature mode Endpointing not for continuous recognition mode");
 			 dataSource = new S4DataStreamDataSource();
 		 } else if (parts[1].equals("x-wav")) {
 			 dataSource = new AudioStreamDataSource();
-			 fe = createAudioFrontend(true,false);
+			 fe = createAudioFrontend(true,false,(DataProcessor) dataSource);
 		 } else {
 			 _logger.warn("Unrecognized mime type: "+mimeType + " Trying to process as audio/x-wav");
 			 dataSource = new AudioStreamDataSource();
-			 fe = createAudioFrontend(true,false);
+			 fe = createAudioFrontend(true,false,(DataProcessor) dataSource);
 		 }
 	     _logger.debug("-----> "+mimeType+ " "+parts[1]);
 	     //set the first stage of the front end
@@ -547,21 +551,23 @@ public class SphinxRecEngine extends AbstractPoolableObject implements RecEngine
     
     
     
-    private FrontEnd createFeatureFrontend() {
+    private FrontEnd createFeatureFrontend(DataProcessor dataSource) {
     	   ArrayList<DataProcessor> components = new ArrayList <DataProcessor>();
-    	   components.add (new IdentityStage ());
+    	   //components.add (new IdentityStage ());
+     	   components.add(dataSource);
     	   FrontEnd fe = new FrontEnd (components);
     	   return fe;   	
     }
 
     
-    private FrontEnd createAudioFrontend(boolean endpointing, boolean batchCMN) {
+    private FrontEnd createAudioFrontend(boolean endpointing, boolean batchCMN, DataProcessor dataSource) {
     	
  	   ArrayList<DataProcessor> components = new ArrayList <DataProcessor>();
-	   components.add (new DataBlocker());
+ 	   components.add(dataSource);
+	   components.add (new DataBlocker(10));
 	   if (endpointing) {
-		  components.add (new SpeechClassifier());
-	      components.add (new SpeechMarker());
+		  components.add (new SpeechClassifier(10,0.003,10.0,0.0));
+	      components.add (new SpeechMarker(200,500,100,50,100));
 	      components.add (new NonSpeechDataFilter());
 	      SpeechDataMonitor mon = new SpeechDataMonitor();
 		  components.add (mon);
@@ -569,21 +575,21 @@ public class SphinxRecEngine extends AbstractPoolableObject implements RecEngine
 		  mon.setSpeechEventListener(listener);
 	   }
 
-	   components.add (new Preemphasizer());
+	   components.add (new Preemphasizer(0.97));
 	   components.add (new Dither());
-	   components.add (new RaisedCosineWindower());
-	   components.add (new DiscreteFourierTransform());
+	   components.add (new RaisedCosineWindower(0.46,(float)25.625,(float)10.0));
+	   components.add (new DiscreteFourierTransform(-1,false));
 	   components.add (new MelFrequencyFilterBank((double)133.0,(double)3500.0,31));
 
-	   components.add (new DiscreteCosineTransform());
+	   components.add (new DiscreteCosineTransform(40,13));
 	   if (batchCMN) {
 	      components.add (new BatchCMN());
 	   } else {
 	      components.add (new LiveCMN(12,500,800));
 	   }
 	   
-	   components.add (new DeltasFeatureExtractor());
-	   components.add (new LDA());
+	   components.add (new DeltasFeatureExtractor(3));
+	   components.add (new LDA(_loader));
 	   	   
 	   FrontEnd fe = new FrontEnd (components);
 	   return fe;   

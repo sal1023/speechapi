@@ -408,6 +408,8 @@ public class HttpRecognizer {
 
 
         //create the listener (listens for end points)
+		
+        speechStarted = false;
         MySpeechEventListener listener = new MySpeechEventListener();
 
 	    epStream.startAudioTransfer(timeout, listener);
