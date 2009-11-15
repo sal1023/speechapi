@@ -12,3 +12,14 @@ https://jax-ws.dev.java.net/
 Tomcat
 Add this to CATALINA_HOME/conf/catalina.properties
 shared.loader=c:/tools/jaxws-ri/lib/*.jar
+
+Add this tomcat.conf (for linux)
+
+   export MARY_BASE="/usr/share/MARYTTS"
+   export SHPROT_BASE="$MARY_BASE/lib/modules/shprot"
+   export LD_LIBRARY_PATH="$MARY_BASE/lib/native:$LD_LIBRARY_PATH"
+
+For windows you can move the mary (mp3) dll's to windows/system32
+from $maryhome/lib/windows
+(lametritonus.dll and lame_enc.dll )
+
