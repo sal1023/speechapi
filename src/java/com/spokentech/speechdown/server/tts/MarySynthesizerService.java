@@ -109,15 +109,12 @@ public class MarySynthesizerService implements SynthesizerService {
 
 
 	public void startup() {
-        
-		
-  
-		mary = new Mary();
 
 		try {
-			//addJarsToClasspath();
+			addJarsToClasspath();
 	        MaryProperties.readProperties();
-	        mary.startup();
+			//mary = new Mary();
+	        Mary.startup();
         } catch (Exception e) {
 	        // TODO Auto-generated catch block
 	        e.printStackTrace();
