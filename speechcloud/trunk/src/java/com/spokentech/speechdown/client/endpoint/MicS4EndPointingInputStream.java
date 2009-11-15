@@ -31,11 +31,7 @@ public class MicS4EndPointingInputStream extends EndPointingInputStreamBase impl
 
 	private int id;
 
-	private ConfigurationManager cm;
-
 	private Microphone mic;
-
-	private String s4ConfigFile = "/config/sphinx-config.xml";
 	
 	private AudioFormat desiredFormat;
 
@@ -45,9 +41,8 @@ public class MicS4EndPointingInputStream extends EndPointingInputStreamBase impl
 	
 	
 	
-	public MicS4EndPointingInputStream(String configFile, AudioFormat desiredFormat, String mimeType) {
+	public MicS4EndPointingInputStream( AudioFormat desiredFormat, String mimeType) {
 	    super();
-	    s4ConfigFile = configFile;
 	    this.desiredFormat = desiredFormat;
 	    this.mimeType = mimeType;
     }
@@ -87,25 +82,6 @@ public class MicS4EndPointingInputStream extends EndPointingInputStreamBase impl
     public void setMimeType(String mimeType) {
     	this.mimeType = mimeType;
     }
-	
-    /**
-     * Gets the s4 config file.
-     * 
-     * @return the s4ConfigFile
-     */
-    public String getS4ConfigFile() {
-    	return s4ConfigFile;
-    }
-
-
-	/**
-	 * Sets the s4 config file.
-	 * 
-	 * @param configFile the s4ConfigFile to set
-	 */
-    public void setS4ConfigFile(String configFile) {
-    	s4ConfigFile = configFile;
-    }
 
 
 	/**
@@ -117,8 +93,8 @@ public class MicS4EndPointingInputStream extends EndPointingInputStreamBase impl
         //    throw new RuntimeException("Sphinx config file not found!");
         //}
         //cm = new ConfigurationManager(sphinxConfigUrl);
-        _logger.debug("config: "+s4ConfigFile);
-        cm = new ConfigurationManager(s4ConfigFile);
+        //_logger.debug("config: "+s4ConfigFile);
+        //cm = new ConfigurationManager(s4ConfigFile);
 	}
 	
 	/**
@@ -144,18 +120,7 @@ public class MicS4EndPointingInputStream extends EndPointingInputStreamBase impl
 	 */
 	public void startAudioTransfer(long timeout, SpeechEventListener listener) throws InstantiationException, IOException {
 
-		_listener = new Listener(listener);
-		
-		//TODO: do I need multiple front ends
-		id = 10;
-
-		//get elements from the s4 front end
-		SpeechDataMonitor speechDataMonitor = (SpeechDataMonitor) cm.lookup("speechDataMonitor");
-		if (speechDataMonitor != null) {
-			speechDataMonitor.setSpeechEventListener(_listener);
-		}
-
-		
+		_listener = new Listener(listener);		
 		
 		int sampleRate = (int)desiredFormat.getSampleRate();
 		int sampleSizeInBits = desiredFormat.getSampleSizeInBits();
@@ -169,7 +134,7 @@ public class MicS4EndPointingInputStream extends EndPointingInputStreamBase impl
         int selectedChannel = 0;
         String selectedMixerIndex = "default";
         
-		FrontEnd frontEnd = (FrontEnd) cm.lookup("frontEnd");	
+
 		//mic = (Microphone) cm.lookup("microphone");
 		//int sampleRate, int bitsPerSample, int channels,
         //boolean bigEndian, boolean signed, boolean closeBetweenUtterances, int msecPerRead, boolean keepLastAudio,
@@ -180,9 +145,9 @@ public class MicS4EndPointingInputStream extends EndPointingInputStreamBase impl
 
     	mic = new Microphone(sampleRate, sampleSizeInBits, channels , bigEndian , signed, closeBetweenUtterances , msecsPerread,keepLastAudio, stereoToMono ,selectedChannel ,selectedMixerIndex);		
 		mic.initialize();
-    	frontEnd.setDataSource((DataProcessor) mic);
-		frontEnd.initialize();
-
+		
+ 		FrontEnd frontEnd = createFrontend(false, false, (DataProcessor) mic, _listener);
+ 		 
 		mic.startRecording();
 		SpeechDataStreamer sds = new SpeechDataStreamer();
 		sds.startStreaming(frontEnd, outputStream);

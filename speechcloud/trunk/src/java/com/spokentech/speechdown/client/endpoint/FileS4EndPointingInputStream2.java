@@ -34,7 +34,6 @@ public class FileS4EndPointingInputStream2 extends EndPointingInputStreamBase im
 
 	StreamDataSource dataSource = null;
 	
-	private String s4ConfigFile = "/config/sphinx-config.xml";
 	private String mimeType;
 	
 	/**
@@ -54,21 +53,6 @@ public class FileS4EndPointingInputStream2 extends EndPointingInputStreamBase im
 
 
 	
-
-    /**
-     * @return the s4ConfigFile
-     */
-    public String getS4ConfigFile() {
-    	return s4ConfigFile;
-    }
-
-
-	/**
-     * @param configFile the s4ConfigFile to set
-     */
-    public void setS4ConfigFile(String configFile) {
-    	s4ConfigFile = configFile;
-    }
 
 	public void setupStream(File file) {
 		_logger.info("Setting up the file");
@@ -90,8 +74,8 @@ public class FileS4EndPointingInputStream2 extends EndPointingInputStreamBase im
         //    throw new RuntimeException("Sphinx config file not found!");
         //}
         //cm = new ConfigurationManager(sphinxConfigUrl);
-        _logger.debug("config: "+s4ConfigFile);
-        cm = new ConfigurationManager(s4ConfigFile);
+        //_logger.debug("config: "+s4ConfigFile);
+        //cm = new ConfigurationManager(s4ConfigFile);
 	}
 	
 
@@ -105,20 +89,10 @@ public class FileS4EndPointingInputStream2 extends EndPointingInputStreamBase im
 
 		_listener = new Listener(listener);
 		
-		//TODO: do I need multiple front ends
-		id = 10;
-
-		//get elements from the s4 front end
-		SpeechDataMonitor speechDataMonitor = (SpeechDataMonitor) cm.lookup("speechDataMonitor");
-		if (speechDataMonitor != null) {
-			speechDataMonitor.setSpeechEventListener(_listener);
-		}
-
-		FrontEnd frontEnd = (FrontEnd) cm.lookup("frontEnd");
  		StreamDataSource dataSource = new AudioStreamDataSource();
- 		frontEnd.setDataSource((DataProcessor) dataSource);
 
-		frontEnd.initialize();
+ 		FrontEnd frontEnd = createFrontend(false, false, (DataProcessor) dataSource, _listener);
+ 		//frontEnd.initialize();
 		
 		dataSource.setInputStream((InputStream)stream, "ws-audiostream", (int)stream.getFormat().getSampleRate(), stream.getFormat().isBigEndian(), stream.getFormat().getSampleSizeInBits()/8,stream.getFormat().getEncoding());
  		

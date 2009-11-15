@@ -101,7 +101,7 @@ public class HttpRecognizer {
 	 * 
 	 * @return the recognition result
 	 */
-	public RecognitionResult recognize(String  fileName, URL grammarUrl, boolean lmflg, boolean doEndpointing) {
+	public RecognitionResult recognize(String  fileName, URL grammarUrl, boolean lmflg, boolean doEndpointing, boolean batchMode) {
 		
 		
     	File soundFile = new File(fileName);	 
@@ -116,7 +116,7 @@ public class HttpRecognizer {
     	} catch (Exception e) {
     		e.printStackTrace();
     	}
-    	return recognize(audioInputStream, type, grammarUrl, lmflg, doEndpointing);
+    	return recognize(audioInputStream, type, grammarUrl, lmflg, doEndpointing,batchMode);
     	
 	}
 	
@@ -132,12 +132,12 @@ public class HttpRecognizer {
 	 * 
 	 * @return the recognition result
 	 */
-	public RecognitionResult recognize(AudioInputStream audioInputStream, Type type, URL grammarUrl, boolean lmflg, boolean doEndpointing) {
+	public RecognitionResult recognize(AudioInputStream audioInputStream, Type type, URL grammarUrl, boolean lmflg, boolean doEndpointing, boolean batchMode) {
         // get the audio format and send as form fields.  Cound not send aduio file with format included because audio files do not
         // support mark/reset.  That is needed for stremaing using http chunk encoding on the servlet side using file upload.
         AudioFormat format = audioInputStream.getFormat();
 		
-    	return recognize(audioInputStream, format, type, grammarUrl, lmflg, doEndpointing);
+    	return recognize(audioInputStream, format, type, grammarUrl, lmflg, doEndpointing, batchMode);
     }
 
 	/**
@@ -151,7 +151,7 @@ public class HttpRecognizer {
 	 * 
 	 * @return the recognition result
 	 */
-	public RecognitionResult recognize(InputStream inputStream, AudioFormat format, Type type, URL grammarUrl, boolean lmflg, boolean doEndpointing) {
+	public RecognitionResult recognize(InputStream inputStream, AudioFormat format, Type type, URL grammarUrl, boolean lmflg, boolean doEndpointing, boolean batchMode) {
 	    // Plain old http approach    	
     	HttpClient httpclient = new DefaultHttpClient();
         HttpPost httppost = new HttpPost(service);
@@ -170,8 +170,7 @@ public class HttpRecognizer {
 		        e1.printStackTrace();
 	        }
         }
-
-
+        
         _logger.info("Actual format: " + format);    	
     	StringBody sampleRate = null;
     	StringBody bigEndian = null;
@@ -179,6 +178,7 @@ public class HttpRecognizer {
     	StringBody encoding = null;
     	StringBody lmFlag = null;
     	StringBody endpointFlag = null;
+    	StringBody batchModeFlag = null;
         try {
         	sampleRate = new StringBody(String.valueOf((int)format.getSampleRate()));
         	bigEndian = new StringBody(String.valueOf(format.isBigEndian()));
@@ -186,6 +186,7 @@ public class HttpRecognizer {
         	encoding = new StringBody(format.getEncoding().toString());
         	lmFlag = new StringBody(String.valueOf(lmflg));
         	endpointFlag = new StringBody(String.valueOf(doEndpointing));
+        	batchModeFlag = new StringBody(String.valueOf(batchMode));
         } catch (UnsupportedEncodingException e1) {
 	        // TODO Auto-generated catch block
 	        e1.printStackTrace();
@@ -198,6 +199,8 @@ public class HttpRecognizer {
 		mpEntity.addPart(HttpCommandFields.ENCODING_FIELD_NAME, encoding);
 		mpEntity.addPart(HttpCommandFields.LANGUAGE_MODEL_FLAG, lmFlag);
 		mpEntity.addPart(HttpCommandFields.ENDPOINTING_FLAG, endpointFlag);
+		mpEntity.addPart(HttpCommandFields.CMN_BATCH, batchModeFlag);
+		
 		
 		String mimeType = null;
 		String fname = null;

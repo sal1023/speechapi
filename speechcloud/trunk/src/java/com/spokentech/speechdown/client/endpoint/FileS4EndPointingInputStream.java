@@ -22,6 +22,7 @@ import com.spokentech.speechdown.common.SpeechEventListener;
 /**
  * The Class FileS4EndPointingInputStream.  This class will read on a audio file and stream out only the audio between start and end speech.  
  * It use Sphinx4 frontend to do the endpointing.
+ * @deprecated
  */
 public class FileS4EndPointingInputStream implements EndPointingInputStream {
 	
@@ -37,25 +38,6 @@ public class FileS4EndPointingInputStream implements EndPointingInputStream {
 	    delegate = new StreamS4EndPointingInputStream();
     }
 	
-
-    /**
-     * Gets the s4 config file.
-     * 
-     * @return the s4ConfigFile
-     */
-    public String getS4ConfigFile() {
-    	return delegate.getS4ConfigFile();
-    }
-
-
-	/**
-	 * Sets the s4 config file.
-	 * 
-	 * @param configFile the s4ConfigFile to set
-	 */
-    public void setS4ConfigFile(String configFile) {
-    	delegate.setS4ConfigFile(configFile);
-    }
 
 
 
