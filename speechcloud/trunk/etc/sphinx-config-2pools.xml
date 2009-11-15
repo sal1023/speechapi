@@ -196,6 +196,18 @@
     </component>
 
 
+  <component name="dummy-frontend" type="edu.cmu.sphinx.frontend.FrontEnd">
+        <propertylist name="pipeline">
+            <item>grammar-identityStage2</item>
+        </propertylist>
+    </component>
+
+   <component name="grammar-identityStage2"
+               type="com.spokentech.speechdown.common.sphinx.IdentityStage"/>
+
+
+
+
     <!-- *********************************************************** -->
     <!--                 Pool #1 for grammars                       -->
     <!-- *********************************************************** -->
@@ -220,7 +232,7 @@
 
     <component name="grammar-scorer1"
                type="edu.cmu.sphinx.decoder.scorer.ThreadedAcousticScorer">
-        <property name="frontend" value="grammar-audio-ep-frontend1"/>
+        <property name="frontend" value="dummy-frontend"/>
     </component>
     
     <component name="grammar-SearchManager1"
@@ -240,139 +252,9 @@
     </component>
     
   
-	<!-- ************************************************   -->
-	<!-- *** Three frontends for each decoder               -->
-    <!-- *** audio,audio with endpointing and feature       -->
-    <!-- ************************************************   -->
 
-    <!-- ******************************************************** -->
-    <!-- The feature frontend configuration                       -->
-    <!-- ******************************************************** -->
-    
-    
-    <component name="grammar-feature-frontend1" type="edu.cmu.sphinx.frontend.FrontEnd">
-        <propertylist name="pipeline">       
-            <item>grammar-identityStage1</item>
-        </propertylist>
-    </component>
-
-    <!-- *******************************************************  -->
-    <!-- The Audio frontend configuration                         -->
-    <!-- ******************************************************** -->
-    
-    
-    <component name="grammar-audio-frontend1" type="edu.cmu.sphinx.frontend.FrontEnd">
-        <propertylist name="pipeline">       
-            <item>grammar-preemphasizer1</item>
-            <item>grammar-dither1</item>
-            <item>grammar-windower1</item>
-            <item>grammar-fft1</item>
-            <item>grammar-melFilterBank1</item>
-            <item>grammar-dct1</item>
-            <item>grammar-cmn1</item>
-            <item>grammar-featureExtraction1</item>
-            <item>grammar-LDA1</item>
-        </propertylist>
-    </component>
-
- 
-    <!-- ******************************************************** -->
-    <!-- The audio frontend with endpointer                       -->
-    <!-- ******************************************************** -->
-
-       <component name="grammar-audio-ep-frontend1" type="edu.cmu.sphinx.frontend.FrontEnd">
-        <propertylist name="pipeline">       
-            <item>grammar-dataBlocker1 </item>
-            <item>grammar-speechClassifier1 </item>
-            <item>grammar-speechMarker1 </item>
-	        <item>grammar-nonSpeechDataFilter1 </item>
-	        <item>grammar-speechDataMonitor1 </item>
-            <item>grammar-preemphasizer1</item>
-            <item>grammar-dither1</item>
-            <item>grammar-windower1</item>
-            <item>grammar-fft1</item>
-            <item>grammar-melFilterBank1</item>
-            <item>grammar-dct1</item>
-            <item>grammar-cmn1</item>
-            <item>grammar-featureExtraction1</item>
-            <item>grammar-LDA1</item>
-        </propertylist>
-    </component>
-
-    <!-- ******************************************* -->
-    <!-- The  frontend components                    -->
-    <!-- ******************************************* -->
-    
-    <component name="grammar-identityStage1" 
-               type="com.spokentech.speechdown.common.sphinx.IdentityStage"/>
-
-    <component name="grammar-dataBlocker1" type="edu.cmu.sphinx.frontend.DataBlocker"/>
-      
-    <component name="grammar-nonSpeechDataFilter1" 
-               type="edu.cmu.sphinx.frontend.endpoint.NonSpeechDataFilter"/>
-    
-    <component name="grammar-speechClassifier1"
-               type="edu.cmu.sphinx.frontend.endpoint.SpeechClassifier">
-	       <property name="threshold" value="${speechClassifierThreshold}"/>
-	       <!--property name="logLevel" value="FINEST"/-->
-    </component>
-
-    <component name="grammar-speechDataMonitor1"
-               type="com.spokentech.speechdown.common.sphinx.SpeechDataMonitor"/>
-
-    <component name="grammar-speechMarker1"
-               type="edu.cmu.sphinx.frontend.endpoint.SpeechMarker" >
-	    <!--property name="speechTrailer" value="50"/-->
-        <!--property name="endSilence" value="20"/-->
-	    <!--property name="startSpeech" value="20"/-->
-	    <!--property name="speechLeader" value="50"/-->
-    </component>   
-          
-    <component name="grammar-streamDataSource1" 
-               type="com.spokentech.speechdown.server.recog.AudioStreamDataSource"/>
-
-    <component name="grammar-speechDataRecorder1"
-               type="org.speechforge.cairo.rtp.server.sphinx.SpeechDataRecorder"/>
-
-    <component name="grammar-preemphasizer1"
-               type="edu.cmu.sphinx.frontend.filter.Preemphasizer"/>
-                             
-    <component name="grammar-dither1"
-               type="edu.cmu.sphinx.frontend.filter.Dither"/>
-
-    <component name="grammar-windower1"
-               type="edu.cmu.sphinx.frontend.window.RaisedCosineWindower"/>
-
-    <component name="grammar-fft1"
-               type="edu.cmu.sphinx.frontend.transform.DiscreteFourierTransform"/>
-
-    <component name="grammar-melFilterBank1"
-               type="edu.cmu.sphinx.frontend.frequencywarp.MelFrequencyFilterBank">
-               <property name="minimumFrequency" value="200"/>
-               <property name="maximumFrequency" value="3500"/>
-               <property name="numberFilters" value="31"/>
-    </component>
-
-    <component name="grammar-dct1"
-               type="edu.cmu.sphinx.frontend.transform.DiscreteCosineTransform"/>
-
-    <component name="grammar-cmn1"
-               type="edu.cmu.sphinx.frontend.feature.LiveCMN">
-                 <property name="initialMean " value="12"/>
-               <property name="cmnWindow" value="500"/>
-               <property name="shiftWindow" value="800"/>
-    </component>             
-               
-    <component name="grammar-featureExtraction1"
-               type="edu.cmu.sphinx.frontend.feature.DeltasFeatureExtractor"/>
-    
-    <component name="grammar-LDA1" 
-		   type="edu.cmu.sphinx.frontend.feature.LDA">	
-		<property name="loader" value="loader"/>
-	</component>
 	
-	
-	<!-- ******************************************************** -->
+    <!-- ******************************************************** -->
     <!-- The Decoder   configuration  #2                          -->
     <!-- ******************************************************** -->
 
@@ -389,7 +271,7 @@
 
     <component name="grammar-scorer2"
                type="edu.cmu.sphinx.decoder.scorer.ThreadedAcousticScorer">
-        <property name="frontend" value="grammar-audio-ep-frontend2"/>
+        <property name="frontend" value="dummy-frontend"/>
     </component>
     
     <component name="grammar-SearchManager2"
@@ -409,145 +291,13 @@
     </component>
     
 
-    
-    
-	<!-- ************************************************   -->
-	<!-- *** Three frontends for each decoder               -->
-    <!-- *** audio,audio with endpointing and feature       -->
-    <!-- ************************************************   -->
-
-    <!-- ******************************************************** -->
-    <!-- The feature frontend configuration                       -->
-    <!-- ******************************************************** -->
-    
-    <component name="grammar-feature-frontend2" type="edu.cmu.sphinx.frontend.FrontEnd">
-        <propertylist name="pipeline">       
-            <item>grammar-identityStage2</item>
-        </propertylist>
-    </component>
-
-    <!-- *******************************************************  -->
-    <!-- The Audio frontend configuration                         -->
-    <!-- ******************************************************** -->
-
-    <component name="grammar-audio-frontend2" type="edu.cmu.sphinx.frontend.FrontEnd">
-        <propertylist name="pipeline">       
-            <item>grammar-preemphasizer2</item>
-            <item>grammar-dither2</item>
-            <item>grammar-windower2</item>
-            <item>grammar-fft2</item>
-            <item>grammar-melFilterBank2</item>
-            <item>grammar-dct2</item>
-            <item>grammar-cmn2</item>
-            <item>grammar-featureExtraction2</item>
-            <item>grammar-LDA2</item>
-        </propertylist>
-    </component>
- 
-    <!-- ******************************************************** -->
-    <!-- The audio frontend with endpointer                       -->
-    <!-- ******************************************************** -->
-
-    <component name="grammar-audio-ep-frontend2" type="edu.cmu.sphinx.frontend.FrontEnd">
-        <propertylist name="pipeline">       
-            <item>grammar-dataBlocker2 </item>
-            <item>grammar-speechClassifier2 </item>
-            <item>grammar-speechMarker2 </item>
-	        <item>grammar-nonSpeechDataFilter2 </item>
-	        <item>grammar-speechDataMonitor2 </item>
-            <item>grammar-preemphasizer2</item>
-            <item>grammar-dither2</item>
-            <item>grammar-windower2</item>
-            <item>grammar-fft2</item>
-            <item>grammar-melFilterBank2</item>
-            <item>grammar-dct2</item>
-            <item>grammar-cmn2</item>
-            <item>grammar-featureExtraction2</item>
-            <item>grammar-LDA2</item>
-        </propertylist>
-    </component>
-    
-    <!-- ******************************************* -->
-    <!-- The  frontend components                    -->
-    <!-- ******************************************* -->
-    
-    <component name="grammar-identityStage2" 
-               type="com.spokentech.speechdown.common.sphinx.IdentityStage"/>
-
-    <component name="grammar-dataBlocker2" type="edu.cmu.sphinx.frontend.DataBlocker"/>
-      
-    <component name="grammar-nonSpeechDataFilter2" 
-               type="edu.cmu.sphinx.frontend.endpoint.NonSpeechDataFilter"/>
-    
-    <component name="grammar-speechClassifier2"
-               type="edu.cmu.sphinx.frontend.endpoint.SpeechClassifier">
-	       <property name="threshold" value="${speechClassifierThreshold}"/>
-	       <!--property name="logLevel" value="FINEST"/-->
-    </component>
-
-    <component name="grammar-speechDataMonitor2"
-               type="com.spokentech.speechdown.common.sphinx.SpeechDataMonitor"/>
-
-    <component name="grammar-speechMarker2"
-               type="edu.cmu.sphinx.frontend.endpoint.SpeechMarker" >
-	    <!--property name="speechTrailer" value="50"/-->
-        <!--property name="endSilence" value="20"/-->
-	    <!--property name="startSpeech" value="20"/-->
-	    <!--property name="speechLeader" value="50"/-->
-    </component>   
-          
-    <component name="grammar-streamDataSource2" 
-               type="com.spokentech.speechdown.server.recog.AudioStreamDataSource"/>
-
-    <component name="grammar-speechDataRecorder2"
-               type="org.speechforge.cairo.rtp.server.sphinx.SpeechDataRecorder"/>
-
-    <component name="grammar-preemphasizer2"
-               type="edu.cmu.sphinx.frontend.filter.Preemphasizer"/>
-                             
-    <component name="grammar-dither2"
-               type="edu.cmu.sphinx.frontend.filter.Dither"/>
-
-    <component name="grammar-windower2"
-               type="edu.cmu.sphinx.frontend.window.RaisedCosineWindower"/>
-
-    <component name="grammar-fft2"
-               type="edu.cmu.sphinx.frontend.transform.DiscreteFourierTransform"/>
-
-    <component name="grammar-melFilterBank2"
-               type="edu.cmu.sphinx.frontend.frequencywarp.MelFrequencyFilterBank">
-               <property name="minimumFrequency" value="200"/>
-               <property name="maximumFrequency" value="3500"/>
-               <property name="numberFilters" value="31"/>
-    </component>
-
-    <component name="grammar-dct2"
-               type="edu.cmu.sphinx.frontend.transform.DiscreteCosineTransform"/>
-
-    <component name="grammar-cmn2"
-               type="edu.cmu.sphinx.frontend.feature.LiveCMN">
-                 <property name="initialMean " value="12"/>
-               <property name="cmnWindow" value="500"/>
-               <property name="shiftWindow" value="800"/>
-    </component>             
-               
-    <component name="grammar-featureExtraction2"
-               type="edu.cmu.sphinx.frontend.feature.DeltasFeatureExtractor"/>
-    
-    <component name="grammar-LDA2" 
-		   type="edu.cmu.sphinx.frontend.feature.LDA">	
-		<property name="loader" value="loader"/>
-	</component>
-	
-	
-	
-	<!-- *********************************************************** -->
+    <!-- *********************************************************** -->
     <!--                 Pool #2 for language models                  -->
     <!-- *********************************************************** -->
     
   
     
-        <!-- ********************************************************** -->
+    <!-- ********************************************************** -->
     <!--  Decoders  (repeated N times for each decoder in the pool  -->
     <!-- ********************************************************** -->
 
@@ -568,7 +318,7 @@
 
     <component name="lm-scorer1"
                type="edu.cmu.sphinx.decoder.scorer.ThreadedAcousticScorer">
-        <property name="frontend" value="lm-audio-ep-frontend1"/>
+        <property name="frontend" value="dummy-frontend"/>
     </component>
     
   
@@ -599,139 +349,8 @@
     </component>
     
   
-	<!-- ************************************************   -->
-	<!-- *** Three frontends for each decoder               -->
-    <!-- *** audio,audio with endpointing and feature       -->
-    <!-- ************************************************   -->
-
-    <!-- ******************************************************** -->
-    <!-- The feature frontend configuration                       -->
-    <!-- ******************************************************** -->
-    
-    
-    <component name="lm-feature-frontend1" type="edu.cmu.sphinx.frontend.FrontEnd">
-        <propertylist name="pipeline">       
-            <item>lm-identityStage1</item>
-        </propertylist>
-    </component>
-
-    <!-- *******************************************************  -->
-    <!-- The Audio frontend configuration                         -->
-    <!-- ******************************************************** -->
-    
-    
-    <component name="lm-audio-frontend1" type="edu.cmu.sphinx.frontend.FrontEnd">
-        <propertylist name="pipeline">       
-            <item>lm-preemphasizer1</item>
-            <item>lm-dither1</item>
-            <item>lm-windower1</item>
-            <item>lm-fft1</item>
-            <item>lm-melFilterBank1</item>
-            <item>lm-dct1</item>
-            <item>lm-cmn1</item>
-            <item>lm-featureExtraction1</item>
-            <item>lm-LDA1</item>
-        </propertylist>
-    </component>
-
- 
-    <!-- ******************************************************** -->
-    <!-- The audio frontend with endpointer                       -->
-    <!-- ******************************************************** -->
-
-       <component name="lm-audio-ep-frontend1" type="edu.cmu.sphinx.frontend.FrontEnd">
-        <propertylist name="pipeline">       
-            <item>lm-dataBlocker1 </item>
-            <item>lm-speechClassifier1 </item>
-            <item>lm-speechMarker1 </item>
-	        <item>lm-nonSpeechDataFilter1 </item>
-	        <item>lm-speechDataMonitor1 </item>
-            <item>lm-preemphasizer1</item>
-            <item>lm-dither1</item>
-            <item>lm-windower1</item>
-            <item>lm-fft1</item>
-            <item>lm-melFilterBank1</item>
-            <item>lm-dct1</item>
-            <item>lm-cmn1</item>
-            <item>lm-featureExtraction1</item>
-            <item>lm-LDA1</item>
-        </propertylist>
-    </component>
-
-    <!-- ******************************************* -->
-    <!-- The  frontend components                    -->
-    <!-- ******************************************* -->
-    
-    <component name="lm-identityStage1" 
-               type="com.spokentech.speechdown.common.sphinx.IdentityStage"/>
-
-    <component name="lm-dataBlocker1" type="edu.cmu.sphinx.frontend.DataBlocker"/>
-      
-    <component name="lm-nonSpeechDataFilter1" 
-               type="edu.cmu.sphinx.frontend.endpoint.NonSpeechDataFilter"/>
-    
-    <component name="lm-speechClassifier1"
-               type="edu.cmu.sphinx.frontend.endpoint.SpeechClassifier">
-	       <property name="threshold" value="${speechClassifierThreshold}"/>
-	       <!--property name="logLevel" value="FINEST"/-->
-    </component>
-
-    <component name="lm-speechDataMonitor1"
-               type="com.spokentech.speechdown.common.sphinx.SpeechDataMonitor"/>
-
-    <component name="lm-speechMarker1"
-               type="edu.cmu.sphinx.frontend.endpoint.SpeechMarker" >
-	    <!--property name="speechTrailer" value="50"/-->
-        <!--property name="endSilence" value="20"/-->
-	    <!--property name="startSpeech" value="20"/-->
-	    <!--property name="speechLeader" value="50"/-->
-    </component>   
-          
-    <component name="lm-streamDataSource1" 
-               type="com.spokentech.speechdown.server.recog.AudioStreamDataSource"/>
-
-    <component name="lm-speechDataRecorder1"
-               type="org.speechforge.cairo.rtp.server.sphinx.SpeechDataRecorder"/>
-
-    <component name="lm-preemphasizer1"
-               type="edu.cmu.sphinx.frontend.filter.Preemphasizer"/>
-                             
-    <component name="lm-dither1"
-               type="edu.cmu.sphinx.frontend.filter.Dither"/>
-
-    <component name="lm-windower1"
-               type="edu.cmu.sphinx.frontend.window.RaisedCosineWindower"/>
-
-    <component name="lm-fft1"
-               type="edu.cmu.sphinx.frontend.transform.DiscreteFourierTransform"/>
-
-    <component name="lm-melFilterBank1"
-               type="edu.cmu.sphinx.frontend.frequencywarp.MelFrequencyFilterBank">
-               <property name="minimumFrequency" value="200"/>
-               <property name="maximumFrequency" value="3500"/>
-               <property name="numberFilters" value="31"/>
-    </component>
-
-    <component name="lm-dct1"
-               type="edu.cmu.sphinx.frontend.transform.DiscreteCosineTransform"/>
-
-    <component name="lm-cmn1"
-               type="edu.cmu.sphinx.frontend.feature.LiveCMN">
-                 <property name="initialMean " value="12"/>
-               <property name="cmnWindow" value="500"/>
-               <property name="shiftWindow" value="800"/>
-    </component>             
-               
-    <component name="lm-featureExtraction1"
-               type="edu.cmu.sphinx.frontend.feature.DeltasFeatureExtractor"/>
-    
-    <component name="lm-LDA1" 
-		   type="edu.cmu.sphinx.frontend.feature.LDA">	
-		<property name="loader" value="loader"/>
-	</component>
 	
-	
-	<!-- ******************************************************** -->
+    <!-- ******************************************************** -->
     <!-- The Decoder   configuration  #2                          -->
     <!-- ******************************************************** -->
 
@@ -748,7 +367,7 @@
 
     <component name="lm-scorer2"
                type="edu.cmu.sphinx.decoder.scorer.ThreadedAcousticScorer">
-        <property name="frontend" value="lm-audio-ep-frontend2"/>
+        <property name="frontend" value="dummy-frontend"/>
     </component>
     
    <component name="lm-SearchManager2" 
@@ -778,134 +397,4 @@
     </component>
     
     
-	<!-- ************************************************   -->
-	<!-- *** Three frontends for each decoder               -->
-    <!-- *** audio,audio with endpointing and feature       -->
-    <!-- ************************************************   -->
-
-    <!-- ******************************************************** -->
-    <!-- The feature frontend configuration                       -->
-    <!-- ******************************************************** -->
-    
-    <component name="lm-feature-frontend2" type="edu.cmu.sphinx.frontend.FrontEnd">
-        <propertylist name="pipeline">       
-            <item>lm-identityStage2</item>
-        </propertylist>
-    </component>
-
-    <!-- *******************************************************  -->
-    <!-- The Audio frontend configuration                         -->
-    <!-- ******************************************************** -->
-
-    <component name="lm-audio-frontend2" type="edu.cmu.sphinx.frontend.FrontEnd">
-        <propertylist name="pipeline">       
-            <item>lm-preemphasizer2</item>
-            <item>lm-dither2</item>
-            <item>lm-windower2</item>
-            <item>lm-fft2</item>
-            <item>lm-melFilterBank2</item>
-            <item>lm-dct2</item>
-            <item>lm-cmn2</item>
-            <item>lm-featureExtraction2</item>
-            <item>lm-LDA2</item>
-        </propertylist>
-    </component>
- 
-    <!-- ******************************************************** -->
-    <!-- The audio frontend with endpointer                       -->
-    <!-- ******************************************************** -->
-
-    <component name="lm-audio-ep-frontend2" type="edu.cmu.sphinx.frontend.FrontEnd">
-        <propertylist name="pipeline">       
-            <item>lm-dataBlocker2 </item>
-            <item>lm-speechClassifier2 </item>
-            <item>lm-speechMarker2 </item>
-	        <item>lm-nonSpeechDataFilter2 </item>
-	        <item>lm-speechDataMonitor2 </item>
-            <item>lm-preemphasizer2</item>
-            <item>lm-dither2</item>
-            <item>lm-windower2</item>
-            <item>lm-fft2</item>
-            <item>lm-melFilterBank2</item>
-            <item>lm-dct2</item>
-            <item>lm-cmn2</item>
-            <item>lm-featureExtraction2</item>
-            <item>lm-LDA2</item>
-        </propertylist>
-    </component>
-    
-    <!-- ******************************************* -->
-    <!-- The  frontend components                    -->
-    <!-- ******************************************* -->
-    
-    <component name="lm-identityStage2" 
-               type="com.spokentech.speechdown.common.sphinx.IdentityStage"/>
-
-    <component name="lm-dataBlocker2" type="edu.cmu.sphinx.frontend.DataBlocker"/>
-      
-    <component name="lm-nonSpeechDataFilter2" 
-               type="edu.cmu.sphinx.frontend.endpoint.NonSpeechDataFilter"/>
-    
-    <component name="lm-speechClassifier2"
-               type="edu.cmu.sphinx.frontend.endpoint.SpeechClassifier">
-	       <property name="threshold" value="${speechClassifierThreshold}"/>
-	       <!--property name="logLevel" value="FINEST"/-->
-    </component>
-
-    <component name="lm-speechDataMonitor2"
-               type="com.spokentech.speechdown.common.sphinx.SpeechDataMonitor"/>
-
-    <component name="lm-speechMarker2"
-               type="edu.cmu.sphinx.frontend.endpoint.SpeechMarker" >
-	    <!--property name="speechTrailer" value="50"/-->
-        <!--property name="endSilence" value="20"/-->
-	    <!--property name="startSpeech" value="20"/-->
-	    <!--property name="speechLeader" value="50"/-->
-    </component>   
-          
-    <component name="lm-streamDataSource2" 
-               type="com.spokentech.speechdown.server.recog.AudioStreamDataSource"/>
-
-    <component name="lm-speechDataRecorder2"
-               type="org.speechforge.cairo.rtp.server.sphinx.SpeechDataRecorder"/>
-
-    <component name="lm-preemphasizer2"
-               type="edu.cmu.sphinx.frontend.filter.Preemphasizer"/>
-                             
-    <component name="lm-dither2"
-               type="edu.cmu.sphinx.frontend.filter.Dither"/>
-
-    <component name="lm-windower2"
-               type="edu.cmu.sphinx.frontend.window.RaisedCosineWindower"/>
-
-    <component name="lm-fft2"
-               type="edu.cmu.sphinx.frontend.transform.DiscreteFourierTransform"/>
-
-    <component name="lm-melFilterBank2"
-               type="edu.cmu.sphinx.frontend.frequencywarp.MelFrequencyFilterBank">
-               <property name="minimumFrequency" value="200"/>
-               <property name="maximumFrequency" value="3500"/>
-               <property name="numberFilters" value="31"/>
-    </component>
-
-    <component name="lm-dct2"
-               type="edu.cmu.sphinx.frontend.transform.DiscreteCosineTransform"/>
-
-    <component name="lm-cmn2"
-               type="edu.cmu.sphinx.frontend.feature.LiveCMN">
-                 <property name="initialMean " value="12"/>
-               <property name="cmnWindow" value="500"/>
-               <property name="shiftWindow" value="800"/>
-    </component>             
-               
-    <component name="lm-featureExtraction2"
-               type="edu.cmu.sphinx.frontend.feature.DeltasFeatureExtractor"/>
-    
-    <component name="lm-LDA2" 
-		   type="edu.cmu.sphinx.frontend.feature.LDA">	
-		<property name="loader" value="loader"/>
-	</component>
-	
-  
- 
 </config>
