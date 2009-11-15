@@ -15,11 +15,10 @@ import org.apache.log4j.Logger;
 
 import edu.cmu.sphinx.frontend.DataProcessor;
 import edu.cmu.sphinx.frontend.FrontEnd;
-import edu.cmu.sphinx.util.props.ConfigurationManager;
+
 import com.spokentech.speechdown.client.sphinx.SpeechDataStreamer;
 import com.spokentech.speechdown.common.SpeechEventListener;
 import com.spokentech.speechdown.common.sphinx.AudioStreamDataSource;
-import com.spokentech.speechdown.common.sphinx.SpeechDataMonitor;
 
 import com.spokentech.speechdown.server.recog.StreamDataSource;
 
@@ -32,15 +31,10 @@ public class StreamS4EndPointingInputStream extends EndPointingInputStreamBase i
 	
     private static Logger _logger = Logger.getLogger(StreamS4EndPointingInputStream.class);
 
-	private int id;
-
-	private ConfigurationManager cm;
-
 	private AudioInputStream  stream;
 
 	StreamDataSource dataSource = null;
-	
-	private String s4ConfigFile = "/config/sphinx-config.xml";
+
 	private String mimeType;
 	
 	/**
@@ -63,26 +57,6 @@ public class StreamS4EndPointingInputStream extends EndPointingInputStreamBase i
     }
 
 
-	
-
-    /**
-     * Gets the s4 config file.
-     * 
-     * @return the s4ConfigFile
-     */
-    public String getS4ConfigFile() {
-    	return s4ConfigFile;
-    }
-
-
-	/**
-	 * Sets the s4 config file.
-	 * 
-	 * @param configFile the s4ConfigFile to set
-	 */
-    public void setS4ConfigFile(String configFile) {
-    	s4ConfigFile = configFile;
-    }
 
 	/**
 	 * Sets the up stream.
@@ -104,8 +78,8 @@ public class StreamS4EndPointingInputStream extends EndPointingInputStreamBase i
         //    throw new RuntimeException("Sphinx config file not found!");
         //}
         //cm = new ConfigurationManager(sphinxConfigUrl);
-        _logger.debug("config: "+s4ConfigFile);
-        cm = new ConfigurationManager(s4ConfigFile);
+        //_logger.debug("config: "+s4ConfigFile);
+        //cm = new ConfigurationManager(s4ConfigFile);
 	}
 	
 
@@ -125,21 +99,10 @@ public class StreamS4EndPointingInputStream extends EndPointingInputStreamBase i
 
 		_listener = new Listener(listener);
 		
-		//TODO: do I need multiple front ends
-		id = 10;
-
-		//get elements from the s4 front end
-		SpeechDataMonitor speechDataMonitor = (SpeechDataMonitor) cm.lookup("speechDataMonitor");
-		if (speechDataMonitor != null) {
-			speechDataMonitor.setSpeechEventListener(_listener);
-		}
-
-		FrontEnd frontEnd = (FrontEnd) cm.lookup("frontEnd");
- 		StreamDataSource dataSource = new AudioStreamDataSource();
- 		frontEnd.setDataSource((DataProcessor) dataSource);
-
-		frontEnd.initialize();
-		
+		StreamDataSource dataSource = new AudioStreamDataSource();
+		 	
+		FrontEnd frontEnd = createFrontend(false, false, (DataProcessor) dataSource, listener);
+ 	
 		dataSource.setInputStream((InputStream)stream, "ws-audiostream", (int)stream.getFormat().getSampleRate(), stream.getFormat().isBigEndian(), stream.getFormat().getSampleSizeInBits()/8,stream.getFormat().getEncoding());
  		
 		_logger.info("Starting audio trasnfer");

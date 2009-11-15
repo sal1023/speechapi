@@ -27,6 +27,7 @@ import org.speechforge.cairo.rtp.server.sphinx.RawAudioTransferHandler;
 import org.speechforge.cairo.rtp.server.sphinx.SourceAudioFormat;
 
 
+import edu.cmu.sphinx.frontend.FrontEnd;
 import edu.cmu.sphinx.util.props.ConfigurationManager;
 import com.spokentech.speechdown.common.SpeechEventListener;
 import com.spokentech.speechdown.common.sphinx.SpeechDataMonitor;
@@ -44,12 +45,9 @@ public class RtpS4EndPointingInputStream extends EndPointingInputStreamBase impl
 	private int id;
 	private RawAudioProcessor _rawAudioProcessor;
 	private RawAudioTransferHandler _rawAudioTransferHandler;
-	private ConfigurationManager cm;
 
     private RTPStreamReplicator _replicator;
     private Processor _processor;
-	
-	private String s4ConfigFile = "/config/sphinx-config.xml";
 	
 	private String mimeType;
 	
@@ -72,35 +70,17 @@ public class RtpS4EndPointingInputStream extends EndPointingInputStreamBase impl
     	this.mimeType = mimeType;
     }
 	
-    /**
-     * Gets the s4 config file.
-     * 
-     * @return the s4ConfigFile
-     */
-    public String getS4ConfigFile() {
-    	return s4ConfigFile;
-    }
-
-
-	/**
-	 * Sets the s4 config file.
-	 * 
-	 * @param configFile the s4ConfigFile to set
-	 */
-    public void setS4ConfigFile(String configFile) {
-    	s4ConfigFile = configFile;
-    }
 
 
 	/**
 	 * Inits the.
 	 */
 	public void init() {
-	    URL sphinxConfigUrl = RtpS4EndPointingInputStream.class.getResource(s4ConfigFile);
-        if (sphinxConfigUrl == null) {
-            throw new RuntimeException("Sphinx config file not found!");
-        }
-        cm = new ConfigurationManager(sphinxConfigUrl);
+	    //URL sphinxConfigUrl = RtpS4EndPointingInputStream.class.getResource(s4ConfigFile);
+        //if (sphinxConfigUrl == null) {
+        //    throw new RuntimeException("Sphinx config file not found!");
+        //}
+        //cm = new ConfigurationManager(sphinxConfigUrl);
 	}
 	
 	/**
@@ -141,24 +121,10 @@ public class RtpS4EndPointingInputStream extends EndPointingInputStreamBase impl
 
 		_listener = new Listener(listener);
 
+		RawAudioProcessor primaryInput = new RawAudioProcessor();
 		
-		//TODO: do I need multiple front ends
-		id = 1;
-
-		//get elements from the s4 front end
-		SpeechDataMonitor speechDataMonitor = (SpeechDataMonitor) cm.lookup("speechDataMonitor"+id);
-		if (speechDataMonitor != null) {
-			speechDataMonitor.setSpeechEventListener(listener);
-		}
-
-		Object primaryInput = cm.lookup("primaryInput");
-
-		if (primaryInput instanceof RawAudioProcessor) {
-			_rawAudioProcessor = (RawAudioProcessor) primaryInput;
-		} else {
-			String className = (primaryInput == null) ? null : primaryInput.getClass().getName();
-			throw new InstantiationException("Unsupported primary input type: " + className);
-		}
+		//TODO: How is front end used here? 
+		FrontEnd frontEnd = createFrontend(false, false, primaryInput, _listener);
 
 		//get the processor from the rtpStream
 		if (_processor != null) {

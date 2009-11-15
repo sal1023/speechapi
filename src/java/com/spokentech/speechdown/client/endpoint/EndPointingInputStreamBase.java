@@ -9,6 +9,7 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.PipedInputStream;
 import java.io.PipedOutputStream;
+import java.util.ArrayList;
 import java.util.Timer;
 import java.util.TimerTask;
 
@@ -16,6 +17,24 @@ import org.apache.log4j.Logger;
 
 import com.spokentech.speechdown.client.SpeechEventListenerDecorator;
 import com.spokentech.speechdown.common.SpeechEventListener;
+import com.spokentech.speechdown.common.sphinx.SpeechDataMonitor;
+
+import edu.cmu.sphinx.frontend.DataBlocker;
+import edu.cmu.sphinx.frontend.DataProcessor;
+import edu.cmu.sphinx.frontend.FrontEnd;
+import edu.cmu.sphinx.frontend.endpoint.NonSpeechDataFilter;
+import edu.cmu.sphinx.frontend.endpoint.SpeechClassifier;
+import edu.cmu.sphinx.frontend.endpoint.SpeechMarker;
+import edu.cmu.sphinx.frontend.feature.BatchCMN;
+import edu.cmu.sphinx.frontend.feature.DeltasFeatureExtractor;
+import edu.cmu.sphinx.frontend.feature.LDA;
+import edu.cmu.sphinx.frontend.feature.LiveCMN;
+import edu.cmu.sphinx.frontend.filter.Dither;
+import edu.cmu.sphinx.frontend.filter.Preemphasizer;
+import edu.cmu.sphinx.frontend.frequencywarp.MelFrequencyFilterBank;
+import edu.cmu.sphinx.frontend.transform.DiscreteCosineTransform;
+import edu.cmu.sphinx.frontend.transform.DiscreteFourierTransform;
+import edu.cmu.sphinx.frontend.window.RaisedCosineWindower;
 
 // TODO: Auto-generated Javadoc
 /**
@@ -269,5 +288,43 @@ public abstract class EndPointingInputStreamBase implements EndPointingInputStre
 	        return (rootMeanSquare);
 	        //return (LogMath.log10((float)rootMeanSquare) * 20);
 	    }
+	    
+	    
+	    protected FrontEnd createFrontend(boolean featureMode, boolean batchCMN, DataProcessor dataSource, SpeechEventListener listener) {
+	    	
+	 	   ArrayList<DataProcessor> components = new ArrayList <DataProcessor>();
+	 	   components.add(dataSource);
+		   components.add (new DataBlocker(10));
+
+		   components.add (new SpeechClassifier(10,0.003,10.0,0.0));
+		   components.add (new SpeechMarker(200,500,100,50,100));
+		   components.add (new NonSpeechDataFilter());
+		   SpeechDataMonitor mon = new SpeechDataMonitor();
+		   components.add (mon);
+		   mon.setSpeechEventListener(listener);
+		   
+		   if (featureMode) {
+			   components.add (new Preemphasizer(0.97));
+			   components.add (new Dither());
+			   components.add (new RaisedCosineWindower(0.46,(float)25.625,(float)10.0));
+			   components.add (new DiscreteFourierTransform(-1,false));
+			   components.add (new MelFrequencyFilterBank((double)133.0,(double)3500.0,31));
+	
+			   components.add (new DiscreteCosineTransform(40,13));
+			   if (batchCMN) {
+			      components.add (new BatchCMN());
+			   } else {
+			      components.add (new LiveCMN(12,500,800));
+			   }
+			 
+			   components.add (new DeltasFeatureExtractor(3));
+			   //TODO: Can this be done on client (do we need the acoustic model? or a subset of it?)
+			   //components.add (new LDA(_loader));
+		   }
+		   	   
+		   FrontEnd fe = new FrontEnd (components);
+		   return fe;   
+	    }
+
 	   
 }

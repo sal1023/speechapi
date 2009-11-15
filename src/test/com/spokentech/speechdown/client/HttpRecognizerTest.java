@@ -2,9 +2,7 @@ package com.spokentech.speechdown.client;
 
 import java.io.File;
 import java.io.IOException;
-import java.io.InputStream;
 
-import java.io.UnsupportedEncodingException;
 import java.net.MalformedURLException;
 import java.net.URL;
 
@@ -20,20 +18,8 @@ import javax.sound.sampled.LineUnavailableException;
 import javax.sound.sampled.TargetDataLine;
 import javax.sound.sampled.AudioFileFormat.Type;
 
-
-import org.apache.http.HttpEntity;
-import org.apache.http.HttpResponse;
-import org.apache.http.client.ClientProtocolException;
-import org.apache.http.client.HttpClient;
-import org.apache.http.client.methods.HttpPost;
-import org.apache.http.entity.mime.MultipartEntity;
-import org.apache.http.entity.mime.content.InputStreamBody;
-import org.apache.http.entity.mime.content.StringBody;
-import org.apache.http.impl.client.DefaultHttpClient;
 import org.apache.log4j.Logger;
 
-import com.spokentech.speechdown.client.endpoint.EndPointingInputStream;
-import com.spokentech.speechdown.client.endpoint.FileS4EndPointingInputStream;
 import com.spokentech.speechdown.client.endpoint.FileS4EndPointingInputStream2;
 import com.spokentech.speechdown.client.endpoint.StreamEndPointingInputStream;
 import com.spokentech.speechdown.client.endpoint.StreamS4EndPointingInputStream;
@@ -45,84 +31,81 @@ import junit.framework.TestCase;
 
 public class HttpRecognizerTest extends TestCase {
 
-    public class Listener implements SpeechEventListener {
+		public class Listener implements SpeechEventListener {
+	
+			@Override
+			public void noInputTimeout() {
+				// TODO Auto-generated method stub
+	
+			}
+	
+			@Override
+			public void speechEnded() {
+				// TODO Auto-generated method stub
+	
+			}
+	
+			@Override
+			public void speechStarted() {
+				// TODO Auto-generated method stub
+	
+			}
+	
+		}
 
-	    @Override
-	    public void noInputTimeout() {
-		    // TODO Auto-generated method stub
 
+		private static Logger _logger = Logger.getLogger(HttpRecognizerTest.class);
+	    public static final String CRLF = "\r\n";
+	    
+	   
+	    
+	    private static String service = "http://ec2-174-129-20-250.compute-1.amazonaws.com/speechcloud/SpeechUploadServlet";    
+	  
+	    //private static String service = "http://localhost:8090/speechcloud/SpeechUploadServlet";    
+	    private static AudioFormat desiredFormat;
+	    private static int sampleRate = 8000;
+	    private static boolean signed = true;
+	    private static boolean bigEndian = true;
+	    private static int channels = 1;
+	    private static int sampleSizeInBits = 16;
+	    
+	    private static int audioBufferSize = 160000;
+	    private static int msecPerRead = 10;
+	    private static int frameSizeInBytes;
+	    
+		private String grammar = "file:///work/speechcloud/etc/grammar/example.gram";    
+		URL grammarUrl = null;
+		HttpRecognizer recog;
+		
+		File soundFile1 = new File("c:/work/speechcloud/etc/prompts/lookupsports.wav");	 	
+		File soundFile2 = new File("c:/work/speechcloud/etc/prompts/get_me_a_stock_quote.wav");	 	
+		File soundFile3 = new File("c:/work/speechcloud/etc/prompts/i_would_like_sports_news.wav");	 	
+	
+		
+	    String wav = "audio/x-wav";
+	    String s4feature = "audio/x-s4feature";
+	    String s4audio = "audio/x-s4audio";
+	    
+	    
+	    String audioConfigFile="c:/work/speechcloud/etc/sphinxfrontendonly-audio.xml";
+	    String featureConfigFile="c:/work/speechcloud/etc/sphinxfrontendonly-feature.xml";
+	
+	    public String configForMime(String mimeType) {
+	    	String configFile = null;
+	    	if (mimeType.equals(wav)) {
+	            configFile=audioConfigFile;
+	    	} else if (mimeType.equals(s4feature)) {
+	            configFile=featureConfigFile;
+	    	} else if (mimeType.equals(s4audio)) {
+	            configFile=audioConfigFile;
+	    	} else {
+	    		_logger.warn("Unrecognized data mode: "+mimeType+"  Guessing audio/x-wav.");
+	    		mimeType = "audio/x-wav";
+	    	}
+	    	return configFile;
 	    }
+	    
 
-	    @Override
-	    public void speechEnded() {
-		    // TODO Auto-generated method stub
-
-	    }
-
-	    @Override
-	    public void speechStarted() {
-		    // TODO Auto-generated method stub
-
-	    }
-
-    }
-
-
-	private static Logger _logger = Logger.getLogger(HttpRecognizerTest.class);
-    public static final String CRLF = "\r\n";
-    
-   
-    
-    private static String service = "http://ec2-174-129-20-250.compute-1.amazonaws.com/speechcloud/SpeechUploadServlet";    
-  
-    //private static String service = "http://localhost:8090/speechcloud/SpeechUploadServlet";    
-    private static AudioFormat desiredFormat;
-    private static int sampleRate = 8000;
-    private static boolean signed = true;
-    private static boolean bigEndian = true;
-    private static int channels = 1;
-    private static int sampleSizeInBits = 16;
-    
-    private static int audioBufferSize = 160000;
-    private static int msecPerRead = 10;
-    private static int frameSizeInBytes;
-    
-	private String grammar = "file:///work/speechcloud/etc/grammar/example.gram";    
-	URL grammarUrl = null;
-	HttpRecognizer recog;
-	
-	File soundFile1 = new File("c:/work/speechcloud/etc/prompts/lookupsports.wav");	 	
-	File soundFile2 = new File("c:/work/speechcloud/etc/prompts/get_me_a_stock_quote.wav");	 	
-	File soundFile3 = new File("c:/work/speechcloud/etc/prompts/i_would_like_sports_news.wav");	 	
-
-	
-    String wav = "audio/x-wav";
-    String s4feature = "audio/x-s4feature";
-    String s4audio = "audio/x-s4audio";
-    
-    
-    String audioConfigFile="c:/work/speechcloud/etc/sphinxfrontendonly-audio.xml";
-    String featureConfigFile="c:/work/speechcloud/etc/sphinxfrontendonly-feature.xml";
-
-    public String configForMime(String mimeType) {
-    	String configFile = null;
-    	if (mimeType.equals(wav)) {
-            configFile=audioConfigFile;
-    	} else if (mimeType.equals(s4feature)) {
-            configFile=featureConfigFile;
-    	} else if (mimeType.equals(s4audio)) {
-            configFile=audioConfigFile;
-    	} else {
-    		_logger.warn("Unrecognized data mode: "+mimeType+"  Guessing audio/x-wav.");
-    		mimeType = "audio/x-wav";
-    	}
-    	return configFile;
-    }
-    
-    
-    
-	
-	
 	     protected void setUp() {
 		    	recog = new HttpRecognizer();
 		    	recog.setService(service);
@@ -136,19 +119,61 @@ public class HttpRecognizerTest extends TestCase {
 
 	 
 
-	    public void testRecognizeFile() {
+	    public void testRecognizeFileLmBatch() {
 	    	System.out.println("Starting File Test ...");
 	        String fname = "c:/work/speechcloud/etc/prompts/lookupsports.wav"; 	
 	    	boolean lmflg = true;
 	    	boolean doEndpointing = true;
-	    	RecognitionResult r = recog.recognize(fname, grammarUrl, lmflg, doEndpointing);
-	    	System.out.println("lm result: "+r.getText());
-	    	
-	    	lmflg = false;
-	    	r = recog.recognize(fname, grammarUrl, lmflg, doEndpointing);
-	    	System.out.println("grammar result: "+r.getText());
+	    	boolean batchMode = true;
+			long start = System.nanoTime();
+	    	RecognitionResult r = recog.recognize(fname, grammarUrl, lmflg, doEndpointing,batchMode);
+			long stop = System.nanoTime();
+			long wall = (stop - start)/1000000;
+	    	System.out.println("FILE TEST: Batch mode, Server Endpointing, LM result: "+r.getText() + " took "+wall+ " ms");    	
+	    }
+	    
+	    public void testRecognizeFileGrammarBatch() {
+	    	System.out.println("Starting File Test ...");
+	        String fname = "c:/work/speechcloud/etc/prompts/lookupsports.wav"; 	
+	    	boolean lmflg = false;
+	    	boolean doEndpointing = true;
+	    	boolean batchMode = true;
+			long start = System.nanoTime();
+	    	RecognitionResult r = recog.recognize(fname, grammarUrl, lmflg, doEndpointing,batchMode);
+			long stop = System.nanoTime();
+			long wall = (stop - start)/1000000;
+	    	System.out.println("FILE TEST: Batch mode, Server Endpointing, Grammar result: "+r.getText() + " took "+wall+ " ms");
+	    }
+	    
+	    public void testRecognizeFileLmLive() {
+	    	System.out.println("Starting File Test ...");
+	        String fname = "c:/work/speechcloud/etc/prompts/lookupsports.wav"; 	
+	    	boolean lmflg = true;
+	    	boolean doEndpointing = true;
+	    	boolean batchMode = false;
+			long start = System.nanoTime();
+	    	RecognitionResult r = recog.recognize(fname, grammarUrl, lmflg, doEndpointing,batchMode);
+			long stop = System.nanoTime();
+			long wall = (stop - start)/1000000;
+	    	System.out.println("FILETEST: Live mode, Server Endpointing, LM result: "+r.getText() + " took "+wall+ " ms");    	
+	    }
+	    
+	    public void testRecognizeFileGrammarLive() {
+	    	System.out.println("Starting File Test ...");
+	        String fname = "c:/work/speechcloud/etc/prompts/lookupsports.wav"; 	
+	    	boolean lmflg = false;
+	    	boolean doEndpointing = true;
+	    	boolean batchMode = false;
+			long start = System.nanoTime();
+	    	RecognitionResult r = recog.recognize(fname, grammarUrl, lmflg, doEndpointing,batchMode);
+			long stop = System.nanoTime();
+			long wall = (stop - start)/1000000;
+	    	System.out.println("FILE TEST: Live mode, Server endpointing, Grammar result: "+r.getText() + " took "+wall+ " ms");
 	    }
 	     
+	    
+	    
+	    
 	    public void testRecognizeFileS4EP() {
 	    	System.out.println("Starting File EP Test ...");	
 
@@ -157,7 +182,6 @@ public class HttpRecognizerTest extends TestCase {
 	    	FileS4EndPointingInputStream2 epStream = new FileS4EndPointingInputStream2();
 
 	    	epStream.setMimeType(s4audio);
-	    	epStream.setS4ConfigFile(configForMime(s4audio));
 	    	epStream.setupStream(soundFile1);
 	    	epStream.init();
 
@@ -181,7 +205,6 @@ public class HttpRecognizerTest extends TestCase {
 	    	epStream = new FileS4EndPointingInputStream2();
 
 	    	epStream.setMimeType(s4audio);
-	    	epStream.setS4ConfigFile(configForMime(s4audio));
 	    	epStream.setupStream(soundFile1);
 	    	epStream.init();
 
@@ -202,9 +225,8 @@ public class HttpRecognizerTest extends TestCase {
 	    }
 
 	    
-	    public void testRecognizeAudioStream() {
+	    public void testRecognizeAudioStreamLmBatch() {
 	    	System.out.println("Starting Stream Test ...");
-	    	
 	    	
 	    	// Get a stream for the test
 	    	AudioInputStream	audioInputStream = null;
@@ -219,8 +241,13 @@ public class HttpRecognizerTest extends TestCase {
 	    	//run the test
 	    	boolean lmflg = true;
 	    	boolean doEndpointing = true;
-	    	RecognitionResult r = recog.recognize(audioInputStream, type, null, lmflg, doEndpointing);
-	    	System.out.println("lm result: "+r.getText());
+	    	boolean batchMode = true;
+			long start = System.nanoTime();
+
+	    	RecognitionResult r = recog.recognize(audioInputStream, type, null, lmflg, doEndpointing,batchMode);
+			long stop = System.nanoTime();
+			long wall = (stop - start)/1000000;
+	    	System.out.println("STREAM TEST: Batch mode, No endpointing, LM result: "+r.getText() + " took "+wall+ " ms");	    	
 	    	
 	    	// Get a stream for the test
 	    	try {
@@ -229,13 +256,33 @@ public class HttpRecognizerTest extends TestCase {
 	    	} catch (Exception e) {
 	    		e.printStackTrace();
 	    	}
+	    }
+	    	
+	    public void testRecognizeAudioStreamGrammarLive() {
+	    	System.out.println("Starting Stream Test ...");
+
+
+	    	// Get a stream for the test
+	    	AudioInputStream audioInputStream = null;
+	    	Type type = null;
+	    	try {
+	    		audioInputStream = AudioSystem.getAudioInputStream(soundFile1);
+	    		type = AudioSystem.getAudioFileFormat(soundFile1).getType();
+	    	} catch (Exception e) {
+	    		e.printStackTrace();
+	    	}
 	    	
 	    	//run the test
-	    	lmflg = false;
-	    	r = recog.recognize(audioInputStream, type, grammarUrl, lmflg, doEndpointing);
-	    	System.out.println("grammar result: "+r.getText());	    	
 	    	
-	    	
+	    	boolean doEndpointing = false;
+	    	boolean lmflg = false;
+	    	boolean batchMode =false;
+	    	long start = System.nanoTime();
+	    	RecognitionResult r = recog.recognize(audioInputStream, type, grammarUrl, lmflg, doEndpointing,batchMode);
+	    	long stop = System.nanoTime();
+	    	long wall = (stop - start)/1000000;
+	    	System.out.println("STREAM TEST: Live mode, No Endpointing Grammar result: "+r.getText() + " took "+wall+ " ms");   	
+
 	    }
 	     
 	    public void testRecognizeStreamWithFormatParamater() {
@@ -259,7 +306,8 @@ public class HttpRecognizerTest extends TestCase {
 	    	//run the test
 	    	boolean lmflg = true;
 	    	boolean doEndpointing = true;
-	    	RecognitionResult r = recog.recognize(audioInputStream, format, type, null, lmflg,doEndpointing);
+	    	boolean batchMode = true;
+	    	RecognitionResult r = recog.recognize(audioInputStream, format, type, null, lmflg,doEndpointing, batchMode);
 	    	System.out.println("lm result: "+r.getText());
 	    	
 	    	// Get a stream for the test
@@ -273,7 +321,7 @@ public class HttpRecognizerTest extends TestCase {
 	    	
 	    	//run the test
 	    	lmflg = false;
-	    	r = recog.recognize(audioInputStream, format, type, grammarUrl, lmflg,doEndpointing);
+	    	r = recog.recognize(audioInputStream, format, type, grammarUrl, lmflg,doEndpointing, batchMode);
 	    	System.out.println("grammar result: "+r.getText());	    	
 	    	
 	    	
@@ -316,7 +364,6 @@ public class HttpRecognizerTest extends TestCase {
 	    	
 	    	StreamS4EndPointingInputStream epStream = new StreamS4EndPointingInputStream();
 	    	epStream.setMimeType(s4audio);
-	    	epStream.setS4ConfigFile(configForMime(s4audio));
 	    	epStream.setupStream(audioInputStream);
 	    	epStream.init();
 
@@ -348,7 +395,6 @@ public class HttpRecognizerTest extends TestCase {
 	    	//run the test
 	    	epStream = new StreamS4EndPointingInputStream();
 	    	epStream.setMimeType(s4audio);
-	    	epStream.setS4ConfigFile(configForMime(s4audio));
 	    	epStream.setupStream(audioInputStream);
 	    	epStream.init();
            
