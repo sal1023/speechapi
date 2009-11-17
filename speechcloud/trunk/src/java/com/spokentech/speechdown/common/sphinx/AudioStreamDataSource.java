@@ -34,7 +34,7 @@ import org.apache.log4j.Logger;
 
 import com.spokentech.speechdown.server.recog.StreamDataSource;
 
-
+import java.io.PipedInputStream;
 /**
  * An AudioFileDataSource generates a stream of audio data from a given audion file. All required information concerning
  * the audio format are read directly from the file . One would need to call {@link #setAudioFile(java.io.File,String)}
@@ -50,17 +50,17 @@ import com.spokentech.speechdown.server.recog.StreamDataSource;
 public class AudioStreamDataSource extends BaseDataProcessor implements StreamDataSource {
 	private static Logger _logger = Logger.getLogger(AudioStreamDataSource.class);
     /** SphinxProperty for the number of bytes to read from the InputStream each time. */
-    @S4Integer(defaultValue = 3200)
+    @S4Integer(defaultValue = 1024)
     public static final String PROP_BYTES_PER_READ = "bytesPerRead";
     /** Default value for PROP_BYTES_PER_READ. */
-    public static final int PROP_BYTES_PER_READ_DEFAULT = 3200;
+    public static final int PROP_BYTES_PER_READ_DEFAULT = 1024;
 
     @S4ComponentList(type = Configurable.class)
     public static final String AUDIO_FILE_LISTENERS = "audioFileListners";
     protected List<AudioFileProcessListener> fileListeners = new ArrayList<AudioFileProcessListener>();
 
 
-    protected InputStream dataStream;
+    protected PipedInputStream dataStream;
     protected int sampleRate;
     protected int bytesPerRead = PROP_BYTES_PER_READ_DEFAULT;
     protected int bytesPerValue;
@@ -175,6 +175,30 @@ public class AudioStreamDataSource extends BaseDataProcessor implements StreamDa
 
         setInputStream(audioStream, streamName);
     }
+   public void setInputStream(PipedInputStream inputStream, String streamName) {
+        dataStream = inputStream;
+        streamEndReached = false;
+        utteranceEndSent = false;
+        utteranceStarted = false;
+        totalValuesRead = 0;
+
+        _logger.debug("inputstream "+inputStream);
+
+        //AudioFormat format = inputStream.getFormat();
+        this.sampleRate = 8000; 
+        this.bigEndian = false;
+        this.bytesPerValue = 2;
+
+        // test whether all files in the stream have the same format
+        //if (encoding.equals(AudioFormat.Encoding.PCM_SIGNED))
+            signedData = true;
+        //else if (encoding.equals(AudioFormat.Encoding.PCM_UNSIGNED))
+         //   signedData = false;
+        //else
+       //     throw new RuntimeException("used file encoding is not supported");
+
+        totalValuesRead = 0;
+    }
 
 
     /**
@@ -184,7 +208,7 @@ public class AudioStreamDataSource extends BaseDataProcessor implements StreamDa
      * @param streamName  the name of the InputStream
      */
     public void setInputStream(InputStream inputStream, String streamName) {
-        dataStream = inputStream;
+        dataStream = (PipedInputStream)inputStream;
         streamEndReached = false;
         utteranceEndSent = false;
         utteranceStarted = false;
@@ -225,7 +249,7 @@ public class AudioStreamDataSource extends BaseDataProcessor implements StreamDa
      * @param streamName  the name of the InputStream
      */
     public void setInputStream(InputStream inputStream, String streamName, int sampleRate, boolean bigEndian, int bytesPerValue, AudioFormat.Encoding encoding) {
-        dataStream = inputStream;
+        dataStream = (PipedInputStream)inputStream;
         streamEndReached = false;
         utteranceEndSent = false;
         utteranceStarted = false;
