@@ -1,10 +1,13 @@
 package com.spokentech.speechdown.server.recog;
 
+import java.io.FileWriter;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
 import java.io.PrintWriter;
+import java.text.SimpleDateFormat;
 import java.util.ArrayList;
+import java.util.Date;
 import java.util.List;
 import java.util.Timer;
 import java.util.TimerTask;
@@ -21,7 +24,9 @@ import com.spokentech.speechdown.common.RecognitionResult;
 import com.spokentech.speechdown.common.SpeechEventListener;
 import com.spokentech.speechdown.common.sphinx.AudioStreamDataSource;
 import com.spokentech.speechdown.common.sphinx.IdentityStage;
+import com.spokentech.speechdown.common.sphinx.InsertSpeechSignalStage;
 import com.spokentech.speechdown.common.sphinx.SpeechDataMonitor;
+import com.spokentech.speechdown.common.sphinx.WavWriter;
 import com.spokentech.speechdown.server.util.pool.AbstractPoolableObject;
 
 import edu.cmu.sphinx.decoder.Decoder;
@@ -86,12 +91,18 @@ public class SphinxRecEngine extends AbstractPoolableObject implements RecEngine
 	private LexTreeLinguist _lexTreelingust;
 	private SpeechDataMonitor _speechDataMonitor;
 	
+	private WavWriter recorder; 
+	private String recordingFilePath;
+	private boolean recordingEnabled;
+    private FileWriter outTextFile;
+
+
 	protected /*static*/ Timer _timer = new Timer();
 	protected TimerTask _noInputTimeoutTask;
 	
 	protected StreamDataSource _dataSource = null;
 	
-    public SphinxRecEngine(ConfigurationManager cm, GrammarManager grammarManager,String prefixId, int id) throws IOException, PropertyException, InstantiationException {
+    public SphinxRecEngine(ConfigurationManager cm, GrammarManager grammarManager,String prefixId, int id, String recordingFilePath, boolean recordingEnabled) throws IOException, PropertyException, InstantiationException {
 
     	_logger.info("Creating a recognizer "+prefixId +"recognizer"+id);
     	_recognizer = (Recognizer) cm.lookup(prefixId+"recognizer"+id);
@@ -132,9 +143,26 @@ public class SphinxRecEngine extends AbstractPoolableObject implements RecEngine
 		//_decoder = (Decoder)_cm.lookup(prefixId+"decoder"+_id);
 		
 
+    	this.recordingEnabled = recordingEnabled;
+    	
+    	Date dateNow = new Date ();
+        SimpleDateFormat dateformatMMDDYYYY = new SimpleDateFormat("MMddyyyy");
+ 
+        StringBuilder nowMMDDYYYY = new StringBuilder( dateformatMMDDYYYY.format( dateNow ) );
+    	this.recordingFilePath = recordingFilePath+"/"+nowMMDDYYYY+"-";
+    	
+    	if (recordingEnabled) {
+		    try {
+		    	outTextFile = new FileWriter(recordingFilePath+"/"+nowMMDDYYYY+".txt",true);
+		    } catch (IOException e) {
+		        // TODO Auto-generated catch block
+		        e.printStackTrace();
+		    }
+    	}
+
     }
     
-    
+	
 	
 	//Recognize using language mode
     public RecognitionResult recognize(InputStream as, String mimeType, int sampleRate, boolean bigEndian, 
@@ -206,7 +234,16 @@ public class SphinxRecEngine extends AbstractPoolableObject implements RecEngine
             int bytesPerValue, Encoding encoding, boolean doEndpointing, boolean cmnBatch) {
 	    //TODO: Timers for recog timeout
 		
-
+		
+		//setup the recorder
+		// reuse this rather than construct a new one each time
+		if (recordingEnabled) {
+			boolean isCompletePath = false;
+			int bitsPerSample = bytesPerValue*8;
+			boolean isSigned = true;
+			boolean captureUtts = true;
+			recorder = new WavWriter(recordingFilePath,isCompletePath,bitsPerSample,bigEndian,isSigned,captureUtts);
+		}
 	
 	    // configure the audio input for the recognizer
 
@@ -256,6 +293,10 @@ public class SphinxRecEngine extends AbstractPoolableObject implements RecEngine
 		long streamLen = _dataSource.getLengthInMs();
 		double ratio = (double)wall/(double)streamLen;
 		_logger.info(ratio+ "  Wall time "+ wall+ " stream length "+ streamLen);
+		if (recordingEnabled) {
+			logResults(r, recorder.getWavName());
+		}
+		
 		fe=null;
 	    return r;
     }
@@ -573,8 +614,14 @@ public class SphinxRecEngine extends AbstractPoolableObject implements RecEngine
 		  components.add (mon);
 		  SpeechEventListener listener = new Listener();
 		  mon.setSpeechEventListener(listener);
+	   } else {
+		   components.add(new InsertSpeechSignalStage());
 	   }
-
+	   //this is just for logging debug messages.
+	   components.add(new IdentityStage());
+	   if (recordingEnabled) {
+	      components.add(recorder);
+	   }
 	   components.add (new Preemphasizer(0.97));
 	   components.add (new Dither());
 	   components.add (new RaisedCosineWindower(0.46,(float)25.625,(float)10.0));
@@ -595,7 +642,22 @@ public class SphinxRecEngine extends AbstractPoolableObject implements RecEngine
 	   return fe;   
     }
 
- 
+	public void logResults(Result r,String wavName) {
+		try {
+			String results = null;
+			if (r == null) {
+				results ="null result";
+			} else {
+				results = r.getBestFinalResultNoFiller();
+			}
+	        outTextFile.write(results+","+wavName+"\n");
+	        outTextFile.flush();
+        } catch (IOException e) {
+	        // TODO Auto-generated catch block
+	        e.printStackTrace();
+        }
+           
+    }
 
 
 }
