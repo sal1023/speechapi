@@ -60,7 +60,6 @@ public class HttpRecognizerTest extends TestCase {
 	   
 	    
 	    private static String service = "http://ec2-174-129-20-250.compute-1.amazonaws.com/speechcloud/SpeechUploadServlet";    
-	  
 	    //private static String service = "http://localhost:8090/speechcloud/SpeechUploadServlet";    
 	    private static AudioFormat desiredFormat;
 	    private static int sampleRate = 8000;
@@ -121,7 +120,7 @@ public class HttpRecognizerTest extends TestCase {
 
 	    public void testRecognizeFileLmBatch() {
 	    	System.out.println("Starting File Test ...");
-	        String fname = "c:/work/speechcloud/etc/prompts/lookupsports.wav"; 	
+	        String fname = "c:/work/speechcloud/etc/prompts/get_me_a_stock_quote.wav"; 	
 	    	boolean lmflg = true;
 	    	boolean doEndpointing = true;
 	    	boolean batchMode = true;
@@ -134,7 +133,7 @@ public class HttpRecognizerTest extends TestCase {
 	    
 	    public void testRecognizeFileGrammarBatch() {
 	    	System.out.println("Starting File Test ...");
-	        String fname = "c:/work/speechcloud/etc/prompts/lookupsports.wav"; 	
+	        String fname = "c:/work/speechcloud/etc/prompts/get_me_a_stock_quote.wav"; 	
 	    	boolean lmflg = false;
 	    	boolean doEndpointing = true;
 	    	boolean batchMode = true;
@@ -147,7 +146,7 @@ public class HttpRecognizerTest extends TestCase {
 	    
 	    public void testRecognizeFileLmLive() {
 	    	System.out.println("Starting File Test ...");
-	        String fname = "c:/work/speechcloud/etc/prompts/lookupsports.wav"; 	
+	        String fname = "c:/work/speechcloud/etc/prompts/get_me_a_stock_quote.wav"; 	
 	    	boolean lmflg = true;
 	    	boolean doEndpointing = true;
 	    	boolean batchMode = false;
@@ -160,7 +159,7 @@ public class HttpRecognizerTest extends TestCase {
 	    
 	    public void testRecognizeFileGrammarLive() {
 	    	System.out.println("Starting File Test ...");
-	        String fname = "c:/work/speechcloud/etc/prompts/lookupsports.wav"; 	
+	        String fname = "c:/work/speechcloud/etc/prompts/get_me_a_stock_quote.wav"; 	
 	    	boolean lmflg = false;
 	    	boolean doEndpointing = true;
 	    	boolean batchMode = false;
@@ -232,8 +231,8 @@ public class HttpRecognizerTest extends TestCase {
 	    	AudioInputStream	audioInputStream = null;
 	    	Type type = null;
 	    	try {
-	    		audioInputStream = AudioSystem.getAudioInputStream(soundFile1);
-	    		type = AudioSystem.getAudioFileFormat(soundFile1).getType();
+	    		audioInputStream = AudioSystem.getAudioInputStream(soundFile2);
+	    		type = AudioSystem.getAudioFileFormat(soundFile2).getType();
 	    	} catch (Exception e) {
 	    		e.printStackTrace();
 	    	}
@@ -252,7 +251,7 @@ public class HttpRecognizerTest extends TestCase {
 	    	// Get a stream for the test
 	    	try {
 	    		audioInputStream = AudioSystem.getAudioInputStream(soundFile2);
-	    		type = AudioSystem.getAudioFileFormat(soundFile1).getType();
+	    		type = AudioSystem.getAudioFileFormat(soundFile2).getType();
 	    	} catch (Exception e) {
 	    		e.printStackTrace();
 	    	}
@@ -266,8 +265,8 @@ public class HttpRecognizerTest extends TestCase {
 	    	AudioInputStream audioInputStream = null;
 	    	Type type = null;
 	    	try {
-	    		audioInputStream = AudioSystem.getAudioInputStream(soundFile1);
-	    		type = AudioSystem.getAudioFileFormat(soundFile1).getType();
+	    		audioInputStream = AudioSystem.getAudioInputStream(soundFile2);
+	    		type = AudioSystem.getAudioFileFormat(soundFile2).getType();
 	    	} catch (Exception e) {
 	    		e.printStackTrace();
 	    	}
@@ -278,52 +277,65 @@ public class HttpRecognizerTest extends TestCase {
 	    	boolean lmflg = false;
 	    	boolean batchMode =false;
 	    	long start = System.nanoTime();
-	    	RecognitionResult r = recog.recognize(audioInputStream, type, grammarUrl, lmflg, doEndpointing,batchMode);
+	    	RecognitionResult r = recog.recognize(audioInputStream, audioInputStream.getFormat(), type, grammarUrl, lmflg, doEndpointing,batchMode);
 	    	long stop = System.nanoTime();
 	    	long wall = (stop - start)/1000000;
 	    	System.out.println("STREAM TEST: Live mode, No Endpointing Grammar result: "+r.getText() + " took "+wall+ " ms");   	
 
 	    }
-	     
-	    public void testRecognizeStreamWithFormatParamater() {
+	  
+	    
+	    
+	    public void testRecognizeStreamGrammarLiveEPWithFormatParamater() {
 	    	System.out.println("Starting Input Stream with format parameter Test ...");
-	    	
+	
+	    	// Get a stream for the test
+	    	AudioInputStream	audioInputStream = null;
+	    	Type type = null;
+	     
+	    	boolean lmflg = false;
+	    	boolean doEndpointing = true;
+	    	boolean batchMode = false;
 
-			
+	    	try {
+	    		audioInputStream = AudioSystem.getAudioInputStream(soundFile2);
+	    		type = AudioSystem.getAudioFileFormat(soundFile2).getType();
+	    	} catch (Exception e) {
+	    		e.printStackTrace();
+	    	}
+	    	AudioFormat format = audioInputStream.getFormat();
+	    	long start = System.nanoTime();
+	    	RecognitionResult r = recog.recognize(audioInputStream, format, type, grammarUrl, lmflg,doEndpointing, batchMode);
+	    	long stop = System.nanoTime();
+	    	long wall = (stop - start)/1000000;
+	    	System.out.println("STREAM TEST: Live mode, Endpointing, with parameter Grammar result: "+r.getText() + " took "+wall+ " ms");   	
+    	
+	    	
+	    }
+	    public void testRecognizeStreamLMLiveEPWithFormatParamater() {
+	    	System.out.println("Starting Input Stream with format parameter Test ...");
+	
 	    	
 	    	// Get a stream for the test
 	    	AudioInputStream	audioInputStream = null;
 	    	Type type = null;
 	    	try {
-	    		audioInputStream = AudioSystem.getAudioInputStream(soundFile1);
-	    		type = AudioSystem.getAudioFileFormat(soundFile1).getType();
+	    		audioInputStream = AudioSystem.getAudioInputStream(soundFile2);
+	    		type = AudioSystem.getAudioFileFormat(soundFile2).getType();
 	    	} catch (Exception e) {
 	    		e.printStackTrace();
 	    	}
 	        AudioFormat format = audioInputStream.getFormat();
-	        
-	        
+	        	        
 	    	//run the test
 	    	boolean lmflg = true;
 	    	boolean doEndpointing = true;
-	    	boolean batchMode = true;
+	    	boolean batchMode = false;
+	    	long start = System.nanoTime();
 	    	RecognitionResult r = recog.recognize(audioInputStream, format, type, null, lmflg,doEndpointing, batchMode);
-	    	System.out.println("lm result: "+r.getText());
-	    	
-	    	// Get a stream for the test
-	    	try {
-	    		audioInputStream = AudioSystem.getAudioInputStream(soundFile2);
-	    		type = AudioSystem.getAudioFileFormat(soundFile1).getType();
-	    	} catch (Exception e) {
-	    		e.printStackTrace();
-	    	}
-	    	format = audioInputStream.getFormat();
-	    	
-	    	//run the test
-	    	lmflg = false;
-	    	r = recog.recognize(audioInputStream, format, type, grammarUrl, lmflg,doEndpointing, batchMode);
-	    	System.out.println("grammar result: "+r.getText());	    	
-	    	
+	    	long stop = System.nanoTime();
+	    	long wall = (stop - start)/1000000;
+	    	System.out.println("STREAM TEST: Live mode, Endpointing, with parameter LM result: "+r.getText() + " took "+wall+ " ms");   	
 	    	
 	    }
 	     
@@ -334,8 +346,8 @@ public class HttpRecognizerTest extends TestCase {
 	    	AudioInputStream	audioInputStream = null;
 	    	Type type = null;
 	    	try {
-	    		audioInputStream = AudioSystem.getAudioInputStream(soundFile1);
-	    		type = AudioSystem.getAudioFileFormat(soundFile1).getType();
+	    		audioInputStream = AudioSystem.getAudioInputStream(soundFile2);
+	    		type = AudioSystem.getAudioFileFormat(soundFile2).getType();
 	    	} catch (Exception e) {
 	    		e.printStackTrace();
 	    	}
@@ -353,8 +365,8 @@ public class HttpRecognizerTest extends TestCase {
 	    	AudioInputStream	audioInputStream = null;
 	    	Type type = null;
 	    	try {
-	    		audioInputStream = AudioSystem.getAudioInputStream(soundFile1);
-	    		type = AudioSystem.getAudioFileFormat(soundFile1).getType();
+	    		audioInputStream = AudioSystem.getAudioInputStream(soundFile2);
+	    		type = AudioSystem.getAudioFileFormat(soundFile2).getType();
 	    	} catch (Exception e) {
 	    		e.printStackTrace();
 	    	}
@@ -386,8 +398,8 @@ public class HttpRecognizerTest extends TestCase {
             audioInputStream = null;
 	    	type = null;
 	    	try {
-	    		audioInputStream = AudioSystem.getAudioInputStream(soundFile1);
-	    		type = AudioSystem.getAudioFileFormat(soundFile1).getType();
+	    		audioInputStream = AudioSystem.getAudioInputStream(soundFile2);
+	    		type = AudioSystem.getAudioFileFormat(soundFile2).getType();
 	    	} catch (Exception e) {
 	    		e.printStackTrace();
 	    	}

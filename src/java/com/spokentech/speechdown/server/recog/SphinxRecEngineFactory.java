@@ -52,6 +52,38 @@ public class SphinxRecEngineFactory extends AbstractPoolableObjectFactory {
     private URL sphinxConfigUrl = null;
     private int id = 1;
     private String prefixId;
+    
+	/**
+     * @return the recordingFilePath
+     */
+    public String getRecordingFilePath() {
+    	return recordingFilePath;
+    }
+
+	/**
+     * @param recordingFilePath the recordingFilePath to set
+     */
+    public void setRecordingFilePath(String recordingFilePath) {
+    	this.recordingFilePath = recordingFilePath;
+    }
+
+	/**
+     * @return the recordingEnabled
+     */
+    public boolean isRecordingEnabled() {
+    	return recordingEnabled;
+    }
+
+	/**
+     * @param recordingEnabled the recordingEnabled to set
+     */
+    public void setRecordingEnabled(boolean recordingEnabled) {
+    	this.recordingEnabled = recordingEnabled;
+    }
+
+	private String recordingFilePath;
+	private boolean recordingEnabled;
+    
 
     /**
      * @return the sphinxConfigFile
@@ -89,7 +121,8 @@ public class SphinxRecEngineFactory extends AbstractPoolableObjectFactory {
     @Override
     public PoolableObject makeObject() throws Exception {
 
-        return new SphinxRecEngine(_cm, grammarManager,prefixId, id++);
+    	SphinxRecEngine s =  new SphinxRecEngine(_cm, grammarManager,prefixId, id++,recordingFilePath,recordingEnabled);
+    	return s;
     }
 
     /**

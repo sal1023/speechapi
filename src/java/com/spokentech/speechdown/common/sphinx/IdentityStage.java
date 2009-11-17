@@ -1,25 +1,3 @@
-/*
- * Cairo - Open source framework for control of speech media resources.
- *
- * Copyright (C) 2005-2006 SpeechForge - http://www.speechforge.org
- *
- * This program is free software; you can redistribute it and/or modify
- * it under the terms of the GNU General Public License as published by
- * the Free Software Foundation; either version 2 of the License, or
- * (at your option) any later version.
- *
- * This program is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- * GNU General Public License for more details.
- *
- * You should have received a copy of the GNU General Public License
- * along with this program; if not, write to the Free Software
- * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
- *
- * Contact: ngodfredsen@users.sourceforge.net
- *
- */
 package com.spokentech.speechdown.common.sphinx;
 
 import edu.cmu.sphinx.frontend.BaseDataProcessor;
@@ -37,9 +15,9 @@ import org.apache.log4j.Logger;
 
 /**
 
- * Monitors a stream of speech data being processed and broadcasts start-of-speech and end-of-speech events.
+ * Identity Stage.  Input is unchanged and sent to output (identity operator).
  *
- * @author Niels Godfredsen {@literal <}<a href="mailto:ngodfredsen@users.sourceforge.net">ngodfredsen@users.sourceforge.net</a>{@literal >}
+ * @author Spencer Lord {@literal <}<a href="mailto:salord@users.sourceforge.net">salord@users.sourceforge.net</a>{@literal >}
  */
 public class IdentityStage extends BaseDataProcessor {
 
@@ -69,13 +47,13 @@ public class IdentityStage extends BaseDataProcessor {
     private void showSignals(Data data) {
 
         if (data instanceof SpeechStartSignal) {
-            _logger.debug("identidy<<<<<<<<<<<<<<< SpeechStartSignal encountered!");
+            _logger.debug("identity<<<<<<<<<<<<<<< SpeechStartSignal encountered!");
         } else if (data instanceof SpeechEndSignal) {
-            _logger.debug("identidy <<<<<<<<<<<<<<< SpeechEndSignal encountered!");
+            _logger.debug("identity <<<<<<<<<<<<<<< SpeechEndSignal encountered!");
         } else if (data instanceof DataStartSignal) {
-            _logger.debug("identidy <<<<<<<<<<<<<<< DataStartSignal encountered!");
+            _logger.debug("identity <<<<<<<<<<<<<<< DataStartSignal encountered!");
         } else if (data instanceof DataEndSignal) {
-            _logger.debug("identidy >>>>>>>>>>>>>>> DataEndSignal encountered!");
+            _logger.debug("identity >>>>>>>>>>>>>>> DataEndSignal encountered!");
         }
 
     }
