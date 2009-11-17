@@ -122,6 +122,7 @@ public abstract class EndPointingInputStreamBase implements EndPointingInputStre
 	         */
 	        @Override
 	        public void speechStarted() {
+
 	            _logger.debug("speechStarted()");
 
 	            synchronized (EndPointingInputStreamBase.this) {
@@ -295,13 +296,13 @@ public abstract class EndPointingInputStreamBase implements EndPointingInputStre
 	 	   ArrayList<DataProcessor> components = new ArrayList <DataProcessor>();
 	 	   components.add(dataSource);
 		   components.add (new DataBlocker(10));
-
-		   components.add (new SpeechClassifier(10,0.003,10.0,0.0));
-		   components.add (new SpeechMarker(200,500,100,50,100));
+		   components.add (new SpeechClassifier(10,0.002,10.0,10.0));
+		   //components.add (new SpeechMarker(200,500,100,50,100));
+		   components.add (new SpeechMarker(200,250,200,50,200));
 		   components.add (new NonSpeechDataFilter());
 		   SpeechDataMonitor mon = new SpeechDataMonitor();
 		   components.add (mon);
-		   mon.setSpeechEventListener(listener);
+		   mon.setSpeechEventListener(_listener);
 		   
 		   if (featureMode) {
 			   components.add (new Preemphasizer(0.97));
