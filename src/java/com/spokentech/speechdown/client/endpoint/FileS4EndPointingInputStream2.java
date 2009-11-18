@@ -55,7 +55,7 @@ public class FileS4EndPointingInputStream2 extends EndPointingInputStreamBase im
 	
 
 	public void setupStream(File file) {
-		_logger.info("Setting up the file");
+		_logger.debug("Setting up the file");
 		this.file = file;
 
     	try {
@@ -68,15 +68,6 @@ public class FileS4EndPointingInputStream2 extends EndPointingInputStreamBase im
         setupPipedStream();
 	}
 
-	public void init() {
-	    //URL sphinxConfigUrl = MicReceiver.class.getResource(s4ConfigFile);
-        //if (sphinxConfigUrl == null) {
-        //    throw new RuntimeException("Sphinx config file not found!");
-        //}
-        //cm = new ConfigurationManager(sphinxConfigUrl);
-        //_logger.debug("config: "+s4ConfigFile);
-        //cm = new ConfigurationManager(s4ConfigFile);
-	}
 	
 
 	public void shutdownStream() {
@@ -85,7 +76,7 @@ public class FileS4EndPointingInputStream2 extends EndPointingInputStreamBase im
 	}
 	
 	
-	public void startAudioTransfer(long timeout, SpeechEventListener listener) throws InstantiationException, IOException {
+	public synchronized void startAudioTransfer(long timeout, SpeechEventListener listener) throws InstantiationException, IOException {
 
 		_listener = new Listener(listener);
 		
@@ -109,7 +100,7 @@ public class FileS4EndPointingInputStream2 extends EndPointingInputStreamBase im
 	
 	
     public synchronized void stopAudioTransfer() {
-    	_logger.info("Stopping stream");
+    	_logger.debug("Stopping stream");
     	if (dataSource != null) {
 	    	try {
 		        dataSource.closeDataStream();

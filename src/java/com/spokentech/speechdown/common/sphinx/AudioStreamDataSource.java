@@ -21,9 +21,7 @@ import javax.sound.sampled.AudioInputStream;
 import javax.sound.sampled.AudioSystem;
 import javax.sound.sampled.UnsupportedAudioFileException;
 
-import java.io.BufferedWriter;
 import java.io.File;
-import java.io.FileWriter;
 import java.io.IOException;
 import java.io.InputStream;
 import java.net.MalformedURLException;
@@ -60,7 +58,7 @@ public class AudioStreamDataSource extends BaseDataProcessor implements StreamDa
     protected List<AudioFileProcessListener> fileListeners = new ArrayList<AudioFileProcessListener>();
 
 
-    protected PipedInputStream dataStream;
+    protected InputStream dataStream;
     protected int sampleRate;
     protected int bytesPerRead = PROP_BYTES_PER_READ_DEFAULT;
     protected int bytesPerValue;
@@ -175,6 +173,14 @@ public class AudioStreamDataSource extends BaseDataProcessor implements StreamDa
 
         setInputStream(audioStream, streamName);
     }
+    
+    /**
+     * Sets the InputStream from which this StreamDataSource reads.
+     *
+     * @param inputStream the InputStream from which audio data comes
+     * @param streamName  the name of the InputStream
+     *  @deprecated
+     */
    public void setInputStream(PipedInputStream inputStream, String streamName) {
         dataStream = inputStream;
         streamEndReached = false;
@@ -208,7 +214,7 @@ public class AudioStreamDataSource extends BaseDataProcessor implements StreamDa
      * @param streamName  the name of the InputStream
      */
     public void setInputStream(InputStream inputStream, String streamName) {
-        dataStream = (PipedInputStream)inputStream;
+        dataStream = inputStream;
         streamEndReached = false;
         utteranceEndSent = false;
         utteranceStarted = false;
@@ -249,7 +255,7 @@ public class AudioStreamDataSource extends BaseDataProcessor implements StreamDa
      * @param streamName  the name of the InputStream
      */
     public void setInputStream(InputStream inputStream, String streamName, int sampleRate, boolean bigEndian, int bytesPerValue, AudioFormat.Encoding encoding) {
-        dataStream = (PipedInputStream)inputStream;
+        dataStream = inputStream;
         streamEndReached = false;
         utteranceEndSent = false;
         utteranceStarted = false;
@@ -292,13 +298,15 @@ public class AudioStreamDataSource extends BaseDataProcessor implements StreamDa
                 // sample number should be 'totalValuesRead - 1'
                 output = createDataEndSignal();
                 utteranceEndSent = true;
-                System.out.println("Sending end signal");
+                _logger.debug("Sending end signal");
+            } else {
+            	_logger.debug("Not Sending end signal");          	
             }
         } else {
             if (!utteranceStarted) {
                 utteranceStarted = true;
                 output = new DataStartSignal(sampleRate);
-                System.out.println("Sending start signal ");
+                _logger.debug("Sending start signal ");
             } else {
                 if (dataStream != null) {
                     output = readNextFrame();
@@ -307,7 +315,7 @@ public class AudioStreamDataSource extends BaseDataProcessor implements StreamDa
                         if (!utteranceEndSent) {
                             output = createDataEndSignal();
                             utteranceEndSent = true;
-                            //System.out.println(".. but was null, sending end signal2");
+                            _logger.debug(".. but was null, sending end signal2");
                         }
                     }
                 }

@@ -58,7 +58,7 @@ public class SpeechDataStreamer  extends Thread{
     private void infoDataStartSignal(DataStartSignal dataStartSignal) {
         Map<String, Object> dataProps = dataStartSignal.getProps();
         if (dataProps.containsKey(DataStartSignal.SPEECH_TAGGED_FEATURE_STREAM))
-           _logger.info("SPEECH TAG FEATURE STREAM: "+dataProps.get(DataStartSignal.SPEECH_TAGGED_FEATURE_STREAM));
+           _logger.debug("SPEECH TAG FEATURE STREAM: "+dataProps.get(DataStartSignal.SPEECH_TAGGED_FEATURE_STREAM));
     }
     
     
@@ -88,7 +88,7 @@ public class SpeechDataStreamer  extends Thread{
     	this.frontEnd = frontEnd;
     	this.out = out;
         this.dout = new ObjectOutputStream(out);
-    	_logger.info("startStreaming...");
+    	_logger.debug("startStreaming...");
         start();
     }
 
@@ -113,7 +113,7 @@ public class SpeechDataStreamer  extends Thread{
     				e.printStackTrace();
     			}
     		} else {
-    			_logger.info("Null data");
+    			_logger.debug("Null data");
     			moreData=false;
     			try {
     				dout.flush();

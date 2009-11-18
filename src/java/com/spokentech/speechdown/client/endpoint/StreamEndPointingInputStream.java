@@ -106,7 +106,7 @@ public class StreamEndPointingInputStream extends EndPointingInputStreamBase imp
      * @see com.spokentech.speechdown.client.endpoint.EndPointingInputStream#stopAudioTransfer()
      */
     public synchronized void stopAudioTransfer() {
-    	_logger.info("Stopping stream");
+    	_logger.debug("Stopping stream");
     	if (ep != null) {
     		ep.stopRecording();
     	}
