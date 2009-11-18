@@ -152,7 +152,7 @@ public class HttpRecognizer {
 	 * 
 	 * @return the recognition result
 	 */
-	public RecognitionResult recognize(AudioInputStream inputStream, AudioFormat format, Type type, URL grammarUrl, boolean lmflg, boolean doEndpointing, boolean batchMode) {
+	public RecognitionResult recognize(InputStream inputStream, AudioFormat format, Type type, URL grammarUrl, boolean lmflg, boolean doEndpointing, boolean batchMode) {
 	    // Plain old http approach    	
     	HttpClient httpclient = new DefaultHttpClient();
         HttpPost httppost = new HttpPost(service);
@@ -172,7 +172,7 @@ public class HttpRecognizer {
 	        }
         }
         
-        _logger.info("Actual format: " + format);    	
+        _logger.debug("Actual format: " + format);    	
     	StringBody sampleRate = null;
     	StringBody bigEndian = null;
     	StringBody bytesPerValue = null;
@@ -202,18 +202,18 @@ public class HttpRecognizer {
 		mpEntity.addPart(HttpCommandFields.ENDPOINTING_FLAG, endpointFlag);
 		mpEntity.addPart(HttpCommandFields.CMN_BATCH, batchModeFlag);
 		
-                String mimeType = null;
-                String fname = null;
-                if (type == AudioFileFormat.Type.WAVE) {
-                //Always a audio/x-wav
-		    mimeType = "audio/x-wav";
-                    fname = "audio.wav";
-                } else if (type == AudioFileFormat.Type.AU) {
-                    mimeType = "audio/x-au";
-                    fname = "audio.au";
-                } else {
-                    _logger.warn("unhanlded format type "+type.getExtension());
-                }
+		String mimeType = null;
+		String fname = null;
+		if (type == AudioFileFormat.Type.WAVE) {
+			//Always a audio/x-wav
+			mimeType = "audio/x-wav";
+			fname = "audio.wav";
+		} else if (type == AudioFileFormat.Type.AU) {
+			mimeType = "audio/x-au";
+			fname = "audio.au";
+		} else {
+			_logger.warn("unhanlded format type "+type.getExtension());
+		}
 
 
         InputStreamBody audioBody = new InputStreamBody(inputStream, mimeType,fname);      
@@ -268,6 +268,21 @@ public class HttpRecognizer {
         
         return r;
     }
+
+  /**
+   * Recognize.
+   * 
+   * @param inputStream the input stream
+   * @param format the format
+   * @param type the type
+   * @param grammarUrl the grammar url
+   * @param lmflg the lmflg
+   * @param doEndpointing the do endpointing
+   * 
+   * @return the recognition result
+   * 
+   * @deprecated
+   */
 
 	public RecognitionResult recognize(PipedInputStream inputStream, AudioFormat format, Type type, URL grammarUrl, boolean lmflg, boolean doEndpointing) {
 
@@ -384,6 +399,19 @@ public class HttpRecognizer {
         return r;
     }
 
+	  /**
+	   * Recognize.
+	   * 
+	   * @param inputStream the input stream
+	   * @param format the format
+	   * @param type the type
+	   * @param grammarUrl the grammar url
+	   * @param lmflg the lmflg
+	   * 
+	   * @return the recognition result
+	   * 
+	   * @deprecated
+	   */
 	public RecognitionResult recognize(PipedInputStream inputStream, AudioFormat format, Type type, URL grammarUrl, boolean lmflg) {
 	    // Plain old http approach    	
     	HttpClient httpclient = new DefaultHttpClient();
@@ -643,6 +671,7 @@ public class HttpRecognizer {
         MySpeechEventListener listener = new MySpeechEventListener();
 
 
+
     	// Plain old http approach    	
     	HttpClient httpclient = new DefaultHttpClient();
         HttpPost httppost = new HttpPost(service);
@@ -706,8 +735,10 @@ public class HttpRecognizer {
 	    httppost.setEntity(mpEntity);
 
      	//now wait for a start speech event
+	    
         speechStarted = false;
-   	epStream.startAudioTransfer(timeout, listener);
+	    epStream.startAudioTransfer(timeout, listener);
+
 		while (!speechStarted) {
             synchronized (this) {        
                 try {
@@ -717,11 +748,11 @@ public class HttpRecognizer {
                 }
             }
         }
-    	_logger.info("Speech started!");
+    	_logger.debug("Speech started!!!");
 
 	    
 	    //execute the post command
-        _logger.info("executing request " + httppost.getRequestLine());
+        _logger.debug("executing request " + httppost.getRequestLine());
         HttpResponse response = null;
         try {
 	        response = httpclient.execute(httppost);
@@ -736,11 +767,11 @@ public class HttpRecognizer {
         //get the response from the post
         HttpEntity resEntity = response.getEntity();
 
-        _logger.info("----------------------------------------");
-        _logger.info(response.getStatusLine());
+        _logger.debug("----------------------------------------");
+        _logger.debug(response.getStatusLine());
         if (resEntity != null) {
-        	_logger.info("Response content length: " + resEntity.getContentLength());
-        	_logger.info("Chunked?: " + resEntity.isChunked());
+        	_logger.debug("Response content length: " + resEntity.getContentLength());
+        	_logger.debug("Chunked?: " + resEntity.isChunked());
         }
         RecognitionResult r = null;
         if (resEntity != null) {
@@ -802,14 +833,14 @@ public class HttpRecognizer {
 		 * @see com.spokentech.speechdown.client.SpeechEventListener#speechEnded()
 		 */
 		public void speechEnded() {
-		    _logger.info("Speech Ended");
+		    _logger.debug("Speech Ended");
 	    }
 
 	    /* (non-Javadoc)
     	 * @see com.spokentech.speechdown.client.SpeechEventListener#speechStarted()
     	 */
     	public void speechStarted() {
-		    _logger.info("Speech Started");
+		    _logger.debug("Speech Started");
 			//signal for the blocking call to check for unblocking
 			synchronized (this) {
 				speechStarted=true;
@@ -822,7 +853,7 @@ public class HttpRecognizer {
 		 */
 		@Override
         public void noInputTimeout() {
-		    _logger.info("No input timeout");   
+		    _logger.debug("No input timeout");   
         }
     }
 	

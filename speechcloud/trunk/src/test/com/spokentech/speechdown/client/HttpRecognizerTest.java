@@ -173,57 +173,7 @@ public class HttpRecognizerTest extends TestCase {
 	    
 	    
 	    
-	    public void testRecognizeFileS4EP() {
-	    	System.out.println("Starting File EP Test ...");	
 
-	    	
-	    	long timeout = 10000;       	
-	    	FileS4EndPointingInputStream2 epStream = new FileS4EndPointingInputStream2();
-
-	    	epStream.setMimeType(s4audio);
-	    	epStream.setupStream(soundFile1);
-	    	epStream.init();
-
-	    	RecognitionResult r = null;
-	    	
-	    	boolean lmflg = true;
-	        try {	            
-	            r = recog.recognize(grammarUrl,  epStream,  lmflg,  timeout) ;
-            } catch (InstantiationException e) {
-	            // TODO Auto-generated catch block
-	            e.printStackTrace();
-            } catch (IOException e) {
-	            // TODO Auto-generated catch block
-	            e.printStackTrace();
-            }
-	    	
-            System.out.println("lm result: "+r.getText());
-	   
-            
-            timeout = 10000;       	
-	    	epStream = new FileS4EndPointingInputStream2();
-
-	    	epStream.setMimeType(s4audio);
-	    	epStream.setupStream(soundFile1);
-	    	epStream.init();
-
-            
-	    	lmflg = false;
-	        try {	            
-	            r = recog.recognize(grammarUrl,  epStream,  lmflg,  timeout) ;
-            } catch (InstantiationException e) {
-	            // TODO Auto-generated catch block
-	            e.printStackTrace();
-            } catch (IOException e) {
-	            // TODO Auto-generated catch block
-	            e.printStackTrace();
-            
-            }
-            System.out.println("grammar result: "+r.getText());
-	    	
-	    }
-
-	    
 	    public void testRecognizeAudioStreamLmBatch() {
 	    	System.out.println("Starting Stream Test ...");
 	    	
@@ -357,7 +307,59 @@ public class HttpRecognizerTest extends TestCase {
 	    }
 	    
 	    
-	    public void testRecognizeStreamS4EP() {
+	    public void testRecognizeFileS4EPGrammar() {
+	    	System.out.println("Starting File EP Test ...");	
+	    	
+	    	long timeout = 10000;       	
+	    	FileS4EndPointingInputStream2 epStream = new FileS4EndPointingInputStream2();
+
+	    	epStream.setMimeType(s4audio);
+	    	epStream.setupStream(soundFile2);
+	 
+	    	RecognitionResult r = null;
+	    	
+	    	boolean lmflg = false;
+	        try {	            
+	            r = recog.recognize(grammarUrl,  epStream,  lmflg,  timeout) ;
+            } catch (InstantiationException e) {
+	            // TODO Auto-generated catch block
+	            e.printStackTrace();
+            } catch (IOException e) {
+	            // TODO Auto-generated catch block
+	            e.printStackTrace();
+            }
+	    	
+            System.out.println("grammar result: "+r.getText());
+	    }
+            
+	    public void testRecognizeFileS4EPLm() {
+	    	long timeout = 10000;       	
+	    	FileS4EndPointingInputStream2 epStream = new FileS4EndPointingInputStream2();
+
+	    	epStream.setMimeType(s4audio);
+	    	epStream.setupStream(soundFile2);
+	
+            
+	    	RecognitionResult r = null;
+	    	boolean lmflg = true;
+	        try {	            
+	            r = recog.recognize(grammarUrl,  epStream,  lmflg,  timeout) ;
+            } catch (InstantiationException e) {
+	            // TODO Auto-generated catch block
+	            e.printStackTrace();
+            } catch (IOException e) {
+	            // TODO Auto-generated catch block
+	            e.printStackTrace();
+            
+            }
+            System.out.println("ENDPOINT TEST: lm  result: "+r.getText());
+	    	
+	    }
+
+	    
+	    
+	    
+	    public void xtestRecognizeStreamS4EP() {
 	
 	    	System.out.println("Starting S4 EP Stream Test ...");
 

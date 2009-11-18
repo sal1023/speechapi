@@ -1,16 +1,12 @@
 package com.spokentech.speechdown.client;
 
 import java.io.File;
-import java.io.IOException;
-import java.io.InputStream;
 
-import java.io.UnsupportedEncodingException;
 import java.net.MalformedURLException;
 import java.net.URL;
 
-
 import javax.sound.sampled.AudioFormat;
-import javax.sound.sampled.AudioInputStream;
+
 import javax.sound.sampled.AudioSystem;
 import javax.sound.sampled.DataLine;
 import javax.sound.sampled.LineEvent;
@@ -18,25 +14,9 @@ import javax.sound.sampled.LineListener;
 import javax.sound.sampled.LineUnavailableException;
 
 import javax.sound.sampled.TargetDataLine;
-import javax.sound.sampled.AudioFileFormat.Type;
 
-
-import org.apache.http.HttpEntity;
-import org.apache.http.HttpResponse;
-import org.apache.http.client.ClientProtocolException;
-import org.apache.http.client.HttpClient;
-import org.apache.http.client.methods.HttpPost;
-import org.apache.http.entity.mime.MultipartEntity;
-import org.apache.http.entity.mime.content.InputStreamBody;
-import org.apache.http.entity.mime.content.StringBody;
-import org.apache.http.impl.client.DefaultHttpClient;
 import org.apache.log4j.Logger;
 
-import com.spokentech.speechdown.client.endpoint.EndPointingInputStream;
-import com.spokentech.speechdown.client.endpoint.FileS4EndPointingInputStream;
-import com.spokentech.speechdown.client.endpoint.FileS4EndPointingInputStream2;
-import com.spokentech.speechdown.client.endpoint.StreamEndPointingInputStream;
-import com.spokentech.speechdown.client.endpoint.StreamS4EndPointingInputStream;
 import com.spokentech.speechdown.common.RecognitionResult;
 
 

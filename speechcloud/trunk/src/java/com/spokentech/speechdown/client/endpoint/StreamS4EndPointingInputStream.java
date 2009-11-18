@@ -18,7 +18,6 @@ import org.apache.log4j.Logger;
 
 import edu.cmu.sphinx.frontend.DataProcessor;
 import edu.cmu.sphinx.frontend.FrontEnd;
-import edu.cmu.sphinx.util.props.ConfigurationManager;
 
 
 import com.spokentech.speechdown.client.sphinx.SpeechDataStreamer;
@@ -36,10 +35,11 @@ public class StreamS4EndPointingInputStream extends EndPointingInputStreamBase i
 	
     private static Logger _logger = Logger.getLogger(StreamS4EndPointingInputStream.class);
 
-	private PipedInputStream  stream;
+	private InputStream  stream;
+	private AudioFormat  format;
 
 	StreamDataSource dataSource = null;
-	private String s4ConfigFile = "/config/sphinx-config.xml";
+
 
 	private String mimeType;
 	
@@ -62,62 +62,91 @@ public class StreamS4EndPointingInputStream extends EndPointingInputStreamBase i
     	this.mimeType = mimeType;
     }
 
-    public void setS4ConfigFile(String configFile) {
-    	s4ConfigFile = configFile;
-    }
 
-
+    
+	public void init() {
+	}
+	
+    
 	/**
-	 * Sets the s4 config file.
+	 * Sets the up stream.
 	 * 
-	 * @param configFile the s4ConfigFile to set
+	 * @param stream the new up stream
 	 */
-    private static AudioFormat getAudioFormat(){
-	float sampleRate = 8000.0F;
-	//8000,11025,16000,22050,44100
-	int sampleSizeInBits = 16;
-	//8,16
-	int channels = 1;
-	//1,2
-	boolean signed = true;
-	//true,false
-	boolean bigEndian = false;
-	//true,false
-	return new AudioFormat(sampleRate,
-			       sampleSizeInBits,
-			       channels,
-			       signed,
-			       bigEndian);
-    }//end getAudioFormat
+	public void setupStream(InputStream stream, AudioFormat format) {
+		_logger.info("Setting up the stream");
+		this.stream = stream;
+		this.format = format;
+        setupPipedStream();
+	}
+	
 	/**
 	 * Sets the up stream.
 	 * 
 	 * @param stream the new up stream
 	 */
 	public void setupStream(AudioInputStream stream) {
-	//	_logger.info("Setting up the stream");
-	//	this.stream = stream;
-       // setupPipedStream();
+		_logger.info("Setting up the stream");
+		this.stream = stream;
+		this.format = stream.getFormat();
+        setupPipedStream();
 	}
+	
+	
+	/**
+	 * Sets the up stream.
+	 * 
+	 * @param stream the new up stream
+	 * @deprecated
+	 */
 	public void setupStream(PipedInputStream stream) {
 		_logger.info("Setting up the stream");
 		this.stream = stream;
+    	float sampleRate = 8000.0F;
+    	//8000,11025,16000,22050,44100
+    	int sampleSizeInBits = 16;
+    	//8,16
+    	int channels = 1;
+    	//1,2
+    	boolean signed = true;
+    	//true,false
+    	boolean bigEndian = false;
+    	//true,false
+		this.format= new AudioFormat(sampleRate,
+    			sampleSizeInBits,
+    			channels,
+    			signed,
+    			bigEndian);
 		//this.stream = new AudioInputStream(stream,getAudioFormat(),-1);
 		setupPipedStream();
 	}
-	/**
-	 * Inits the.
-	 */
-	public void init() {
-	    //URL sphinxConfigUrl = MicReceiver.class.getResource(s4ConfigFile);
-        //if (sphinxConfigUrl == null) {
-        //    throw new RuntimeException("Sphinx config file not found!");
-        //}
-        //cm = new ConfigurationManager(sphinxConfigUrl);
-        //_logger.debug("config: "+s4ConfigFile);
-        //cm = new ConfigurationManager(s4ConfigFile);
-	}
 	
+
+    /**
+     * gets a hard coded audioformat
+     * 
+     * @param configFile the s4ConfigFile to set
+     * @deprecated
+     */
+    private static AudioFormat getAudioFormat(){
+    	float sampleRate = 8000.0F;
+    	//8000,11025,16000,22050,44100
+    	int sampleSizeInBits = 16;
+    	//8,16
+    	int channels = 1;
+    	//1,2
+    	boolean signed = true;
+    	//true,false
+    	boolean bigEndian = false;
+    	//true,false
+    	return new AudioFormat(sampleRate,
+    			sampleSizeInBits,
+    			channels,
+    			signed,
+    			bigEndian);
+    }
+	
+
 
 	/**
 	 * Shutdown stream.
@@ -132,16 +161,21 @@ public class StreamS4EndPointingInputStream extends EndPointingInputStreamBase i
 	 * @see com.spokentech.speechdown.client.endpoint.EndPointingInputStream#startAudioTransfer(long, com.spokentech.speechdown.client.SpeechEventListener)
 	 */
 	public void startAudioTransfer(long timeout, SpeechEventListener listener) throws InstantiationException, IOException {
-		_listener = new Listener(listener);
-		//get elements from the s4 front end
+		
+		
 
-		    //FrontEnd frontEnd = (FrontEnd) cm.lookup("frontEnd");
- 		AudioStreamDataSource dataSource = new AudioStreamDataSource();
+		_listener = new Listener(listener);
+		
+		StreamDataSource dataSource = new AudioStreamDataSource();
+		 	
 		FrontEnd frontEnd = createFrontend(false, false, (DataProcessor) dataSource, listener);
-		this.dataSource=dataSource;
- 		frontEnd.setDataSource((DataProcessor) dataSource);
-		frontEnd.initialize();
-		dataSource.setInputStream(stream, "ws-audiostream");
+ 	
+		dataSource.setInputStream((InputStream)stream, "ws-audiostream", (int)format.getSampleRate(), format.isBigEndian(), format.getSampleSizeInBits()/8,format.getEncoding());
+ 		
+		_logger.info("Starting audio trasnfer");
+		
+		
+	
 		_logger.info("Starting audio trasnfer");
 		SpeechDataStreamer sds = new SpeechDataStreamer();
 		sds.startStreaming(frontEnd, outputStream);
@@ -158,7 +192,7 @@ public class StreamS4EndPointingInputStream extends EndPointingInputStreamBase i
      * @see com.spokentech.speechdown.client.endpoint.EndPointingInputStream#stopAudioTransfer()
      */
     public synchronized void stopAudioTransfer() {
-    	_logger.info("Stopping stream");
+    	_logger.debug("Stopping stream");
     	if (dataSource != null) {
 	    	try {
 		        dataSource.closeDataStream();
@@ -209,7 +243,7 @@ public class StreamS4EndPointingInputStream extends EndPointingInputStreamBase i
 	@Override
     public AudioFormat getFormat1() {
 	    // TODO Auto-generated method stub
-		return getAudioFormat();
+		return this.format;
     }
 
 

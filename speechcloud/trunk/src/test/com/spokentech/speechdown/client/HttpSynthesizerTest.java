@@ -6,44 +6,15 @@ import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
-
-import java.io.UnsupportedEncodingException;
-import java.net.MalformedURLException;
-import java.net.URL;
-
-
 import javax.sound.sampled.AudioFormat;
 import javax.sound.sampled.AudioInputStream;
 import javax.sound.sampled.AudioSystem;
 import javax.sound.sampled.DataLine;
-import javax.sound.sampled.LineEvent;
-import javax.sound.sampled.LineListener;
 import javax.sound.sampled.LineUnavailableException;
-
-import javax.sound.sampled.TargetDataLine;
-import javax.sound.sampled.AudioFileFormat.Type;
-
-
-import org.apache.http.HttpEntity;
-import org.apache.http.HttpResponse;
-import org.apache.http.client.ClientProtocolException;
-import org.apache.http.client.HttpClient;
-import org.apache.http.client.methods.HttpPost;
-import org.apache.http.entity.mime.MultipartEntity;
-import org.apache.http.entity.mime.content.InputStreamBody;
-import org.apache.http.entity.mime.content.StringBody;
-import org.apache.http.impl.client.DefaultHttpClient;
+import javax.sound.sampled.SourceDataLine;
+import javax.sound.sampled.UnsupportedAudioFileException;
 import org.apache.log4j.Logger;
-
-import com.spokentech.speechdown.client.endpoint.EndPointingInputStream;
-import com.spokentech.speechdown.client.endpoint.FileS4EndPointingInputStream;
-import com.spokentech.speechdown.client.endpoint.FileS4EndPointingInputStream2;
-import com.spokentech.speechdown.client.endpoint.StreamEndPointingInputStream;
-import com.spokentech.speechdown.client.endpoint.StreamS4EndPointingInputStream;
-import com.spokentech.speechdown.common.RecognitionResult;
 import com.spokentech.speechdown.common.SpeechEventListener;
-
-
 import junit.framework.TestCase;
 
 public class HttpSynthesizerTest extends TestCase {
@@ -102,7 +73,7 @@ public class HttpSynthesizerTest extends TestCase {
 		    	synth.setService(service);	 
 		    	
 		        format = new AudioFormat ((float) sampleRate, sampleSizeInBits, channels, signed, bigEndian);
-
+		      
 	     }
 
 
@@ -123,7 +94,22 @@ public class HttpSynthesizerTest extends TestCase {
 	    	outFileName = "this-is.wav";
 	    	stream = synth.synthesize(text, format, wav, voice);
 	        if (stream != null) {
-	        	writeStreamToFile(stream,outFileName);
+	        	//writeStreamToFile(stream,outFileName);
+	        	try {
+	        	    format = new AudioFormat ((float) 16000.0, sampleSizeInBits, channels, signed, false);
+	  		         	
+	        		AudioInputStream ais = new AudioInputStream(stream,format,-1);
+	                streamAudioToSpeaker(ais);
+                } catch (IOException e) {
+	                // TODO Auto-generated catch block
+	                e.printStackTrace();
+                } catch (UnsupportedAudioFileException e) {
+	                // TODO Auto-generated catch block
+	                e.printStackTrace();
+                } catch (LineUnavailableException e) {
+	                // TODO Auto-generated catch block
+	                e.printStackTrace();
+                }
 	        }
 	    	
 	    	text = "To be or not to be, that is the question. Whether tis nobler in the mind to suffer the slings and arrows of outrageous fortune, or to take arms against a sea of troubles, And by opposing end them. To die—to sleep";
@@ -131,14 +117,44 @@ public class HttpSynthesizerTest extends TestCase {
 	    	outFileName = "to-be.mp3";
 	    	stream = synth.synthesize(text, format, mpeg, voice);
 	        if (stream != null) {
-	        	writeStreamToFile(stream,outFileName);
+	        	//writeStreamToFile(stream,outFileName);
+	        	try {
+	        	    format = new AudioFormat ((float) 16000.0, sampleSizeInBits, channels, signed, false);
+	  		         	
+	        		AudioInputStream ais = new AudioInputStream(stream,format,-1);
+	                streamAudioToSpeaker(ais);
+                } catch (IOException e) {
+	                // TODO Auto-generated catch block
+	                e.printStackTrace();
+                } catch (UnsupportedAudioFileException e) {
+	                // TODO Auto-generated catch block
+	                e.printStackTrace();
+                } catch (LineUnavailableException e) {
+	                // TODO Auto-generated catch block
+	                e.printStackTrace();
+                }
 	        }
 	    	text = "A man, a plan, a canal, panama";
 			voice = "slt-arctic";
 	    	outFileName = "a-man.wav";
 	    	 stream = synth.synthesize(text, format, wav, voice);
 	        if (stream != null) {
-	        	writeStreamToFile(stream,outFileName);
+	        	//writeStreamToFile(stream,outFileName);
+	        	try {
+	        	    format = new AudioFormat ((float) 16000.0, sampleSizeInBits, channels, signed, false);
+	  		         	
+	        		AudioInputStream ais = new AudioInputStream(stream,format,-1);
+	                streamAudioToSpeaker(ais);
+                } catch (IOException e) {
+	                // TODO Auto-generated catch block
+	                e.printStackTrace();
+                } catch (UnsupportedAudioFileException e) {
+	                // TODO Auto-generated catch block
+	                e.printStackTrace();
+                } catch (LineUnavailableException e) {
+	                // TODO Auto-generated catch block
+	                e.printStackTrace();
+                }
 	        }
 			
 	    	text = "If a server wants to start sending a response before knowing its total length (like with long script output), it might use the simple chunked transfer-encoding, which breaks the complete response into smaller chunks and sends them in series. ";
@@ -146,7 +162,22 @@ public class HttpSynthesizerTest extends TestCase {
 	    	outFileName = "If-a-server.mpeg";
 	    	 stream = synth.synthesize(text, format, mpeg, voice);
 	        if (stream != null) {
-	        	writeStreamToFile(stream,outFileName);
+	        	//writeStreamToFile(stream,outFileName);
+	        	try {
+	        	    format = new AudioFormat ((float) 16000.0, sampleSizeInBits, channels, signed, false);
+	  		         	
+	        		AudioInputStream ais = new AudioInputStream(stream,format,-1);
+	                streamAudioToSpeaker(ais);
+                } catch (IOException e) {
+	                // TODO Auto-generated catch block
+	                e.printStackTrace();
+                } catch (UnsupportedAudioFileException e) {
+	                // TODO Auto-generated catch block
+	                e.printStackTrace();
+                } catch (LineUnavailableException e) {
+	                // TODO Auto-generated catch block
+	                e.printStackTrace();
+                }
 	        }
 
 
@@ -187,7 +218,90 @@ public class HttpSynthesizerTest extends TestCase {
 		} 
 	}
 	    
+	   /** Read sampled audio data from the specified URL and play it */
+    public  void streamAudioToSpeaker(AudioInputStream ain)
+        throws IOException, UnsupportedAudioFileException,
+               LineUnavailableException
+    {
+        SourceDataLine line = null;   // And write it here.
 
+        try {
+     
+            // Get information about the format of the stream
+            AudioFormat format = ain.getFormat( );
+            DataLine.Info info=new DataLine.Info(SourceDataLine.class,format);
+
+            // If the format is not supported directly (i.e. if it is not PCM
+            // encoded), then try to transcode it to PCM.
+            if (!AudioSystem.isLineSupported(info)) {
+                // This is the PCM format we want to transcode to.
+                // The parameters here are audio format details that you
+                // shouldn't need to understand for casual use.
+                AudioFormat pcm =
+                    new AudioFormat(format.getSampleRate( ), 16,
+                                    format.getChannels( ), true, false);
+
+                // Get a wrapper stream around the input stream that does the
+                // transcoding for us.
+                ain = AudioSystem.getAudioInputStream(pcm, ain);
+
+                // Update the format and info variables for the transcoded data
+                format = ain.getFormat( ); 
+                info = new DataLine.Info(SourceDataLine.class, format);
+            }
+
+            // Open the line through which we'll play the streaming audio.
+            line = (SourceDataLine) AudioSystem.getLine(info);
+            line.open(format);  
+
+            // Allocate a buffer for reading from the input stream and writing
+            // to the line.  Make it large enough to hold 4k audio frames.
+            // Note that the SourceDataLine also has its own internal buffer.
+            int framesize = format.getFrameSize( );
+            byte[  ] buffer = new byte[4 * 1024 * framesize]; // the buffer
+            int numbytes = 0;                               // how many bytes
+
+            // We haven't started the line yet.
+            boolean started = false;
+
+            for(;;) {  // We'll exit the loop when we reach the end of stream
+                // First, read some bytes from the input stream.
+                int bytesread=ain.read(buffer,numbytes,buffer.length-numbytes);
+                // If there were no more bytes to read, we're done.
+                if (bytesread == -1) break;
+                numbytes += bytesread;
+                
+                // Now that we've got some audio data to write to the line,
+                // start the line, so it will play that data as we write it.
+                if (!started) {
+                    line.start( );
+                    started = true;
+                }
+                
+                // We must write bytes to the line in an integer multiple of
+                // the framesize.  So figure out how many bytes we'll write.
+                int bytestowrite = (numbytes/framesize)*framesize;
+                
+                // Now write the bytes. The line will buffer them and play
+                // them. This call will block until all bytes are written.
+                line.write(buffer, 0, bytestowrite);
+                
+                // If we didn't have an integer multiple of the frame size, 
+                // then copy the remaining bytes to the start of the buffer.
+                int remaining = numbytes - bytestowrite;
+                if (remaining > 0)
+                    System.arraycopy(buffer,bytestowrite,buffer,0,remaining);
+                numbytes = remaining;
+            }
+
+            // Now block until all buffered sound finishes playing.
+            line.drain( );
+        }
+        finally { // Always relinquish the resources we use
+            if (line != null) line.close( );
+            if (ain != null) ain.close( );
+        }
+    }
 	    
 }
 
