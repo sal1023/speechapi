@@ -27,7 +27,6 @@ import edu.cmu.sphinx.frontend.endpoint.SpeechClassifier;
 import edu.cmu.sphinx.frontend.endpoint.SpeechMarker;
 import edu.cmu.sphinx.frontend.feature.BatchCMN;
 import edu.cmu.sphinx.frontend.feature.DeltasFeatureExtractor;
-import edu.cmu.sphinx.frontend.feature.LDA;
 import edu.cmu.sphinx.frontend.feature.LiveCMN;
 import edu.cmu.sphinx.frontend.filter.Dither;
 import edu.cmu.sphinx.frontend.filter.Preemphasizer;
