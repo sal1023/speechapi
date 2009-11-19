@@ -166,7 +166,7 @@ public class StreamS4EndPointingInputStream extends EndPointingInputStreamBase i
 
 		_listener = new Listener(listener);
 		
-		StreamDataSource dataSource = new AudioStreamDataSource();
+		dataSource = new AudioStreamDataSource();
 		 	
 		FrontEnd frontEnd = createFrontend(false, false, (DataProcessor) dataSource, listener);
  	
