@@ -12,13 +12,10 @@ import org.apache.log4j.Logger;
 
 import edu.cmu.sphinx.frontend.DataProcessor;
 import edu.cmu.sphinx.frontend.FrontEnd;
-import edu.cmu.sphinx.frontend.util.Microphone;
-import edu.cmu.sphinx.util.props.ConfigurationManager;
 
+import com.spokentech.speechdown.client.sphinx.Microphone2;
 import com.spokentech.speechdown.client.sphinx.SpeechDataStreamer;
 import com.spokentech.speechdown.common.SpeechEventListener;
-import com.spokentech.speechdown.common.sphinx.SpeechDataMonitor;
-
 
 // TODO: Auto-generated Javadoc
 /**
@@ -31,7 +28,7 @@ public class MicS4EndPointingInputStream extends EndPointingInputStreamBase impl
 
 	private int id;
 
-	private Microphone mic;
+	private Microphone2 mic;
 	
 	private AudioFormat desiredFormat;
 
@@ -84,24 +81,12 @@ public class MicS4EndPointingInputStream extends EndPointingInputStreamBase impl
     }
 
 
-	/**
-	 * Inits the.
-	 */
-	public void init() {
-	    //URL sphinxConfigUrl = MicReceiver.class.getResource(s4ConfigFile);
-        //if (sphinxConfigUrl == null) {
-        //    throw new RuntimeException("Sphinx config file not found!");
-        //}
-        //cm = new ConfigurationManager(sphinxConfigUrl);
-        //_logger.debug("config: "+s4ConfigFile);
-        //cm = new ConfigurationManager(s4ConfigFile);
-	}
 	
 	/**
 	 * Setup stream.
 	 */
 	public void setupStream() {
-		_logger.info("Setting up the stream");
+		_logger.debug("Setting up the stream");
         setupPipedStream();
 	}
 
@@ -135,16 +120,13 @@ public class MicS4EndPointingInputStream extends EndPointingInputStreamBase impl
         String selectedMixerIndex = "default";
         
 
-		//mic = (Microphone) cm.lookup("microphone");
-		//int sampleRate, int bitsPerSample, int channels,
-        //boolean bigEndian, boolean signed, boolean closeBetweenUtterances, int msecPerRead, boolean keepLastAudio,
-        //String stereoToMono, int selectedChannel, String selectedMixerIndex) {
-		_logger.info("FORMAT" + (int)desiredFormat.getSampleRate() +","+desiredFormat.getSampleSizeInBits()+","+desiredFormat.getChannels()+","+ desiredFormat.isBigEndian());
+		_logger.debug("FORMAT" + (int)desiredFormat.getSampleRate() +","+desiredFormat.getSampleSizeInBits()+","+desiredFormat.getChannels()+","+ desiredFormat.isBigEndian());
         AudioFormat a  = new AudioFormat((float) sampleRate, sampleSizeInBits, channels, signed, bigEndian);
-        _logger.info("FORMAT: "+a);
+        _logger.debug("FORMAT: "+a);
 
-    	mic = new Microphone(sampleRate, sampleSizeInBits, channels , bigEndian , signed, closeBetweenUtterances , msecsPerread,keepLastAudio, stereoToMono ,selectedChannel ,selectedMixerIndex);		
-		mic.initialize();
+    	mic = new Microphone2(sampleRate, sampleSizeInBits, channels , bigEndian , signed, closeBetweenUtterances , msecsPerread,keepLastAudio, stereoToMono ,selectedChannel ,selectedMixerIndex);
+        //mic = new Microphone(a);
+		//mic.initialize();
 		
  		FrontEnd frontEnd = createFrontend(false, false, (DataProcessor) mic, _listener);
  		 
@@ -165,7 +147,7 @@ public class MicS4EndPointingInputStream extends EndPointingInputStreamBase impl
      * @see com.spokentech.speechdown.client.endpoint.EndPointingInputStream#stopAudioTransfer()
      */
     public synchronized void stopAudioTransfer() {
-    	_logger.info("Stopping mic");
+    	_logger.debug("Stopping mic");
     	mic.stopRecording();
     	//mic.shutDown();
     	_timer.cancel();
