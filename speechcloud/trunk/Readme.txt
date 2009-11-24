@@ -23,3 +23,5 @@ For windows you can move the mary (mp3) dll's to windows/system32
 from $maryhome/lib/windows
 (lametritonus.dll and lame_enc.dll )
 
+Open Mary
+set server=false in $MARY_HOME/conf/marybase.conf

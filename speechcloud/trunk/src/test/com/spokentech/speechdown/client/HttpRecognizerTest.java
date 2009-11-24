@@ -2,6 +2,7 @@ package com.spokentech.speechdown.client;
 
 import java.io.File;
 import java.io.IOException;
+import java.io.InputStream;
 
 import java.net.MalformedURLException;
 import java.net.URL;
@@ -59,8 +60,8 @@ public class HttpRecognizerTest extends TestCase {
 	    
 	   
 	    
-	    private static String service = "http://ec2-174-129-20-250.compute-1.amazonaws.com/speechcloud/SpeechUploadServlet";    
-	    //private static String service = "http://localhost:8090/speechcloud/SpeechUploadServlet";    
+	    //private static String service = "http://ec2-174-129-20-250.compute-1.amazonaws.com/speechcloud/SpeechUploadServlet";    
+	    private static String service = "http://localhost:8090/speechcloud/SpeechUploadServlet";    
 	    private static AudioFormat desiredFormat;
 	    private static int sampleRate = 8000;
 	    private static boolean signed = true;
@@ -81,6 +82,11 @@ public class HttpRecognizerTest extends TestCase {
 		File soundFile3 = new File("c:/work/speechcloud/etc/prompts/i_would_like_sports_news.wav");	 	
 	
 		
+    	File soundFile0 = new File("c:/work/speechcloud/etc/prompts/cubanson.wav");
+    	//File soundFile0 = new File("c:/work/speechcloud/etc/prompts/fabfour.wav");
+	
+		
+		
 	    String wav = "audio/x-wav";
 	    String s4feature = "audio/x-s4feature";
 	    String s4audio = "audio/x-s4audio";
@@ -89,20 +95,6 @@ public class HttpRecognizerTest extends TestCase {
 	    String audioConfigFile="c:/work/speechcloud/etc/sphinxfrontendonly-audio.xml";
 	    String featureConfigFile="c:/work/speechcloud/etc/sphinxfrontendonly-feature.xml";
 	
-	    public String configForMime(String mimeType) {
-	    	String configFile = null;
-	    	if (mimeType.equals(wav)) {
-	            configFile=audioConfigFile;
-	    	} else if (mimeType.equals(s4feature)) {
-	            configFile=featureConfigFile;
-	    	} else if (mimeType.equals(s4audio)) {
-	            configFile=audioConfigFile;
-	    	} else {
-	    		_logger.warn("Unrecognized data mode: "+mimeType+"  Guessing audio/x-wav.");
-	    		mimeType = "audio/x-wav";
-	    	}
-	    	return configFile;
-	    }
 	    
 
 	     protected void setUp() {
@@ -117,6 +109,40 @@ public class HttpRecognizerTest extends TestCase {
 	     }
 
 	 
+	     
+	    public void testTranscribe() {
+	    	System.out.println("Starting Transcribe Test ...");
+	        
+	    	AudioInputStream audioInputStream = null;
+	    	Type type = null;
+	    	try {
+	    		audioInputStream = AudioSystem.getAudioInputStream(soundFile0);
+	    		type = AudioSystem.getAudioFileFormat(soundFile2).getType();
+	    	} catch (Exception e) {
+	    		e.printStackTrace();
+	    	}
+	    	AudioFormat format = audioInputStream.getFormat();
+			long start = System.nanoTime();
+            try {
+		    	boolean lmflg = true;
+		    	InputStream s = recog.transcribe(audioInputStream, format,type, grammarUrl, lmflg);
+
+                int c;
+                while ((c = s.read()) != -1) {
+                    System.out.write(c);
+                }
+
+            } catch (IOException e) {
+	            // TODO Auto-generated catch block
+	            e.printStackTrace();
+            }
+            
+			long stop = System.nanoTime();
+			long wall = (stop - start)/1000000;
+	    	System.out.println("FILE TEST: Batch mode, Server Endpointing, LM result: " + " took "+wall+ " ms");    	
+	    }
+		    
+	     
 
 	    public void testRecognizeFileLmBatch() {
 	    	System.out.println("Starting File Test ...");
@@ -319,8 +345,9 @@ public class HttpRecognizerTest extends TestCase {
 	    	RecognitionResult r = null;
 	    	
 	    	boolean lmflg = false;
+	    	boolean batchFlag = false;
 	        try {	            
-	            r = recog.recognize(grammarUrl,  epStream,  lmflg,  timeout) ;
+	            r = recog.recognize(grammarUrl,  epStream,  lmflg,  batchFlag, timeout) ;
             } catch (InstantiationException e) {
 	            // TODO Auto-generated catch block
 	            e.printStackTrace();
@@ -342,8 +369,9 @@ public class HttpRecognizerTest extends TestCase {
             
 	    	RecognitionResult r = null;
 	    	boolean lmflg = true;
+	    	boolean batchFlag = false;
 	        try {	            
-	            r = recog.recognize(grammarUrl,  epStream,  lmflg,  timeout) ;
+	            r = recog.recognize(grammarUrl,  epStream,  lmflg,  batchFlag, timeout) ;
             } catch (InstantiationException e) {
 	            // TODO Auto-generated catch block
 	            e.printStackTrace();
@@ -383,8 +411,9 @@ public class HttpRecognizerTest extends TestCase {
 
 	    	RecognitionResult r = null;
 	    	boolean lmflg = true;
+	    	boolean batchFlag = false;
 	        try {
-	        	r = recog.recognize(grammarUrl,  epStream,  lmflg,  timeout) ;
+	        	r = recog.recognize(grammarUrl,  epStream,  lmflg,  batchFlag, timeout) ;
             } catch (InstantiationException e) {
 	            // TODO Auto-generated catch block
 	            e.printStackTrace();
@@ -413,8 +442,9 @@ public class HttpRecognizerTest extends TestCase {
 	    	epStream.init();
            
 	    	lmflg = false;
+	    	batchFlag = false;
 	        try {
-	        	r = recog.recognize(grammarUrl,  epStream,  lmflg,  timeout) ;
+	        	r = recog.recognize(grammarUrl,  epStream,  lmflg, batchFlag, timeout) ;
             } catch (InstantiationException e) {
 	            // TODO Auto-generated catch block
 	            e.printStackTrace();
@@ -480,11 +510,12 @@ public class HttpRecognizerTest extends TestCase {
 	        }
 	    	boolean doEndpointing = true;
 	    	boolean lmflg = true;
-	    	RecognitionResult r = recog.recognize(audioLine, grammarUrl, lmflg, doEndpointing);
+	    	boolean batchFlag = false;
+	    	RecognitionResult r = recog.recognize(audioLine, grammarUrl, lmflg, batchFlag, doEndpointing);
 	    	System.out.println("lm result: "+r.getText());	        
 	    	
 	        lmflg = false;
-	        r = recog.recognize(audioLine, grammarUrl, lmflg,doEndpointing);
+	        r = recog.recognize(audioLine, grammarUrl, lmflg,doEndpointing,batchFlag);
 	        System.out.println("grammar result: "+r.getText());
 	    	
 	    }
@@ -507,8 +538,9 @@ public class HttpRecognizerTest extends TestCase {
 
 	    	RecognitionResult r = null;
 	    	boolean lmflg = true;
+	    	boolean batchFlag = false;
 	        try {          
-	            r = recog.recognize(grammarUrl,  epStream,  lmflg,  timeout) ;
+	            r = recog.recognize(grammarUrl,  epStream,  lmflg,  batchFlag, timeout) ;
             } catch (InstantiationException e) {
 	            // TODO Auto-generated catch block
 	            e.printStackTrace();
@@ -519,8 +551,9 @@ public class HttpRecognizerTest extends TestCase {
             System.out.println("lm result: "+r.getText());
 
 	    	lmflg = false;
+	    	batchFlag = false;
 	        try {          
-	            r = recog.recognize(grammarUrl,  epStream,  lmflg,  timeout) ;
+	            r = recog.recognize(grammarUrl,  epStream,  lmflg, batchFlag, timeout) ;
             } catch (InstantiationException e) {
 	            // TODO Auto-generated catch block
 	            e.printStackTrace();

@@ -144,6 +144,7 @@ public class Microphone extends BaseDataProcessor {
         stereoToMono = "average";
         selectedChannel = 0;
         selectedMixerIndex = "default";
+        sampleRate = (int) desiredFormat.getSampleRate();
     }
     
     
@@ -328,7 +329,7 @@ public class Microphone extends BaseDataProcessor {
                         (audioStream.getFormat().getSampleSizeInBits() / 8) *
                                 (int) (sec * audioStream.getFormat().getSampleRate());
 
-                logger.info("Frame size: " + frameSizeInBytes + " bytes");
+                logger.debug("Frame size: " + frameSizeInBytes + " bytes");
             }
             return true;
         } else {
@@ -473,7 +474,7 @@ public class Microphone extends BaseDataProcessor {
                 audioLine.start();
                 while (!done) {
                     Data data = readData(currentUtterance);
-                	logger.info("->read data ");
+                	//logger.info("->read data ");
                     if (data == null) {
                     	logger.info("->data null");
                         done = true;
@@ -600,7 +601,7 @@ public class Microphone extends BaseDataProcessor {
             if (channels > 1) {
                 samples = convertStereoToMono(samples, channels);
             }
-            logger.info("++++++++++++++++++++++++++++read in "+samples.length+" samples");
+            logger.debug("++++++++++++++++++++++++++++read in "+samples.length+" samples");
             //for (double d: samples) {
             //   System.out.println(d);            	
             //}

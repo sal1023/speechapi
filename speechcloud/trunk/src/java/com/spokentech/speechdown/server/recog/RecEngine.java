@@ -3,6 +3,7 @@ package com.spokentech.speechdown.server.recog;
 import java.io.InputStream;
 import java.io.PrintWriter;
 
+import javax.servlet.http.HttpServletResponse;
 import javax.sound.sampled.AudioFormat;
 import javax.sound.sampled.AudioInputStream;
 
@@ -16,7 +17,7 @@ public interface RecEngine {
 
 	public RecognitionResult recognize(InputStream as, String mimeType, int sampleRate, boolean bigEndian, int bytesPerValue, AudioFormat.Encoding encoding, boolean doEndpointing, boolean cmnBatch);
 
-	public String transcribe(InputStream as, String mimeType, int sampleRate, boolean bigEndian, int bytesPerValue, AudioFormat.Encoding encoding, PrintWriter out);
+	public String transcribe(InputStream as, String mimeType, int sampleRate, boolean bigEndian, int bytesPerValue, AudioFormat.Encoding encoding, PrintWriter out, HttpServletResponse response);
 
 	
 }

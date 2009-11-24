@@ -135,11 +135,13 @@ public class MicRecognizerTest extends TestCase {
 	        }
 	    	boolean doEndpointing = true;
 	    	boolean lmflg = true;
+	        boolean batchFlag = false;
 	    	//RecognitionResult r = recog.recognize(audioLine, grammarUrl, lmflg, doEndpointing);
 	    	//System.out.println("lm result: "+r.getText());	        
 	    	
 	        lmflg = false;
-	        RecognitionResult r = recog.recognize(audioLine, grammarUrl, lmflg,doEndpointing);
+	        batchFlag = false;
+	        RecognitionResult r = recog.recognize(audioLine, grammarUrl, batchFlag, lmflg,doEndpointing);
 	        System.out.println("grammar result: "+r.getText());
 	    	
 	    }

@@ -144,11 +144,13 @@ public class HttpRecognizer {
 	/**
 	 * Recognize.
 	 * 
-	 * @param Stream the input stream of the audiofile
 	 * @param format the format of the inputstreamd (note the is needed in plain input streams unlike audioInputstreams where this information is included in the stream.
-	 * @param type the audiostream  (AudioFileFormat.Type.WAVE,  AudioFileFormat.Type.AU) 
+	 * @param type the audiostream  (AudioFileFormat.Type.WAVE,  AudioFileFormat.Type.AU)
 	 * @param grammarUrl the grammar url.  If lmFlag is false, you must set the grammar file url.  (JSGF is supported)
 	 * @param lmflg the lmflg.  If lmflga is true, recognition will use the default language mode on speechcloud server.
+	 * @param inputStream the input stream
+	 * @param doEndpointing the do endpointing
+	 * @param batchMode the batch mode
 	 * 
 	 * @return the recognition result
 	 */
@@ -180,6 +182,7 @@ public class HttpRecognizer {
     	StringBody lmFlag = null;
     	StringBody endpointFlag = null;
     	StringBody batchModeFlag = null;
+    	StringBody continuousFlag = null;
         try {
         	sampleRate = new StringBody(String.valueOf((int)format.getSampleRate()));
         	bigEndian = new StringBody(String.valueOf(format.isBigEndian()));
@@ -188,6 +191,7 @@ public class HttpRecognizer {
         	lmFlag = new StringBody(String.valueOf(lmflg));
         	endpointFlag = new StringBody(String.valueOf(doEndpointing));
         	batchModeFlag = new StringBody(String.valueOf(batchMode));
+           	continuousFlag = new StringBody(String.valueOf(Boolean.FALSE));
         } catch (UnsupportedEncodingException e1) {
 	        // TODO Auto-generated catch block
 	        e1.printStackTrace();
@@ -201,7 +205,9 @@ public class HttpRecognizer {
 		mpEntity.addPart(HttpCommandFields.LANGUAGE_MODEL_FLAG, lmFlag);
 		mpEntity.addPart(HttpCommandFields.ENDPOINTING_FLAG, endpointFlag);
 		mpEntity.addPart(HttpCommandFields.CMN_BATCH, batchModeFlag);
-		
+		mpEntity.addPart(HttpCommandFields.CONTINUOUS_FLAG,continuousFlag);
+
+       	
 		String mimeType = null;
 		String fname = null;
 		if (type == AudioFileFormat.Type.WAVE) {
@@ -269,257 +275,7 @@ public class HttpRecognizer {
         return r;
     }
 
-  /**
-   * Recognize.
-   * 
-   * @param inputStream the input stream
-   * @param format the format
-   * @param type the type
-   * @param grammarUrl the grammar url
-   * @param lmflg the lmflg
-   * @param doEndpointing the do endpointing
-   * 
-   * @return the recognition result
-   * 
-   * @deprecated
-   */
 
-	public RecognitionResult recognize(PipedInputStream inputStream, AudioFormat format, Type type, URL grammarUrl, boolean lmflg, boolean doEndpointing) {
-
-	    // Plain old http approach    	
-    	HttpClient httpclient = new DefaultHttpClient();
-        HttpPost httppost = new HttpPost(service);
-    	
-    	//create the multipart entity
-    	MultipartEntity mpEntity = new MultipartEntity();
-    	
-    	
-    	// one part is the grammar
-        InputStreamBody grammarBody = null;
-        if (!lmflg) {
-	        try {
-	        	grammarBody = new InputStreamBody(grammarUrl.openStream(), "plain/text","grammar.gram");
-	        } catch (IOException e1) {
-		        // TODO Auto-generated catch block
-		        e1.printStackTrace();
-	        }
-        }
-
-
-        _logger.info("Actual format: " + format);    	
-    	StringBody sampleRate = null;
-    	StringBody bigEndian = null;
-    	StringBody bytesPerValue = null;
-    	StringBody encoding = null;
-    	StringBody lmFlag = null;
-    	StringBody endpointFlag = null;
-        try {
-        	sampleRate = new StringBody(String.valueOf((int)format.getSampleRate()));
-        	bigEndian = new StringBody(String.valueOf(format.isBigEndian()));
-        	bytesPerValue =new StringBody(String.valueOf(format.getSampleSizeInBits()/8));
-        	encoding = new StringBody(format.getEncoding().toString());
-        	lmFlag = new StringBody(String.valueOf(lmflg));
-        	endpointFlag = new StringBody(String.valueOf(doEndpointing));
-        } catch (UnsupportedEncodingException e1) {
-	        // TODO Auto-generated catch block
-	        e1.printStackTrace();
-        }
-        
-        //add the form field parts
-		mpEntity.addPart(HttpCommandFields.SAMPLE_RATE_FIELD_NAME, sampleRate);
-		mpEntity.addPart(HttpCommandFields.BIG_ENDIAN_FIELD_NAME, bigEndian);
-		mpEntity.addPart(HttpCommandFields.BYTES_PER_VALUE_FIELD_NAME, bytesPerValue);
-		mpEntity.addPart(HttpCommandFields.ENCODING_FIELD_NAME, encoding);
-		mpEntity.addPart(HttpCommandFields.LANGUAGE_MODEL_FLAG, lmFlag);
-		mpEntity.addPart(HttpCommandFields.ENDPOINTING_FLAG, endpointFlag);
-
-                String mimeType = null;
-                String fname = null;
-                if (type == AudioFileFormat.Type.WAVE) {
-
-                        mimeType = "audio/x-wav";
-                        fname = "audio.wav";
-               } else if (type == AudioFileFormat.Type.AU) {
-                       mimeType = "audio/x-au";
-                       fname = "audio.au";
-               } else {
-                       _logger.warn("unhanlded format type "+type.getExtension());
-               }
-
-        InputStreamBody audioBody = new InputStreamBody(inputStream, mimeType,fname);      
-
-        if (!lmflg)
-        	mpEntity.addPart("grammar", grammarBody);
-		
-        mpEntity.addPart("audio", audioBody);      
-        httppost.setEntity(mpEntity);
-         
-        _logger.info("executing request " + httppost.getRequestLine());
-        HttpResponse response = null;
-        try {
-	        response = httpclient.execute(httppost);
-        } catch (ClientProtocolException e) {
-	        // TODO Auto-generated catch block
-	        e.printStackTrace();
-        } catch (IOException e) {
-	        // TODO Auto-generated catch block
-	        e.printStackTrace();
-        }
-        HttpEntity resEntity = response.getEntity();
-
-        _logger.info(response.getStatusLine());
-        if (resEntity != null) {
-        	_logger.info("Response content length: " + resEntity.getContentLength());
-        	_logger.info("Chunked?: " + resEntity.isChunked());
-
-            Header[] headers = response.getAllHeaders();
-            for (int i=0; i<headers.length; i++) {
-            	_logger.info(headers[i]);
-            }
-        }
-        
-        
-        RecognitionResult r = null;
-        if (resEntity != null) {
-            try {
-                InputStream s = resEntity.getContent();
-                String result = readInputStreamAsString(s);
-                _logger.info(result);
-                r = RecognitionResult.constructResultFromString(result);
-	            resEntity.consumeContent();
-            } catch (IOException e) {
-	            // TODO Auto-generated catch block
-	            e.printStackTrace();
-            } catch (InvalidRecognitionResultException e) {
-	            // TODO Auto-generated catch block
-	            e.printStackTrace();
-            }
-        }
-        
-        return r;
-    }
-
-	  /**
-	   * Recognize.
-	   * 
-	   * @param inputStream the input stream
-	   * @param format the format
-	   * @param type the type
-	   * @param grammarUrl the grammar url
-	   * @param lmflg the lmflg
-	   * 
-	   * @return the recognition result
-	   * 
-	   * @deprecated
-	   */
-	public RecognitionResult recognize(PipedInputStream inputStream, AudioFormat format, Type type, URL grammarUrl, boolean lmflg) {
-	    // Plain old http approach    	
-    	HttpClient httpclient = new DefaultHttpClient();
-        HttpPost httppost = new HttpPost(service);
-    	
-    	//create the multipart entity
-    	MultipartEntity mpEntity = new MultipartEntity();
-    	
-    	
-    	// one part is the grammar
-        InputStreamBody grammarBody = null;
-        if (!lmflg) {
-	        try {
-	        	grammarBody = new InputStreamBody(grammarUrl.openStream(), "plain/text","grammar.gram");
-	        } catch (IOException e1) {
-		        // TODO Auto-generated catch block
-		        e1.printStackTrace();
-	        }
-        }
-
-
-        _logger.info("Actual format: " + format);    	
-    	StringBody sampleRate = null;
-    	StringBody bigEndian = null;
-    	StringBody bytesPerValue = null;
-    	StringBody encoding = null;
-    	StringBody lmFlag = null;
-        try {
-        	sampleRate = new StringBody(String.valueOf((int)format.getSampleRate()));
-        	bigEndian = new StringBody(String.valueOf(format.isBigEndian()));
-        	bytesPerValue =new StringBody(String.valueOf(format.getSampleSizeInBits()/8));
-        	encoding = new StringBody(format.getEncoding().toString());
-        	lmFlag = new StringBody(String.valueOf(lmflg));
-        } catch (UnsupportedEncodingException e1) {
-	        // TODO Auto-generated catch block
-	        e1.printStackTrace();
-        }
-        
-        //add the form field parts
-		mpEntity.addPart(HttpCommandFields.SAMPLE_RATE_FIELD_NAME, sampleRate);
-		mpEntity.addPart(HttpCommandFields.BIG_ENDIAN_FIELD_NAME, bigEndian);
-		mpEntity.addPart(HttpCommandFields.BYTES_PER_VALUE_FIELD_NAME, bytesPerValue);
-		mpEntity.addPart(HttpCommandFields.ENCODING_FIELD_NAME, encoding);
-		mpEntity.addPart(HttpCommandFields.LANGUAGE_MODEL_FLAG, lmFlag);
-
-		String mimeType = null;
-		String fname = null;
-		if (type == AudioFileFormat.Type.WAVE) {
-			mimeType = "audio/x-wav";
-			fname = "audio.wav";
-				} else if (type == AudioFileFormat.Type.AU) {
-			mimeType = "audio/x-au";
-			fname = "audio.au";
-				} else {
-		    _logger.warn("unhanlded format type "+type.getExtension());
-			}
-        InputStreamBody audioBody = new InputStreamBody(inputStream, mimeType,fname);      
-
-        if (!lmflg)
-        	mpEntity.addPart("grammar", grammarBody);
-		
-        mpEntity.addPart("audio", audioBody);      
-        httppost.setEntity(mpEntity);
-         
-        _logger.info("executing request " + httppost.getRequestLine());
-        HttpResponse response = null;
-        try {
-	        response = httpclient.execute(httppost);
-        } catch (ClientProtocolException e) {
-	        // TODO Auto-generated catch block
-	        e.printStackTrace();
-        } catch (IOException e) {
-	        // TODO Auto-generated catch block
-	        e.printStackTrace();
-        }
-        HttpEntity resEntity = response.getEntity();
-
-        _logger.info(response.getStatusLine());
-        if (resEntity != null) {
-        	_logger.info("Response content length: " + resEntity.getContentLength());
-        	_logger.info("Chunked?: " + resEntity.isChunked());
-
-            Header[] headers = response.getAllHeaders();
-            for (int i=0; i<headers.length; i++) {
-            	_logger.info(headers[i]);
-            }
-        }
-        
-        
-        RecognitionResult r = null;
-        if (resEntity != null) {
-            try {
-                InputStream s = resEntity.getContent();
-                String result = readInputStreamAsString(s);
-                _logger.info(result);
-                r = RecognitionResult.constructResultFromString(result);
-	            resEntity.consumeContent();
-            } catch (IOException e) {
-	            // TODO Auto-generated catch block
-	            e.printStackTrace();
-            } catch (InvalidRecognitionResultException e) {
-	            // TODO Auto-generated catch block
-	            e.printStackTrace();
-            }
-        }
-        
-        return r;
-    }
  
 	/**
 	 * Recognize.  recognize audio from the local microphone/
@@ -527,10 +283,12 @@ public class HttpRecognizer {
 	 * @param audioLine the audio line of (must likely used for the local microphone)
 	 * @param grammarUrl the grammar url.  If lmFlag is false, you must set the grammar file url.  (JSGF is supported)
 	 * @param lmflg the lmflg.  If lmflga is true, recognition will use the default language mode on speechcloud server.
+	 * @param doEndpointing the do endpointing
+	 * @param batchMode the batch mode
 	 * 
 	 * @return the recognition result
 	 */
-	public  RecognitionResult recognize(TargetDataLine audioLine, URL grammarUrl, boolean lmflg, boolean doEndpointing) {
+	public  RecognitionResult recognize(TargetDataLine audioLine, URL grammarUrl, boolean lmflg, boolean doEndpointing, boolean batchMode) {
 
         
         //create the thread and start it
@@ -570,7 +328,8 @@ public class HttpRecognizer {
     	StringBody encoding = null;
     	StringBody lmFlag = null;
     	StringBody endpointFlag = null;
-    	//StringBody dataStreamMode = null;
+    	StringBody continuousFlag = null;
+    	StringBody batchModeFlag = null;
         try {
         	sampleRate = new StringBody(String.valueOf((int)format.getSampleRate()));
         	bigEndian = new StringBody(String.valueOf(format.isBigEndian()));
@@ -578,7 +337,8 @@ public class HttpRecognizer {
         	encoding = new StringBody(format.getEncoding().toString());
         	lmFlag = new StringBody(String.valueOf(lmflg));
         	endpointFlag = new StringBody(String.valueOf(doEndpointing));
-        	//dataStreamMode = new StringBody(dataMode);
+           	continuousFlag = new StringBody(String.valueOf(Boolean.FALSE));
+        	batchModeFlag = new StringBody(String.valueOf(batchMode));
         } catch (UnsupportedEncodingException e1) {
 	        // TODO Auto-generated catch block
 	        e1.printStackTrace();
@@ -592,6 +352,8 @@ public class HttpRecognizer {
 		mpEntity.addPart(HttpCommandFields.ENCODING_FIELD_NAME, encoding);
 		mpEntity.addPart(HttpCommandFields.LANGUAGE_MODEL_FLAG, lmFlag);
 		mpEntity.addPart(HttpCommandFields.ENDPOINTING_FLAG, endpointFlag);
+		mpEntity.addPart(HttpCommandFields.CMN_BATCH, batchModeFlag);
+		mpEntity.addPart(HttpCommandFields.CONTINUOUS_FLAG,continuousFlag);
 		
 		//add the grammar part
 		mpEntity.addPart("grammar", grammarBody);
@@ -662,7 +424,7 @@ public class HttpRecognizer {
 	 * @throws InstantiationException the instantiation exception
 	 * @throws IOException Signals that an I/O exception has occurred.
 	 */
-	public  RecognitionResult recognize(URL grammarUrl, EndPointingInputStream epStream, boolean lmflg, long timeout) throws InstantiationException, IOException {
+	public  RecognitionResult recognize(URL grammarUrl, EndPointingInputStream epStream, boolean lmflg, boolean batchMode, long timeout) throws InstantiationException, IOException {
 
 
         //create the listener (listens for end points)
@@ -698,7 +460,8 @@ public class HttpRecognizer {
     	StringBody encoding = null;
     	StringBody lmFlag = null;
     	StringBody endpointFlag = null;
-    	//StringBody dataStreamMode = new StringBody(dataMode);  	
+    	StringBody continuousFlag = null;
+    	StringBody batchModeFlag = null;
     	AudioFormat format = epStream.getFormat1();
     	
         try {
@@ -708,6 +471,8 @@ public class HttpRecognizer {
         	encoding = new StringBody(format.getEncoding().toString());
         	lmFlag = new StringBody(String.valueOf(lmflg));
            	endpointFlag = new StringBody(String.valueOf(Boolean.FALSE));
+           	continuousFlag = new StringBody(String.valueOf(Boolean.FALSE));
+        	batchModeFlag = new StringBody(String.valueOf(batchMode));
         } catch (UnsupportedEncodingException e1) {
 	        // TODO Auto-generated catch block
 	        e1.printStackTrace();
@@ -722,7 +487,8 @@ public class HttpRecognizer {
 		mpEntity.addPart(HttpCommandFields.ENCODING_FIELD_NAME, encoding);
 		mpEntity.addPart(HttpCommandFields.LANGUAGE_MODEL_FLAG, lmFlag);
 		mpEntity.addPart(HttpCommandFields.ENDPOINTING_FLAG, endpointFlag);
-	
+		mpEntity.addPart(HttpCommandFields.CONTINUOUS_FLAG,continuousFlag);
+		mpEntity.addPart(HttpCommandFields.CMN_BATCH, batchModeFlag);
 		
 		
 		//add the grammar part
@@ -791,6 +557,134 @@ public class HttpRecognizer {
         }
 		return r;
 	}
+	
+	
+	
+	/**
+	 * Recognize.
+	 * 
+	 * @param format the format of the inputstreamd (note the is needed in plain input streams unlike audioInputstreams where this information is included in the stream.
+	 * @param type the audiostream  (AudioFileFormat.Type.WAVE,  AudioFileFormat.Type.AU)
+	 * @param grammarUrl the grammar url.  If lmFlag is false, you must set the grammar file url.  (JSGF is supported)
+	 * @param lmflg the lmflg.  If lmflga is true, recognition will use the default language mode on speechcloud server.
+	 * @param inputStream the input stream
+	 * @param doEndpointing the do endpointing
+	 * @param batchMode the batch mode
+	 * 
+	 * @return the recognition result
+	 * @throws IOException 
+	 * @throws IllegalStateException 
+	 */
+	public InputStream transcribe(InputStream inputStream, AudioFormat format, Type type, URL grammarUrl, boolean lmflg) throws IllegalStateException, IOException {
+	    // Plain old http approach    	
+    	HttpClient httpclient = new DefaultHttpClient();
+        HttpPost httppost = new HttpPost(service);
+    	
+    	//create the multipart entity
+    	MultipartEntity mpEntity = new MultipartEntity();
+    	
+    	
+    	// one part is the grammar
+        InputStreamBody grammarBody = null;
+        if (!lmflg) {
+	        try {
+	        	grammarBody = new InputStreamBody(grammarUrl.openStream(), "plain/text","grammar.gram");
+	        } catch (IOException e1) {
+		        // TODO Auto-generated catch block
+		        e1.printStackTrace();
+	        }
+        }
+        
+        _logger.debug("Actual format: " + format);    	
+    	StringBody sampleRate = null;
+    	StringBody bigEndian = null;
+    	StringBody bytesPerValue = null;
+    	StringBody encoding = null;
+    	StringBody lmFlag = null;
+    	StringBody endpointFlag = null;
+    	StringBody batchModeFlag = null;
+    	StringBody continuousFlag = null;
+        try {
+        	sampleRate = new StringBody(String.valueOf((int)format.getSampleRate()));
+        	bigEndian = new StringBody(String.valueOf(format.isBigEndian()));
+        	bytesPerValue =new StringBody(String.valueOf(format.getSampleSizeInBits()/8));
+        	encoding = new StringBody(format.getEncoding().toString());
+        	lmFlag = new StringBody(String.valueOf(lmflg));
+        	endpointFlag = new StringBody(String.valueOf(Boolean.TRUE));
+        	batchModeFlag = new StringBody(String.valueOf(Boolean.FALSE));
+           	continuousFlag = new StringBody(String.valueOf(Boolean.TRUE));
+        } catch (UnsupportedEncodingException e1) {
+	        // TODO Auto-generated catch block
+	        e1.printStackTrace();
+        }
+        
+        //add the form field parts
+		mpEntity.addPart(HttpCommandFields.SAMPLE_RATE_FIELD_NAME, sampleRate);
+		mpEntity.addPart(HttpCommandFields.BIG_ENDIAN_FIELD_NAME, bigEndian);
+		mpEntity.addPart(HttpCommandFields.BYTES_PER_VALUE_FIELD_NAME, bytesPerValue);
+		mpEntity.addPart(HttpCommandFields.ENCODING_FIELD_NAME, encoding);
+		mpEntity.addPart(HttpCommandFields.LANGUAGE_MODEL_FLAG, lmFlag);
+		mpEntity.addPart(HttpCommandFields.ENDPOINTING_FLAG, endpointFlag);
+		mpEntity.addPart(HttpCommandFields.CMN_BATCH, batchModeFlag);
+		mpEntity.addPart(HttpCommandFields.CONTINUOUS_FLAG,continuousFlag);
+
+       	
+		String mimeType = null;
+		String fname = null;
+		if (type == AudioFileFormat.Type.WAVE) {
+			//Always a audio/x-wav
+			mimeType = "audio/x-wav";
+			fname = "audio.wav";
+		} else if (type == AudioFileFormat.Type.AU) {
+			mimeType = "audio/x-au";
+			fname = "audio.au";
+		} else {
+			_logger.warn("unhanlded format type "+type.getExtension());
+		}
+
+
+        InputStreamBody audioBody = new InputStreamBody(inputStream, mimeType,fname);      
+
+        if (!lmflg)
+        	mpEntity.addPart("grammar", grammarBody);
+		
+        mpEntity.addPart("audio", audioBody);      
+        httppost.setEntity(mpEntity);
+         
+        _logger.info("executing request " + httppost.getRequestLine());
+        HttpResponse response = null;
+        try {
+	        response = httpclient.execute(httppost);
+        } catch (ClientProtocolException e) {
+	        // TODO Auto-generated catch block
+	        e.printStackTrace();
+        } catch (IOException e) {
+	        // TODO Auto-generated catch block
+	        e.printStackTrace();
+        }
+        HttpEntity resEntity = response.getEntity();
+
+        _logger.info(response.getStatusLine());
+        if (resEntity != null) {
+        	_logger.info("Response content length: " + resEntity.getContentLength());
+        	_logger.info("Chunked?: " + resEntity.isChunked());
+
+            Header[] headers = response.getAllHeaders();
+            for (int i=0; i<headers.length; i++) {
+            	_logger.info(headers[i]);
+            }
+        }
+        
+        
+        RecognitionResult r = null;
+        if (resEntity != null) {
+            return resEntity.getContent();
+        } else {
+        	return null;
+        }
+    }
+
+	
 	
 	/**
 	 * Read input stream  and return it as a stream

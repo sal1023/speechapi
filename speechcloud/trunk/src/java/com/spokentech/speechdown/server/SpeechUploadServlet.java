@@ -192,7 +192,7 @@ public class SpeechUploadServlet extends HttpServlet {
 				    			//response.setHeader("Content-Disposition", "attachment; filename=results.txt'");			
 				    			response.setHeader("Transfer-coding","chunked");
 					    		if (lmFlag) {
-					    			textResult = recognizerService.Transcribe(audio,contentType,sampleRate,bigEndian,bytesPerValue,encoding,out);
+					    			textResult = recognizerService.Transcribe(audio,contentType,sampleRate,bigEndian,bytesPerValue,encoding,out,response);
 					    		} else {
 							        _logger.debug("recognition result is null");
 								    out.println("recognition result is null");

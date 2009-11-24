@@ -12,6 +12,7 @@ import java.util.List;
 import java.util.Timer;
 import java.util.TimerTask;
 
+import javax.servlet.http.HttpServletResponse;
 import javax.sound.sampled.AudioInputStream;
 import javax.sound.sampled.AudioFormat.Encoding;
 import javax.speech.recognition.GrammarException;
@@ -313,7 +314,7 @@ public class SphinxRecEngine extends AbstractPoolableObject implements RecEngine
 	
 	@Override
     public String transcribe(InputStream as, String mimeType, int sampleRate, boolean bigEndian,
-            int bytesPerValue, Encoding encoding, PrintWriter out) {
+            int bytesPerValue, Encoding encoding, PrintWriter out,HttpServletResponse response) {
 		
 		_logger.info("Using recognizer # "+_id);
 	    //SAL
@@ -321,7 +322,7 @@ public class SphinxRecEngine extends AbstractPoolableObject implements RecEngine
         _logger.debug("After allocate" + System.currentTimeMillis());
         
 
-	    String r = doTranscribe(as, mimeType, sampleRate, bigEndian, bytesPerValue, encoding, out);
+	    String r = doTranscribe(as, mimeType, sampleRate, bigEndian, bytesPerValue, encoding, out, response);
 
 	    //SAL
 	    //_recognizer.deallocate();
@@ -330,36 +331,36 @@ public class SphinxRecEngine extends AbstractPoolableObject implements RecEngine
     }
 	
 	private String doTranscribe(InputStream as, String mimeType, int sampleRate, boolean bigEndian,
-            int bytesPerValue, Encoding encoding, PrintWriter out) {
+            int bytesPerValue, Encoding encoding, PrintWriter out,HttpServletResponse response) {
 	    //TODO: Timers for recog timeout
 	
 		
 		FrontEnd fe = null;
 	    // configure the audio input for the recognizer
-  		 StreamDataSource dataSource = null;
+
 		 String parts[] = mimeType.split("/");
 		 if (parts[1].equals("x-s4audio")) {
-			 dataSource = new S4DataStreamDataSource();
-			 fe = createAudioFrontend(true,false,(DataProcessor) dataSource);
+			 _dataSource = new S4DataStreamDataSource();
+			 fe = createAudioFrontend(true,false,(DataProcessor) _dataSource);
 		 } else if (parts[1].equals("x-s4feature")) {
 			 _logger.warn("Feature mode Endpointing not for continuous recognition mode");
-			 dataSource = new S4DataStreamDataSource();
+			 _dataSource = new S4DataStreamDataSource();
 		 } else if (parts[1].equals("x-wav")) {
-			 dataSource = new AudioStreamDataSource();
-			 fe = createAudioFrontend(true,false,(DataProcessor) dataSource);
+			 _dataSource = new AudioStreamDataSource();
+			 fe = createAudioFrontend(true,false,(DataProcessor) _dataSource);
 		 } else {
 			 _logger.warn("Unrecognized mime type: "+mimeType + " Trying to process as audio/x-wav");
-			 dataSource = new AudioStreamDataSource();
-			 fe = createAudioFrontend(true,false,(DataProcessor) dataSource);
+			 _dataSource = new AudioStreamDataSource();
+			 fe = createAudioFrontend(true,false,(DataProcessor) _dataSource);
 		 }
 	     _logger.debug("-----> "+mimeType+ " "+parts[1]);
 	     //set the first stage of the front end
-		 fe.setDataSource((DataProcessor) dataSource);
+		 fe.setDataSource((DataProcessor) _dataSource);
 		 
 		 // set the front end in the scorer in realtime
 		 _scorer.setFrontEnd(fe);
 		 
-		 dataSource.setInputStream(as, "ws-audiostream", sampleRate, bigEndian, bytesPerValue,encoding);
+		 _dataSource.setInputStream(as, "ws-audiostream", sampleRate, bigEndian, bytesPerValue,encoding);
 	    
 		_logger.debug("After setting the input stream" + System.currentTimeMillis());
 	    
@@ -375,6 +376,15 @@ public class SphinxRecEngine extends AbstractPoolableObject implements RecEngine
             _logger.info(resultText);
             out.println(resultText);
             totalResult = totalResult+resultText;
+
+            //chunked encoded, so flush for realtime streaming
+            if (response != null)
+	            try {
+	                response.flushBuffer();
+                } catch (IOException e) {
+	                // TODO Auto-generated catch block
+	                e.printStackTrace();
+                }
             //resultList.add(result);
     
         }
@@ -608,7 +618,7 @@ public class SphinxRecEngine extends AbstractPoolableObject implements RecEngine
 	   components.add (new DataBlocker(10));
 	   if (endpointing) {
 		  components.add (new SpeechClassifier(10,0.003,10.0,0.0));
-	      components.add (new SpeechMarker(200,500,100,50,100));
+	      components.add (new SpeechMarker(200,200,100,50,100));
 	      components.add (new NonSpeechDataFilter());
 	      SpeechDataMonitor mon = new SpeechDataMonitor();
 		  components.add (mon);
@@ -619,7 +629,7 @@ public class SphinxRecEngine extends AbstractPoolableObject implements RecEngine
 	   }
 	   //this is just for logging debug messages.
 	   components.add(new IdentityStage());
-	   if (recordingEnabled) {
+	   if (recordingEnabled && (recorder != null)) {
 	      components.add(recorder);
 	   }
 	   components.add (new Preemphasizer(0.97));
@@ -638,6 +648,10 @@ public class SphinxRecEngine extends AbstractPoolableObject implements RecEngine
 	   components.add (new DeltasFeatureExtractor(3));
 	   components.add (new LDA(_loader));
 	   	   
+       //for (DataProcessor dp : components) {
+       //   _logger.debug(dp);
+       //}
+	   
 	   FrontEnd fe = new FrontEnd (components);
 	   return fe;   
     }
