@@ -6,6 +6,7 @@ import java.io.OutputStream;
 import java.io.PrintWriter;
 
 import javax.activation.DataHandler;
+import javax.servlet.http.HttpServletResponse;
 import javax.sound.sampled.AudioInputStream;
 import javax.sound.sampled.AudioSystem;
 import javax.sound.sampled.UnsupportedAudioFileException;
@@ -193,7 +194,7 @@ public class RecognizerService {
     }
 
 	public String Transcribe(InputStream audio, String mimeType, int sampleRate, boolean bigEndian,
-            int bytesPerValue, Encoding encoding, PrintWriter out) {
+            int bytesPerValue, Encoding encoding, PrintWriter out, HttpServletResponse response) {
 		_logger.debug("Before borrow" + System.currentTimeMillis());
 		
     	
@@ -210,7 +211,7 @@ public class RecognizerService {
         _logger.debug("After borrow" + System.currentTimeMillis());
 	
         
-        String results = rengine.transcribe(audio,mimeType,sampleRate,bigEndian,bytesPerValue,encoding,out);
+        String results = rengine.transcribe(audio,mimeType,sampleRate,bigEndian,bytesPerValue,encoding,out,response);
         
         try {
         	_lmRecognizerPool.returnObject(rengine);
