@@ -159,16 +159,18 @@ public class MarySynthesizerService implements SynthesizerService {
         if (outputType.equals(MaryDataType.get("AUDIO"))) {
 
             AudioFileFormat.Type audioType = MaryAudioUtils.getAudioFileFormatType(audioTypeName);
-            AudioFormat audioFormat = null;
+            
+            //AudioFormat audioFormat = null;
             if (audioType.toString().equals("MP3")) {
                 if (!MaryAudioUtils.canCreateMP3())
                     throw new UnsupportedAudioFileException("Conversion to MP3 not supported.");
-                audioFormat = MaryAudioUtils.getMP3AudioFormat();
-            } else {
-                Voice ref = (voice != null) ? voice : Voice.getDefaultVoice(Locale.ENGLISH);
-                audioFormat = ref.dbAudioFormat();
+                //audioFormat = MaryAudioUtils.getMP3AudioFormat();
+            //} else {
+                //Voice ref = (voice != null) ? voice : Voice.getDefaultVoice(Locale.ENGLISH);
+                //audioFormat = ref.dbAudioFormat();
             }
-            audioFileFormat = new AudioFileFormat(audioType, audioFormat, AudioSystem.NOT_SPECIFIED);
+            System.out.println("***: "+format.toString());
+            audioFileFormat = new AudioFileFormat(audioType, format, AudioSystem.NOT_SPECIFIED);
         }
         Request request = new Request(inputType, outputType, voice, "", "", 1, audioFileFormat);
  

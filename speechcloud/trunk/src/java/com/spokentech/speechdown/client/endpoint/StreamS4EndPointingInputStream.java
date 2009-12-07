@@ -10,9 +10,8 @@ import java.io.IOException;
 import java.io.InputStream;
 import javax.sound.sampled.AudioFormat;
 import javax.sound.sampled.AudioInputStream;
-import java.io.InputStream;
+
 import java.io.PipedInputStream;
-import java.io.PipedOutputStream;
 
 import org.apache.log4j.Logger;
 

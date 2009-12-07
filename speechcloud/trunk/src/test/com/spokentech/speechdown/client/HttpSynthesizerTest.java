@@ -14,8 +14,11 @@ import javax.sound.sampled.LineUnavailableException;
 import javax.sound.sampled.SourceDataLine;
 import javax.sound.sampled.UnsupportedAudioFileException;
 import org.apache.log4j.Logger;
+
+import com.spokentech.speechdown.common.RecognitionResult;
 import com.spokentech.speechdown.common.SpeechEventListener;
 import junit.framework.TestCase;
+import org.tritonus.share.sampled.Encodings;
 
 public class HttpSynthesizerTest extends TestCase {
 
@@ -39,6 +42,12 @@ public class HttpSynthesizerTest extends TestCase {
 
 	    }
 
+		@Override
+        public void recognitionComplete(RecognitionResult rr) {
+	        // TODO Auto-generated method stub
+	        
+        }
+
     }
 
 
@@ -46,10 +55,10 @@ public class HttpSynthesizerTest extends TestCase {
     public static final String CRLF = "\r\n";
     
    
-    private static String service = "http://ec2-174-129-20-250.compute-1.amazonaws.com/speechcloud/SpeechDownloadServlet";  
-    //private static String service = "http://localhost:8090/speechcloud/SpeechDownloadServlet";    
+    //private static String service = "http://ec2-174-129-20-250.compute-1.amazonaws.com/speechcloud/SpeechDownloadServlet";  
+    private static String service = "http://localhost:8090/speechcloud/SpeechDownloadServlet";    
 
-    private static int sampleRate = 8000;
+    private static int sampleRate = 16000;
     private static boolean signed = true;
     private static boolean bigEndian = true;
     private static int channels = 1;
@@ -66,14 +75,34 @@ public class HttpSynthesizerTest extends TestCase {
     String mpeg = "audio/mpeg";
     
     private  AudioFormat format;
-
+    private  AudioFormat format2;
 	
 	     protected void setUp() {
 		    	synth = new HttpSynthesizer();
 		    	synth.setService(service);	 
 		    	
-		        format = new AudioFormat ((float) sampleRate, sampleSizeInBits, channels, signed, bigEndian);
-		      
+		        //format = new AudioFormat ((float) sampleRate, sampleSizeInBits, channels, signed, bigEndian);
+		
+		    	format = new AudioFormat(
+		                AudioFormat.Encoding.PCM_SIGNED,
+		                32000,
+		                16,
+		                1,
+		                2,
+		                16000,
+		                true);
+		    	
+		    	format2 = new AudioFormat(
+		                Encodings.getEncoding("MPEG1L3"),
+		                32000,
+		                16,
+		                1,
+		                2,
+		                11000,
+		                true);
+		    	
+		    	System.out.println(format.toString());
+		    	System.out.println(format2.toString());
 	     }
 
 
@@ -89,13 +118,21 @@ public class HttpSynthesizerTest extends TestCase {
 	    	System.out.println("Starting Test ...");
 	    	
 	    	
+	    	text = "To be or not to be, that is the question. Whether tis nobler in the mind to suffer the slings and arrows of outrageous fortune, or to take arms against a sea of troubles, And by opposing end them. To die—to sleep";
+			voice = "hmm-jmk";
+	    	outFileName = "to-be.mp3";
+	    	stream = synth.synthesize(text, format2, mpeg, voice);
+	        if (stream != null) {
+	        	writeStreamToFile(stream,outFileName);
+	        }
+	    	
 	    	text = "this is a only a test";
 	    	voice = "jmk-arctic";
 	    	outFileName = "this-is.wav";
 	    	stream = synth.synthesize(text, format, wav, voice);
 	        if (stream != null) {
-	        	//writeStreamToFile(stream,outFileName);
-	        	try {
+	        	writeStreamToFile(stream,outFileName);
+	        	/*try {
 	        	    format = new AudioFormat ((float) 16000.0, sampleSizeInBits, channels, signed, false);
 	  		         	
 	        		AudioInputStream ais = new AudioInputStream(stream,format,-1);
@@ -109,38 +146,16 @@ public class HttpSynthesizerTest extends TestCase {
                 } catch (LineUnavailableException e) {
 	                // TODO Auto-generated catch block
 	                e.printStackTrace();
-                }
+                }*/
 	        }
-	    	
-	    	text = "To be or not to be, that is the question. Whether tis nobler in the mind to suffer the slings and arrows of outrageous fortune, or to take arms against a sea of troubles, And by opposing end them. To die—to sleep";
-			voice = "hmm-jmk";
-	    	outFileName = "to-be.mp3";
-	    	stream = synth.synthesize(text, format, mpeg, voice);
-	        if (stream != null) {
-	        	//writeStreamToFile(stream,outFileName);
-	        	try {
-	        	    format = new AudioFormat ((float) 16000.0, sampleSizeInBits, channels, signed, false);
-	  		         	
-	        		AudioInputStream ais = new AudioInputStream(stream,format,-1);
-	                streamAudioToSpeaker(ais);
-                } catch (IOException e) {
-	                // TODO Auto-generated catch block
-	                e.printStackTrace();
-                } catch (UnsupportedAudioFileException e) {
-	                // TODO Auto-generated catch block
-	                e.printStackTrace();
-                } catch (LineUnavailableException e) {
-	                // TODO Auto-generated catch block
-	                e.printStackTrace();
-                }
-	        }
+	
 	    	text = "A man, a plan, a canal, panama";
 			voice = "slt-arctic";
 	    	outFileName = "a-man.wav";
 	    	 stream = synth.synthesize(text, format, wav, voice);
 	        if (stream != null) {
-	        	//writeStreamToFile(stream,outFileName);
-	        	try {
+	        	writeStreamToFile(stream,outFileName);
+	        	/*try {
 	        	    format = new AudioFormat ((float) 16000.0, sampleSizeInBits, channels, signed, false);
 	  		         	
 	        		AudioInputStream ais = new AudioInputStream(stream,format,-1);
@@ -154,35 +169,21 @@ public class HttpSynthesizerTest extends TestCase {
                 } catch (LineUnavailableException e) {
 	                // TODO Auto-generated catch block
 	                e.printStackTrace();
-                }
+                }*/
 	        }
 			
 	    	text = "If a server wants to start sending a response before knowing its total length (like with long script output), it might use the simple chunked transfer-encoding, which breaks the complete response into smaller chunks and sends them in series. ";
 			voice = "hmm-slt";
-	    	outFileName = "If-a-server.mpeg";
-	    	 stream = synth.synthesize(text, format, mpeg, voice);
+	    	outFileName = "If-a-server.mp3";
+	    	 stream = synth.synthesize(text, format2, mpeg, voice);
 	        if (stream != null) {
-	        	//writeStreamToFile(stream,outFileName);
-	        	try {
-	        	    format = new AudioFormat ((float) 16000.0, sampleSizeInBits, channels, signed, false);
-	  		         	
-	        		AudioInputStream ais = new AudioInputStream(stream,format,-1);
-	                streamAudioToSpeaker(ais);
-                } catch (IOException e) {
-	                // TODO Auto-generated catch block
-	                e.printStackTrace();
-                } catch (UnsupportedAudioFileException e) {
-	                // TODO Auto-generated catch block
-	                e.printStackTrace();
-                } catch (LineUnavailableException e) {
-	                // TODO Auto-generated catch block
-	                e.printStackTrace();
-                }
+	        	writeStreamToFile(stream,outFileName);
+	
 	        }
-
-
-
-
+			//voice = "hmm-jmk";
+	    	//voice = "jmk-arctic";
+			//voice = "hmm-slt";
+			//voice = "slt-arctic";
 			 //voice = "hmm-bdl";
 			 //voice = "bdl-arctic";
 			 //voice = "misspelled";

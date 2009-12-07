@@ -45,5 +45,7 @@
 	<classpathentry kind="lib" path="etc"/>
 	<classpathentry kind="lib" path="lib/sphinx4.jar"/>
 	<classpathentry kind="var" path="OPENMARY_HOME/java/mary-common.jar"/>
+	<classpathentry kind="lib" path="lib/tritonus_mp3-0.3.6.jar"/>
+	<classpathentry kind="lib" path="lib/tritonus_share-0.3.6.jar"/>
 	<classpathentry kind="output" path="target/eclipse"/>
 </classpath>
