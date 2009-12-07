@@ -37,20 +37,26 @@ public class HttpRecognizerTest extends TestCase {
 			@Override
 			public void noInputTimeout() {
 				// TODO Auto-generated method stub
-	
+	            _logger.info("no input timeout event");
 			}
 	
 			@Override
 			public void speechEnded() {
 				// TODO Auto-generated method stub
-	
+	            _logger.info("speceh ended event");
 			}
 	
 			@Override
 			public void speechStarted() {
 				// TODO Auto-generated method stub
-	
+	            _logger.info("speech started event");
 			}
+
+			@Override
+            public void recognitionComplete(RecognitionResult rr) {
+	            // TODO Auto-generated method stub
+	            _logger.info("recognition complete: "+rr.getText());
+            }
 	
 		}
 
@@ -61,7 +67,8 @@ public class HttpRecognizerTest extends TestCase {
 	   
 	    
 	    //private static String service = "http://ec2-174-129-20-250.compute-1.amazonaws.com/speechcloud/SpeechUploadServlet";    
-	    private static String service = "http://localhost:8090/speechcloud/SpeechUploadServlet";    
+	    //private static String service = "http://localhost:8090/speechcloud/SpeechUploadServlet";    
+	    private static String service = "http://spokentech.net/speechcloud/SpeechUploadServlet";   
 	    private static AudioFormat desiredFormat;
 	    private static int sampleRate = 8000;
 	    private static boolean signed = true;
@@ -359,6 +366,41 @@ public class HttpRecognizerTest extends TestCase {
             System.out.println("grammar result: "+r.getText());
 	    }
             
+	    public void testRecognizeFileS4EPGrammarAsynch() {
+	    	System.out.println("Starting File EP Test ...");	
+	    	recog.enableAsynchMode(2);
+	    	
+	    	long timeout = 10000;       	
+	    	FileS4EndPointingInputStream2 epStream = new FileS4EndPointingInputStream2();
+
+	    	epStream.setMimeType(s4audio);
+	    	epStream.setupStream(soundFile2);
+	 
+	    	RecognitionResult r = null;
+	    	
+	    	Listener l = new Listener();
+	    	boolean lmflg = false;
+	    	boolean batchFlag = false;
+	        try {	            
+	            recog.recognizeAsynch(grammarUrl,  epStream,  lmflg,  batchFlag, timeout,l) ;
+            } catch (InstantiationException e) {
+	            // TODO Auto-generated catch block
+	            e.printStackTrace();
+            } catch (IOException e) {
+	            // TODO Auto-generated catch block
+	            e.printStackTrace();
+            }
+	    	
+            _logger.info("called asynch method. sleeping for 20 secs");
+            try {
+	            Thread.sleep(20000);
+            } catch (InterruptedException e) {
+	            // TODO Auto-generated catch block
+	            e.printStackTrace();
+            }
+            
+	    }
+	    
 	    public void testRecognizeFileS4EPLm() {
 	    	long timeout = 10000;       	
 	    	FileS4EndPointingInputStream2 epStream = new FileS4EndPointingInputStream2();
@@ -566,6 +608,8 @@ public class HttpRecognizerTest extends TestCase {
 
 	    	
 	    }
+	    
+	    
 
 
 	    //private void testRtpInputS4EP(InputStream stream) {

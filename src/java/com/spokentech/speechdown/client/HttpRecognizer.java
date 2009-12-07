@@ -11,6 +11,7 @@ package com.spokentech.speechdown.client;
 import java.io.BufferedInputStream;
 import com.spokentech.speechdown.common.HttpCommandFields;
 
+import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.File;
 import java.io.IOException;
@@ -62,7 +63,7 @@ public class HttpRecognizer {
 
     private static Logger _logger = Logger.getLogger(HttpRecognizer.class);
      
-    private  String service = "http://localhost:8080/speechcloud/SpeechUploadServlet";    
+    private  String service = "http://spokentech.net/speechcloud/SpeechUploadServlet";    
 
 	//Default values (if not specified as a parameter)
     private static int sampleRate = 8000;
@@ -72,9 +73,17 @@ public class HttpRecognizer {
     private static int sampleSizeInBits = 16;
     
 	private boolean speechStarted = false;
+    private int numThreadsForAsyncCalls;
+	
+    private WorkQueue workQ = null;
     
-    
-    /**
+     
+    public void enableAsynchMode(int numThreadsForAsyncCalls) {
+        this.numThreadsForAsyncCalls = numThreadsForAsyncCalls;
+	    workQ = new WorkQueue(numThreadsForAsyncCalls);
+    }
+
+	/**
      * Gets the service.  The service is the a string containing the URL of the speechCloud server
      * 
      * @return the service
@@ -409,6 +418,54 @@ public class HttpRecognizer {
     }  
 	
 	
+	public  void recognizeAsynch(URL grammarUrl, EndPointingInputStream epStream, boolean lmflg, boolean batchMode, long timeout, SpeechEventListener eventListener ) throws InstantiationException, IOException {
+		InputStream grammarIs = grammarUrl.openStream();
+
+		if (workQ != null) {
+		   AsynchCommand command = new AsynchCommand(AsynchCommand.CommandType.recognize, service, grammarIs, epStream, batchMode, batchMode, timeout, eventListener);
+		   workQ.execute(command);
+		} else {
+			_logger.warn("AsycnMode is not enabled.  Use the enableAsynch(int numthreads) to enable ascynh mode");
+	    }
+	}
+	
+	public  void recognizeAsynch(String grammar, EndPointingInputStream epStream, boolean lmflg, boolean batchMode, long timeout, SpeechEventListener eventListener ) throws InstantiationException, IOException {
+		InputStream grammarIs = new ByteArrayInputStream(grammar.getBytes());
+		
+		if (workQ != null) {
+		   AsynchCommand command = new AsynchCommand(AsynchCommand.CommandType.recognize, service, grammarIs, epStream, batchMode, batchMode, timeout, eventListener);
+		   workQ.execute(command);
+		} else {
+			_logger.warn("AsycnMode is not enabled.  Use the enableAsynch(int numthreads) to enable ascynh mode");
+	    }
+	}	
+
+	/**
+	 * Recognize.  With no listener specified
+	 * 
+	 * @param grammarUrl the grammar url
+	 * @param epStream the ep stream
+	 * @param lmflg the lmflg
+	 * @param batchMode the batch mode
+	 * @param timeout the timeout
+	 * 
+	 * @return the recognition result
+	 * 
+	 * @throws InstantiationException the instantiation exception
+	 * @throws IOException Signals that an I/O exception has occurred.
+	 */
+	public  RecognitionResult recognize(URL grammarUrl, EndPointingInputStream epStream, boolean lmflg, boolean batchMode, long timeout ) throws InstantiationException, IOException {
+		return recognize( grammarUrl,  epStream,  lmflg,  batchMode,  timeout, null);
+	}
+
+	
+	public  RecognitionResult recognize(String grammar, EndPointingInputStream epStream, boolean lmflg, boolean batchMode, long timeout, SpeechEventListener eventListener) throws InstantiationException, IOException {
+		//String charset = Charset.defaultCharset;
+		InputStream is = new ByteArrayInputStream(grammar.getBytes());
+		RecognitionResult r = recognize(is, epStream,lmflg,batchMode,timeout,eventListener);
+		return r;
+	}
+	
 	/**
 	 * Recognize.  This method will do require and endpointing stream as input (containing the audio).  The endpointstream will do endpoing (here on the client)
 	 * This can save bandwidth aty the cost of processing on the client.
@@ -424,15 +481,21 @@ public class HttpRecognizer {
 	 * @throws InstantiationException the instantiation exception
 	 * @throws IOException Signals that an I/O exception has occurred.
 	 */
-	public  RecognitionResult recognize(URL grammarUrl, EndPointingInputStream epStream, boolean lmflg, boolean batchMode, long timeout) throws InstantiationException, IOException {
+	public  RecognitionResult recognize(URL grammarUrl, EndPointingInputStream epStream, boolean lmflg, boolean batchMode, long timeout, SpeechEventListener eventListener) throws InstantiationException, IOException {
 
+		InputStream is = grammarUrl.openStream();
 
-        //create the listener (listens for end points)
+		RecognitionResult r = recognize(is, epStream,lmflg,batchMode,timeout,eventListener);
+		return r;
+	}
 		
+
+	public  RecognitionResult recognize(InputStream grammar, EndPointingInputStream epStream, boolean lmflg, boolean batchMode, long timeout, SpeechEventListener eventListener) throws InstantiationException, IOException {
+
+
+        //create the listener (listens for end points)  A decorator, so also can  pass events back to client
         speechStarted = false;
-        MySpeechEventListener listener = new MySpeechEventListener();
-
-
+        MySpeechEventListener listener = new MySpeechEventListener(eventListener);
 
     	// Plain old http approach    	
     	HttpClient httpclient = new DefaultHttpClient();
@@ -442,13 +505,8 @@ public class HttpRecognizer {
     	MultipartEntity mpEntity = new MultipartEntity();
     	
     	// one part is the grammar
-        InputStreamBody grammarBody = null;
-        try {
-        	grammarBody = new InputStreamBody(grammarUrl.openStream(), "plain/text","grammar.gram");
-        } catch (IOException e1) {
-	        // TODO Auto-generated catch block
-	        e1.printStackTrace();
-        }
+        InputStreamBody grammarBody = new InputStreamBody(grammar, "plain/text","grammar.gram");
+   
   
         //one part is the audio
         InputStreamBody audioBody = new InputStreamBody(epStream.getInputStream(), epStream.getMimeType(),"audio.wav");      
@@ -555,6 +613,10 @@ public class HttpRecognizer {
 	            e.printStackTrace();
             }
         }
+
+        // send back event through the listener (decorator).  If the client did not pass in a eventListener (and it is null), decorator
+        // will do nothing, else propagate the event to the client. 
+        listener.recognitionComplete(r);
 		return r;
 	}
 	
@@ -682,6 +744,8 @@ public class HttpRecognizer {
         } else {
         	return null;
         }
+
+
     }
 
 	
@@ -721,13 +785,24 @@ public class HttpRecognizer {
      * 
      * @see MySpeechEventEvent
      */
-    private class MySpeechEventListener implements SpeechEventListener {
-    
+    private class MySpeechEventListener extends SpeechEventListenerDecorator {
+   
+        /**
+    	 * TODOC.
+    	 * 
+    	 * @param speechEventListener the speech event listener
+    	 */
+        public MySpeechEventListener(SpeechEventListener speechEventListener) {
+            super(speechEventListener);
+        }
+
+    	
 		/* (non-Javadoc)
 		 * @see com.spokentech.speechdown.client.SpeechEventListener#speechEnded()
 		 */
 		public void speechEnded() {
 		    _logger.debug("Speech Ended");
+            super.speechEnded();
 	    }
 
 	    /* (non-Javadoc)
@@ -740,6 +815,7 @@ public class HttpRecognizer {
 				speechStarted=true;
 				this.notifyAll();
 			}
+            super.speechStarted();
 	    }
 
 		/* (non-Javadoc)
@@ -747,7 +823,8 @@ public class HttpRecognizer {
 		 */
 		@Override
         public void noInputTimeout() {
-		    _logger.debug("No input timeout");   
+		    _logger.debug("No input timeout"); 
+            super.noInputTimeout();
         }
     }
 	

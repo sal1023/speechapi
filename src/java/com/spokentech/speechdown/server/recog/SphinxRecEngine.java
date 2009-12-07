@@ -576,6 +576,12 @@ public class SphinxRecEngine extends AbstractPoolableObject implements RecEngine
 
 	        }
 
+			@Override
+            public void recognitionComplete(RecognitionResult rr) {
+	            // TODO Auto-generated method stub
+	            
+            }
+
 	    }
 
     /**

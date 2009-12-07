@@ -4,18 +4,13 @@ import java.io.BufferedInputStream;
 import java.io.BufferedOutputStream;
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
-import java.io.DataInputStream;
 import java.io.DataOutputStream;
 import java.io.File;
-import java.io.FileInputStream;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
-import java.io.PrintWriter;
 import java.util.Enumeration;
-import java.util.LinkedList;
-import java.util.List;
 
 import javax.servlet.ServletConfig;
 import javax.servlet.ServletException;
@@ -26,9 +21,7 @@ import javax.sound.sampled.AudioFileFormat;
 import javax.sound.sampled.AudioFormat;
 import javax.sound.sampled.AudioInputStream;
 import javax.sound.sampled.AudioSystem;
-import javax.sound.sampled.UnsupportedAudioFileException;
 
-import org.apache.commons.fileupload.FileItem;
 import org.apache.commons.fileupload.FileItemIterator;
 import org.apache.commons.fileupload.FileItemStream;
 import org.apache.commons.fileupload.FileUploadException;
@@ -41,11 +34,9 @@ import org.apache.log4j.Logger;
 
 import org.springframework.context.ApplicationContext;
 import org.springframework.web.context.support.WebApplicationContextUtils;
+import org.tritonus.share.sampled.Encodings;
 
 import com.spokentech.speechdown.common.HttpCommandFields;
-import com.spokentech.speechdown.common.RecognitionResult;
-import com.spokentech.speechdown.server.tts.MarySynthesizerService;
-
 
 /**
  * Servlet for uploading audio for speech recognition processing.
@@ -161,6 +152,8 @@ public class SpeechDownloadServlet extends HttpServlet {
 		        				encoding = AudioFormat.Encoding.PCM_SIGNED;
 		        			} else if (value.equals(AudioFormat.Encoding.PCM_UNSIGNED.toString())) {
 		        				encoding = AudioFormat.Encoding.PCM_UNSIGNED;
+		        			} else if (value.equals(Encodings.getEncoding("MPEG1L3").toString())) {
+		        				encoding = Encodings.getEncoding("MPEG1L3");
 		        			} else {
 		        				_logger.warn("Unsupported encoding: "+value);
 		        			}
@@ -178,7 +171,7 @@ public class SpeechDownloadServlet extends HttpServlet {
 			
 
 		    //encoding, samplerate,bytes per samplesize, channels, framesize,framerate,bigendianflag
-	        AudioFormat format = new AudioFormat(encoding, sampleRate, 8, 1, 8, 8000, bigEndian);
+	        AudioFormat format = new AudioFormat(encoding, sampleRate, bytesPerValue, 1, bytesPerValue, sampleRate, bigEndian);
 			//run the synthesizer
 			File f =  null;
 			
