@@ -1,0 +1,36 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE log4j:configuration SYSTEM "log4j.dtd">
+
+<log4j:configuration>
+        
+  <appender name="Console" class="org.apache.log4j.ConsoleAppender">
+     <param name="Target" value="System.err"/> 
+     <layout class="org.apache.log4j.PatternLayout">
+        <param name="ConversionPattern" value="%m%n"/>
+        <!--param name="ConversionPattern" value="%d %-5p {%t} %c%n %m%n"/-->
+     </layout>
+  </appender>
+
+  <!-- Example: switch this priority value to "trace" to see each buffer transferred. -->
+  <category name="org.apache.commons.httpclient">
+    <priority value="info"/>
+  </category>
+  <category name="org.apache.http">
+    <priority value="info"/>
+  </category>
+    <category name="com.spokentech.speechdown.common">
+    <priority value="info"/>
+  </category>
+      <category name="com.spokentech.speechdown.server">
+    <priority value="info"/>
+  </category>
+  <category name="com.spokentech.speechdown.client">
+    <priority value="info"/>
+  </category>
+
+  <root>
+    <priority value="info"/>
+    <appender-ref ref="Console"/>
+  </root>
+
+</log4j:configuration>

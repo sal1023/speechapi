@@ -1,0 +1,82 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<web-app xmlns="http://java.sun.com/xml/ns/j2ee"
+         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="http://java.sun.com/xml/ns/j2ee http://java.sun.com/xml/ns/j2ee/web-app_2_4.xsd"
+         version="2.4">
+
+    <display-name>Speech Cloud Application</display-name>
+	<description>Web application for uploading and processing speech audio files.</description>
+
+    <listener>
+        <listener-class>org.springframework.web.context.ContextLoaderListener</listener-class>
+    </listener>
+
+
+
+   <!-- the jaxws servelet for webservice based communication -->
+
+    <servlet>
+        <servlet-name>jaxws-servlet</servlet-name>
+        <servlet-class>com.sun.xml.ws.transport.http.servlet.WSSpringServlet</servlet-class>
+        <load-on-startup>1</load-on-startup>
+    </servlet>
+    <servlet-mapping>
+        <servlet-name>jaxws-servlet</servlet-name>
+        <url-pattern>/speechlink</url-pattern>
+     </servlet-mapping>
+    
+     <servlet-mapping>
+        <servlet-name>jaxws-servlet</servlet-name>
+        <url-pattern>/speechattach</url-pattern>
+    </servlet-mapping>
+    
+ 
+ 
+    <!--The upload servlet for using straightforward http protocol -->    
+
+	<servlet>
+		<servlet-name>SpeechUploadServlet</servlet-name>
+		<servlet-class>com.spokentech.speechdown.server.SpeechUploadServlet</servlet-class>
+		<init-param>
+			<param-name>tempDir</param-name>
+			<param-value>/TEMP/speechup/tempdir</param-value>
+		</init-param>
+		<init-param>
+			<param-name>destinationDir</param-name>
+			<param-value>/TEMP/speechup/destdir</param-value>
+		</init-param>
+	</servlet>
+	<servlet-mapping>
+		<servlet-name>SpeechUploadServlet</servlet-name>
+		<url-pattern>/SpeechUploadServlet</url-pattern>
+	</servlet-mapping>
+	
+	
+	 
+    <!--The download servlet for using straightforward http protocol -->    
+
+	<servlet>
+		<servlet-name>SpeechDownloadServlet</servlet-name>
+		<servlet-class>com.spokentech.speechdown.server.SpeechDownloadServlet</servlet-class>
+		<init-param>
+			<param-name>tempDir</param-name>
+			<param-value>/TEMP/speechup/tempdir</param-value>
+		</init-param>
+		<init-param>
+			<param-name>destinationDir</param-name>
+			<param-value>/TEMP/speechup/destdir</param-value>
+		</init-param>
+	</servlet>
+	<servlet-mapping>
+		<servlet-name>SpeechDownloadServlet</servlet-name>
+		<url-pattern>/SpeechDownloadServlet</url-pattern>
+	</servlet-mapping>
+	
+	
+	<session-config>
+        <session-timeout>60</session-timeout>
+    </session-config>
+   
+    
+</web-app>
