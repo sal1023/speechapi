@@ -239,7 +239,7 @@ public class HttpRecognizer {
         mpEntity.addPart("audio", audioBody);      
         httppost.setEntity(mpEntity);
          
-        _logger.info("executing request " + httppost.getRequestLine());
+        _logger.debug("executing request " + httppost.getRequestLine());
         HttpResponse response = null;
         try {
 	        response = httpclient.execute(httppost);
@@ -252,14 +252,14 @@ public class HttpRecognizer {
         }
         HttpEntity resEntity = response.getEntity();
 
-        _logger.info(response.getStatusLine());
+        _logger.debug(response.getStatusLine());
         if (resEntity != null) {
-        	_logger.info("Response content length: " + resEntity.getContentLength());
-        	_logger.info("Chunked?: " + resEntity.isChunked());
+        	_logger.debug("Response content length: " + resEntity.getContentLength());
+        	_logger.debug("Chunked?: " + resEntity.isChunked());
 
             Header[] headers = response.getAllHeaders();
             for (int i=0; i<headers.length; i++) {
-            	_logger.info(headers[i]);
+            	_logger.debug(headers[i]);
             }
         }
         
@@ -269,7 +269,7 @@ public class HttpRecognizer {
             try {
                 InputStream s = resEntity.getContent();
                 String result = readInputStreamAsString(s);
-                _logger.info(result);
+                _logger.debug(result);
                 r = RecognitionResult.constructResultFromString(result);
 	            resEntity.consumeContent();
             } catch (IOException e) {
@@ -330,7 +330,7 @@ public class HttpRecognizer {
         // support mark/reset.  That is needed for stremaing using http chunk encoding on the servlet side using file upload.
 		AudioInputStream audioStream = new AudioInputStream(audioLine);
         AudioFormat format = audioStream.getFormat();
-        _logger.info("Actual format: " + format);    	
+        _logger.debug("Actual format: " + format);    	
     	StringBody sampleRate = null;
     	StringBody bigEndian = null;
     	StringBody bytesPerValue = null;
@@ -377,7 +377,7 @@ public class HttpRecognizer {
 
 
 	    //execute the post command
-        _logger.info("executing request " + httppost.getRequestLine());
+        _logger.debug("executing request " + httppost.getRequestLine());
         HttpResponse response = null;
         try {
 	        response = httpclient.execute(httppost);
@@ -392,18 +392,18 @@ public class HttpRecognizer {
         //get the response from the post
         HttpEntity resEntity = response.getEntity();
 
-        _logger.info("----------------------------------------");
-        _logger.info(response.getStatusLine());
+        _logger.debug("----------------------------------------");
+        _logger.debug(response.getStatusLine());
         if (resEntity != null) {
-        	_logger.info("Response content length: " + resEntity.getContentLength());
-        	_logger.info("Chunked?: " + resEntity.isChunked());
+        	_logger.debug("Response content length: " + resEntity.getContentLength());
+        	_logger.debug("Chunked?: " + resEntity.isChunked());
         }
         RecognitionResult r = null;
         if (resEntity != null) {
             try {
                 InputStream s = resEntity.getContent();
                 String result = readInputStreamAsString(s);
-                _logger.info(result);
+                _logger.debug(result);
                 r = RecognitionResult.constructResultFromString(result);
 	            resEntity.consumeContent();
             } catch (IOException e) {
@@ -602,7 +602,7 @@ public class HttpRecognizer {
             try {
                 InputStream s = resEntity.getContent();
                 String result = readInputStreamAsString(s);
-                _logger.info(result);
+                _logger.debug(result);
                 r = RecognitionResult.constructResultFromString(result);
 	            resEntity.consumeContent();
             } catch (IOException e) {
@@ -713,7 +713,7 @@ public class HttpRecognizer {
         mpEntity.addPart("audio", audioBody);      
         httppost.setEntity(mpEntity);
          
-        _logger.info("executing request " + httppost.getRequestLine());
+        _logger.debug("executing request " + httppost.getRequestLine());
         HttpResponse response = null;
         try {
 	        response = httpclient.execute(httppost);
@@ -726,14 +726,14 @@ public class HttpRecognizer {
         }
         HttpEntity resEntity = response.getEntity();
 
-        _logger.info(response.getStatusLine());
+        _logger.debug(response.getStatusLine());
         if (resEntity != null) {
-        	_logger.info("Response content length: " + resEntity.getContentLength());
-        	_logger.info("Chunked?: " + resEntity.isChunked());
+        	_logger.debug("Response content length: " + resEntity.getContentLength());
+        	_logger.debug("Chunked?: " + resEntity.isChunked());
 
             Header[] headers = response.getAllHeaders();
             for (int i=0; i<headers.length; i++) {
-            	_logger.info(headers[i]);
+            	_logger.debug(headers[i]);
             }
         }
         

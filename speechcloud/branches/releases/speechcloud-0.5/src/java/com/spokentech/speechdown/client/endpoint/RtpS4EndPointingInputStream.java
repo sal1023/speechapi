@@ -91,7 +91,7 @@ public class RtpS4EndPointingInputStream extends EndPointingInputStreamBase impl
 	 * @param replicator the new up stream
 	 */
 	public void setupStream(RTPStreamReplicator replicator) {
-		_logger.info("Setting up the stream");
+		_logger.debug("Setting up the stream");
         Validate.notNull(replicator, "Null replicator!");
         this._replicator = replicator;
         setupPipedStream();
@@ -105,7 +105,7 @@ public class RtpS4EndPointingInputStream extends EndPointingInputStreamBase impl
 	 */
 	public void shutdownStream() {
 		//TODO:
-		_logger.info("Shutdown stream not implemented!");
+		_logger.debug("Shutdown stream not implemented!");
 	}
 
 	
@@ -129,8 +129,8 @@ public class RtpS4EndPointingInputStream extends EndPointingInputStreamBase impl
 		}
 		
 		
-		_logger.info("SAL: " +SourceAudioFormat.PREFERRED_MEDIA_FORMATS[0].toString());
-		_logger.info("SAL COUNT:"+SourceAudioFormat.PREFERRED_MEDIA_FORMATS.length);
+		_logger.debug("Format: " +SourceAudioFormat.PREFERRED_MEDIA_FORMATS[0].toString());
+		_logger.debug("Format Count:"+SourceAudioFormat.PREFERRED_MEDIA_FORMATS.length);
 		
 		ProcessorReplicatorPair prp = _replicator.createRealizedProcessor(CONTENT_DESCRIPTOR_RAW, 10000,SourceAudioFormat.PREFERRED_MEDIA_FORMATS); // TODO: specify audio format
 
@@ -157,7 +157,7 @@ public class RtpS4EndPointingInputStream extends EndPointingInputStreamBase impl
 		if (_logger.isDebugEnabled()) {
 			_logger.debug("Starting recognition on stream format: " + streams[0].getFormat());
 		}
-		_logger.info("Starting recognition on stream format: " + streams[0].getFormat());
+		_logger.debug("Starting recognition on stream format: " + streams[0].getFormat());
 		try {
 			_rawAudioTransferHandler = new RawAudioTransferHandler(primaryInput);
 			_rawAudioTransferHandler.startProcessing(streams[0]);

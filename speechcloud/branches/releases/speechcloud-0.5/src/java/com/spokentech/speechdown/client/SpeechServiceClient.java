@@ -38,7 +38,7 @@ public class SpeechServiceClient {
     public static void main (String[] args) {
 
     	
-    	_logger.info("Starting Link service tests ...");
+    	_logger.debug("Starting Link service tests ...");
     	
     	
         SpeechLinkPortType port = new SpeechLinkService().getSpeechLinkPort();
@@ -51,21 +51,21 @@ public class SpeechServiceClient {
 	    linkRequest.grammar = grammar;
 	    linkRequest.audioURL =audio;
         RecResponseType result = port.recognize (linkRequest);
-        _logger.info("The recognition result for Link Service: "+result);
+        _logger.debug("The recognition result for Link Service: "+result);
 
 
 	    String prompt = "Hello world!";
         String ttsAudio = port.synthesize (prompt);
-        _logger.info("The synthesis result for Link Service: "+ttsAudio);
+        _logger.debug("The synthesis result for Link Service: "+ttsAudio);
         /*} catch (SynthesisException_Exception ex) {
             System.out.printf ("Caught SynthesisException_Exception: %s\n", ex.getFaultInfo ().getDetail ());
         } catch (RecognitionException_Exception ex) {
             System.out.printf ("Caught RecognitionException_Exception: %s\n", ex.getFaultInfo ().getDetail ());
         }*/
         
-        _logger.info("... done Link Service tests.");
-    	_logger.info("Starting Attach service tests ...");
-    	_logger.info("First the recognition request.");
+        _logger.debug("... done Link Service tests.");
+    	_logger.debug("Starting Attach service tests ...");
+    	_logger.debug("First the recognition request.");
 
     	
     	SpeechAttachService aService = new SpeechAttachService();
@@ -84,7 +84,7 @@ public class SpeechServiceClient {
 
         String filename = "./etc/prompts/lookupsports.wav"; 
     	File fstart = new File(filename);
-    	_logger.info("File name for the audio file: "+fstart.getAbsolutePath());
+    	_logger.debug("File name for the audio file: "+fstart.getAbsolutePath());
     	DataHandler rdh = new DataHandler(new FileDataSource(filename)); 
     	RecRequestAttachType recRequest = new RecRequestAttachType();
     	recRequest.setAudio(rdh);
@@ -107,7 +107,7 @@ public class SpeechServiceClient {
     	} catch (IOException e2) {
     		_logger.info(e2.getStackTrace());
     	}
-    	_logger.info("Grammar: "+sb);
+    	_logger.debug("Grammar: "+sb);
     	recRequest.setGrammar(sb.toString());
 
     	//Make the Recognition request (returns the recognition results)
@@ -115,14 +115,14 @@ public class SpeechServiceClient {
 
     	try {
     	   RecognitionResult r = RecognitionResult.constructResultFromString(recResult.getSerialized());
-    	   _logger.info("The recognition result is: "+r.getText());
+    	   _logger.debug("The recognition result is: "+r.getText());
     	} catch (InvalidRecognitionResultException e) {
     		e.printStackTrace();
     	}
     	
     	
     	//Synthesize request (returns a wav file attachment)
-    	_logger.info("Starting the synthesis test (attach service)");  	
+    	_logger.debug("Starting the synthesis test (attach service)");  	
         SynthResponseAttachType response = port2.synthesize (prompt);
         DataHandler dh = response.getAudio();
 
@@ -135,10 +135,10 @@ public class SpeechServiceClient {
         //write the attachment to file system
         try {
             if (dh instanceof StreamingDataHandler) {
-            	_logger.info("Data handler is instance of streamdatdaHandler");
+            	_logger.debug("Data handler is instance of streamdatdaHandler");
                 in = ((StreamingDataHandler) dh).readOnce();
             } else {
-            	_logger.info("Data hadnler is not streamdatahandler");
+            	_logger.debug("Data hadnler is not streamdatahandler");
                 in = dh.getInputStream();
             }
             out = new FileOutputStream("data.wav");
@@ -170,7 +170,7 @@ public class SpeechServiceClient {
         }
 
         
-	    _logger.info("The synthesis result is: "+response.getAudio().getName());
+	    _logger.debug("The synthesis result is: "+response.getAudio().getName());
 
     }
 
