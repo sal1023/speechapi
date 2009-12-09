@@ -94,7 +94,7 @@ public class HttpSynthesizer {
         // support mark/reset.  That is needed for stremaing using http chunk encoding on the servlet side using file upload.
 
 
-        _logger.info("Format: " + format);    	
+        _logger.debug("Format: " + format);    	
     	StringBody sampleRate = null;
     	StringBody bigEndian = null;
     	StringBody bytesPerValue = null;
@@ -129,7 +129,7 @@ public class HttpSynthesizer {
         httppost.setEntity(mpEntity);
     
         
-        _logger.info("executing request " + httppost.getRequestLine());
+        _logger.debug("executing request " + httppost.getRequestLine());
         HttpResponse response = null;
         try {
 	        response = httpclient.execute(httppost);
@@ -142,11 +142,11 @@ public class HttpSynthesizer {
         }
         HttpEntity resEntity = response.getEntity();
 
-        _logger.info("----------------------------------------");
-        _logger.info(response.getStatusLine());
+        _logger.debug("----------------------------------------");
+        _logger.debug(response.getStatusLine());
         if (resEntity != null) {
-            _logger.info("Response content length: " + resEntity.getContentLength());
-            _logger.info("Chunked?: " + resEntity.isChunked());
+            _logger.debug("Response content length: " + resEntity.getContentLength());
+            _logger.debug("Chunked?: " + resEntity.isChunked());
 
         }
         InputStream s = null;
