@@ -3,12 +3,10 @@ package com.spokentech.speechdown.server.recog;
 import java.io.FileWriter;
 import java.io.IOException;
 import java.io.InputStream;
-import java.io.OutputStream;
 import java.io.PrintWriter;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Date;
-import java.util.List;
 import java.util.Timer;
 import java.util.TimerTask;
 
@@ -30,11 +28,9 @@ import com.spokentech.speechdown.common.sphinx.SpeechDataMonitor;
 import com.spokentech.speechdown.common.sphinx.WavWriter;
 import com.spokentech.speechdown.server.util.pool.AbstractPoolableObject;
 
-import edu.cmu.sphinx.decoder.Decoder;
 import edu.cmu.sphinx.decoder.ResultListener;
 
 import edu.cmu.sphinx.decoder.scorer.AbstractScorer;
-import edu.cmu.sphinx.decoder.search.SearchManager;
 import edu.cmu.sphinx.frontend.DataBlocker;
 import edu.cmu.sphinx.frontend.DataProcessor;
 import edu.cmu.sphinx.frontend.FrontEnd;
@@ -53,8 +49,6 @@ import edu.cmu.sphinx.frontend.transform.DiscreteFourierTransform;
 import edu.cmu.sphinx.frontend.window.RaisedCosineWindower;
 import edu.cmu.sphinx.jsapi.JSGFGrammar;
 import edu.cmu.sphinx.linguist.acoustic.tiedstate.Sphinx3Loader;
-import edu.cmu.sphinx.linguist.flat.FlatLinguist;
-import edu.cmu.sphinx.linguist.lextree.LexTreeLinguist;
 import edu.cmu.sphinx.recognizer.Recognizer;
 import edu.cmu.sphinx.recognizer.StateListener;
 import edu.cmu.sphinx.recognizer.Recognizer.State;
@@ -74,34 +68,45 @@ public class SphinxRecEngine extends AbstractPoolableObject implements RecEngine
 	protected volatile short _state = COMPLETE;
 
 	private Sphinx3Loader _loader;
-    private Decoder  _decoder;
     private AbstractScorer  _scorer;
-    private SearchManager  _jsgfSearchManager;
-    private SearchManager  _lmSearchManager;
+
 	private FrontEnd fe = null;
-	//private FrontEnd _audioFe;
-	//private FrontEnd _audioEpFe;
-	//private FrontEnd _featureFe;
     private Recognizer _recognizer;
     private JSGFGrammar _jsgfGrammar;
     private boolean hotword = false;       
 	private GrammarManager _grammarManager;
 	private ConfigurationManager _cm;
 	private int _id;
-	private FlatLinguist _flatlingust;
-	private LexTreeLinguist _lexTreelingust;
-	private SpeechDataMonitor _speechDataMonitor;
 	
-	private WavWriter recorder; 
+
 	private String recordingFilePath;
 	private boolean recordingEnabled;
     private FileWriter outTextFile;
 
-
 	protected /*static*/ Timer _timer = new Timer();
-	protected TimerTask _noInputTimeoutTask;
-	
+	protected TimerTask _noInputTimeoutTask;	
 	protected StreamDataSource _dataSource = null;
+	
+	//front end elements
+	DataBlocker dataBlocker ;
+	SpeechClassifier speechClassifier;
+	SpeechMarker speechMarker;
+	NonSpeechDataFilter nonSpeechDataFilter;
+	SpeechDataMonitor speechDataMonitor ;
+	SpeechEventListener listener;
+	InsertSpeechSignalStage insertSpeechSignalStage;
+	IdentityStage identityStage ;
+	Preemphasizer preemphasizer;
+	Dither dither;
+	RaisedCosineWindower raisedCosineWindower ;
+	DiscreteFourierTransform discreteFourierTransform ;
+	MelFrequencyFilterBank melFrequencyFilterBank ;
+	DiscreteCosineTransform discreteCosineTransform ;
+	BatchCMN batchCmn ;
+	LiveCMN liveCmn;
+	LDA lda;
+	DeltasFeatureExtractor deltasFeatureExtractor;
+	private WavWriter recorder; 
 	
     public SphinxRecEngine(ConfigurationManager cm, GrammarManager grammarManager,String prefixId, int id, String recordingFilePath, boolean recordingEnabled) throws IOException, PropertyException, InstantiationException {
 
@@ -127,22 +132,6 @@ public class SphinxRecEngine extends AbstractPoolableObject implements RecEngine
 
 		_recognizer.addStateListener(stateListener);
 
-		//_audioFe = (FrontEnd)_cm.lookup(prefixId+"audio-frontend"+_id);
-		//_featureFe = (FrontEnd)_cm.lookup(prefixId+"feature-frontend"+_id);
-		//_audioEpFe = (FrontEnd)_cm.lookup(prefixId+"audio-ep-frontend"+_id);
-		
-	    //_speechDataMonitor = (SpeechDataMonitor) _cm.lookup(prefixId+"speechDataMonitor"+_id);
-		
-		//_jsgfSearchManager = (SearchManager)_cm.lookup(prefixId+"jsgfSearchManager"+_id);
-		//_jsgfSearchManager.allocate();
-		//_lmSearchManager = (SearchManager)_cm.lookup(prefixId+"lmSearchManager"+_id);
-		//_lmSearchManager.allocate();
-		
-		//_lexTreelingust = (LexTreeLinguist)_cm.lookup("lexTreeLinguist");
-		//_flatlingust = (FlatLinguist)_cm.lookup("flatLinguist");
-		
-		//_decoder = (Decoder)_cm.lookup(prefixId+"decoder"+_id);
-		
 
     	this.recordingEnabled = recordingEnabled;
     	
@@ -152,28 +141,37 @@ public class SphinxRecEngine extends AbstractPoolableObject implements RecEngine
         StringBuilder nowMMDDYYYY = new StringBuilder( dateformatMMDDYYYY.format( dateNow ) );
     	this.recordingFilePath = recordingFilePath+"/"+nowMMDDYYYY+"-";
     	
+    	
+    	// todo:  should be a single filerwriter (but then it must be threadsafe), else each recognizer maybe should have its own file...
+    	// Not really sure of what happens when there is a many Filewriters with the same filename
     	if (recordingEnabled) {
 		    try {
-		    	outTextFile = new FileWriter(recordingFilePath+"/"+nowMMDDYYYY+".txt",true);
+		    	outTextFile = new FileWriter(recordingFilePath+"/"+nowMMDDYYYY+"-"+id+".txt",true);
 		    } catch (IOException e) {
 		        // TODO Auto-generated catch block
 		        e.printStackTrace();
 		    }
     	}
 
+    	//create frontend elements (to be assembled into frontends at run time)
+    	createFrontEndElements();
+    	
+    	
     }
     
-	
-	
+
+
+
+
 	//Recognize using language mode
     public RecognitionResult recognize(InputStream as, String mimeType, int sampleRate, boolean bigEndian, 
     	                               int bytesPerValue, Encoding encoding, boolean doEndpointing, boolean cmnBatch) {
-		_logger.info("Using recognizer # "+_id);
+    	long startTime= System.currentTimeMillis();
+		_logger.info("Using recognizer # "+_id+ ", time: "+startTime);
 	    //SAL
 		//_recognizer.allocate();
-        _logger.debug("After allocate" + System.currentTimeMillis());
-        
-        
+
+
         //set the search manager in real time (to the one configured for language models)
         //_decoder.setSearchManager(_lmSearchManager);
         
@@ -193,7 +191,8 @@ public class SphinxRecEngine extends AbstractPoolableObject implements RecEngine
 	//recognize using a grammar
 	public RecognitionResult recognize(InputStream as, String mimeType, String grammar, int sampleRate, 
 			                           boolean bigEndian, int bytesPerValue, Encoding encoding, boolean doEndpointing, boolean cmnBatch) {
-		_logger.info("Using recognizer # "+_id);
+    	long startTime= System.currentTimeMillis();
+		_logger.info("Using recognizer # "+_id+ ", time: "+startTime);
 	    //SAL
 		//_recognizer.allocate();
         _logger.debug("After allocate" + System.currentTimeMillis());
@@ -239,11 +238,10 @@ public class SphinxRecEngine extends AbstractPoolableObject implements RecEngine
 		//setup the recorder
 		// reuse this rather than construct a new one each time
 		if (recordingEnabled) {
-			boolean isCompletePath = false;
-			int bitsPerSample = bytesPerValue*8;
-			boolean isSigned = true;
-			boolean captureUtts = true;
-			recorder = new WavWriter(recordingFilePath,isCompletePath,bitsPerSample,bigEndian,isSigned,captureUtts);
+			recorder.setBigEndian(bigEndian);
+			recorder.setBitsPerSample(bytesPerValue*8);
+			recorder.setSampleRate(sampleRate);
+			recorder.setSigned(true);
 		}
 	
 	    // configure the audio input for the recognizer
@@ -283,7 +281,7 @@ public class SphinxRecEngine extends AbstractPoolableObject implements RecEngine
 	     
 		 _dataSource.setInputStream(as, "ws-audiostream", sampleRate, bigEndian, bytesPerValue,encoding);
 	    
-		_logger.debug("After setting the input stream" + System.currentTimeMillis());
+		_logger.info("After setting the input stream " + System.currentTimeMillis());
 	    
 		long  start = System.nanoTime();
 	    // decode the audio file.
@@ -616,43 +614,74 @@ public class SphinxRecEngine extends AbstractPoolableObject implements RecEngine
     	   return fe;   	
     }
 
+	
+	
+    private void createFrontEndElements() {
+
+    	// create all the components that may be needed for the front end ahead of time. 
+    	// to save time at recognition requests time.
+    	dataBlocker = new DataBlocker(10);
+    	speechClassifier = new SpeechClassifier(10,0.003,10.0,0.0);
+    	speechMarker = new SpeechMarker(200,200,100,50,100);
+    	nonSpeechDataFilter = new NonSpeechDataFilter();
+    	speechDataMonitor  = new SpeechDataMonitor();
+    	listener = new Listener();
+    	insertSpeechSignalStage = new InsertSpeechSignalStage();
+    	identityStage = new IdentityStage();
+    	preemphasizer = new Preemphasizer(0.97);
+    	dither = new Dither();
+    	raisedCosineWindower = new RaisedCosineWindower(0.46,(float)25.625,(float)10.0);
+    	discreteFourierTransform = new DiscreteFourierTransform(-1,false);
+    	melFrequencyFilterBank = new MelFrequencyFilterBank((double)133.0,(double)3500.0,31);
+    	discreteCosineTransform = new DiscreteCosineTransform(40,13);
+    	batchCmn = new BatchCMN();
+    	liveCmn = new LiveCMN(12,500,800);
+    	deltasFeatureExtractor = new DeltasFeatureExtractor(3);
+    	lda = new LDA(_loader);
+    	
+		boolean isCompletePath = false;
+		int bitsPerSample = 16;
+		boolean isSigned = true;
+		boolean captureUtts = true;
+		boolean bigEndian = false;
+		recorder = new WavWriter(recordingFilePath,isCompletePath,bitsPerSample,bigEndian,isSigned,captureUtts);
+    }
+    
     
     private FrontEnd createAudioFrontend(boolean endpointing, boolean batchCMN, DataProcessor dataSource) {
     	
  	   ArrayList<DataProcessor> components = new ArrayList <DataProcessor>();
  	   components.add(dataSource);
-	   components.add (new DataBlocker(10));
+	   components.add (dataBlocker);
 	   if (endpointing) {
-		  components.add (new SpeechClassifier(10,0.003,10.0,0.0));
-	      components.add (new SpeechMarker(200,200,100,50,100));
-	      components.add (new NonSpeechDataFilter());
-	      SpeechDataMonitor mon = new SpeechDataMonitor();
-		  components.add (mon);
-		  SpeechEventListener listener = new Listener();
-		  mon.setSpeechEventListener(listener);
+		  components.add (speechClassifier);
+	      components.add (speechMarker);
+	      components.add (nonSpeechDataFilter);
+		  components.add (speechDataMonitor);
+		  speechDataMonitor.setSpeechEventListener(listener);
 	   } else {
-		   components.add(new InsertSpeechSignalStage());
+		   components.add(insertSpeechSignalStage);
 	   }
 	   //this is just for logging debug messages.
-	   components.add(new IdentityStage());
+	   components.add(identityStage);
 	   if (recordingEnabled && (recorder != null)) {
 	      components.add(recorder);
 	   }
-	   components.add (new Preemphasizer(0.97));
-	   components.add (new Dither());
-	   components.add (new RaisedCosineWindower(0.46,(float)25.625,(float)10.0));
-	   components.add (new DiscreteFourierTransform(-1,false));
-	   components.add (new MelFrequencyFilterBank((double)133.0,(double)3500.0,31));
+	   components.add (preemphasizer);
+	   components.add (dither);
+	   components.add (raisedCosineWindower);
+	   components.add (discreteFourierTransform);
+	   components.add (melFrequencyFilterBank);
 
-	   components.add (new DiscreteCosineTransform(40,13));
+	   components.add (discreteCosineTransform);
 	   if (batchCMN) {
-	      components.add (new BatchCMN());
+	      components.add (batchCmn);
 	   } else {
-	      components.add (new LiveCMN(12,500,800));
+	      components.add (liveCmn);
 	   }
 	   
-	   components.add (new DeltasFeatureExtractor(3));
-	   components.add (new LDA(_loader));
+	   components.add (deltasFeatureExtractor);
+	   components.add (lda);
 	   	   
        //for (DataProcessor dp : components) {
        //   _logger.debug(dp);
