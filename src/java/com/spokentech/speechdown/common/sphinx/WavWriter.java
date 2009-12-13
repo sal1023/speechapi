@@ -97,7 +97,63 @@ public class WavWriter extends BaseDataProcessor {
         initialize();
     }
 
-    public WavWriter() {
+    /**
+     * @return the bitsPerSample
+     */
+    public int getBitsPerSample() {
+    	return bitsPerSample;
+    }
+
+	/**
+     * @param bitsPerSample the bitsPerSample to set
+     */
+    public void setBitsPerSample(int bitsPerSample) {
+    	this.bitsPerSample = bitsPerSample;
+    }
+
+	/**
+     * @return the isBigEndian
+     */
+    public boolean isBigEndian() {
+    	return isBigEndian;
+    }
+
+	/**
+     * @param isBigEndian the isBigEndian to set
+     */
+    public void setBigEndian(boolean isBigEndian) {
+    	this.isBigEndian = isBigEndian;
+    }
+
+	/**
+     * @return the isSigned
+     */
+    public boolean isSigned() {
+    	return isSigned;
+    }
+
+	/**
+     * @param isSigned the isSigned to set
+     */
+    public void setSigned(boolean isSigned) {
+    	this.isSigned = isSigned;
+    }
+
+	/**
+     * @return the sampleRate
+     */
+    public int getSampleRate() {
+    	return sampleRate;
+    }
+
+	/**
+     * @param sampleRate the sampleRate to set
+     */
+    public void setSampleRate(int sampleRate) {
+    	this.sampleRate = sampleRate;
+    }
+
+	public WavWriter() {
     }
 
     /*
