@@ -171,7 +171,7 @@ public class SpeechDownloadServlet extends HttpServlet {
 			
 
 		    //encoding, samplerate,bytes per samplesize, channels, framesize,framerate,bigendianflag
-	        AudioFormat format = new AudioFormat(encoding, sampleRate, bytesPerValue, 1, bytesPerValue, sampleRate, bigEndian);
+	        AudioFormat format = new AudioFormat(encoding, sampleRate, bytesPerValue*8, 1, bytesPerValue, sampleRate, bigEndian);
 			//run the synthesizer
 			File f =  null;
 			
