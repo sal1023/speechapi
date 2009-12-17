@@ -14,27 +14,15 @@ package com.spokentech.speechdown.server.recog;
 import edu.cmu.sphinx.frontend.*;
 import edu.cmu.sphinx.frontend.endpoint.SpeechEndSignal;
 import edu.cmu.sphinx.frontend.endpoint.SpeechStartSignal;
-import edu.cmu.sphinx.frontend.util.AudioFileProcessListener;
-import edu.cmu.sphinx.frontend.util.DataUtil;
 import edu.cmu.sphinx.util.props.*;
 
 import javax.sound.sampled.AudioFormat;
-import javax.sound.sampled.AudioInputStream;
-import javax.sound.sampled.AudioSystem;
-import javax.sound.sampled.UnsupportedAudioFileException;
 
-import java.io.BufferedWriter;
-import java.io.File;
-import java.io.FileWriter;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.ObjectInputStream;
-import java.net.MalformedURLException;
-import java.net.URL;
-import java.util.ArrayList;
-import java.util.List;
-import org.apache.log4j.Logger;
 
+import org.apache.log4j.Logger;
 
 public class S4DataStreamDataSource extends BaseDataProcessor implements StreamDataSource {
 	private static Logger _logger = Logger.getLogger(S4DataStreamDataSource.class);
@@ -138,18 +126,24 @@ public class S4DataStreamDataSource extends BaseDataProcessor implements StreamD
         return output;
     }
 
+    long sstart;
+    long sstop; 
+    long dstart;
+    long dstop; 
     private void showSignals(Data data) {
 
         if (data instanceof SpeechStartSignal) {
-            _logger.debug("<<<<<<<<<<<<<<< SpeechStartSignal encountered!");
+        	 sstart = System.currentTimeMillis();
+            _logger.debug("<<<<<<<<<<<<<<< SpeechStartSignal encountered at "+ sstart);
         } else if (data instanceof SpeechEndSignal) {
-        	
-            _logger.debug("<<<<<<<<<<<<<<< SpeechEndSignal encountered!");
+       	     sstop = System.currentTimeMillis();
+            _logger.debug("<<<<<<<<<<<<<<< SpeechEndSignal encountered at " + sstop + "it took " +(sstop-sstart) + "length of audio: "+ (totalValues*1000)/sampleRate);
         } else if (data instanceof DataStartSignal) {
-
-            _logger.debug("<<<<<<<<<<<<<<< DataStartSignal encountered!");
+       	     dstart = System.currentTimeMillis();
+            _logger.debug("<<<<<<<<<<<<<<< DataStartSignal encountered at "+ dstart);
         } else if (data instanceof DataEndSignal) {
-            _logger.debug(">>>>>>>>>>>>>>> DataEndSignal encountered!");
+      	     dstop = System.currentTimeMillis();
+            _logger.debug(">>>>>>>>>>>>>>> DataEndSignal encountered at " + dstop + "it took " +(dstop-dstart) + "length of audio: "+ (totalValues*1000)/sampleRate);
         }
 
     }
@@ -185,11 +179,11 @@ public class S4DataStreamDataSource extends BaseDataProcessor implements StreamD
     	long len = 0;
         if (data instanceof DoubleData) {
         	DoubleData dd = (DoubleData) data;
-        	_logger.debug(dd.toString());
+        	_logger.trace(dd.toString());
         } else if (data instanceof FloatData) {
         	FloatData fd = (FloatData) data;
         	len = fd.getValues().length;
-        	_logger.debug("FloatData: " + fd.getSampleRate() + "Hz, first sample #: " +
+        	_logger.trace("FloatData: " + fd.getSampleRate() + "Hz, first sample #: " +
                     fd.getFirstSampleNumber() + ", collect time: " + fd.getCollectTime());
         }
         if (sampleRate == 0)
