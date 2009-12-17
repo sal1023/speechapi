@@ -30,6 +30,10 @@ public class SpeechDataStreamer  extends Thread{
     private BaseDataProcessor frontEnd;
 	private OutputStream out;
     private ObjectOutputStream dout;
+    
+    boolean dataEnded = false;
+    boolean speechEnded = false;
+    
 	/**
      * TODOC
      */
@@ -45,11 +49,13 @@ public class SpeechDataStreamer  extends Thread{
             _logger.debug("streamer <<<<<<<<<<<<<<< SpeechStartSignal encountered!");
         } else if (data instanceof SpeechEndSignal) {
             _logger.debug("streamer <<<<<<<<<<<<<<< SpeechEndSignal encountered!");
+            speechEnded = true;
         } else if (data instanceof DataStartSignal) {
             _logger.debug("streamer <<<<<<<<<<<<<<< DataStartSignal encountered!");
             infoDataStartSignal((DataStartSignal) data);
         } else if (data instanceof DataEndSignal) {
             _logger.debug("streamer >>>>>>>>>>>>>>> DataEndSignal encountered!");
+            dataEnded = true;
         }
 
     }
@@ -88,6 +94,7 @@ public class SpeechDataStreamer  extends Thread{
     	this.frontEnd = frontEnd;
     	this.out = out;
         this.dout = new ObjectOutputStream(out);
+		this.dout.flush();
     	_logger.debug("startStreaming...");
         start();
     }
@@ -95,35 +102,38 @@ public class SpeechDataStreamer  extends Thread{
 
     
     public void run() {
-
+    	long t1 = 0;
+    	long t2 = 0;
+    	long t3 = 0;
     	_logger.debug("start stream pulling");
     	boolean moreData = true;
     	while (moreData) {
-
+   		    t1 = System.nanoTime();
     		Data data = frontEnd.getData();
     		showSignals(data);
     		showData(data);
-    		//_logger.debug("SDS: "+data);
+    		t3 = t2;
+    		t2 = System.nanoTime();
+    		_logger.debug("Data Streamer: time to get from front end: "+(t2-t1) + "  time to write to stream"+ (t1-t3));
  
     		if (data != null) {
     			try {
     				dout.writeObject(data);
+
     			} catch (IOException e) {
     				// TODO Auto-generated catch block
     				e.printStackTrace();
     			}
+    			if (speechEnded || dataEnded) {
+        			moreData=false;
+        			speechEnded = false;
+        			dataEnded = false;
+        			closeOutputStream();
+    			}
     		} else {
     			_logger.debug("Null data");
     			moreData=false;
-    			try {
-    				dout.flush();
-					out.flush();
-	                dout.close();
-	                out.close();
-                } catch (IOException e) {
-	                // TODO Auto-generated catch block
-	                e.printStackTrace();
-                }
+    			closeOutputStream();
     		}
     		
        		/*if (data instanceof DataEndSignal) {
@@ -141,8 +151,17 @@ public class SpeechDataStreamer  extends Thread{
     	}
     }
     	
-    
-
+    private void closeOutputStream() {
+		try {
+			dout.flush();
+			out.flush();
+	        dout.close();
+	        out.close();
+	    } catch (IOException e) {
+	        // TODO Auto-generated catch block
+	        e.printStackTrace();
+	    }
+    }
 
 
 

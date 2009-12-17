@@ -96,6 +96,8 @@ public class SpeechUploadServlet extends HttpServlet {
 	@SuppressWarnings("unchecked")
 	public void doPost(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
 
+		long start = System.currentTimeMillis();
+		_logger.info("New request came in" + start);
 		Enumeration hnames = request.getHeaderNames();
 	    while (hnames.hasMoreElements()) {
 	        String key = (String) hnames.nextElement();
@@ -198,7 +200,8 @@ public class SpeechUploadServlet extends HttpServlet {
 								    out.println("recognition result is null");
 					    		}
 				    		} else {
-
+				    			long stop = System.currentTimeMillis();
+				    			_logger.info("Calling recognizer Service" + stop +" ("+(stop-start) +")" );
 					    		if (lmFlag) {
 					    			result = recognizerService.Recognize(audio,contentType,sampleRate,bigEndian,bytesPerValue,encoding,doEndpointing,cmnBatch);
 					    		} else {
@@ -216,7 +219,8 @@ public class SpeechUploadServlet extends HttpServlet {
 									_logger.debug(textResult);
 									out.println(textResult);
 								}
-					    		
+					    		long stop2 =  System.currentTimeMillis();
+				    			_logger.info("Done! " + stop2 +" ("+(stop2-start) +")" );
 					    	    //String filename = Long.toString(System.currentTimeMillis()) + ".wav";
 					    		//writeStreamToFile2(audio,filename);
 				    		}

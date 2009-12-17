@@ -48,6 +48,8 @@ public class SpeechDataMonitor extends BaseDataProcessor {
     private SpeechEventListener _speechEventListener = null;
     
     private boolean endFlag = false;
+    
+    private long start;
 
     /**
      * TODOC
@@ -80,22 +82,26 @@ public class SpeechDataMonitor extends BaseDataProcessor {
             broadcastSpeechEndSignal();
             //endFlag = true;
         } else if (data instanceof DataStartSignal) {
-            _logger.debug("<<<<<<<<<<<<<<< DataStartSignal encountered!");
+        	start = System.currentTimeMillis();
+            _logger.debug(start+ " <<<<<<<<<<<<<<< DataStartSignal encountered!");
         } else if (data instanceof DataEndSignal) {
-            _logger.debug(">>>>>>>>>>>>>>> DataEndSignal encountered!");
+        	long time = System.currentTimeMillis();
+            _logger.debug(time+"  >>>>>>>>>>>>>>> DataEndSignal encountered! "+(time-start));
         }
         return data;
     }
     
     private void broadcastSpeechStartSignal() {
-        _logger.debug("*************** SpeechStartSignal encountered!");
+    	long time = System.currentTimeMillis();
+        _logger.debug(time+"  *************** SpeechStartSignal encountered! "+(time-start));
         if (_speechEventListener != null) {
             _speechEventListener.speechStarted();
         }
     }
 
     private void broadcastSpeechEndSignal() {
-        _logger.debug("*************** SpeechEndSignal encountered!");
+    	long time = System.currentTimeMillis();
+        _logger.debug(time+ "  *************** SpeechEndSignal encountered!  "+(time-start));
         if (_speechEventListener != null) {
             _speechEventListener.speechEnded();
         }
