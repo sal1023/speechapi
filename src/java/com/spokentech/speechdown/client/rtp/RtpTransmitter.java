@@ -1,6 +1,9 @@
 package com.spokentech.speechdown.client.rtp;
 
+import java.io.BufferedInputStream;
+import java.io.BufferedOutputStream;
 import java.io.File;
+import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.net.InetAddress;
@@ -13,6 +16,7 @@ import javax.sound.sampled.AudioFormat;
 import org.apache.log4j.Logger;
 import org.speechforge.cairo.rtp.AudioFormats;
 import org.speechforge.cairo.rtp.RTPPlayer;
+import org.speechforge.cairo.rtp.RTPPlayerJlibRtpImpl;
 
 import com.spokentech.speechdown.client.PromptPlayListener;
 
@@ -51,8 +55,9 @@ public class RtpTransmitter {
     private static int sampleSizeInBits = 16;
     private  String fileType ="audio/x-au";
     private AudioFormat format;
-    
-    /**
+
+
+	/**
      * TODOC
      * @param localPort 
      * @param remoteAddress 
@@ -89,11 +94,30 @@ public class RtpTransmitter {
         return fileType;
     }
     
-    public synchronized int queueAudio(InputStream stream, PromptPlayListener listener) throws InvalidSessionAddressException, IOException {
+    
 
-        int state = _state;
-        _logger.warn("queueing streams not implemented yet");
-    	return state;
+    //TODO: finish this method.  need to make prompt player in cairo-rtp capable of sending an input stream (processor takes data source or media locator only)
+    public synchronized int queueAudio(InputStream stream, PromptPlayListener listener, String filename) throws InvalidSessionAddressException, IOException { 
+    	int state = _state;
+    	init();
+    	// if queue is empty and player is idle, stream it directly right away, else save it in a file first
+    	//TODO: Finish the prompt streaming 
+    	//TODO:  1) create a flag to check if player is idle (not just empty queue check)
+    	//TODO:  2) make promptPlay a proper command object (rather than checking for null stream)
+    	//TODO:  3) fix the custom datasource in cairo-rtp package
+    	PromptPlay pp;
+    	//if (_promptQueue.size() == 0) {
+    	//	pp = new PromptPlay(null,stream,listener);
+    	//} else {
+    		pp = new PromptPlay(streamToFile(stream,filename),null,listener);
+    	//}
+    	try {
+           _promptQueue.put(pp);
+           _state = SPEAKING;    	
+	    } catch (InterruptedException e) {
+	        throw new RuntimeException(e);
+	    }
+	    return state;
     }
     
     
@@ -107,12 +131,12 @@ public class RtpTransmitter {
                     if (_logger.isDebugEnabled()) {
                         _logger.debug("Queueing feeder prompt: " + FEEDER_PROMPT_FILE.getAbsolutePath());
                     }
-                    _promptQueue.put(new PromptPlay(FEEDER_PROMPT_FILE, null));
+                    _promptQueue.put(new PromptPlay(FEEDER_PROMPT_FILE, null,null));
                 } else if (_logger.isDebugEnabled()) {
                     _logger.debug("Feeder prompt not found: " + FEEDER_PROMPT_FILE.getAbsolutePath());
                 }
             }
-            _promptQueue.put(new PromptPlay(promptFile, listener));
+            _promptQueue.put(new PromptPlay(promptFile,null, listener));
             _state = SPEAKING;
         } catch (InterruptedException e) {
             throw new RuntimeException(e);
@@ -161,7 +185,13 @@ public class RtpTransmitter {
                     _logger.debug("taking next prompt from prompt queue...");
                     promptPlay = _promptQueue.take();
                     _logger.debug("playing next prompt...");
-                    _promptPlayer.playPrompt(promptPlay._promptFile);
+                    
+                    // The idea here is that if the promptPlay command has a stream, play that
+                    // else it must have a file to play
+                    if (promptPlay._promptStream == null)
+                       _promptPlayer.playPrompt(promptPlay._promptFile);
+                    else
+                        _promptPlayer.playStream(promptPlay._promptStream,format);
 
                     // drain all prompts in queue if current prompt playback is interrupted (e.g. by STOP request)
                     drainQueue = Thread.interrupted();
@@ -225,14 +255,38 @@ public class RtpTransmitter {
     private static class PromptPlay {
 
         private File _promptFile;
+        private InputStream _promptStream;
         private PromptPlayListener _listener;
 
-        PromptPlay(File promptFile, PromptPlayListener listener) {
+        PromptPlay(File promptFile, InputStream promptStream, PromptPlayListener listener) {
             _promptFile = promptFile;
             _listener = listener;
+            _promptStream = promptStream;
         }
     }
 
+    
+	private File streamToFile(InputStream inStream,String fname) throws IOException {
+
+        File file = new File(fname);
+		BufferedOutputStream out = new BufferedOutputStream(new FileOutputStream(file));
+		
+		BufferedInputStream in = new BufferedInputStream(inStream);
+
+		byte[] buffer = new byte[256]; 
+		while (true) { 
+			int bytesRead = in.read(buffer);
+			//_logger.trace("Read "+ bytesRead + "bytes.");
+			if (bytesRead == -1) break; 
+			out.write(buffer, 0, bytesRead); 
+		} 
+		_logger.debug("Closing streams");
+		in.close(); 
+		out.close(); 
+
+	    return file;
+    }
+    
     /**
      * TODOC
      * @param args

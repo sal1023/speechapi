@@ -41,6 +41,8 @@
 	
 	<property name="mary-common.jar" value="${lib.dir}/mary-common.jar" />
 	
+	<property name="jlibrtp.jar" value="${lib.dir}/jlibrtp.jar" />
+	<property name="jdom.jar" value="${lib.dir}/jdom.jar" />
 
     <property name="servlet-api.jar" value="${catalina.home}/lib/servlet-api.jar" />
 	<property name="commons-logging.jar" value="${lib.dir}/commons-logging.jar" />
@@ -85,7 +87,8 @@
 	    <!--pathelement	location="${standard.jar}" /-->
 	    
 		<pathelement	location="${mary-common.jar}" />
-		
+		<pathelement	location="${jlibrtp.jar}" />
+		<pathelement	location="${jdom.jar}" />
 
 		<fileset dir="${jaxws.home}/lib">
 			<include name="*.jar" />
