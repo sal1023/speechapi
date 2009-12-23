@@ -28,6 +28,8 @@ import org.speechforge.cairo.rtp.server.sphinx.SourceAudioFormat;
 
 import edu.cmu.sphinx.frontend.FrontEnd;
 import com.spokentech.speechdown.client.sphinx.SpeechDataStreamer;
+import com.spokentech.speechdown.client.util.AFormat;
+import com.spokentech.speechdown.client.util.FormatUtils;
 import com.spokentech.speechdown.common.SpeechEventListener;
 
 // TODO: Auto-generated Javadoc
@@ -114,54 +116,58 @@ public class RtpS4EndPointingInputStream extends EndPointingInputStreamBase impl
      */
 	public void startAudioTransfer(long timeout, SpeechEventListener listener) throws InstantiationException, IOException {
 
-		_logger.debug("STARTING AUIDO TRANSFER!!!!!!");
+		long start = System.currentTimeMillis();
+		_logger.info("STARTING AUIDO TRANSFER!!!!!!  "+start);
 		_listener = new Listener(listener);
 
 		RawAudioProcessor primaryInput = new RawAudioProcessor(10);
 		FrontEnd frontEnd = createFrontend(false, false, primaryInput, _listener);
 
-
-
-		//get the processor from the rtpStream
-		if (_processor != null) {
-			throw new IllegalStateException("Grabbing already in progress!");
-			// TODO: cancel or queue request instead (depending upon value of 'cancel-if-queue' header)
-		}
-		
-		
 		_logger.debug("Format: " +SourceAudioFormat.PREFERRED_MEDIA_FORMATS[0].toString());
 		_logger.debug("Format Count:"+SourceAudioFormat.PREFERRED_MEDIA_FORMATS.length);
+
+		PushBufferStream[] streams = null;
 		
-		ProcessorReplicatorPair prp = _replicator.createRealizedProcessor(CONTENT_DESCRIPTOR_RAW, 10000,SourceAudioFormat.PREFERRED_MEDIA_FORMATS); // TODO: specify audio format
+		//get the processor from the rtpStream
+		if ((_processor != null) && (_pbds != null)) {
+			//throw new IllegalStateException("Grabbing already in progress!");
+			// TODO: cancel or queue request instead (depending upon value of 'cancel-if-queue' header)
+		} else {
+	
+			ProcessorReplicatorPair prp = _replicator.createRealizedProcessor(CONTENT_DESCRIPTOR_RAW, 10000,SourceAudioFormat.PREFERRED_MEDIA_FORMATS); // TODO: specify audio format
 
-		 _processor = prp.getProc();
-		 _pbds = prp.getPbds();
-		PushBufferDataSource dataSource = (PushBufferDataSource) _processor.getDataOutput();
+			_processor = prp.getProc();
+			_pbds = prp.getPbds();
+			PushBufferDataSource dataSource = (PushBufferDataSource) _processor.getDataOutput();
 
-		if (dataSource == null) {
-			throw new IOException("Processor.getDataOutput() returned null!");
-		}
+			if (dataSource == null) {
+				throw new IOException("Processor.getDataOutput() returned null!");
+			}
+
+			long t2 = System.currentTimeMillis();
+			_logger.info("xxx... "+ (t2-start));
 
 
-		_logger.debug("xxx...");
 
-		if (_rawAudioTransferHandler != null) {
-			throw new IllegalStateException("Recognition already in progress!");
-		}
-
-		PushBufferStream[] streams = dataSource.getStreams();
-		if (streams.length != 1) {
-			throw new IllegalArgumentException(
+			streams = dataSource.getStreams();
+			if (streams.length != 1) {
+				throw new IllegalArgumentException(
 					"Rec engine can handle only single stream datasources, # of streams: " + streams);
+			}
+			if (_logger.isDebugEnabled()) {
+				_logger.debug("Starting recognition on stream format: " + streams[0].getFormat());
+			}
 		}
-		if (_logger.isDebugEnabled()) {
-			_logger.debug("Starting recognition on stream format: " + streams[0].getFormat());
-		}
+	    //if (_rawAudioTransferHandler != null) {
+		//	throw new IllegalStateException("Recognition already in progress!");
+		//}
 		_logger.debug("Starting recognition on stream format: " + streams[0].getFormat());
+		long t3 = 0;
 		try {
 			_rawAudioTransferHandler = new RawAudioTransferHandler(primaryInput);
 			_rawAudioTransferHandler.startProcessing(streams[0]);
-			_logger.debug("Started the raw audio transfer handler");
+			t3 = System.currentTimeMillis();
+			_logger.info("Started the raw audio transfer handler "+ (t3-start));
 		} catch (UnsupportedEncodingException e) {
 			e.printStackTrace();
 		}
@@ -176,6 +182,9 @@ public class RtpS4EndPointingInputStream extends EndPointingInputStreamBase impl
 		SpeechDataStreamer sds = new SpeechDataStreamer();
 		sds.startStreaming(frontEnd, outputStream);
 		
+		long t4 = System.currentTimeMillis();
+		_logger.info("RTP stream all set "+(t4-t3));
+		
 		_state = WAITING_FOR_SPEECH;
 		
 	}
@@ -184,17 +193,19 @@ public class RtpS4EndPointingInputStream extends EndPointingInputStreamBase impl
      * @see com.spokentech.speechdown.client.rtp.EndPointingReceiver#stopAudioTransfer()
      */
     public synchronized void stopAudioTransfer() {
-        if (_processor != null) {
-            _logger.debug("Closing processor...");
-            _replicator.removeReplicant(_pbds);
-            _processor.close();
-            _processor = null;
-        }
+    	   if (_rawAudioTransferHandler != null) {
+               _rawAudioTransferHandler.stopProcessing();
+               _rawAudioTransferHandler = null;
+           }
+    	
+        //if (_processor != null) {
+            //_logger.debug("Closing processor...");
+            //_replicator.removeReplicant(_pbds);
+            //_processor.close();
+            //_processor = null;
+        //}
 
-        if (_rawAudioTransferHandler != null) {
-            _rawAudioTransferHandler.stopProcessing();
-            _rawAudioTransferHandler = null;
-        }
+     
   
 
     }
@@ -232,7 +243,7 @@ public class RtpS4EndPointingInputStream extends EndPointingInputStreamBase impl
 	 * @see com.spokentech.speechdown.client.endpoint.EndPointingInputStream#getFormat1()
 	 */
 	@Override
-    public javax.sound.sampled.AudioFormat getFormat1() {
+    public AFormat getFormat() {
 		javax.sound.sampled.AudioFormat f = new javax.sound.sampled.AudioFormat(
 				javax.sound.sampled.AudioFormat.Encoding.PCM_SIGNED,
                 8000,
@@ -241,12 +252,11 @@ public class RtpS4EndPointingInputStream extends EndPointingInputStreamBase impl
                 2,
                 16000,
                 true);;
-		return f;
+        return FormatUtils.covertToNeutral(f);
+
     }
 	
-	/* (non-Javadoc)
-     * @see com.spokentech.speechdown.client.rtp.EndPointingReceiver#getFormat()
-     */
+
 	public AudioFormat getFormat2() {
 		return SourceAudioFormat.PREFERRED_MEDIA_FORMATS[0];
 	}

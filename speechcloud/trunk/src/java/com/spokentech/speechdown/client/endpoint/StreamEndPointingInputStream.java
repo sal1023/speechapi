@@ -17,6 +17,8 @@ import edu.cmu.sphinx.frontend.DataProcessor;
 import edu.cmu.sphinx.frontend.FrontEnd;
 import edu.cmu.sphinx.util.props.ConfigurationManager;
 import com.spokentech.speechdown.client.sphinx.SpeechDataStreamer;
+import com.spokentech.speechdown.client.util.AFormat;
+import com.spokentech.speechdown.client.util.FormatUtils;
 import com.spokentech.speechdown.common.SpeechEventListener;
 import com.spokentech.speechdown.common.sphinx.AudioStreamDataSource;
 import com.spokentech.speechdown.common.sphinx.SpeechDataMonitor;
@@ -149,24 +151,10 @@ public class StreamEndPointingInputStream extends EndPointingInputStreamBase imp
 	/* (non-Javadoc)
 	 * @see com.spokentech.speechdown.client.endpoint.EndPointingInputStream#getFormat1()
 	 */
+
 	@Override
-    public AudioFormat getFormat1() {
-	    // TODO Auto-generated method stub
-		return stream.getFormat();
+    public AFormat getFormat() {
+		return FormatUtils.covertToNeutral(stream.getFormat());
     }
-
-
-	/* (non-Javadoc)
-	 * @see com.spokentech.speechdown.client.endpoint.EndPointingInputStream#getFormat2()
-	 */
-	@Override
-    public javax.media.format.AudioFormat getFormat2() {
-	    // TODO Auto-generated method stub
-	    return null;
-    }
-	
-
-	
-
 	
 }

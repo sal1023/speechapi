@@ -10,6 +10,7 @@ import java.io.IOException;
 import java.io.InputStream;
 
 
+import com.spokentech.speechdown.client.util.AFormat;
 import com.spokentech.speechdown.common.SpeechEventListener;
 
 // TODO: Auto-generated Javadoc
@@ -25,18 +26,12 @@ public interface EndPointingInputStream {
 	public static final short COMPLETE = 2;
 
 	/**
-	 * Gets the format1.  returns the format of the audio (Format defined in java.sound)
+	 * Gets the format.  returns the format of the audio
 	 * 
-	 * @return the format1
+	 * @return the format
 	 */
-	public javax.sound.sampled.AudioFormat getFormat1();
+	public AFormat getFormat();
 	
-	/**
-	 * Gets the format2.   returns the format of the audio (Format defined in JMF)
-	 * 
-	 * @return the format2
-	 */
-	public javax.media.format.AudioFormat getFormat2();
 	
 	/**
 	 * Start audio transfer.
@@ -78,5 +73,8 @@ public interface EndPointingInputStream {
 	 * @return the mime type
 	 */
 	public String getMimeType();
+
+	public void setMimeType(String mimeType);
+
 
 }
