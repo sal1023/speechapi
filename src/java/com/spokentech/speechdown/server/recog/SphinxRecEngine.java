@@ -657,11 +657,15 @@ public class SphinxRecEngine extends AbstractPoolableObject implements RecEngine
 		  components.add (speechClassifier);
 	      components.add (speechMarker);
 	      components.add (nonSpeechDataFilter);
-		  components.add (speechDataMonitor);
-		  speechDataMonitor.setSpeechEventListener(listener);
-	   } else {
-		   components.add(insertSpeechSignalStage);
+	   //} else {
+		
+		//   components.add(insertSpeechSignalStage);
 	   }
+	   _logger.info("Endpointing is: "+endpointing);
+	   //always add the monitor and listener
+	   components.add (speechDataMonitor);
+	   speechDataMonitor.setSpeechEventListener(listener);
+	    
 	   //this is just for logging debug messages.
 	   components.add(identityStage);
 	   if (recordingEnabled && (recorder != null)) {

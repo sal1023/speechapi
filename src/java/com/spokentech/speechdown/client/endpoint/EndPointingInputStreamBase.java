@@ -18,6 +18,7 @@ import org.apache.log4j.Logger;
 import com.spokentech.speechdown.client.SpeechEventListenerDecorator;
 import com.spokentech.speechdown.common.SpeechEventListener;
 import com.spokentech.speechdown.common.sphinx.SpeechDataMonitor;
+import com.spokentech.speechdown.common.sphinx.WavWriter;
 
 import edu.cmu.sphinx.frontend.DataBlocker;
 import edu.cmu.sphinx.frontend.DataProcessor;
@@ -43,7 +44,7 @@ public abstract class EndPointingInputStreamBase implements EndPointingInputStre
 	
     private static Logger _logger = Logger.getLogger(EndPointingInputStreamBase.class);
 	
-    private static int audioBufferSize = 16000;
+    private static int audioBufferSize = 160000;
     
 	protected /*static*/ Timer _timer = new Timer();
 	protected TimerTask _noInputTimeoutTask;
@@ -141,10 +142,12 @@ public abstract class EndPointingInputStreamBase implements EndPointingInputStre
         	 */
         	public void speechEnded() {
 	            _logger.debug("speechEnded()");
+
 	            synchronized (EndPointingInputStreamBase.this) {
-	            	stopAudioTransfer();
+
 	            	_state = COMPLETE;
 	            }
+            	stopAudioTransfer();
 	            super.speechEnded();
 	        }
 
@@ -302,7 +305,17 @@ public abstract class EndPointingInputStreamBase implements EndPointingInputStre
 		   SpeechDataMonitor mon = new SpeechDataMonitor();
 		   components.add (mon);
 		   mon.setSpeechEventListener(_listener);
-		   
+		   boolean recordingEnabled = true;
+		   String recordingFilePath = "c:/tmp/";
+		   if (recordingEnabled ) {
+				boolean isCompletePath = false;
+				int bitsPerSample = 16;
+				boolean isSigned = true;
+				boolean captureUtts = true;
+				boolean bigEndian = false;
+				WavWriter recorder = new WavWriter(recordingFilePath,isCompletePath,bitsPerSample,bigEndian,isSigned,captureUtts);
+			      components.add(recorder);
+		   }
 		   if (featureMode) {
 			   components.add (new Preemphasizer(0.97));
 			   components.add (new Dither());

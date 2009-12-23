@@ -8,6 +8,7 @@ import java.net.MalformedURLException;
 import java.net.URL;
 
 
+import javax.sound.sampled.AudioFileFormat;
 import javax.sound.sampled.AudioFormat;
 import javax.sound.sampled.AudioInputStream;
 import javax.sound.sampled.AudioSystem;
@@ -24,6 +25,8 @@ import org.apache.log4j.Logger;
 import com.spokentech.speechdown.client.endpoint.FileS4EndPointingInputStream2;
 import com.spokentech.speechdown.client.endpoint.StreamEndPointingInputStream;
 import com.spokentech.speechdown.client.endpoint.StreamS4EndPointingInputStream;
+import com.spokentech.speechdown.client.util.AFormat;
+import com.spokentech.speechdown.client.util.FormatUtils;
 import com.spokentech.speechdown.common.RecognitionResult;
 import com.spokentech.speechdown.common.SpeechEventListener;
 
@@ -82,7 +85,7 @@ public class HttpRecognizerTest extends TestCase {
 	    
 		private String grammar = "file:///work/speechcloud/etc/grammar/example.gram";    
 		URL grammarUrl = null;
-		HttpRecognizer recog;
+		HttpRecognizerJavaSound recog;
 		
 		File soundFile1 = new File("c:/work/speechcloud/etc/prompts/lookupsports.wav");	 	
 		File soundFile2 = new File("c:/work/speechcloud/etc/prompts/get_me_a_stock_quote.wav");	 	
@@ -105,7 +108,7 @@ public class HttpRecognizerTest extends TestCase {
 	    
 
 	     protected void setUp() {
-		    	recog = new HttpRecognizer();
+		    	recog = new HttpRecognizerJavaSound();
 		    	recog.setService(service);
 
 		    	try {
@@ -128,11 +131,25 @@ public class HttpRecognizerTest extends TestCase {
 	    	} catch (Exception e) {
 	    		e.printStackTrace();
 	    	}
-	    	AudioFormat format = audioInputStream.getFormat();
+	    	String mimeType = null;
+			if (type == AudioFileFormat.Type.WAVE) {
+				//Always a audio/x-wav
+				mimeType = "audio/x-wav";
+			} else if (type == AudioFileFormat.Type.AU) {
+				mimeType = "audio/x-au";
+			} else {
+				_logger.warn("unhanlded format type "+type.getExtension());
+			}
+	    	
+	        AudioFormat f = audioInputStream.getFormat();
+	        AFormat format = FormatUtils.covertToNeutral(f);
+	       	    	
+	    	
+	    	
 			long start = System.nanoTime();
             try {
 		    	boolean lmflg = true;
-		    	InputStream s = recog.transcribe(audioInputStream, format,type, grammarUrl, lmflg);
+		    	InputStream s = recog.transcribe(audioInputStream, format,mimeType, grammarUrl, lmflg);
 
                 int c;
                 while ((c = s.read()) != -1) {
@@ -254,13 +271,27 @@ public class HttpRecognizerTest extends TestCase {
 	    		e.printStackTrace();
 	    	}
 	    	
+	    	String mimeType = null;
+			if (type == AudioFileFormat.Type.WAVE) {
+				//Always a audio/x-wav
+				mimeType = "audio/x-wav";
+			} else if (type == AudioFileFormat.Type.AU) {
+				mimeType = "audio/x-au";
+			} else {
+				_logger.warn("unhanlded format type "+type.getExtension());
+			}
+	    	
+	        AudioFormat f = audioInputStream.getFormat();
+	        AFormat format = FormatUtils.covertToNeutral(f);
+	       
+	    	
 	    	//run the test
 	    	
 	    	boolean doEndpointing = false;
 	    	boolean lmflg = false;
 	    	boolean batchMode =false;
 	    	long start = System.nanoTime();
-	    	RecognitionResult r = recog.recognize(audioInputStream, audioInputStream.getFormat(), type, grammarUrl, lmflg, doEndpointing,batchMode);
+	    	RecognitionResult r = recog.recognize(audioInputStream, format, mimeType, grammarUrl, lmflg, doEndpointing,batchMode);
 	    	long stop = System.nanoTime();
 	    	long wall = (stop - start)/1000000;
 	    	System.out.println("STREAM TEST: Live mode, No Endpointing Grammar result: "+r.getText() + " took "+wall+ " ms");   	
@@ -286,9 +317,24 @@ public class HttpRecognizerTest extends TestCase {
 	    	} catch (Exception e) {
 	    		e.printStackTrace();
 	    	}
-	    	AudioFormat format = audioInputStream.getFormat();
+	    	
+	    	String mimeType = null;
+			if (type == AudioFileFormat.Type.WAVE) {
+				//Always a audio/x-wav
+				mimeType = "audio/x-wav";
+			} else if (type == AudioFileFormat.Type.AU) {
+				mimeType = "audio/x-au";
+			} else {
+				_logger.warn("unhanlded format type "+type.getExtension());
+			}
+	    	
+	        AudioFormat f = audioInputStream.getFormat();
+	        AFormat format = FormatUtils.covertToNeutral(f);
+	       
+	    	
+	    	
 	    	long start = System.nanoTime();
-	    	RecognitionResult r = recog.recognize(audioInputStream, format, type, grammarUrl, lmflg,doEndpointing, batchMode);
+	    	RecognitionResult r = recog.recognize(audioInputStream, format, mimeType, grammarUrl, lmflg,doEndpointing, batchMode);
 	    	long stop = System.nanoTime();
 	    	long wall = (stop - start)/1000000;
 	    	System.out.println("STREAM TEST: Live mode, Endpointing, with parameter Grammar result: "+r.getText() + " took "+wall+ " ms");   	
@@ -308,14 +354,26 @@ public class HttpRecognizerTest extends TestCase {
 	    	} catch (Exception e) {
 	    		e.printStackTrace();
 	    	}
-	        AudioFormat format = audioInputStream.getFormat();
+	    	
+	    	String mimeType = null;
+			if (type == AudioFileFormat.Type.WAVE) {
+				//Always a audio/x-wav
+				mimeType = "audio/x-wav";
+			} else if (type == AudioFileFormat.Type.AU) {
+				mimeType = "audio/x-au";
+			} else {
+				_logger.warn("unhanlded format type "+type.getExtension());
+			}
+	    	
+	        AudioFormat f = audioInputStream.getFormat();
+	        AFormat format = FormatUtils.covertToNeutral(f);
 	        	        
 	    	//run the test
 	    	boolean lmflg = true;
 	    	boolean doEndpointing = true;
 	    	boolean batchMode = false;
 	    	long start = System.nanoTime();
-	    	RecognitionResult r = recog.recognize(audioInputStream, format, type, null, lmflg,doEndpointing, batchMode);
+	    	RecognitionResult r = recog.recognize(audioInputStream, format, mimeType, null, lmflg,doEndpointing, batchMode);
 	    	long stop = System.nanoTime();
 	    	long wall = (stop - start)/1000000;
 	    	System.out.println("STREAM TEST: Live mode, Endpointing, with parameter LM result: "+r.getText() + " took "+wall+ " ms");   	

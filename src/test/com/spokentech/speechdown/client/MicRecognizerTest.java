@@ -44,7 +44,7 @@ public class MicRecognizerTest extends TestCase {
     
 	private String grammar = "file:///work/speechcloud/etc/grammar/example.gram";    
 	URL grammarUrl = null;
-	HttpRecognizer recog;
+	HttpRecognizerJavaSound recog;
 	
 	File soundFile1 = new File("c:/work/speechcloud/etc/prompts/lookupsports.wav");	 	
 	File soundFile2 = new File("c:/work/speechcloud/etc/prompts/get_me_a_stock_quote.wav");	 	
@@ -79,7 +79,7 @@ public class MicRecognizerTest extends TestCase {
 	
 	
 	     protected void setUp() {
-		    	recog = new HttpRecognizer();
+		    	recog = new HttpRecognizerJavaSound();
 		    	recog.setService(service);
 
 		    	try {

@@ -55,8 +55,8 @@ public class HttpSynthesizerTest extends TestCase {
     public static final String CRLF = "\r\n";
     
    
-    //private static String service = "http://ec2-174-129-20-250.compute-1.amazonaws.com/speechcloud/SpeechDownloadServlet";  
-    private static String service = "http://localhost:8090/speechcloud/SpeechDownloadServlet";    
+    private static String service = "http://ec2-174-129-20-250.compute-1.amazonaws.com/speechcloud/SpeechDownloadServlet";  
+    //private static String service = "http://localhost:8090/speechcloud/SpeechDownloadServlet";    
 
     private static int sampleRate = 16000;
     private static boolean signed = true;
@@ -76,6 +76,7 @@ public class HttpSynthesizerTest extends TestCase {
     
     private  AudioFormat format;
     private  AudioFormat format2;
+    private  AudioFormat format3;
 	
 	     protected void setUp() {
 		    	synth = new HttpSynthesizer();
@@ -90,16 +91,19 @@ public class HttpSynthesizerTest extends TestCase {
 		                1,
 		                2,
 		                16000,
-		                true);
+		                false);
 		    	
 		    	format2 = new AudioFormat(
 		                Encodings.getEncoding("MPEG1L3"),
-		                32000,
-		                16,
+		                44100,
+		                32,
 		                1,
 		                2,
-		                11000,
+		                11025,
 		                true);
+		    	
+		        format3 = new AudioFormat ( 44100, 32, channels, signed, bigEndian);             
+		        
 		    	
 		    	System.out.println(format.toString());
 		    	System.out.println(format2.toString());

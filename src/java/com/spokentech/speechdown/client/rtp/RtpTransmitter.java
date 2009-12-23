@@ -55,7 +55,23 @@ public class RtpTransmitter {
     private static int sampleSizeInBits = 16;
     private  String fileType ="audio/x-au";
     private AudioFormat format;
+    
+    private String tempDirForPrompts = "c:/temp/";
 
+
+	/**
+     * @return the tempDirForPrompts
+     */
+    public String getTempDirForPrompts() {
+    	return tempDirForPrompts;
+    }
+
+	/**
+     * @param tempDirForPrompts the tempDirForPrompts to set
+     */
+    public void setTempDirForPrompts(String tempDirForPrompts) {
+    	this.tempDirForPrompts = tempDirForPrompts;
+    }
 
 	/**
      * TODOC
@@ -101,15 +117,13 @@ public class RtpTransmitter {
     	int state = _state;
     	init();
     	// if queue is empty and player is idle, stream it directly right away, else save it in a file first
-    	//TODO: Finish the prompt streaming 
-    	//TODO:  1) create a flag to check if player is idle (not just empty queue check)
-    	//TODO:  2) make promptPlay a proper command object (rather than checking for null stream)
-    	//TODO:  3) fix the custom datasource in cairo-rtp package
+    	//TODO:  make promptPlay a proper command object (rather than checking for null stream)
+    	//TODO:  add the prompt streamer back in (still clicks a little bit)
     	PromptPlay pp;
-    	//if (_promptQueue.size() == 0) {
+    	//if (_state != SPEAKING) {
     	//	pp = new PromptPlay(null,stream,listener);
     	//} else {
-    		pp = new PromptPlay(streamToFile(stream,filename),null,listener);
+    		pp = new PromptPlay(streamToFile(stream,tempDirForPrompts+filename),null,listener);
     	//}
     	try {
            _promptQueue.put(pp);
