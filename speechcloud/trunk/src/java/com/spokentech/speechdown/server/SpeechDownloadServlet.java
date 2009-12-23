@@ -41,7 +41,7 @@ import com.spokentech.speechdown.common.HttpCommandFields;
 /**
  * Servlet for uploading audio for speech recognition processing.
  *
- * @author nielsgodfredsen
+ * @author Spencer Lord
  */
 @SuppressWarnings("serial")
 public class SpeechDownloadServlet extends HttpServlet {
@@ -89,14 +89,11 @@ public class SpeechDownloadServlet extends HttpServlet {
 		synthesizerService = (SynthesizerService)context.getBean("synthesizerService");
 	
 	}
-
-	/* (non-Javadoc)
-	 * @see javax.servlet.http.HttpServlet#doPost(javax.servlet.http.HttpServletRequest, javax.servlet.http.HttpServletResponse)
-	 */
-	@Override
-	@SuppressWarnings("unchecked")
-	public void doPost(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
-
+	
+	
+    // This method handles both GET and POST requests.
+    private void doGetOrPost(HttpServletRequest request, HttpServletResponse response) throws IOException {
+   
 		Enumeration hnames = request.getHeaderNames();
 	    while (hnames.hasMoreElements()) {
 	        String key = (String) hnames.nextElement();
@@ -112,101 +109,87 @@ public class SpeechDownloadServlet extends HttpServlet {
 	    String mime = "audio/x-wav";
 	    AudioFormat.Encoding encoding = AudioFormat.Encoding.PCM_SIGNED;
 	    //AudioFileFormat.Type fileFormat = AudioFileFormat.Type.AU; 
+    	
+        // Get the values of all request parameters
+    	Enumeration params = request.getParameterNames();
+	    while (params.hasMoreElements()) {
+            // Get the name of the request parameter
+            String name = (String)params.nextElement();
+
+            // Get the value of the request parameter
+            String value = request.getParameter(name);
+    
+            // If the request parameter can appear more than once in the query string, get all values
+            //String[] values = request.getParameterValues(name);
+	        _logger.debug("Form field " + name + " with value " + value + " detected.");
+	        if (name.equals(HttpCommandFields.SAMPLE_RATE_FIELD_NAME)) {
+	        	sampleRate = Integer.parseInt(value);
+	        }else if (name.equals(HttpCommandFields.TEXT)) {
+	        	text = value;
+	        }else if (name.equals(HttpCommandFields.VOICE_NAME)) {
+	        	voice = value;
+	        } else if (name.equals(HttpCommandFields.BIG_ENDIAN_FIELD_NAME)) {
+	        	bigEndian = Boolean.parseBoolean(value);
+        	} else if (name.equals(HttpCommandFields.BYTES_PER_VALUE_FIELD_NAME)) {
+	        	bytesPerValue = Integer.parseInt(value);
+    		} else if (name.equals(HttpCommandFields.MIME_TYPE)) {
+    			mime = value;
+    
+    		} else if (name.equals(HttpCommandFields.ENCODING_FIELD_NAME)) {
+    			if (value.equals(AudioFormat.Encoding.ALAW.toString())) {
+    				encoding = AudioFormat.Encoding.ALAW;
+    			} else if (value.equals(AudioFormat.Encoding.ULAW.toString())) {
+    				encoding = AudioFormat.Encoding.ULAW;
+    			} else if (value.equals(AudioFormat.Encoding.PCM_SIGNED.toString())) {
+    				encoding = AudioFormat.Encoding.PCM_SIGNED;
+    			} else if (value.equals(AudioFormat.Encoding.PCM_UNSIGNED.toString())) {
+    				encoding = AudioFormat.Encoding.PCM_UNSIGNED;
+    			} else if (value.equals(Encodings.getEncoding("MPEG1L3").toString())) {
+    				encoding = Encodings.getEncoding("MPEG1L3");
+    			} else {
+    				_logger.warn("Unsupported encoding: "+value);
+    			}
+	        } else {
+	        	_logger.warn("Unrecognized field "+name+ " = "+value);
+	        }
+        }
 	    
-		// Create a new file upload handler
-		ServletFileUpload upload = new ServletFileUpload();
 
+	    //encoding, samplerate,bytes per samplesize, channels, framesize,framerate,bigendianflag
+        AudioFormat format = new AudioFormat(encoding, sampleRate, bytesPerValue*8, 1, bytesPerValue, sampleRate, bigEndian);
+		//run the synthesizer
+		
+		response.setContentType("audio/x-wav");
+		response.setHeader("Content-Disposition", "attachment; filename=synthesized.wav'");			
+		response.setHeader("Transfer-coding","chunked");
+		
+    	try {
+    		_logger.debug("sythesizing audio!  Sample rate= "+sampleRate+", bigEndian= "+ bigEndian+", bytes per value= "+bytesPerValue+", encoding= "+encoding.toString());
+    	     //f = synthesizerService.ttsFile(text,format,fileFormat);
+    	     synthesizerService.streamTTS(text,format,mime,voice,response.getOutputStream());
+    	} catch (Exception e) {
+    		e.printStackTrace();
+    	}
+    	
+		OutputStream out = response.getOutputStream();
 
-    	//TODO: grammar must be the first item processed in the iterator
-		// Parse the request
-		try {
-			FileItemIterator iter = upload.getItemIterator(request);
-			while (iter.hasNext()) {
-			    FileItemStream item = iter.next();
-			    String name = item.getFieldName();
-			    InputStream stream = item.openStream();
-			    String contentType = item.getContentType();
-			    if (item.isFormField()) {
-			    	String value = Streams.asString(stream);
-			        _logger.debug("Form field " + name + " with value " + value + " detected.");
-			        try { 
-				        if (name.equals(HttpCommandFields.SAMPLE_RATE_FIELD_NAME)) {
-				        	sampleRate = Integer.parseInt(value);
-				        }else if (name.equals(HttpCommandFields.TEXT)) {
-				        	text = value;
-				        }else if (name.equals(HttpCommandFields.VOICE_NAME)) {
-				        	voice = value;
-				        } else if (name.equals(HttpCommandFields.BIG_ENDIAN_FIELD_NAME)) {
-				        	bigEndian = Boolean.parseBoolean(value);
-			        	} else if (name.equals(HttpCommandFields.BYTES_PER_VALUE_FIELD_NAME)) {
-				        	bytesPerValue = Integer.parseInt(value);
-		        		} else if (name.equals(HttpCommandFields.MIME_TYPE)) {
-		        			mime = value;
-		        
-		        		} else if (name.equals(HttpCommandFields.ENCODING_FIELD_NAME)) {
-		        			if (value.equals(AudioFormat.Encoding.ALAW.toString())) {
-		        				encoding = AudioFormat.Encoding.ALAW;
-		        			} else if (value.equals(AudioFormat.Encoding.ULAW.toString())) {
-		        				encoding = AudioFormat.Encoding.ULAW;
-		        			} else if (value.equals(AudioFormat.Encoding.PCM_SIGNED.toString())) {
-		        				encoding = AudioFormat.Encoding.PCM_SIGNED;
-		        			} else if (value.equals(AudioFormat.Encoding.PCM_UNSIGNED.toString())) {
-		        				encoding = AudioFormat.Encoding.PCM_UNSIGNED;
-		        			} else if (value.equals(Encodings.getEncoding("MPEG1L3").toString())) {
-		        				encoding = Encodings.getEncoding("MPEG1L3");
-		        			} else {
-		        				_logger.warn("Unsupported encoding: "+value);
-		        			}
-				        } else {
-				        	_logger.warn("Unrecognized field "+name+ " = "+value);
-				        }
-			        } catch (Exception e) {
-			        	_logger.warn("Exception " + e.getMessage() + "ooccured while processing field name= "+name +" with value= "+value);
-			        }
-			    } else {
-			        _logger.debug("File field " + name + " with file name " + item.getName() + " detected.");
-			    }
-			}
-			
-			
+        out.flush();
+        out.close();
+	    
 
-		    //encoding, samplerate,bytes per samplesize, channels, framesize,framerate,bigendianflag
-	        AudioFormat format = new AudioFormat(encoding, sampleRate, bytesPerValue*8, 1, bytesPerValue, sampleRate, bigEndian);
-			//run the synthesizer
-			File f =  null;
-			
-			response.setContentType("audio/x-wav");
-			response.setHeader("Content-Disposition", "attachment; filename=synthesized.wav'");			
-			response.setHeader("Transfer-coding","chunked");
-			
-	    	try {
-	    		_logger.debug("sythesizing audio!  Sample rate= "+sampleRate+", bigEndian= "+ bigEndian+", bytes per value= "+bytesPerValue+", encoding= "+encoding.toString());
-	    	     //f = synthesizerService.ttsFile(text,format,fileFormat);
-	    	     synthesizerService.streamTTS(text,format,mime,voice,response.getOutputStream());
-	    	} catch (Exception e) {
-	    		e.printStackTrace();
-	    	}
-	    	
-	    	
-	    	//TODO: Get a stream in the first place (no need to go to a file first)
-	    	//take the output file and put in the response stream
-			OutputStream out = response.getOutputStream();
+    }
 
+	
+	
 
-	        out.flush();
-	        out.close();
+	/* (non-Javadoc)
+	 * @see javax.servlet.http.HttpServlet#doPost(javax.servlet.http.HttpServletRequest, javax.servlet.http.HttpServletResponse)
+	 */
+	@Override
+	@SuppressWarnings("unchecked")
+	public void doPost(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
+		doGetOrPost(request,response);
 
-			
-				
-			// store file list and pass control to view jsp
-			//request.setAttribute("fileUploadList", filenames);
-			//this.getServletContext().getRequestDispatcher("/speechup_result.jsp").forward(request, response);
-
-		} catch (IOFileUploadException e) {
-			throw (IOException) e.getCause();
-		} catch (FileUploadException e) {
-			throw new ServletException(e.getMessage(), e);
-		}
 	}
 
 	
@@ -217,8 +200,10 @@ public class SpeechDownloadServlet extends HttpServlet {
 	 */
 	@Override
 	public void doGet(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
-		response.sendRedirect(response.encodeRedirectURL("/")); // TODO: allow redirect location to be configured
+		doGetOrPost(request,response);
 	}
+	
+
 	
 	public  String readInputStreamAsString(InputStream in) throws IOException {
 
@@ -321,6 +306,118 @@ public class SpeechDownloadServlet extends HttpServlet {
 			_logger.warn("upload Exception"); e.printStackTrace(); 
 			e.printStackTrace();
 		} 
+	}
+	
+	public void oldDoPost(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
+
+		Enumeration hnames = request.getHeaderNames();
+	    while (hnames.hasMoreElements()) {
+	        String key = (String) hnames.nextElement();
+	        _logger.debug(key + " -- " + request.getHeader(key));
+	      }
+
+	    //set the audio format parameters to default values
+	    int sampleRate = 8000;
+	    boolean bigEndian = true;
+	    int bytesPerValue = 2;
+	    String text = "";
+	    String voice = "";
+	    String mime = "audio/x-wav";
+	    AudioFormat.Encoding encoding = AudioFormat.Encoding.PCM_SIGNED;
+	    //AudioFileFormat.Type fileFormat = AudioFileFormat.Type.AU; 
+	    
+		// Create a new file upload handler
+		ServletFileUpload upload = new ServletFileUpload();
+
+
+    	//TODO: grammar must be the first item processed in the iterator
+		// Parse the request
+		try {
+			FileItemIterator iter = upload.getItemIterator(request);
+			while (iter.hasNext()) {
+			    FileItemStream item = iter.next();
+			    String name = item.getFieldName();
+			    InputStream stream = item.openStream();
+			    String contentType = item.getContentType();
+			    if (item.isFormField()) {
+			    	String value = Streams.asString(stream);
+			        _logger.debug("Form field " + name + " with value " + value + " detected.");
+			        try { 
+				        if (name.equals(HttpCommandFields.SAMPLE_RATE_FIELD_NAME)) {
+				        	sampleRate = Integer.parseInt(value);
+				        }else if (name.equals(HttpCommandFields.TEXT)) {
+				        	text = value;
+				        }else if (name.equals(HttpCommandFields.VOICE_NAME)) {
+				        	voice = value;
+				        } else if (name.equals(HttpCommandFields.BIG_ENDIAN_FIELD_NAME)) {
+				        	bigEndian = Boolean.parseBoolean(value);
+			        	} else if (name.equals(HttpCommandFields.BYTES_PER_VALUE_FIELD_NAME)) {
+				        	bytesPerValue = Integer.parseInt(value);
+		        		} else if (name.equals(HttpCommandFields.MIME_TYPE)) {
+		        			mime = value;
+		        
+		        		} else if (name.equals(HttpCommandFields.ENCODING_FIELD_NAME)) {
+		        			if (value.equals(AudioFormat.Encoding.ALAW.toString())) {
+		        				encoding = AudioFormat.Encoding.ALAW;
+		        			} else if (value.equals(AudioFormat.Encoding.ULAW.toString())) {
+		        				encoding = AudioFormat.Encoding.ULAW;
+		        			} else if (value.equals(AudioFormat.Encoding.PCM_SIGNED.toString())) {
+		        				encoding = AudioFormat.Encoding.PCM_SIGNED;
+		        			} else if (value.equals(AudioFormat.Encoding.PCM_UNSIGNED.toString())) {
+		        				encoding = AudioFormat.Encoding.PCM_UNSIGNED;
+		        			} else if (value.equals(Encodings.getEncoding("MPEG1L3").toString())) {
+		        				encoding = Encodings.getEncoding("MPEG1L3");
+		        			} else {
+		        				_logger.warn("Unsupported encoding: "+value);
+		        			}
+				        } else {
+				        	_logger.warn("Unrecognized field "+name+ " = "+value);
+				        }
+			        } catch (Exception e) {
+			        	_logger.warn("Exception " + e.getMessage() + "ooccured while processing field name= "+name +" with value= "+value);
+			        }
+			    } else {
+			        _logger.debug("File field " + name + " with file name " + item.getName() + " detected.");
+			    }
+			}
+			
+			
+
+		    //encoding, samplerate,bytes per samplesize, channels, framesize,framerate,bigendianflag
+	        AudioFormat format = new AudioFormat(encoding, sampleRate, bytesPerValue*8, 1, bytesPerValue, sampleRate, bigEndian);
+			//run the synthesizer
+			File f =  null;
+			
+			response.setContentType("audio/x-wav");
+			response.setHeader("Content-Disposition", "attachment; filename=synthesized.wav'");			
+			response.setHeader("Transfer-coding","chunked");
+			
+	    	try {
+	    		_logger.debug("sythesizing audio!  Sample rate= "+sampleRate+", bigEndian= "+ bigEndian+", bytes per value= "+bytesPerValue+", encoding= "+encoding.toString());
+	    	     //f = synthesizerService.ttsFile(text,format,fileFormat);
+	    	     synthesizerService.streamTTS(text,format,mime,voice,response.getOutputStream());
+	    	} catch (Exception e) {
+	    		e.printStackTrace();
+	    	}
+	    	
+	    	
+	    	//TODO: Get a stream in the first place (no need to go to a file first)
+	    	//take the output file and put in the response stream
+			OutputStream out = response.getOutputStream();
+
+
+	        out.flush();
+	        out.close();
+	
+			// store file list and pass control to view jsp
+			//request.setAttribute("fileUploadList", filenames);
+			//this.getServletContext().getRequestDispatcher("/speechup_result.jsp").forward(request, response);
+
+		} catch (IOFileUploadException e) {
+			throw (IOException) e.getCause();
+		} catch (FileUploadException e) {
+			throw new ServletException(e.getMessage(), e);
+		}
 	}
 
 }
