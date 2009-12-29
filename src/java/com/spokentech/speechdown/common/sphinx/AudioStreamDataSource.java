@@ -28,8 +28,9 @@ import java.net.MalformedURLException;
 import java.net.URL;
 import java.util.ArrayList;
 import java.util.List;
-import org.apache.log4j.Logger;
+import java.util.logging.Logger;
 
+import com.spokentech.speechdown.client.util.AFormat;
 import com.spokentech.speechdown.server.recog.StreamDataSource;
 
 import java.io.PipedInputStream;
@@ -46,7 +47,7 @@ import java.io.PipedInputStream;
  */
 
 public class AudioStreamDataSource extends BaseDataProcessor implements StreamDataSource {
-	private static Logger _logger = Logger.getLogger(AudioStreamDataSource.class);
+	private static Logger _logger = Logger.getLogger(AudioStreamDataSource.class.getName());
     /** SphinxProperty for the number of bytes to read from the InputStream each time. */
     @S4Integer(defaultValue = 1024)
     public static final String PROP_BYTES_PER_READ = "bytesPerRead";
@@ -188,7 +189,7 @@ public class AudioStreamDataSource extends BaseDataProcessor implements StreamDa
         utteranceStarted = false;
         totalValuesRead = 0;
 
-        _logger.debug("inputstream "+inputStream);
+        _logger.fine("inputstream "+inputStream);
 
         //AudioFormat format = inputStream.getFormat();
         this.sampleRate = 8000; 
@@ -248,34 +249,32 @@ public class AudioStreamDataSource extends BaseDataProcessor implements StreamDa
     }
 
     
+
+
     /**
      * Sets the InputStream from which this StreamDataSource reads.
      *
      * @param inputStream the InputStream from which audio data comes
      * @param streamName  the name of the InputStream
      */
-    public void setInputStream(InputStream inputStream, String streamName, int sampleRate, boolean bigEndian, int bytesPerValue, AudioFormat.Encoding encoding) {
+    public void setInputStream(InputStream inputStream, String streamName, AFormat format) {
         dataStream = inputStream;
         streamEndReached = false;
         utteranceEndSent = false;
         utteranceStarted = false;
         totalValues = 0;
 
-        
-        _logger.debug("inputstream "+inputStream);
+        //int sampleRate, boolean bigEndian, int bytesPerValue, String encoding
+        _logger.fine("inputstream "+inputStream);
 
         //AudioFormat format = inputStream.getFormat();
-        this.sampleRate = sampleRate; 
-        this.bigEndian = bigEndian;
-        this.bytesPerValue = bytesPerValue;
+        this.sampleRate = (int) format.getSampleRate(); 
+        this.bigEndian = format.isBigEndian();
+        this.bytesPerValue = format.getSampleSizeInBits()/8;
 
-        // test whether all files in the stream have the same format
-        if (encoding.equals(AudioFormat.Encoding.PCM_SIGNED))
-            signedData = true;
-        else if (encoding.equals(AudioFormat.Encoding.PCM_UNSIGNED))
-            signedData = false;
-        else
-            throw new RuntimeException("used file encoding is not supported");
+        signedData =format.isSigned();
+        
+ 
 
         totalValuesRead = 0;
     }
@@ -298,24 +297,24 @@ public class AudioStreamDataSource extends BaseDataProcessor implements StreamDa
                 // sample number should be 'totalValuesRead - 1'
                 output = createDataEndSignal();
                 utteranceEndSent = true;
-                _logger.debug("Sending end signal");
+                _logger.fine("Sending end signal");
             } else {
-            	_logger.debug("Not Sending end signal");          	
+            	_logger.fine("Not Sending end signal");          	
             }
         } else {
             if (!utteranceStarted) {
                 utteranceStarted = true;
                 output = new DataStartSignal(sampleRate);
-                _logger.debug("Sending start signal ");
+                _logger.fine("Sending start signal ");
             } else {
                 if (dataStream != null) {
                     output = readNextFrame();
-                    _logger.debug("Getting the next frame");
+                    _logger.fine("Getting the next frame");
                     if (output == null) {
                         if (!utteranceEndSent) {
                             output = createDataEndSignal();
                             utteranceEndSent = true;
-                            _logger.debug(".. but was null, sending end signal2");
+                            _logger.fine(".. but was null, sending end signal2");
                         }
                     }
                 }
@@ -388,7 +387,7 @@ public class AudioStreamDataSource extends BaseDataProcessor implements StreamDa
             doubleData = DataUtil.littleEndianBytesToValues(samplesBuffer, 0, totalRead, bytesPerValue, signedData);
         }
 
-        _logger.debug("Total read in this frame: "+totalRead);
+        _logger.fine("Total read in this frame: "+totalRead);
         totalValues = totalValues + doubleData.length;
         //try {
         //	for (int i=0;i<doubleData.length;i++) {
@@ -400,13 +399,13 @@ public class AudioStreamDataSource extends BaseDataProcessor implements StreamDa
         //	e.printStackTrace();
         //}
 
-        _logger.debug("writing double data,  "+ doubleData.length+ " values"+doubleData[0]+ " "+doubleData[doubleData.length-1]);
+        _logger.fine("writing double data,  "+ doubleData.length+ " values"+doubleData[0]+ " "+doubleData[doubleData.length-1]);
         return new DoubleData(doubleData, sampleRate, collectTime, firstSample);
     }
 
 
     public void closeDataStream() throws IOException {
-    	_logger.debug("Closing data stream");
+    	_logger.fine("Closing data stream");
         streamEndReached = true;
         //if (dataStream != null) {
         //    dataStream.close();
@@ -457,6 +456,8 @@ public class AudioStreamDataSource extends BaseDataProcessor implements StreamDa
 
 	    return (1000*totalValues)/sampleRate;
     }
+
+
 
 
 }

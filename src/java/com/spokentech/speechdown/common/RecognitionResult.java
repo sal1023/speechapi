@@ -22,21 +22,11 @@
  */
 package com.spokentech.speechdown.common;
 
-
-
 import java.util.ArrayList;
 import java.util.List;
-
-import javax.speech.recognition.GrammarException;
-import javax.speech.recognition.RuleGrammar;
-import javax.speech.recognition.RuleParse;
-
+import java.util.logging.Logger;
 import edu.cmu.sphinx.result.Result;
-
-import org.apache.log4j.Logger;
-
 import com.spokentech.speechdown.common.rule.RuleMatch;
-import com.spokentech.speechdown.common.rule.SimpleNLRuleHandler;
 
 /**
  * Represents the result of a completed recognition request.
@@ -45,18 +35,17 @@ import com.spokentech.speechdown.common.rule.SimpleNLRuleHandler;
  */
 public class RecognitionResult {
 
-    private static Logger _logger = Logger.getLogger(RecognitionResult.class);
+    private static Logger _logger = Logger.getLogger(RecognitionResult.class.getName());
     
-    private final static String tagRuleDelimiter = ":";
-    private final static String OUTOFGRAMMAR = "<unk>";
-    private boolean oog;
+    protected final static String tagRuleDelimiter = ":";
+    protected final static String OUTOFGRAMMAR = "<unk>";
+    protected boolean oog;
 
-    private Result _rawResult;
-    private RuleGrammar _ruleGrammar;
-    private String _text;
-    private List<RuleMatch> _ruleMatches;
+    protected Result _rawResult;
+    protected String _text;
+    protected List<RuleMatch> _ruleMatches;
 
-    private boolean noGrammar = false;
+    protected boolean noGrammar = false;
     
     /**
      * @return the noGrammar
@@ -64,7 +53,6 @@ public class RecognitionResult {
     public boolean isNoGrammar() {
     	return noGrammar;
     }
-
 
 
 	/**
@@ -76,68 +64,6 @@ public class RecognitionResult {
     }
     
 
-    
-    /**
-     * TODOC
-     * @param rawResult
-     * @throws NullPointerException
-     */
-    public RecognitionResult(String textResult) {
-    	noGrammar = true;
-        _text = textResult;
-        _ruleGrammar = null;
-        commonInit();
-    }
-    
-    /**
-     * TODOC
-     * @param rawResult
-     * @throws NullPointerException
-     */
-    public RecognitionResult(String textResult, RuleGrammar ruleGrammar) throws NullPointerException {
-        _text = textResult;
-        _ruleGrammar = ruleGrammar;
-        noGrammar = false;
-        commonInit();
-    }
-
-
-    /**
-     * TODOC
-     * @param rawResult
-     * @throws NullPointerException
-     */
-    public RecognitionResult(Result rawResult, RuleGrammar ruleGrammar) throws NullPointerException {
-
-        setNewResult(rawResult,ruleGrammar);
-    }
-    
-    public void setNewResult(Result r, RuleGrammar ruleGrammar) {
-        _rawResult = r;
-        _ruleGrammar =ruleGrammar;
-        noGrammar = false;
-        if (_rawResult != null) {
-            _text = _rawResult.getBestFinalResultNoFiller();
-            commonInit();
-        }
-    }
-    
-    private void commonInit() {
-        oog = false;
-        if (_text.equals(OUTOFGRAMMAR)) {
-            oog = true;
-        }
-        if (_text != null && (_text = _text.trim()).length() > 0 && _ruleGrammar != null && !oog) {
-            try {
-                RuleParse ruleParse = _ruleGrammar.parse(_text, null);
-                _ruleMatches = SimpleNLRuleHandler.getRuleMatches(ruleParse);
-            } catch (GrammarException e) {
-                _logger.warn("GrammarException encountered!", e);
-            }
-        }
-    }
- 
-    
 
     /**
      * TODOC
@@ -147,13 +73,7 @@ public class RecognitionResult {
         return _rawResult;
     }
 
-    /**
-     * TODOC
-     * @return
-     */
-    public RuleGrammar getRuleGrammar() {
-        return _ruleGrammar;
-    }
+
 
     /**
      * TODOC
@@ -215,27 +135,27 @@ public class RecognitionResult {
             result._text = inputString.substring(0, firstBracketIndex);      //raw result are at the begining before the first ruleMatch
             if (result == null)
                 throw new InvalidRecognitionResultException();
-            _logger.debug(result._text);
+            _logger.fine(result._text);
             String theTags = inputString.substring(inputString.indexOf("<"));
             theTags = theTags.trim();
-            _logger.debug(theTags);
+            _logger.fine(theTags);
             String ruleMatches[] = theTags.split("<|>|><");
-            _logger.debug("number of rule matches: " + ruleMatches.length);
+            _logger.fine("number of rule matches: " + ruleMatches.length);
             for (int i=0; i<ruleMatches.length;i++) {
-                _logger.debug("**** "+ i + "th **** " + ruleMatches[i]);
+                _logger.fine("**** "+ i + "th **** " + ruleMatches[i]);
                 //if ((ruleMatches[i].length() > 3) &&(ruleMatches[i].contains(tagRuleDelimiter)) ){
                 if (ruleMatches[i].length() > 3  ){
-                    _logger.debug(" rule match # "+i+"  " +ruleMatches[i]);
+                    _logger.fine(" rule match # "+i+"  " +ruleMatches[i]);
                    String rule[] = ruleMatches[i].split(tagRuleDelimiter);
                    if (rule.length == 2 ) {
                       result._ruleMatches.add(new RuleMatch(rule[0],rule[1]));
-                      _logger.debug(" rule match # "+i+"  " + rule.length+ " "+ruleMatches[i]);
+                      _logger.fine(" rule match # "+i+"  " + rule.length+ " "+ruleMatches[i]);
                    } else {
-                       _logger.debug(" Invalid rule match # "+i+"  " + rule.length+ " "+ruleMatches[i]);
+                       _logger.fine(" Invalid rule match # "+i+"  " + rule.length+ " "+ruleMatches[i]);
                        throw new InvalidRecognitionResultException();
                    }
                 } else {
-                    _logger.debug("Bad Tag Rule In Result: "+ruleMatches[i]);
+                    _logger.fine("Bad Tag Rule In Result: "+ruleMatches[i]);
                 }
             }
             

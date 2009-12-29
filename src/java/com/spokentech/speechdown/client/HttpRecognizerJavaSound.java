@@ -22,7 +22,7 @@ import org.apache.http.entity.mime.MultipartEntity;
 import org.apache.http.entity.mime.content.InputStreamBody;
 import org.apache.http.entity.mime.content.StringBody;
 import org.apache.http.impl.client.DefaultHttpClient;
-import org.apache.log4j.Logger;
+import java.util.logging.Logger;
 
 import com.spokentech.speechdown.client.util.AFormat;
 import com.spokentech.speechdown.client.util.FormatUtils;
@@ -31,7 +31,7 @@ import com.spokentech.speechdown.common.InvalidRecognitionResultException;
 import com.spokentech.speechdown.common.RecognitionResult;
 
 public class HttpRecognizerJavaSound extends HttpRecognizer {
-	   private static Logger _logger = Logger.getLogger(HttpRecognizerJavaSound.class);
+	   private static Logger _logger = Logger.getLogger(HttpRecognizerJavaSound.class.getName());
 	   	
 	
 	/**
@@ -87,7 +87,7 @@ public class HttpRecognizerJavaSound extends HttpRecognizer {
 		} else if (type == AudioFileFormat.Type.AU) {
 			mimeType = "audio/x-au";
 		} else {
-			_logger.warn("unhanlded format type "+type.getExtension());
+			_logger.info("unhanlded format type "+type.getExtension());
 		}
         
     	return recognize(audioInputStream, f, mimeType, grammarUrl, lmflg, doEndpointing, batchMode);
@@ -139,7 +139,7 @@ public class HttpRecognizerJavaSound extends HttpRecognizer {
         // support mark/reset.  That is needed for stremaing using http chunk encoding on the servlet side using file upload.
 		AudioInputStream audioStream = new AudioInputStream(audioLine);
         AudioFormat format = audioStream.getFormat();
-        _logger.debug("Actual format: " + format);    	
+        _logger.fine("Actual format: " + format);    	
     	StringBody sampleRate = null;
     	StringBody bigEndian = null;
     	StringBody bytesPerValue = null;
@@ -186,7 +186,7 @@ public class HttpRecognizerJavaSound extends HttpRecognizer {
 
 
 	    //execute the post command
-        _logger.debug("executing request " + httppost.getRequestLine());
+        _logger.fine("executing request " + httppost.getRequestLine());
         HttpResponse response = null;
         try {
 	        response = httpclient.execute(httppost);
@@ -201,18 +201,18 @@ public class HttpRecognizerJavaSound extends HttpRecognizer {
         //get the response from the post
         HttpEntity resEntity = response.getEntity();
 
-        _logger.debug("----------------------------------------");
-        _logger.debug(response.getStatusLine());
+        _logger.fine("----------------------------------------");
+        _logger.fine(response.getStatusLine().toString());
         if (resEntity != null) {
-        	_logger.debug("Response content length: " + resEntity.getContentLength());
-        	_logger.debug("Chunked?: " + resEntity.isChunked());
+        	_logger.fine("Response content length: " + resEntity.getContentLength());
+        	_logger.fine("Chunked?: " + resEntity.isChunked());
         }
         RecognitionResult r = null;
         if (resEntity != null) {
             try {
                 InputStream s = resEntity.getContent();
                 String result = readInputStreamAsString(s);
-                _logger.debug(result);
+                _logger.fine(result);
                 r = RecognitionResult.constructResultFromString(result);
 	            resEntity.consumeContent();
             } catch (IOException e) {

@@ -2,9 +2,8 @@ package com.spokentech.speechdown.client;
 
 import java.io.IOException;
 import java.io.InputStream;
-import java.net.URL;
+import java.util.logging.Logger;
 
-import org.apache.log4j.Logger;
 
 import com.spokentech.speechdown.client.endpoint.EndPointingInputStream;
 import com.spokentech.speechdown.common.SpeechEventListener;
@@ -12,7 +11,7 @@ import com.spokentech.speechdown.common.SpeechEventListener;
 public class AsynchCommand implements Runnable {
 
 
-    private static Logger _logger = Logger.getLogger(AsynchCommand.class);
+    private static Logger _logger = Logger.getLogger(AsynchCommand.class.getName());
 	
    public enum CommandType {recognize, synthesize}
 	
@@ -61,7 +60,7 @@ public class AsynchCommand implements Runnable {
 	            e.printStackTrace();
             }
 		} else {
-			_logger.warn("Commad type not implemented "+ type);
+			_logger.info("Commad type not implemented "+ type);
 		}
 
 	    

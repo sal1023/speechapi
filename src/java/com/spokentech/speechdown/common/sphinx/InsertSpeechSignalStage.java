@@ -1,5 +1,7 @@
 package com.spokentech.speechdown.common.sphinx;
 
+import java.util.logging.Logger;
+
 import edu.cmu.sphinx.frontend.BaseDataProcessor;
 import edu.cmu.sphinx.frontend.Data;
 import edu.cmu.sphinx.frontend.DataEndSignal;
@@ -8,8 +10,6 @@ import edu.cmu.sphinx.frontend.DataStartSignal;
 
 import edu.cmu.sphinx.frontend.endpoint.SpeechEndSignal;
 import edu.cmu.sphinx.frontend.endpoint.SpeechStartSignal;
-
-import org.apache.log4j.Logger;
 
 
 /**
@@ -20,7 +20,7 @@ import org.apache.log4j.Logger;
  */
 public class InsertSpeechSignalStage extends BaseDataProcessor {
 
-    private static Logger _logger = Logger.getLogger(InsertSpeechSignalStage.class);
+    private static Logger _logger = Logger.getLogger(InsertSpeechSignalStage.class.getName());
     private Data endData = null;
     private SpeechStartSignal start = null;
 

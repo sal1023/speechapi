@@ -4,7 +4,6 @@ import edu.cmu.sphinx.frontend.*;
 import edu.cmu.sphinx.frontend.endpoint.SpeechEndSignal;
 import edu.cmu.sphinx.frontend.endpoint.SpeechStartSignal;
 import edu.cmu.sphinx.frontend.util.DataUtil;
-import edu.cmu.sphinx.result.Result;
 import edu.cmu.sphinx.util.props.*;
 
 import javax.sound.sampled.AudioFileFormat;

@@ -96,6 +96,19 @@
 		</fileset>
 	</path>
 
+
+	<path id="speechcloud.client.classpath">
+		<pathelement location="${java.home}/../lib/tools.jar" />
+		<pathelement	location="${commons-pool.jar}" />
+		<pathelement	location="${commons-lang.jar}" />
+		<pathelement	location="${cairo-rtp.jar}" />
+		
+		<pathelement	location="${httpmime.jar}" />
+		<pathelement	location="${mime4j.jar}" />
+		<pathelement	location="${httpclient.jar}" />
+		<pathelement	location="${httpcore.jar}" />
+	</path>
+
 	<taskdef name="apt" classname="com.sun.tools.ws.ant.Apt">
 		<classpath refid="jaxws.classpath" />
 	</taskdef>
@@ -204,7 +217,7 @@
       <echo message="compile-client" />
       <javac srcdir="src/java"
         destdir="${build.classes.home}"
-        classpathref="jaxws.classpath"
+        classpathref="speechcloud.client.classpath"
         includes="client/**, common/**"
         debug="on"
         debuglevel="lines,vars,source" 

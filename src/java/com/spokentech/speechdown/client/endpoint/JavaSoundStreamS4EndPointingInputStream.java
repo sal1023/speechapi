@@ -8,14 +8,20 @@ package com.spokentech.speechdown.client.endpoint;
 
 import java.io.IOException;
 import java.io.InputStream;
+import javax.sound.sampled.AudioFormat;
+import javax.sound.sampled.AudioInputStream;
+
+import java.io.PipedInputStream;
 
 import org.apache.log4j.Logger;
 
 import edu.cmu.sphinx.frontend.DataProcessor;
 import edu.cmu.sphinx.frontend.FrontEnd;
 
+
 import com.spokentech.speechdown.client.sphinx.SpeechDataStreamer;
 import com.spokentech.speechdown.client.util.AFormat;
+import com.spokentech.speechdown.client.util.FormatUtils;
 import com.spokentech.speechdown.common.SpeechEventListener;
 import com.spokentech.speechdown.common.sphinx.AudioStreamDataSource;
 
@@ -26,12 +32,12 @@ import com.spokentech.speechdown.server.recog.StreamDataSource;
  * The Class StreamS4EndPointingInputStream.  This class will read on a audio stream and stream out only the audio between start and end speech.  
  * It use Sphinx4 frontend to do the endpointing. 
  */
-public class StreamS4EndPointingInputStream extends EndPointingInputStreamBase implements EndPointingInputStream {
+public class JavaSoundStreamS4EndPointingInputStream extends EndPointingInputStreamBase implements EndPointingInputStream {
 	
-    private static Logger _logger = Logger.getLogger(StreamS4EndPointingInputStream.class);
+    private static Logger _logger = Logger.getLogger(JavaSoundStreamS4EndPointingInputStream.class);
 
 	private InputStream  stream;
-	private AFormat  format;
+	private AudioFormat  format;
 
 	StreamDataSource dataSource = null;
 
@@ -68,12 +74,56 @@ public class StreamS4EndPointingInputStream extends EndPointingInputStreamBase i
 	 * 
 	 * @param stream the new up stream
 	 */
-	public void setupStream(InputStream stream, AFormat format) {
+	public void setupStream(InputStream stream, AudioFormat format) {
 		_logger.info("Setting up the stream");
 		this.stream = stream;
 		this.format = format;
         setupPipedStream();
 	}
+	
+	/**
+	 * Sets the up stream.
+	 * 
+	 * @param stream the new up stream
+	 */
+	public void setupStream(AudioInputStream stream) {
+		_logger.info("Setting up the stream");
+		this.stream = stream;
+		this.format = stream.getFormat();
+        setupPipedStream();
+	}
+	
+	
+	/**
+	 * Sets the up stream.
+	 * 
+	 * @param stream the new up stream
+	 * @deprecated
+	 */
+	public void setupStream(PipedInputStream stream) {
+		_logger.info("Setting up the stream");
+		this.stream = stream;
+    	float sampleRate = 8000.0F;
+    	//8000,11025,16000,22050,44100
+    	int sampleSizeInBits = 16;
+    	//8,16
+    	int channels = 1;
+    	//1,2
+    	boolean signed = true;
+    	//true,false
+    	boolean bigEndian = false;
+    	//true,false
+		this.format= new AudioFormat(sampleRate,
+    			sampleSizeInBits,
+    			channels,
+    			signed,
+    			bigEndian);
+		//this.stream = new AudioInputStream(stream,getAudioFormat(),-1);
+		setupPipedStream();
+	}
+	
+
+
 
 	/**
 	 * Shutdown stream.
@@ -90,15 +140,17 @@ public class StreamS4EndPointingInputStream extends EndPointingInputStreamBase i
 	public void startAudioTransfer(long timeout, SpeechEventListener listener) throws InstantiationException, IOException {
 		
 		
+
 		_listener = new Listener(listener);
 		
 		dataSource = new AudioStreamDataSource();
 		 	
 		FrontEnd frontEnd = createFrontend(false, false, (DataProcessor) dataSource, listener);
  	
-		dataSource.setInputStream((InputStream)stream, "ws-audiostream", format);	
-	
-		_logger.info("Starting audio trasnfer");
+ 		AFormat af = FormatUtils.covertToNeutral(format);
+		dataSource.setInputStream((InputStream)stream, "ws-audiostream", af);
+ 		
+		_logger.info("Starting audio transfer");
 		SpeechDataStreamer sds = new SpeechDataStreamer();
 		sds.startStreaming(frontEnd, outputStream);
 		
@@ -164,7 +216,7 @@ public class StreamS4EndPointingInputStream extends EndPointingInputStreamBase i
 	 */
 	@Override
     public AFormat getFormat() {
-		return  this.format;
+		return FormatUtils.covertToNeutral( this.format);
     }
 
 

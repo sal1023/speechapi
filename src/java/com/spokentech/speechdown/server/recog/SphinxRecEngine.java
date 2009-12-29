@@ -19,7 +19,9 @@ import javax.speech.recognition.RuleParse;
 
 import org.apache.log4j.Logger;
 
+import com.spokentech.speechdown.client.util.AFormat;
 import com.spokentech.speechdown.common.RecognitionResult;
+import com.spokentech.speechdown.common.RecognitionResultJsapi;
 import com.spokentech.speechdown.common.SpeechEventListener;
 import com.spokentech.speechdown.common.sphinx.AudioStreamDataSource;
 import com.spokentech.speechdown.common.sphinx.IdentityStage;
@@ -182,7 +184,7 @@ public class SphinxRecEngine extends AbstractPoolableObject implements RecEngine
 	    //_recognizer.deallocate();
 	    
 	    if (r != null) {
-	       RecognitionResult results = new RecognitionResult(r.getBestResultNoFiller());
+	       RecognitionResultJsapi results = new RecognitionResultJsapi(r.getBestResultNoFiller());
 	       return results;
 	    } else {
 	    	return null;
@@ -223,7 +225,7 @@ public class SphinxRecEngine extends AbstractPoolableObject implements RecEngine
  
 	    Result r = doRecognize(as, mimeType, sampleRate, bigEndian, bytesPerValue, encoding,doEndpointing,  cmnBatch);
 	    
-	    RecognitionResult results = new RecognitionResult(r, _jsgfGrammar.getRuleGrammar());
+	    RecognitionResultJsapi results = new RecognitionResultJsapi(r, _jsgfGrammar.getRuleGrammar());
 	    _logger.info("Result: " + (results != null ? results.getText() : null));
 	    //SAL
 	    //_recognizer.deallocate();
@@ -279,7 +281,9 @@ public class SphinxRecEngine extends AbstractPoolableObject implements RecEngine
 		 // set the front end in the scorer in realtime
 		 _scorer.setFrontEnd(fe);
 	     
-		 _dataSource.setInputStream(as, "ws-audiostream", sampleRate, bigEndian, bytesPerValue,encoding);
+		 
+		 AFormat af = new AFormat(encoding.toString(), sampleRate, bytesPerValue*8, 1, bigEndian, true, bytesPerValue, sampleRate);
+		 _dataSource.setInputStream(as, "ws-audiostream", af);
 	    
 		_logger.info("After setting the input stream " + System.currentTimeMillis());
 	    
@@ -358,7 +362,8 @@ public class SphinxRecEngine extends AbstractPoolableObject implements RecEngine
 		 // set the front end in the scorer in realtime
 		 _scorer.setFrontEnd(fe);
 		 
-		 _dataSource.setInputStream(as, "ws-audiostream", sampleRate, bigEndian, bytesPerValue,encoding);
+		 AFormat af = new AFormat(encoding.toString(), sampleRate, bytesPerValue*8, 1, bigEndian, true, bytesPerValue, sampleRate);
+		 _dataSource.setInputStream(as, "ws-audiostream", af);
 	    
 		_logger.debug("After setting the input stream" + System.currentTimeMillis());
 	    
@@ -430,7 +435,7 @@ public class SphinxRecEngine extends AbstractPoolableObject implements RecEngine
      _logger.debug("The hotword flag is: "+hotword);
      //if hotword mode, run recognize until a match occurs
      if (hotword) {
-         RecognitionResult rr = new RecognitionResult();
+    	 RecognitionResultJsapi rr = new RecognitionResultJsapi();
          boolean inGrammarResult = false;
          while (!inGrammarResult) {
               result = _recognizer.recognize();
