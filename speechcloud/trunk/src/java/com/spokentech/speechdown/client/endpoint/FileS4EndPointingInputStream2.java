@@ -87,7 +87,10 @@ public class FileS4EndPointingInputStream2 extends EndPointingInputStreamBase im
  		FrontEnd frontEnd = createFrontend(false, false, (DataProcessor) dataSource, _listener);
  		//frontEnd.initialize();
 		
-		dataSource.setInputStream((InputStream)stream, "ws-audiostream", (int)stream.getFormat().getSampleRate(), stream.getFormat().isBigEndian(), stream.getFormat().getSampleSizeInBits()/8,stream.getFormat().getEncoding());
+ 		
+ 		AFormat af = FormatUtils.covertToNeutral(stream.getFormat());
+ 		
+		dataSource.setInputStream((InputStream)stream, "ws-audiostream", af);
  		
 		
 		SpeechDataStreamer sds = new SpeechDataStreamer();

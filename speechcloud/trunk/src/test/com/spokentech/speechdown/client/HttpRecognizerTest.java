@@ -24,7 +24,7 @@ import org.apache.log4j.Logger;
 
 import com.spokentech.speechdown.client.endpoint.FileS4EndPointingInputStream2;
 import com.spokentech.speechdown.client.endpoint.StreamEndPointingInputStream;
-import com.spokentech.speechdown.client.endpoint.StreamS4EndPointingInputStream;
+import com.spokentech.speechdown.client.endpoint.JavaSoundStreamS4EndPointingInputStream;
 import com.spokentech.speechdown.client.util.AFormat;
 import com.spokentech.speechdown.client.util.FormatUtils;
 import com.spokentech.speechdown.common.RecognitionResult;
@@ -504,7 +504,7 @@ public class HttpRecognizerTest extends TestCase {
 	    	//run the test
 	    	long timeout = 10000;
 	    	
-	    	StreamS4EndPointingInputStream epStream = new StreamS4EndPointingInputStream();
+	    	JavaSoundStreamS4EndPointingInputStream epStream = new JavaSoundStreamS4EndPointingInputStream();
 	    	epStream.setMimeType(s4audio);
 	    	epStream.setupStream(audioInputStream);
 	    	epStream.init();
@@ -536,7 +536,7 @@ public class HttpRecognizerTest extends TestCase {
 	    	}
 	    	
 	    	//run the test
-	    	epStream = new StreamS4EndPointingInputStream();
+	    	epStream = new JavaSoundStreamS4EndPointingInputStream();
 	    	epStream.setMimeType(s4audio);
 	    	epStream.setupStream(audioInputStream);
 	    	epStream.init();

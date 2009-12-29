@@ -12,6 +12,7 @@ package com.spokentech.speechdown.client;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.UnsupportedEncodingException;
+import java.util.logging.Logger;
 
 import javax.sound.sampled.AudioFormat;
 
@@ -23,7 +24,6 @@ import org.apache.http.client.methods.HttpPost;
 import org.apache.http.entity.mime.MultipartEntity;
 import org.apache.http.entity.mime.content.StringBody;
 import org.apache.http.impl.client.DefaultHttpClient;
-import org.apache.log4j.Logger;
 
 import com.spokentech.speechdown.common.HttpCommandFields;
 
@@ -44,7 +44,7 @@ import com.spokentech.speechdown.common.HttpCommandFields;
  * 
  */
 public class HttpSynthesizer {
-    private static Logger _logger = Logger.getLogger(HttpSynthesizer.class);
+    private static Logger _logger = Logger.getLogger(HttpSynthesizer.class.getName());
 
     
     private String service;
@@ -94,7 +94,7 @@ public class HttpSynthesizer {
         // support mark/reset.  That is needed for stremaing using http chunk encoding on the servlet side using file upload.
 
 
-        _logger.debug("Format: " + format);    	
+        _logger.fine("Format: " + format);    	
     	StringBody sampleRate = null;
     	StringBody bigEndian = null;
     	StringBody bytesPerValue = null;
@@ -129,7 +129,7 @@ public class HttpSynthesizer {
         httppost.setEntity(mpEntity);
     
         
-        _logger.debug("executing request " + httppost.getRequestLine());
+        _logger.fine("executing request " + httppost.getRequestLine());
         HttpResponse response = null;
         try {
 	        response = httpclient.execute(httppost);
@@ -142,11 +142,11 @@ public class HttpSynthesizer {
         }
         HttpEntity resEntity = response.getEntity();
 
-        _logger.debug("----------------------------------------");
-        _logger.debug(response.getStatusLine());
+        _logger.fine("----------------------------------------");
+        _logger.fine(response.getStatusLine().toString());
         if (resEntity != null) {
-            _logger.debug("Response content length: " + resEntity.getContentLength());
-            _logger.debug("Chunked?: " + resEntity.isChunked());
+            _logger.fine("Response content length: " + resEntity.getContentLength());
+            _logger.fine("Chunked?: " + resEntity.isChunked());
 
         }
         InputStream s = null;

@@ -22,7 +22,7 @@
  */
 package com.spokentech.speechdown.client;
 
-import org.apache.log4j.Logger;
+import java.util.logging.Logger;
 
 import com.spokentech.speechdown.common.RecognitionResult;
 import com.spokentech.speechdown.common.SpeechEventListener;
@@ -36,7 +36,7 @@ import com.spokentech.speechdown.common.SpeechEventListener;
  */
 public class SpeechEventListenerDecorator implements SpeechEventListener {
 
-    private static Logger _logger = Logger.getLogger(SpeechEventListenerDecorator.class);
+    private static Logger _logger = Logger.getLogger(SpeechEventListenerDecorator.class.getName());
 
     private SpeechEventListener _speechEventListener;
 
@@ -52,7 +52,7 @@ public class SpeechEventListenerDecorator implements SpeechEventListener {
      * @see org.speechforge.cairo.server.recog.RecogListener#speechStarted()
      */
     public void speechStarted() {
-        _logger.debug("speechStarted()");
+        _logger.fine("speechStarted()");
         if (_speechEventListener != null) {
             _speechEventListener.speechStarted();
         }
@@ -62,7 +62,7 @@ public class SpeechEventListenerDecorator implements SpeechEventListener {
      * @see org.speechforge.cairo.server.recog.RecogListener#noInputTimeout()
      */
     public void noInputTimeout() {
-        _logger.debug("noInputTimeout()");
+        _logger.fine("noInputTimeout()");
         if (_speechEventListener != null) {
             _speechEventListener.noInputTimeout();
         }
@@ -70,7 +70,7 @@ public class SpeechEventListenerDecorator implements SpeechEventListener {
 
 	@Override
     public void speechEnded() {
-        _logger.debug("speechEnded()");
+        _logger.fine("speechEnded()");
         if (_speechEventListener != null) {
             _speechEventListener.speechEnded();
         }
@@ -78,7 +78,7 @@ public class SpeechEventListenerDecorator implements SpeechEventListener {
 
 	@Override
     public void recognitionComplete(RecognitionResult rr) {
-        _logger.debug("recognition complete()");
+        _logger.fine("recognition complete()");
         if (_speechEventListener != null) {
             _speechEventListener.recognitionComplete(rr);
         }

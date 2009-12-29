@@ -18,14 +18,12 @@ import edu.cmu.sphinx.util.props.*;
 
 import javax.sound.sampled.*;
 
-import org.apache.log4j.Logger;
-
-import com.spokentech.speechdown.client.endpoint.MicS4EndPointingInputStream;
 
 import java.io.IOException;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.logging.Level;
+import java.util.logging.Logger;
 
 /**
  * <p/> A Microphone captures audio data from the system's underlying audio input systems. Converts these audio data
@@ -39,7 +37,7 @@ import java.util.logging.Level;
  */
 public class Microphone extends BaseDataProcessor {
 
-	private static Logger logger = Logger.getLogger(Microphone.class);
+	private static Logger logger = Logger.getLogger(Microphone.class.getName());
 
     /** SphinxProperty for the sample rate of the data. */
     @S4Integer(defaultValue = 16000)
@@ -199,7 +197,7 @@ public class Microphone extends BaseDataProcessor {
                     = DataUtil.getNativeAudioFormat(desiredFormat,
                     getSelectedMixer());
             if (nativeFormat == null) {
-            	 logger.debug("couldn't find suitable target audio format");
+            	 logger.fine("couldn't find suitable target audio format");
             } else {
                 finalFormat = nativeFormat;
 
@@ -208,18 +206,18 @@ public class Microphone extends BaseDataProcessor {
                         (desiredFormat, nativeFormat);
 
                 if (doConversion) {
-                	 logger.debug
+                	 logger.fine
                             ("Converting from " + finalFormat.getSampleRate()
                                     + "Hz to " + desiredFormat.getSampleRate() + "Hz");
                 } else {
-                	 logger.debug
+                	 logger.fine
                             ("Using native format: Cannot convert from " +
                                     finalFormat.getSampleRate() + "Hz to " +
                                     desiredFormat.getSampleRate() + "Hz");
                 }
             }
         } else {
-        	 logger.debug("Desired format: " + desiredFormat + " supported.");
+        	 logger.fine("Desired format: " + desiredFormat + " supported.");
             finalFormat = desiredFormat;
         }
     }
@@ -249,7 +247,7 @@ public class Microphone extends BaseDataProcessor {
 
     /** Creates the audioLine if necessary and returns it. */
     private TargetDataLine getAudioLine() {
-    	 logger.debug("Entering get audio line");
+    	 logger.fine("Entering get audio line");
         if (audioLine != null) {
             return audioLine;
         }
@@ -265,7 +263,7 @@ public class Microphone extends BaseDataProcessor {
              * that we'll let the processors in the front end (e.g.,
              * the FFT) handle some form of downsampling for us.
              */
-        	 logger.debug("Final format: " + finalFormat);
+        	 logger.fine("Final format: " + finalFormat);
 
             DataLine.Info info = new DataLine.Info(TargetDataLine.class,
                     finalFormat);
@@ -286,11 +284,11 @@ public class Microphone extends BaseDataProcessor {
              */
             audioLine.addLineListener(new LineListener() {
                 public void update(LineEvent event) {
-                	 logger.debug("line listener " + event);
+                	 logger.fine("line listener " + event);
                 }
             });
         } catch (LineUnavailableException e) {
-            logger.error("microphone unavailable " + e.getMessage());
+            logger.info("microphone unavailable " + e.getMessage());
         }
 
         return audioLine;
@@ -307,11 +305,11 @@ public class Microphone extends BaseDataProcessor {
         TargetDataLine audioLine = getAudioLine();
         if (audioLine != null) {
             if (!audioLine.isOpen()) {
-            	 logger.debug("open");
+            	 logger.fine("open");
                 try {
                     audioLine.open(finalFormat, audioBufferSize);
                 } catch (LineUnavailableException e) {
-                    logger.error("Can't open microphone " + e.getMessage());
+                    logger.info("Can't open microphone " + e.getMessage());
                     return false;
                 }
 
@@ -329,11 +327,11 @@ public class Microphone extends BaseDataProcessor {
                         (audioStream.getFormat().getSampleSizeInBits() / 8) *
                                 (int) (sec * audioStream.getFormat().getSampleRate());
 
-                logger.debug("Frame size: " + frameSizeInBytes + " bytes");
+                logger.fine("Frame size: " + frameSizeInBytes + " bytes");
             }
             return true;
         } else {
-            logger.error("Can't find microphone");
+            logger.info("Can't find microphone");
             return false;
         }
     }
@@ -385,7 +383,7 @@ public class Microphone extends BaseDataProcessor {
         }
         utteranceEndReached = false;
         if (audioLine.isRunning()) {
-            logger.error("Whoops: audio line is running");
+            logger.info("Whoops: audio line is running");
         }
         assert (recorder == null);
         recorder = new RecordingThread("Microphone");
@@ -461,7 +459,7 @@ public class Microphone extends BaseDataProcessor {
         /** Implements the run() method of the Thread class. Records audio, and cache them in the audio buffer. */
         public void run() {
             totalSamplesRead = 0;
-            logger.debug("started recording");
+            logger.fine("started recording");
 
             if (keepDataReference) {
                 currentUtterance = new Utterance
@@ -469,14 +467,14 @@ public class Microphone extends BaseDataProcessor {
             }
 
             audioList.add(new DataStartSignal(sampleRate));
-            logger.debug("DataStartSignal added");
+            logger.fine("DataStartSignal added");
             try {
                 audioLine.start();
                 while (!done) {
                     Data data = readData(currentUtterance);
-                	//logger.debug("->read data ");
+                	//logger.fine("->read data ");
                     if (data == null) {
-                    	logger.debug("->data null");
+                    	logger.fine("->data null");
                         done = true;
                         break;
                     }
@@ -500,7 +498,7 @@ public class Microphone extends BaseDataProcessor {
                     audioLine = null;
                 }
             } catch (IOException ioe) {
-                logger.warn("IO Exception " + ioe.getMessage());
+                logger.info("IO Exception " + ioe.getMessage());
                 ioe.printStackTrace();
             }
             long duration = (long)
@@ -508,8 +506,8 @@ public class Microphone extends BaseDataProcessor {
                             (double) audioStream.getFormat().getSampleRate()) * 1000.0);
 
             audioList.add(new DataEndSignal(duration));
-            logger.debug("DataEndSignal ended");
-            logger.debug("stopped recording");
+            logger.fine("DataEndSignal ended");
+            logger.fine("stopped recording");
 
             synchronized (lock) {
                 lock.notify();
@@ -530,7 +528,7 @@ public class Microphone extends BaseDataProcessor {
                     wait();
                 }
             } catch (InterruptedException ie) {
-                logger.warn("wait was interrupted");
+                logger.info("wait was interrupted");
             }
         }
 
@@ -552,7 +550,7 @@ public class Microphone extends BaseDataProcessor {
 
             int numBytesRead = audioStream.read(data, 0, data.length);
 
-        	//logger.debug("channels: "+channels+" "+numBytesRead+" "+frameSizeInBytes+" "+bigEndian);
+        	//logger.fine("channels: "+channels+" "+numBytesRead+" "+frameSizeInBytes+" "+bigEndian);
             
             //  notify the waiters upon start
             if (!started) {
@@ -562,10 +560,10 @@ public class Microphone extends BaseDataProcessor {
                 }
             }
 
-            if (logger.isTraceEnabled()) {
-                logger.trace("Read " + numBytesRead
-                        + " bytes from audio stream.");
-            }
+            //if (logger.isLoggable()) {
+            //    logger.finest("Read " + numBytesRead
+            //            + " bytes from audio stream.");
+            //}
             if (numBytesRead <= 0) {
                 return null;
             }
@@ -601,7 +599,7 @@ public class Microphone extends BaseDataProcessor {
             if (channels > 1) {
                 samples = convertStereoToMono(samples, channels);
             }
-            logger.debug("++++++++++++++++++++++++++++read in "+samples.length+" samples");
+            logger.fine("++++++++++++++++++++++++++++read in "+samples.length+" samples");
             //for (double d: samples) {
             //   System.out.println(d);            	
             //}

@@ -12,13 +12,13 @@ import java.io.PipedOutputStream;
 import java.util.ArrayList;
 import java.util.Timer;
 import java.util.TimerTask;
-
-import org.apache.log4j.Logger;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
 import com.spokentech.speechdown.client.SpeechEventListenerDecorator;
 import com.spokentech.speechdown.common.SpeechEventListener;
 import com.spokentech.speechdown.common.sphinx.SpeechDataMonitor;
-import com.spokentech.speechdown.common.sphinx.WavWriter;
+//import com.spokentech.speechdown.common.sphinx.WavWriter;
 
 import edu.cmu.sphinx.frontend.DataBlocker;
 import edu.cmu.sphinx.frontend.DataProcessor;
@@ -42,7 +42,7 @@ import edu.cmu.sphinx.frontend.window.RaisedCosineWindower;
  */
 public abstract class EndPointingInputStreamBase implements EndPointingInputStream {
 	
-    private static Logger _logger = Logger.getLogger(EndPointingInputStreamBase.class);
+    private static Logger _logger = Logger.getLogger(EndPointingInputStreamBase.class.getName());
 	
     private static int audioBufferSize = 160000;
     
@@ -62,10 +62,13 @@ public abstract class EndPointingInputStreamBase implements EndPointingInputStre
 	 * Setup piped stream.  The piped stream is used internally to readt the input stream andcheck for enpoints and pipe it back out to the user of the 
 	 * endpointed audio stream
 	 */
-	protected void setupPipedStream() {
+	public void setupPipedStream() {
+	       _logger.setLevel(Level.FINE);
+	       
 		outputStream = new PipedOutputStream();
 	    try {
-	        inputStream = new PipedInputStream(outputStream,audioBufferSize);
+	        //inputStream = new PipedInputStream(outputStream,audioBufferSize);
+	        inputStream = new PipedInputStream(outputStream);
 	    } catch (IOException e3) {
 	        // TODO Auto-generated catch block
 	        e3.printStackTrace();
@@ -123,7 +126,7 @@ public abstract class EndPointingInputStreamBase implements EndPointingInputStre
 	        @Override
 	        public void speechStarted() {
 
-	            _logger.debug("speechStarted()");
+	            _logger.fine("speechStarted()");
 
 	            synchronized (EndPointingInputStreamBase.this) {
 	                if (_state == WAITING_FOR_SPEECH) {
@@ -141,7 +144,7 @@ public abstract class EndPointingInputStreamBase implements EndPointingInputStre
         	 * @see com.spokentech.speechdown.client.SpeechEventListenerDecorator#speechEnded()
         	 */
         	public void speechEnded() {
-	            _logger.debug("speechEnded()");
+	            _logger.fine("speechEnded()");
 
 	            synchronized (EndPointingInputStreamBase.this) {
 
@@ -155,7 +158,7 @@ public abstract class EndPointingInputStreamBase implements EndPointingInputStre
         	 * @see com.spokentech.speechdown.client.SpeechEventListenerDecorator#noInputTimeout()
         	 */
         	public void noInputTimeout() {
-	            _logger.debug("no input timeout()");
+	            _logger.fine("no input timeout()");
 	            synchronized (EndPointingInputStreamBase.this) {
 	            	stopAudioTransfer();
 	            	_state = COMPLETE;
@@ -305,17 +308,17 @@ public abstract class EndPointingInputStreamBase implements EndPointingInputStre
 		   SpeechDataMonitor mon = new SpeechDataMonitor();
 		   components.add (mon);
 		   mon.setSpeechEventListener(_listener);
-		   boolean recordingEnabled = true;
-		   String recordingFilePath = "c:/tmp/";
-		   if (recordingEnabled ) {
-				boolean isCompletePath = false;
-				int bitsPerSample = 16;
-				boolean isSigned = true;
-				boolean captureUtts = true;
-				boolean bigEndian = false;
-				WavWriter recorder = new WavWriter(recordingFilePath,isCompletePath,bitsPerSample,bigEndian,isSigned,captureUtts);
-			      components.add(recorder);
-		   }
+		   //boolean recordingEnabled = false;
+		   //String recordingFilePath = "c:/tmp/";
+		   //if (recordingEnabled ) {
+			//	boolean isCompletePath = false;
+			//	int bitsPerSample = 16;
+			//	boolean isSigned = true;
+			//	boolean captureUtts = true;
+			//	boolean bigEndian = false;
+			//	WavWriter recorder = new WavWriter(recordingFilePath,isCompletePath,bitsPerSample,bigEndian,isSigned,captureUtts);
+			 //     components.add(recorder);
+		   //}
 		   if (featureMode) {
 			   components.add (new Preemphasizer(0.97));
 			   components.add (new Dither());

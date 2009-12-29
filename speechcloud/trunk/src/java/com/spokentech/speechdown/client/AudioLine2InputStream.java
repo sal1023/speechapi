@@ -3,16 +3,16 @@ package com.spokentech.speechdown.client;
 import java.io.IOException;
 import java.io.PipedInputStream;
 import java.io.PipedOutputStream;
+import java.util.logging.Logger;
 
 import javax.sound.sampled.AudioFormat;
 import javax.sound.sampled.TargetDataLine;
 
-import org.apache.log4j.Logger;
 
 /** This Thread records audio, and caches them in an audio buffer. */
 class AudioLine2InputStream extends Thread {
 	
-	private static Logger _logger = Logger.getLogger(AudioLine2InputStream.class);
+	private static Logger _logger = Logger.getLogger(AudioLine2InputStream.class.getName());
 	
     private static int audioBufferSize = 16000;
 
@@ -81,15 +81,15 @@ class AudioLine2InputStream extends Thread {
     	int totalSamplesRead = 0;
     	    	
 		while (!speechEnded) {
-    		_logger.debug("trying to read: " + data.length);
+    		_logger.fine("trying to read: " + data.length);
     		int numBytesRead = aline.read(data, 0, data.length);
-    		_logger.debug(" ...read: " + numBytesRead);
+    		_logger.fine(" ...read: " + numBytesRead);
     		int sampleSizeInBytes = format.getSampleSizeInBits() / 8;
     		totalSamplesRead += (numBytesRead / sampleSizeInBytes);
 
     		if (numBytesRead > 0) {
 
-				_logger.debug("Writing "+numBytesRead + "bytes");
+				_logger.fine("Writing "+numBytesRead + "bytes");
 				try {
 					ostream.write(data, 0, numBytesRead);
 				} catch (IOException e) {
@@ -99,7 +99,7 @@ class AudioLine2InputStream extends Thread {
     		}
     	}
 
-		_logger.debug("Done! "+ totalSamplesRead);
+		_logger.fine("Done! "+ totalSamplesRead);
 
 		try {
 			ostream.close();

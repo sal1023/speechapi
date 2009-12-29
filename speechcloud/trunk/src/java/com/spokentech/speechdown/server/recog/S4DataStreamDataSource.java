@@ -16,13 +16,13 @@ import edu.cmu.sphinx.frontend.endpoint.SpeechEndSignal;
 import edu.cmu.sphinx.frontend.endpoint.SpeechStartSignal;
 import edu.cmu.sphinx.util.props.*;
 
-import javax.sound.sampled.AudioFormat;
-
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.ObjectInputStream;
 
 import org.apache.log4j.Logger;
+
+import com.spokentech.speechdown.client.util.AFormat;
 
 public class S4DataStreamDataSource extends BaseDataProcessor implements StreamDataSource {
 	private static Logger _logger = Logger.getLogger(S4DataStreamDataSource.class);
@@ -59,16 +59,6 @@ public class S4DataStreamDataSource extends BaseDataProcessor implements StreamD
 	        // TODO Auto-generated catch block
 	        e.printStackTrace();
         }
-        
-    }
-    
-    
-    /* (non-Javadoc)
-     * @see com.spokentech.speechdown.server.recog.StreamDataSource#setInputStream(java.io.InputStream, java.lang.String, int, boolean, int, javax.sound.sampled.AudioFormat.Encoding)
-     */
-    public void setInputStream(InputStream inputStream, String streamName, int sampleRate, boolean bigEndian, int bytesPerValue, AudioFormat.Encoding encoding) {
-	        setInputStream(inputStream,streamName);
-    
         
     }
     
@@ -204,6 +194,13 @@ public class S4DataStreamDataSource extends BaseDataProcessor implements StreamD
 	    } else {
 	       return (1000*totalValues)/sampleRate;
 	    }
+    }
+
+	@Override
+    public void setInputStream(InputStream inputStream, String streamName, AFormat format) {
+        setInputStream(inputStream,streamName);
+        
+        
     }
 
 }

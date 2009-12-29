@@ -10,6 +10,7 @@ package com.spokentech.speechdown.client;
 
 
 import java.io.BufferedInputStream;
+
 import com.spokentech.speechdown.common.HttpCommandFields;
 
 import java.io.ByteArrayInputStream;
@@ -18,6 +19,8 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.UnsupportedEncodingException;
 import java.net.URL;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
 import org.apache.http.Header;
 import org.apache.http.HttpEntity;
@@ -29,8 +32,6 @@ import org.apache.http.entity.mime.MultipartEntity;
 import org.apache.http.entity.mime.content.InputStreamBody;
 import org.apache.http.entity.mime.content.StringBody;
 import org.apache.http.impl.client.DefaultHttpClient;
-import org.apache.log4j.Logger;
-
 import com.spokentech.speechdown.client.endpoint.EndPointingInputStream;
 import com.spokentech.speechdown.client.util.AFormat;
 import com.spokentech.speechdown.common.InvalidRecognitionResultException;
@@ -54,8 +55,9 @@ import com.spokentech.speechdown.common.SpeechEventListener;
  */
 public class HttpRecognizer {
 
-    private static Logger _logger = Logger.getLogger(HttpRecognizer.class);
-     
+	private static Logger _logger =  Logger.getLogger(HttpRecognizer.class.getName());
+
+    
     protected  String service = "http://spokentech.net/speechcloud/SpeechUploadServlet";    
 
 	//Default values (if not specified as a parameter)
@@ -82,6 +84,7 @@ public class HttpRecognizer {
      * @return the service
      */
     public  String getService() {
+        _logger.setLevel(Level.FINE);
     	return service;
     }
 
@@ -130,7 +133,7 @@ public class HttpRecognizer {
 	        }
         }
         
-        _logger.debug("Actual format: " + format);    	
+        _logger.fine("Actual format: " + format);    	
     	StringBody sampleRate = null;
     	StringBody bigEndian = null;
     	StringBody bytesPerValue = null;
@@ -171,7 +174,7 @@ public class HttpRecognizer {
 			fname = "audio.au";
 		} else {
 			fname = "audio.wav";
-			_logger.warn("unhanlded mime type "+ mimeType);
+			_logger.info("unhanlded mime type "+ mimeType);
 		}
 
 
@@ -183,7 +186,7 @@ public class HttpRecognizer {
         mpEntity.addPart("audio", audioBody);      
         httppost.setEntity(mpEntity);
          
-        _logger.debug("executing request " + httppost.getRequestLine());
+        _logger.fine("executing request " + httppost.getRequestLine());
         HttpResponse response = null;
         try {
 	        response = httpclient.execute(httppost);
@@ -196,14 +199,14 @@ public class HttpRecognizer {
         }
         HttpEntity resEntity = response.getEntity();
 
-        _logger.debug(response.getStatusLine());
+        _logger.fine(response.getStatusLine().toString());
         if (resEntity != null) {
-        	_logger.debug("Response content length: " + resEntity.getContentLength());
-        	_logger.debug("Chunked?: " + resEntity.isChunked());
+        	_logger.fine("Response content length: " + resEntity.getContentLength());
+        	_logger.fine("Chunked?: " + resEntity.isChunked());
 
             Header[] headers = response.getAllHeaders();
             for (int i=0; i<headers.length; i++) {
-            	_logger.debug(headers[i]);
+            	_logger.fine(headers[i].toString());
             }
         }
         
@@ -213,7 +216,7 @@ public class HttpRecognizer {
             try {
                 InputStream s = resEntity.getContent();
                 String result = readInputStreamAsString(s);
-                _logger.debug(result);
+                _logger.fine(result);
                 r = RecognitionResult.constructResultFromString(result);
 	            resEntity.consumeContent();
             } catch (IOException e) {
@@ -237,7 +240,7 @@ public class HttpRecognizer {
 		   AsynchCommand command = new AsynchCommand(AsynchCommand.CommandType.recognize, service, grammarIs, epStream, batchMode, batchMode, timeout, eventListener);
 		   workQ.execute(command);
 		} else {
-			_logger.warn("AsycnMode is not enabled.  Use the enableAsynch(int numthreads) to enable ascynh mode");
+			_logger.info("AsycnMode is not enabled.  Use the enableAsynch(int numthreads) to enable ascynh mode");
 	    }
 	}
 	
@@ -248,7 +251,7 @@ public class HttpRecognizer {
 		   AsynchCommand command = new AsynchCommand(AsynchCommand.CommandType.recognize, service, grammarIs, epStream, batchMode, batchMode, timeout, eventListener);
 		   workQ.execute(command);
 		} else {
-			_logger.warn("AsycnMode is not enabled.  Use the enableAsynch(int numthreads) to enable ascynh mode");
+			_logger.info("AsycnMode is not enabled.  Use the enableAsynch(int numthreads) to enable ascynh mode");
 	    }
 	}	
 
@@ -380,15 +383,15 @@ public class HttpRecognizer {
                 try {
                     this.wait(1000);
                 } catch (InterruptedException e) {
-                	_logger.debug("Interrupt Excepton while waiting for tts to complete");
+                	_logger.fine("Interrupt Excepton while waiting for tts to complete");
                 }
             }
         }
-    	_logger.debug("Speech started!!!");
+    	_logger.fine("Speech started!!!");
 
 	    
 	    //execute the post command
-        _logger.debug("executing request " + httppost.getRequestLine());
+        _logger.fine("executing request " + httppost.getRequestLine());
         HttpResponse response = null;
         try {
 	        response = httpclient.execute(httppost);
@@ -403,18 +406,18 @@ public class HttpRecognizer {
         //get the response from the post
         HttpEntity resEntity = response.getEntity();
 
-        _logger.debug("----------------------------------------");
-        _logger.debug(response.getStatusLine());
+        _logger.fine("----------------------------------------");
+        _logger.fine(response.getStatusLine().toString());
         if (resEntity != null) {
-        	_logger.debug("Response content length: " + resEntity.getContentLength());
-        	_logger.debug("Chunked?: " + resEntity.isChunked());
+        	_logger.fine("Response content length: " + resEntity.getContentLength());
+        	_logger.fine("Chunked?: " + resEntity.isChunked());
         }
         RecognitionResult r = null;
         if (resEntity != null) {
             try {
                 InputStream s = resEntity.getContent();
                 String result = readInputStreamAsString(s);
-                _logger.debug(result);
+                _logger.fine(result);
                 r = RecognitionResult.constructResultFromString(result);
 	            resEntity.consumeContent();
             } catch (IOException e) {
@@ -469,7 +472,7 @@ public class HttpRecognizer {
 	        }
         }
         
-        _logger.debug("Actual format: " + format);    	
+        _logger.fine("Actual format: " + format);    	
     	StringBody sampleRate = null;
     	StringBody bigEndian = null;
     	StringBody bytesPerValue = null;
@@ -510,7 +513,7 @@ public class HttpRecognizer {
 			fname = "audio.au";
 		} else {
 			fname = "audio.wav";
-			_logger.warn("unhanlded mime type "+mimeType);
+			_logger.info("unhanlded mime type "+mimeType);
 		}
 
 
@@ -522,7 +525,7 @@ public class HttpRecognizer {
         mpEntity.addPart("audio", audioBody);      
         httppost.setEntity(mpEntity);
          
-        _logger.debug("executing request " + httppost.getRequestLine());
+        _logger.fine("executing request " + httppost.getRequestLine());
         HttpResponse response = null;
         try {
 	        response = httpclient.execute(httppost);
@@ -535,14 +538,14 @@ public class HttpRecognizer {
         }
         HttpEntity resEntity = response.getEntity();
 
-        _logger.debug(response.getStatusLine());
+        _logger.fine(response.getStatusLine().toString());
         if (resEntity != null) {
-        	_logger.debug("Response content length: " + resEntity.getContentLength());
-        	_logger.debug("Chunked?: " + resEntity.isChunked());
+        	_logger.fine("Response content length: " + resEntity.getContentLength());
+        	_logger.fine("Chunked?: " + resEntity.isChunked());
 
             Header[] headers = response.getAllHeaders();
             for (int i=0; i<headers.length; i++) {
-            	_logger.debug(headers[i]);
+            	_logger.fine(headers[i].toString());
             }
         }
         
@@ -578,7 +581,7 @@ public class HttpRecognizer {
 			buf.write(b);
 			result = bis.read();
 		}        
-		_logger.debug(buf.toString());
+		_logger.fine(buf.toString());
 		return buf.toString();
 	}
  
@@ -610,7 +613,7 @@ public class HttpRecognizer {
 		 * @see com.spokentech.speechdown.client.SpeechEventListener#speechEnded()
 		 */
 		public void speechEnded() {
-		    _logger.debug("Speech Ended");
+		    _logger.fine("Speech Ended");
             super.speechEnded();
 	    }
 
@@ -618,7 +621,7 @@ public class HttpRecognizer {
     	 * @see com.spokentech.speechdown.client.SpeechEventListener#speechStarted()
     	 */
     	public void speechStarted() {
-		    _logger.debug("Speech Started");
+		    _logger.fine("Speech Started");
 			//signal for the blocking call to check for unblocking
 			synchronized (this) {
 				speechStarted=true;
@@ -632,7 +635,7 @@ public class HttpRecognizer {
 		 */
 		@Override
         public void noInputTimeout() {
-		    _logger.debug("No input timeout"); 
+		    _logger.fine("No input timeout"); 
             super.noInputTimeout();
         }
     }

@@ -3,7 +3,8 @@ package com.spokentech.speechdown.server.recog;
 import java.io.IOException;
 import java.io.InputStream;
 
-import javax.sound.sampled.AudioFormat;
+import com.spokentech.speechdown.client.util.AFormat;
+
 
 import edu.cmu.sphinx.frontend.Data;
 import edu.cmu.sphinx.frontend.DataProcessingException;
@@ -26,8 +27,7 @@ public interface StreamDataSource {
 	 * @param streamName  the name of the InputStream
 	 * @throws IOException 
 	 */
-	public void setInputStream(InputStream inputStream, String streamName, int sampleRate, boolean bigEndian,
-	        int bytesPerValue, AudioFormat.Encoding encoding);
+	public void setInputStream(InputStream inputStream, String streamName, AFormat format);
 
 	/**
 	 * Reads and returns the next Data from the InputStream of StreamDataSource, return null if no data is read and end
