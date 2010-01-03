@@ -2,6 +2,7 @@ package com.spokentech.speechdown.client;
 
 import java.io.IOException;
 import java.io.InputStream;
+import java.util.UUID;
 import java.util.logging.Logger;
 
 
@@ -28,6 +29,7 @@ public class AsynchCommand implements Runnable {
 	    this.batchMode = batchMode;
 	    this.timeout = timeout;
 	    this.eventListener = eventListener;
+	    this.id = UUID.randomUUID().toString();
     }
 
 
@@ -39,6 +41,26 @@ public class AsynchCommand implements Runnable {
 	private boolean batchMode;
 	private long timeout;
 	private SpeechEventListener eventListener;
+	private HttpRecognizer httpRecognizer;
+	
+	private String id;
+	
+	/**
+     * @return the id
+     */
+    public String getId() {
+    	return id;
+    }
+
+
+
+	public void cancel(String id) {
+		if (this.id.equals(id))
+			if (httpRecognizer != null)
+		        httpRecognizer.cancel();
+			else
+				_logger.info("cant cancel, no recognizer yet");
+	}
 
 
 	
@@ -49,7 +71,7 @@ public class AsynchCommand implements Runnable {
 				_logger.info("running command");
 				//not thread safe so creating a new recognizer.  It is pretty lightweight so not much overhead but still ...
 				//TODO: make it thread safe so the same HttpRecognizer can be reused (pass the recognizer object in the command)
-				HttpRecognizer httpRecognizer = new HttpRecognizer();
+			    httpRecognizer = new HttpRecognizer();
 				httpRecognizer.setService(service);
 	            httpRecognizer.recognize(grammarIs, epStream, lmflg, batchMode, timeout,eventListener);
             } catch (InstantiationException e) {

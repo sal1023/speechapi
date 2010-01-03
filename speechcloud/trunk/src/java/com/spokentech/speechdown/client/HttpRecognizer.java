@@ -19,6 +19,8 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.UnsupportedEncodingException;
 import java.net.URL;
+import java.util.Timer;
+import java.util.TimerTask;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
@@ -49,14 +51,18 @@ import com.spokentech.speechdown.common.SpeechEventListener;
  * Type type = AudioFileFormat.Type.WAVE
  * URL grammar = new URL("file:///mygrammars/example.gram");
  * boolean lmflag = false;
- * RecognitionResults results = synthAduio= recog.recognize(inputStream,type,grammar, lmflag);       
+ * RecognitionResults results = synthAduio= recog.recognize(inputStream,type,grammar, lmflag);
  * String rawResults = results.getText();
- * </pre>         
+ * </pre>
  */
 public class HttpRecognizer {
 
 	private static Logger _logger =  Logger.getLogger(HttpRecognizer.class.getName());
 
+	
+	//TODO: add in local no input timer capability
+	protected /*static*/ Timer _timer = new Timer();
+	protected TimerTask _noInputTimeoutTask;	
     
     protected  String service = "http://spokentech.net/speechcloud/SpeechUploadServlet";    
 
@@ -68,21 +74,27 @@ public class HttpRecognizer {
     private static int sampleSizeInBits = 16;
     
 	private boolean speechStarted = false;
+	private boolean requestCanceled = false;
     private int numThreadsForAsyncCalls;
 	
     private WorkQueue workQ = null;
     
      
+    /**
+     * Enable asynch mode.
+     * 
+     * @param numThreadsForAsyncCalls the num threads for async calls
+     */
     public void enableAsynchMode(int numThreadsForAsyncCalls) {
         this.numThreadsForAsyncCalls = numThreadsForAsyncCalls;
 	    workQ = new WorkQueue(numThreadsForAsyncCalls);
     }
 
 	/**
-     * Gets the service.  The service is the a string containing the URL of the speechCloud server
-     * 
-     * @return the service
-     */
+	 * Gets the service.  The service is the a string containing the URL of the speechCloud server
+	 * 
+	 * @return the service
+	 */
     public  String getService() {
         _logger.setLevel(Level.FINE);
     	return service;
@@ -104,12 +116,12 @@ public class HttpRecognizer {
 	 * Recognize.
 	 * 
 	 * @param format the format of the inputstreamd (note the is needed in plain input streams unlike audioInputstreams where this information is included in the stream.
-	 * @param type the audiostream  (AudioFileFormat.Type.WAVE,  AudioFileFormat.Type.AU)
 	 * @param grammarUrl the grammar url.  If lmFlag is false, you must set the grammar file url.  (JSGF is supported)
 	 * @param lmflg the lmflg.  If lmflga is true, recognition will use the default language mode on speechcloud server.
 	 * @param inputStream the input stream
 	 * @param doEndpointing the do endpointing
 	 * @param batchMode the batch mode
+	 * @param mimeType the mime type
 	 * 
 	 * @return the recognition result
 	 */
@@ -210,7 +222,6 @@ public class HttpRecognizer {
             }
         }
         
-        
         RecognitionResult r = null;
         if (resEntity != null) {
             try {
@@ -233,26 +244,58 @@ public class HttpRecognizer {
 
 
  	
-	public  void recognizeAsynch(URL grammarUrl, EndPointingInputStream epStream, boolean lmflg, boolean batchMode, long timeout, SpeechEventListener eventListener ) throws InstantiationException, IOException {
+	/**
+	 * Recognize asynch.
+	 * 
+	 * @param grammarUrl the grammar url
+	 * @param epStream the ep stream
+	 * @param lmflg the lmflg
+	 * @param batchMode the batch mode
+	 * @param timeout the timeout
+	 * @param eventListener the event listener
+	 * 
+	 * @return the string
+	 * 
+	 * @throws InstantiationException the instantiation exception
+	 * @throws IOException Signals that an I/O exception has occurred.
+	 */
+	public  String recognizeAsynch(URL grammarUrl, EndPointingInputStream epStream, boolean lmflg, boolean batchMode, long timeout, SpeechEventListener eventListener ) throws InstantiationException, IOException {
 		InputStream grammarIs = grammarUrl.openStream();
-
+		AsynchCommand command = null;
 		if (workQ != null) {
-		   AsynchCommand command = new AsynchCommand(AsynchCommand.CommandType.recognize, service, grammarIs, epStream, batchMode, batchMode, timeout, eventListener);
+		   command = new AsynchCommand(AsynchCommand.CommandType.recognize, service, grammarIs, epStream, batchMode, batchMode, timeout, eventListener);
 		   workQ.execute(command);
 		} else {
 			_logger.info("AsycnMode is not enabled.  Use the enableAsynch(int numthreads) to enable ascynh mode");
 	    }
+		return command.getId();
 	}
 	
-	public  void recognizeAsynch(String grammar, EndPointingInputStream epStream, boolean lmflg, boolean batchMode, long timeout, SpeechEventListener eventListener ) throws InstantiationException, IOException {
+	/**
+	 * Recognize asynch.
+	 * 
+	 * @param grammar the grammar
+	 * @param epStream the ep stream
+	 * @param lmflg the lmflg
+	 * @param batchMode the batch mode
+	 * @param timeout the timeout
+	 * @param eventListener the event listener
+	 * 
+	 * @return the string
+	 * 
+	 * @throws InstantiationException the instantiation exception
+	 * @throws IOException Signals that an I/O exception has occurred.
+	 */
+	public  String recognizeAsynch(String grammar, EndPointingInputStream epStream, boolean lmflg, boolean batchMode, long timeout, SpeechEventListener eventListener ) throws InstantiationException, IOException {
 		InputStream grammarIs = new ByteArrayInputStream(grammar.getBytes());
-		
+		AsynchCommand command = null;
 		if (workQ != null) {
-		   AsynchCommand command = new AsynchCommand(AsynchCommand.CommandType.recognize, service, grammarIs, epStream, lmflg, batchMode, timeout, eventListener);
+		   command = new AsynchCommand(AsynchCommand.CommandType.recognize, service, grammarIs, epStream, lmflg, batchMode, timeout, eventListener);
 		   workQ.execute(command);
 		} else {
 			_logger.info("AsycnMode is not enabled.  Use the enableAsynch(int numthreads) to enable ascynh mode");
 	    }
+		return command.getId();
 	}	
 
 	/**
@@ -274,6 +317,21 @@ public class HttpRecognizer {
 	}
 
 	
+	/**
+	 * Recognize.
+	 * 
+	 * @param grammar the grammar
+	 * @param epStream the ep stream
+	 * @param lmflg the lmflg
+	 * @param batchMode the batch mode
+	 * @param timeout the timeout
+	 * @param eventListener the event listener
+	 * 
+	 * @return the recognition result
+	 * 
+	 * @throws InstantiationException the instantiation exception
+	 * @throws IOException Signals that an I/O exception has occurred.
+	 */
 	public  RecognitionResult recognize(String grammar, EndPointingInputStream epStream, boolean lmflg, boolean batchMode, long timeout, SpeechEventListener eventListener) throws InstantiationException, IOException {
 		//String charset = Charset.defaultCharset;
 		InputStream is = new ByteArrayInputStream(grammar.getBytes());
@@ -285,11 +343,12 @@ public class HttpRecognizer {
 	 * Recognize.  This method will do require and endpointing stream as input (containing the audio).  The endpointstream will do endpoing (here on the client)
 	 * This can save bandwidth aty the cost of processing on the client.
 	 * 
-
 	 * @param epStream the end-pointing stream.  Create a epStream (wraps a inputStream). and use in this method to do endpoint on the client.
 	 * @param grammarUrl the grammar url.  If lmFlag is false, you must set the grammar file url.  (JSGF is supported)
 	 * @param lmflg the lmflg.  If lmflga is true, recognition will use the default language mode on speechcloud server.
 	 * @param timeout the timeout
+	 * @param batchMode the batch mode
+	 * @param eventListener the event listener
 	 * 
 	 * @return the recognition result
 	 * 
@@ -305,11 +364,27 @@ public class HttpRecognizer {
 	}
 		
 
+	/**
+	 * Recognize.
+	 * 
+	 * @param grammar the grammar
+	 * @param epStream the ep stream
+	 * @param lmflg the lmflg
+	 * @param batchMode the batch mode
+	 * @param timeout the timeout
+	 * @param eventListener the event listener
+	 * 
+	 * @return the recognition result
+	 * 
+	 * @throws InstantiationException the instantiation exception
+	 * @throws IOException Signals that an I/O exception has occurred.
+	 */
 	public  RecognitionResult recognize(InputStream grammar, EndPointingInputStream epStream, boolean lmflg, boolean batchMode, long timeout, SpeechEventListener eventListener) throws InstantiationException, IOException {
 
 
         //create the listener (listens for end points)  A decorator, so also can  pass events back to client
         speechStarted = false;
+        requestCanceled = false;
         MySpeechEventListener listener = new MySpeechEventListener(eventListener);
 
     	// Plain old http approach    	
@@ -376,9 +451,10 @@ public class HttpRecognizer {
      	//now wait for a start speech event
 	    
         speechStarted = false;
+        requestCanceled = false;
 	    epStream.startAudioTransfer(timeout, listener);
 
-		while (!speechStarted) {
+		while ((!speechStarted)&&(!requestCanceled)) {
             synchronized (this) {        
                 try {
                     this.wait(1000);
@@ -387,6 +463,11 @@ public class HttpRecognizer {
                 }
             }
         }
+		if (requestCanceled) {
+	    	_logger.info("Request  canceled!!!");
+			return(null);
+		}
+		
     	_logger.fine("Speech started!!!");
 
 	    
@@ -441,16 +522,15 @@ public class HttpRecognizer {
 	 * Recognize.
 	 * 
 	 * @param format the format of the inputstreamd (note the is needed in plain input streams unlike audioInputstreams where this information is included in the stream.
-	 * @param type the audiostream  (AudioFileFormat.Type.WAVE,  AudioFileFormat.Type.AU)
 	 * @param grammarUrl the grammar url.  If lmFlag is false, you must set the grammar file url.  (JSGF is supported)
 	 * @param lmflg the lmflg.  If lmflga is true, recognition will use the default language mode on speechcloud server.
 	 * @param inputStream the input stream
-	 * @param doEndpointing the do endpointing
-	 * @param batchMode the batch mode
+	 * @param mimeType the mime type
 	 * 
 	 * @return the recognition result
-	 * @throws IOException 
-	 * @throws IllegalStateException 
+	 * 
+	 * @throws IOException Signals that an I/O exception has occurred.
+	 * @throws IllegalStateException the illegal state exception
 	 */
 	public InputStream transcribe(InputStream inputStream, AFormat format, String mimeType, URL grammarUrl, boolean lmflg) throws IllegalStateException, IOException {
 	    // Plain old http approach    	
@@ -563,7 +643,7 @@ public class HttpRecognizer {
 	
 	
 	/**
-	 * Read input stream  and return it as a stream
+	 * Read input stream  and return it as a stream.
 	 * 
 	 * @param in the inputSTream
 	 * 
@@ -600,10 +680,10 @@ public class HttpRecognizer {
     private class MySpeechEventListener extends SpeechEventListenerDecorator {
    
         /**
-    	 * TODOC.
-    	 * 
-    	 * @param speechEventListener the speech event listener
-    	 */
+         * TODOC.
+         * 
+         * @param speechEventListener the speech event listener
+         */
         public MySpeechEventListener(SpeechEventListener speechEventListener) {
             super(speechEventListener);
         }
@@ -639,5 +719,53 @@ public class HttpRecognizer {
             super.noInputTimeout();
         }
     }
+    
+    /**
+     * The Class NoInputTimeoutTask.
+     */
+    public class NoInputTimeoutTask extends TimerTask {
+
+        /* (non-Javadoc)
+         * @see java.util.TimerTask#run()
+         */
+        @Override
+        public void run() {
+            synchronized (HttpRecognizer.this) {
+                _noInputTimeoutTask = null;
+                // TODO: forward on the evnt to the listener
+                // TODO: check the state of sych calls and notifyall, if waiting
+                // TODO: could be a timeout for a asynch call, 
+
+                }
+        }
+        
+    }
+
+    
+  
+	/**
+	 * Cancel synchronous request.  Use this if doing client side endpointing
+	 * Limitation is that it will not cancel a request after startspeech has been detected. 
+	 * Or in general if the http requests has been executed. 
+	 */
+	public void cancel() {
+		//TODO: cancel httpclient requests, following just unblocks the local endpointer.
+		synchronized (this) {
+			requestCanceled=true;
+			this.notifyAll();
+		}  
+    } 
+    
+	/**
+	 * Cancel asych requests with the given identifier.  Usse this if doing client side endpointing
+	 * Limitation is that it will not cancel a request after startspeech has been detected. 
+	 * Or in general if the http requests has been executed. 
+	 * 
+	 * @param id the id
+	 */
+	public void cancel(String id) {
+	    workQ.cancel(id);
+    }
+	
 	
 }

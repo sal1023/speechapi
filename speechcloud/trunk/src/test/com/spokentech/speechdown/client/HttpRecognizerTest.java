@@ -271,7 +271,7 @@ public class HttpRecognizerTest extends TestCase {
 	    		e.printStackTrace();
 	    	}
 	    	
-	    	String mimeType = null;
+	    	String mimeType =  "audio/x-wav";
 			if (type == AudioFileFormat.Type.WAVE) {
 				//Always a audio/x-wav
 				mimeType = "audio/x-wav";
@@ -287,7 +287,7 @@ public class HttpRecognizerTest extends TestCase {
 	    	
 	    	//run the test
 	    	
-	    	boolean doEndpointing = false;
+	    	boolean doEndpointing = true;
 	    	boolean lmflg = false;
 	    	boolean batchMode =false;
 	    	long start = System.nanoTime();
@@ -439,8 +439,9 @@ public class HttpRecognizerTest extends TestCase {
 	    	Listener l = new Listener();
 	    	boolean lmflg = false;
 	    	boolean batchFlag = false;
+	    	String id;
 	        try {	            
-	            recog.recognizeAsynch(grammarUrl,  epStream,  lmflg,  batchFlag, timeout,l) ;
+	            id = recog.recognizeAsynch(grammarUrl,  epStream,  lmflg,  batchFlag, timeout,l) ;
             } catch (InstantiationException e) {
 	            // TODO Auto-generated catch block
 	            e.printStackTrace();
@@ -456,6 +457,44 @@ public class HttpRecognizerTest extends TestCase {
 	            // TODO Auto-generated catch block
 	            e.printStackTrace();
             }
+            
+	    }
+	    
+	    public void testRecognizeFileS4EPGrammarAsynchWithCancel() {
+	    	System.out.println("Starting File EP Test ...");	
+	    	recog.enableAsynchMode(2);
+	    	
+	    	long timeout = 10000;       	
+	    	FileS4EndPointingInputStream2 epStream = new FileS4EndPointingInputStream2();
+
+	    	epStream.setMimeType(s4audio);
+	    	epStream.setupStream(soundFile2);
+	 
+	    	RecognitionResult r = null;
+	    	
+	    	Listener l = new Listener();
+	    	boolean lmflg = false;
+	    	boolean batchFlag = false;
+	    	String id = null;
+	        try {	            
+	            id = recog.recognizeAsynch(grammarUrl,  epStream,  lmflg,  batchFlag, timeout,l) ;
+            } catch (InstantiationException e) {
+	            // TODO Auto-generated catch block
+	            e.printStackTrace();
+            } catch (IOException e) {
+	            // TODO Auto-generated catch block
+	            e.printStackTrace();
+            }
+            
+            
+            _logger.info("called asynch method. sleeping for 2 secs");
+            try {
+	            Thread.sleep(2000);
+            } catch (InterruptedException e) {
+	            // TODO Auto-generated catch block
+	            e.printStackTrace();
+            }
+            recog.cancel(id);
             
 	    }
 	    
