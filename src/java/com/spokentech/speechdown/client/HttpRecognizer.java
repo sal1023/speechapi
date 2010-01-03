@@ -248,7 +248,7 @@ public class HttpRecognizer {
 		InputStream grammarIs = new ByteArrayInputStream(grammar.getBytes());
 		
 		if (workQ != null) {
-		   AsynchCommand command = new AsynchCommand(AsynchCommand.CommandType.recognize, service, grammarIs, epStream, batchMode, batchMode, timeout, eventListener);
+		   AsynchCommand command = new AsynchCommand(AsynchCommand.CommandType.recognize, service, grammarIs, epStream, lmflg, batchMode, timeout, eventListener);
 		   workQ.execute(command);
 		} else {
 			_logger.info("AsycnMode is not enabled.  Use the enableAsynch(int numthreads) to enable ascynh mode");
