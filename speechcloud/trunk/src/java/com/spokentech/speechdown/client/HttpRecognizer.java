@@ -61,8 +61,8 @@ public class HttpRecognizer {
 
 	
 	//TODO: add in local no input timer capability
-	protected /*static*/ Timer _timer = new Timer();
-	protected TimerTask _noInputTimeoutTask;	
+	//protected /*static*/ Timer _timer = new Timer();
+	//protected TimerTask _noInputTimeoutTask;	
     
     protected  String service = "http://spokentech.net/speechcloud/SpeechUploadServlet";    
 
@@ -731,7 +731,7 @@ public class HttpRecognizer {
         @Override
         public void run() {
             synchronized (HttpRecognizer.this) {
-                _noInputTimeoutTask = null;
+                //_noInputTimeoutTask = null;
                 // TODO: forward on the evnt to the listener
                 // TODO: check the state of sych calls and notifyall, if waiting
                 // TODO: could be a timeout for a asynch call, 
