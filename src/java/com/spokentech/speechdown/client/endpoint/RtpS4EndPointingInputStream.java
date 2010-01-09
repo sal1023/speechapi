@@ -26,6 +26,7 @@ import org.speechforge.cairo.rtp.server.sphinx.RawAudioProcessor;
 import org.speechforge.cairo.rtp.server.sphinx.RawAudioTransferHandler;
 import org.speechforge.cairo.rtp.server.sphinx.SourceAudioFormat;
 
+import edu.cmu.sphinx.frontend.DataProcessor;
 import edu.cmu.sphinx.frontend.FrontEnd;
 import com.spokentech.speechdown.client.sphinx.SpeechDataStreamer;
 import com.spokentech.speechdown.client.util.AFormat;
@@ -40,20 +41,8 @@ import com.spokentech.speechdown.common.SpeechEventListener;
  */
 public class RtpS4EndPointingInputStream extends EndPointingInputStreamBase implements EndPointingInputStream {
 	
-    private static Logger _logger = Logger.getLogger(RtpS4EndPointingInputStream.class);
+	private static Logger _logger = Logger.getLogger(RtpS4EndPointingInputStream.class);
 
-    public static final javax.media.format.AudioFormat[] PREFERRED_MEDIA_FORMATS = { new javax.media.format.AudioFormat(
-            javax.media.format.AudioFormat.LINEAR, //encoding
-            8000.0,                                //sample rate
-            16,                                    //sample size in bits
-            1,                                     //channels
-            javax.media.format.AudioFormat.LITTLE_ENDIAN,
-            javax.media.format.AudioFormat.SIGNED
-        ) };
-
-
-    
-    
 	private int id;
 	private RawAudioProcessor _rawAudioProcessor;
 	private RawAudioTransferHandler _rawAudioTransferHandler;
@@ -65,7 +54,25 @@ public class RtpS4EndPointingInputStream extends EndPointingInputStreamBase impl
 
 	private PushBufferDataSource _pbds;
 	
+
+    public RtpS4EndPointingInputStream(EndPointer ep) {
+	    super(ep);
+	    // TODO Auto-generated constructor stub
+    }
+
+
 	
+    public static final javax.media.format.AudioFormat[] PREFERRED_MEDIA_FORMATS = { new javax.media.format.AudioFormat(
+            javax.media.format.AudioFormat.LINEAR, //encoding
+            8000.0,                                //sample rate
+            16,                                    //sample size in bits
+            1,                                     //channels
+            javax.media.format.AudioFormat.LITTLE_ENDIAN,
+            javax.media.format.AudioFormat.SIGNED
+        ) };
+
+
+    
 	
 	/**
 	 * Gets the mime type.
@@ -121,7 +128,7 @@ public class RtpS4EndPointingInputStream extends EndPointingInputStreamBase impl
 		_listener = new Listener(listener);
 
 		RawAudioProcessor primaryInput = new RawAudioProcessor(10);
-		FrontEnd frontEnd = createFrontend(false, false, primaryInput, _listener);
+		
 
 		_logger.debug("Format: " +SourceAudioFormat.PREFERRED_MEDIA_FORMATS[0].toString());
 		_logger.debug("Format Count:"+SourceAudioFormat.PREFERRED_MEDIA_FORMATS.length);
@@ -179,9 +186,12 @@ public class RtpS4EndPointingInputStream extends EndPointingInputStreamBase impl
 			startInputTimers(timeout);
 		}
 
-		SpeechDataStreamer sds = new SpeechDataStreamer();
-		sds.startStreaming(frontEnd, outputStream);
-		
+    	//TODO:  Don't like this casting to subclass of end pointer.   Only needed now for this mic and rtp version.  
+    	//       All other streamers just take a stream in the start method (not a dataprocessor)
+	    // start the endpointer thread
+     	((S4EndPointer)ep).start((DataProcessor)primaryInput, getFormat(), outputStream, _listener);
+
+
 		long t4 = System.currentTimeMillis();
 		_logger.info("RTP stream all set "+(t4-t3));
 		

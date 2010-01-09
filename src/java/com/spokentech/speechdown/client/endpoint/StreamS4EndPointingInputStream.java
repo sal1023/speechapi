@@ -14,6 +14,7 @@ import org.apache.log4j.Logger;
 import edu.cmu.sphinx.frontend.DataProcessor;
 import edu.cmu.sphinx.frontend.FrontEnd;
 
+import com.spokentech.speechdown.client.endpoint.EndPointingInputStreamBase.Listener;
 import com.spokentech.speechdown.client.sphinx.SpeechDataStreamer;
 import com.spokentech.speechdown.client.util.AFormat;
 import com.spokentech.speechdown.common.SpeechEventListener;
@@ -26,14 +27,18 @@ import com.spokentech.speechdown.server.recog.StreamDataSource;
  * The Class StreamS4EndPointingInputStream.  This class will read on a audio stream and stream out only the audio between start and end speech.  
  * It use Sphinx4 frontend to do the endpointing. 
  */
-public class StreamS4EndPointingInputStream extends EndPointingInputStreamBase implements EndPointingInputStream {
+public class StreamS4EndPointingInputStream extends EndPointingInputStreamBase {
 	
     private static Logger _logger = Logger.getLogger(StreamS4EndPointingInputStream.class);
 
 	private InputStream  stream;
 	private AFormat  format;
+	
 
-	StreamDataSource dataSource = null;
+	public StreamS4EndPointingInputStream(EndPointer ep) {
+	    super(ep);
+	    // TODO Auto-generated constructor stub
+    }
 
 
 	private String mimeType;
@@ -89,19 +94,12 @@ public class StreamS4EndPointingInputStream extends EndPointingInputStreamBase i
 	 */
 	public void startAudioTransfer(long timeout, SpeechEventListener listener) throws InstantiationException, IOException {
 		
-		
 		_listener = new Listener(listener);
 		
-		dataSource = new AudioStreamDataSource();
-		 	
-		FrontEnd frontEnd = createFrontend(false, false, (DataProcessor) dataSource, listener);
- 	
-		dataSource.setInputStream((InputStream)stream, "ws-audiostream", format);	
-	
-		_logger.info("Starting audio trasnfer");
-		SpeechDataStreamer sds = new SpeechDataStreamer();
-		sds.startStreaming(frontEnd, outputStream);
-		
+	    // start the endpointer thread
+
+     	ep.start(stream, format, outputStream, _listener);
+
 		if (timeout > 0)
 			startInputTimers(timeout);
 		
@@ -110,22 +108,7 @@ public class StreamS4EndPointingInputStream extends EndPointingInputStreamBase i
 
 	
 	
-    /* (non-Javadoc)
-     * @see com.spokentech.speechdown.client.endpoint.EndPointingInputStream#stopAudioTransfer()
-     */
-    public synchronized void stopAudioTransfer() {
-    	_logger.debug("Stopping stream");
-    	if (dataSource != null) {
-	    	try {
-		        dataSource.closeDataStream();
-	        } catch (IOException e) {
-		        // TODO Auto-generated catch block
-		        e.printStackTrace();
-	        }
-    	}
-    	if (_timer !=null) 
-    	   _timer.cancel();
-    }
+
 	
 	
     /**

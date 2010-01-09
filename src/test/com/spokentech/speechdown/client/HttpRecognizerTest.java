@@ -22,7 +22,9 @@ import javax.sound.sampled.AudioFileFormat.Type;
 
 import org.apache.log4j.Logger;
 
+import com.spokentech.speechdown.client.endpoint.AudioStreamEndPointer;
 import com.spokentech.speechdown.client.endpoint.FileS4EndPointingInputStream2;
+import com.spokentech.speechdown.client.endpoint.S4EndPointer;
 import com.spokentech.speechdown.client.endpoint.StreamEndPointingInputStream;
 import com.spokentech.speechdown.client.endpoint.JavaSoundStreamS4EndPointingInputStream;
 import com.spokentech.speechdown.client.util.AFormat;
@@ -386,14 +388,16 @@ public class HttpRecognizerTest extends TestCase {
 	    	// read in the sound file.
 	    	AudioInputStream	audioInputStream = null;
 	    	Type type = null;
+	    	AFormat format= null;
 	    	try {
 	    		audioInputStream = AudioSystem.getAudioInputStream(soundFile2);
 	    		type = AudioSystem.getAudioFileFormat(soundFile2).getType();
+	    		format = FormatUtils.covertToNeutral(audioInputStream.getFormat());
 	    	} catch (Exception e) {
 	    		e.printStackTrace();
 	    	}
 
-	    	StreamInputEP(audioInputStream);
+	    	StreamInputEP(audioInputStream,format);
 
 	    }
 	    
@@ -401,8 +405,9 @@ public class HttpRecognizerTest extends TestCase {
 	    public void testRecognizeFileS4EPGrammar() {
 	    	System.out.println("Starting File EP Test ...");	
 	    	
-	    	long timeout = 10000;       	
-	    	FileS4EndPointingInputStream2 epStream = new FileS4EndPointingInputStream2();
+	    	long timeout = 10000;     
+	    	S4EndPointer ep = new S4EndPointer();
+	    	FileS4EndPointingInputStream2 epStream = new FileS4EndPointingInputStream2(ep);
 
 	    	epStream.setMimeType(s4audio);
 	    	epStream.setupStream(soundFile2);
@@ -428,8 +433,9 @@ public class HttpRecognizerTest extends TestCase {
 	    	System.out.println("Starting File EP Test ...");	
 	    	recog.enableAsynchMode(2);
 	    	
-	    	long timeout = 10000;       	
-	    	FileS4EndPointingInputStream2 epStream = new FileS4EndPointingInputStream2();
+	    	long timeout = 10000;
+	    	S4EndPointer ep = new S4EndPointer();
+	    	FileS4EndPointingInputStream2 epStream = new FileS4EndPointingInputStream2(ep);
 
 	    	epStream.setMimeType(s4audio);
 	    	epStream.setupStream(soundFile2);
@@ -464,8 +470,9 @@ public class HttpRecognizerTest extends TestCase {
 	    	System.out.println("Starting File EP Test ...");	
 	    	recog.enableAsynchMode(2);
 	    	
-	    	long timeout = 10000;       	
-	    	FileS4EndPointingInputStream2 epStream = new FileS4EndPointingInputStream2();
+	    	long timeout = 10000;    
+	    	S4EndPointer ep = new S4EndPointer();
+	    	FileS4EndPointingInputStream2 epStream = new FileS4EndPointingInputStream2(ep);
 
 	    	epStream.setMimeType(s4audio);
 	    	epStream.setupStream(soundFile2);
@@ -500,7 +507,8 @@ public class HttpRecognizerTest extends TestCase {
 	    
 	    public void testRecognizeFileS4EPLm() {
 	    	long timeout = 10000;       	
-	    	FileS4EndPointingInputStream2 epStream = new FileS4EndPointingInputStream2();
+	    	S4EndPointer ep = new S4EndPointer();
+	    	FileS4EndPointingInputStream2 epStream = new FileS4EndPointingInputStream2(ep);
 
 	    	epStream.setMimeType(s4audio);
 	    	epStream.setupStream(soundFile2);
@@ -542,8 +550,8 @@ public class HttpRecognizerTest extends TestCase {
 	    	
 	    	//run the test
 	    	long timeout = 10000;
-	    	
-	    	JavaSoundStreamS4EndPointingInputStream epStream = new JavaSoundStreamS4EndPointingInputStream();
+	    	S4EndPointer ep = new S4EndPointer();
+	    	JavaSoundStreamS4EndPointingInputStream epStream = new JavaSoundStreamS4EndPointingInputStream(ep);
 	    	epStream.setMimeType(s4audio);
 	    	epStream.setupStream(audioInputStream);
 	    	epStream.init();
@@ -575,7 +583,8 @@ public class HttpRecognizerTest extends TestCase {
 	    	}
 	    	
 	    	//run the test
-	    	epStream = new JavaSoundStreamS4EndPointingInputStream();
+
+	    	epStream = new JavaSoundStreamS4EndPointingInputStream(ep);
 	    	epStream.setMimeType(s4audio);
 	    	epStream.setupStream(audioInputStream);
 	    	epStream.init();
@@ -665,14 +674,15 @@ public class HttpRecognizerTest extends TestCase {
 	    //}
 
 
-	    private void StreamInputEP(AudioInputStream stream) {
+	    private void StreamInputEP(AudioInputStream stream, AFormat format) {
 	    
 	    	
 	    	long timeout = 10000;
 	    	
-	    	StreamEndPointingInputStream epStream = new StreamEndPointingInputStream();
+	    	AudioStreamEndPointer ep = new AudioStreamEndPointer();
+	    	StreamEndPointingInputStream epStream = new StreamEndPointingInputStream(ep);
 	    	epStream.setMimeType(wav);
-	    	epStream.setupStream(stream);
+	    	epStream.setupStream(stream,format);
 	    	
 
 	    	RecognitionResult r = null;

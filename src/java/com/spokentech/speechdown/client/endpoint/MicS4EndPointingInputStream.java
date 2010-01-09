@@ -7,12 +7,15 @@
 package com.spokentech.speechdown.client.endpoint;
 
 import java.io.IOException;
+import java.io.InputStream;
+
 import javax.sound.sampled.AudioFormat;
 import org.apache.log4j.Logger;
 
 import edu.cmu.sphinx.frontend.DataProcessor;
 import edu.cmu.sphinx.frontend.FrontEnd;
 
+import com.spokentech.speechdown.client.endpoint.EndPointingInputStreamBase.Listener;
 import com.spokentech.speechdown.client.sphinx.Microphone2;
 import com.spokentech.speechdown.client.sphinx.SpeechDataStreamer;
 import com.spokentech.speechdown.client.util.AFormat;
@@ -24,9 +27,9 @@ import com.spokentech.speechdown.common.SpeechEventListener;
  * The Class MicS4EndPointingInputStream.  This class will read audio from the mic and stream out only the audio between start and end speech.  
  * It use Sphinx4 frontend to do the endpointing. 
  */
-public class MicS4EndPointingInputStream extends EndPointingInputStreamBase implements EndPointingInputStream {
-	
-    private static Logger _logger = Logger.getLogger(MicS4EndPointingInputStream.class);
+public class MicS4EndPointingInputStream extends EndPointingInputStreamBase  {
+
+	private static Logger _logger = Logger.getLogger(MicS4EndPointingInputStream.class);
 
 	private int id;
 
@@ -35,15 +38,11 @@ public class MicS4EndPointingInputStream extends EndPointingInputStreamBase impl
 	private AudioFormat desiredFormat;
 
 	private String mimeType;
+		
 	
-	
-	
-	
-	
-	public MicS4EndPointingInputStream( AudioFormat desiredFormat, String mimeType) {
-	    super();
-	    this.desiredFormat = desiredFormat;
-	    this.mimeType = mimeType;
+	public MicS4EndPointingInputStream(EndPointer ep) {
+	    super(ep);
+
     }
 
 
@@ -83,12 +82,16 @@ public class MicS4EndPointingInputStream extends EndPointingInputStreamBase impl
     }
 
 
+
+	
 	
 	/**
 	 * Setup stream.
 	 */
-	public void setupStream() {
+	public void setupStream( AudioFormat desiredFormat, String mimeType) {
 		_logger.debug("Setting up the stream");
+	    this.desiredFormat = desiredFormat;
+	    this.mimeType = mimeType;
         setupPipedStream();
 	}
 
@@ -106,8 +109,11 @@ public class MicS4EndPointingInputStream extends EndPointingInputStreamBase impl
 	 * @see com.spokentech.speechdown.client.endpoint.EndPointingInputStream#startAudioTransfer(long, com.spokentech.speechdown.client.SpeechEventListener)
 	 */
 	public void startAudioTransfer(long timeout, SpeechEventListener listener) throws InstantiationException, IOException {
+		
 
-		_listener = new Listener(listener);		
+		//setup the listener (it is a decorator)
+		_listener = new Listener(listener);
+
 		
 		int sampleRate = (int)desiredFormat.getSampleRate();
 		int sampleSizeInBits = desiredFormat.getSampleSizeInBits();
@@ -121,24 +127,31 @@ public class MicS4EndPointingInputStream extends EndPointingInputStreamBase impl
         int selectedChannel = 0;
         String selectedMixerIndex = "default";
         
-
 		_logger.debug("FORMAT" + (int)desiredFormat.getSampleRate() +","+desiredFormat.getSampleSizeInBits()+","+desiredFormat.getChannels()+","+ desiredFormat.isBigEndian());
         AudioFormat a  = new AudioFormat((float) sampleRate, sampleSizeInBits, channels, signed, bigEndian);
         _logger.debug("FORMAT: "+a);
-
+        AFormat format = FormatUtils.covertToNeutral(a);
+        
     	mic = new Microphone2(sampleRate, sampleSizeInBits, channels , bigEndian , signed, closeBetweenUtterances , msecsPerread,keepLastAudio, stereoToMono ,selectedChannel ,selectedMixerIndex);
         //mic = new Microphone(a);
 		//mic.initialize();
-		
- 		FrontEnd frontEnd = createFrontend(false, false, (DataProcessor) mic, _listener);
- 		 
-		mic.startRecording();
-		SpeechDataStreamer sds = new SpeechDataStreamer();
-		sds.startStreaming(frontEnd, outputStream);
-		
+    	
+    	
+    	//TODO:  Don't like this casting to subclass of end pointer.   Only needed now for this mic and rtp version.  
+    	//       All other streamers just take a stream in the start method (not a dataprocessor)
+	    // start the endpointer thread
+     	((S4EndPointer)ep).start((DataProcessor)mic, format, outputStream, _listener);
 
+     	//start the timeout of necessary
 		if (timeout > 0)
 			startInputTimers(timeout);
+		
+		//set the state
+		_state = WAITING_FOR_SPEECH;
+    	
+
+		mic.startRecording();
+
 		
 		_state = WAITING_FOR_SPEECH;
 	}
