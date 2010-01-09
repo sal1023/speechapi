@@ -2,7 +2,7 @@ package com.spokentech.speechdown.client.endpoint;
 
 import java.io.File;
 import java.io.IOException;
-import java.io.InputStream;
+
 import javax.sound.sampled.AudioFormat;
 import javax.sound.sampled.AudioInputStream;
 import javax.sound.sampled.AudioSystem;
@@ -10,21 +10,18 @@ import javax.sound.sampled.AudioFileFormat.Type;
 
 import org.apache.log4j.Logger;
 
-import edu.cmu.sphinx.frontend.DataProcessor;
-import edu.cmu.sphinx.frontend.FrontEnd;
 import edu.cmu.sphinx.util.props.ConfigurationManager;
-import com.spokentech.speechdown.client.sphinx.SpeechDataStreamer;
 import com.spokentech.speechdown.client.util.AFormat;
 import com.spokentech.speechdown.client.util.FormatUtils;
 import com.spokentech.speechdown.common.SpeechEventListener;
-import com.spokentech.speechdown.common.sphinx.AudioStreamDataSource;
-import com.spokentech.speechdown.common.sphinx.SpeechDataMonitor;
+
 
 import com.spokentech.speechdown.server.recog.StreamDataSource;
 
 public class FileS4EndPointingInputStream2 extends EndPointingInputStreamBase implements EndPointingInputStream {
 	
-    private static Logger _logger = Logger.getLogger(FileS4EndPointingInputStream2.class);
+
+	private static Logger _logger = Logger.getLogger(FileS4EndPointingInputStream2.class);
 
 	private int id;
 
@@ -33,10 +30,18 @@ public class FileS4EndPointingInputStream2 extends EndPointingInputStreamBase im
 	private File  file;
 	private AudioInputStream stream;
 	private Type type;
+	
+	private AFormat format;
 
 	StreamDataSource dataSource = null;
 	
 	private String mimeType;
+	
+    public FileS4EndPointingInputStream2(EndPointer ep) {
+	    super(ep);
+	    // TODO Auto-generated constructor stub
+    }
+
 	
 	/**
      * @return the mimeType
@@ -63,6 +68,8 @@ public class FileS4EndPointingInputStream2 extends EndPointingInputStreamBase im
     	try {
     		stream = AudioSystem.getAudioInputStream(file);
     		type = AudioSystem.getAudioFileFormat(file).getType();
+	        AudioFormat f = stream.getFormat();
+	        format = FormatUtils.covertToNeutral(f);
 
     	} catch (Exception e) {
     		e.printStackTrace();
@@ -80,25 +87,17 @@ public class FileS4EndPointingInputStream2 extends EndPointingInputStreamBase im
 	
 	public synchronized void startAudioTransfer(long timeout, SpeechEventListener listener) throws InstantiationException, IOException {
 
+		//setup the listener (it is a decorator)
 		_listener = new Listener(listener);
 		
- 		StreamDataSource dataSource = new AudioStreamDataSource();
+	    // start the endpointer thread
+     	ep.start(stream, format, outputStream, _listener);
 
- 		FrontEnd frontEnd = createFrontend(false, false, (DataProcessor) dataSource, _listener);
- 		//frontEnd.initialize();
-		
- 		
- 		AFormat af = FormatUtils.covertToNeutral(stream.getFormat());
- 		
-		dataSource.setInputStream((InputStream)stream, "ws-audiostream", af);
- 		
-		
-		SpeechDataStreamer sds = new SpeechDataStreamer();
-		sds.startStreaming(frontEnd, outputStream);
-		
+     	//start the timeout of necessary
 		if (timeout > 0)
 			startInputTimers(timeout);
 		
+		//set the state
 		_state = WAITING_FOR_SPEECH;
 	}
 

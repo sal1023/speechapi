@@ -40,7 +40,7 @@ public class SpeechDataStreamer  extends Thread{
     public SpeechDataStreamer() {
         super();
         // TODO Auto-generated constructor stub
-        _logger.setLevel(Level.FINE);
+        _logger.setLevel(Level.INFO);
         
     }
     
@@ -48,15 +48,15 @@ public class SpeechDataStreamer  extends Thread{
     private void showSignals(Data data) {
 
         if (data instanceof SpeechStartSignal) {
-            _logger.info("streamer <<<<<<<<<<<<<<< SpeechStartSignal encountered!");
+            _logger.fine("streamer <<<<<<<<<<<<<<< SpeechStartSignal encountered!");
         } else if (data instanceof SpeechEndSignal) {
-            _logger.info("streamer <<<<<<<<<<<<<<< SpeechEndSignal encountered!");
+            _logger.fine("streamer <<<<<<<<<<<<<<< SpeechEndSignal encountered!");
             speechEnded = true;
         } else if (data instanceof DataStartSignal) {
-            _logger.info("streamer <<<<<<<<<<<<<<< DataStartSignal encountered!");
+            _logger.fine("streamer <<<<<<<<<<<<<<< DataStartSignal encountered!");
             infoDataStartSignal((DataStartSignal) data);
         } else if (data instanceof DataEndSignal) {
-            _logger.info("streamer >>>>>>>>>>>>>>> DataEndSignal encountered!");
+            _logger.fine("streamer >>>>>>>>>>>>>>> DataEndSignal encountered!");
             dataEnded = true;
         }
 
@@ -97,7 +97,7 @@ public class SpeechDataStreamer  extends Thread{
     	this.out = out;
         this.dout = new ObjectOutputStream(out);
 		this.dout.flush();
-    	_logger.info("startStreaming...");
+    	_logger.fine("startStreaming...");
         start();
     }
 
@@ -107,7 +107,7 @@ public class SpeechDataStreamer  extends Thread{
     	long t1 = 0;
     	long t2 = 0;
     	long t3 = 0;
-    	_logger.info("start stream pulling");
+    	_logger.fine("start stream pulling");
     	boolean moreData = true;
     	while (moreData) {
    		    t1 = System.nanoTime();
@@ -133,7 +133,7 @@ public class SpeechDataStreamer  extends Thread{
         			closeOutputStream();
     			}
     		} else {
-    			_logger.info("Null data");
+    			_logger.fine("Null data");
     			moreData=false;
     			closeOutputStream();
     		}

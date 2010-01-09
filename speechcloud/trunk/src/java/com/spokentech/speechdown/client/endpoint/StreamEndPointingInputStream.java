@@ -7,37 +7,32 @@
 package com.spokentech.speechdown.client.endpoint;
 
 import java.io.IOException;
-import java.io.InputStream;
-import javax.sound.sampled.AudioFormat;
 import javax.sound.sampled.AudioInputStream;
-
 import org.apache.log4j.Logger;
-
-import edu.cmu.sphinx.frontend.DataProcessor;
-import edu.cmu.sphinx.frontend.FrontEnd;
-import edu.cmu.sphinx.util.props.ConfigurationManager;
-import com.spokentech.speechdown.client.sphinx.SpeechDataStreamer;
 import com.spokentech.speechdown.client.util.AFormat;
 import com.spokentech.speechdown.client.util.FormatUtils;
 import com.spokentech.speechdown.common.SpeechEventListener;
-import com.spokentech.speechdown.common.sphinx.AudioStreamDataSource;
-import com.spokentech.speechdown.common.sphinx.SpeechDataMonitor;
-
-import com.spokentech.speechdown.server.recog.StreamDataSource;
 
 // TODO: Auto-generated Javadoc
 /**
  * The Class StreamEndPointingInputStream.  This class will read on a audio stream and stream out only the audio between start and end speech.  
  */
-public class StreamEndPointingInputStream extends EndPointingInputStreamBase implements EndPointingInputStream {
-	
-    private static Logger _logger = Logger.getLogger(StreamEndPointingInputStream.class);
+public class StreamEndPointingInputStream extends EndPointingInputStreamBase {
+
+
+	private static Logger _logger = Logger.getLogger(StreamEndPointingInputStream.class);
 
 	private AudioInputStream  stream;
+	private AFormat format;
 
-	AudioStreamEndPointer ep;;
-	
 	private String mimeType;
+	
+	
+	
+    public StreamEndPointingInputStream(EndPointer ep) {
+	    super(ep);
+    }
+
 	
 	/**
 	 * Gets the mime type.
@@ -63,9 +58,10 @@ public class StreamEndPointingInputStream extends EndPointingInputStreamBase imp
 	 * 
 	 * @param stream the new up stream
 	 */
-	public void setupStream(AudioInputStream stream) {
+	public void setupStream(AudioInputStream stream, AFormat format) {
 		_logger.info("Setting up the stream");
 		this.stream = stream;
+		this.format = format;
         setupPipedStream();
 	}
 
@@ -93,9 +89,9 @@ public class StreamEndPointingInputStream extends EndPointingInputStreamBase imp
 
 		_listener = new Listener(listener);
 		
-	       //create the thread and start it
-        ep = new AudioStreamEndPointer("Stream", stream, outputStream, _listener );
-     	ep.start();
+	    // start the endpointer thread
+
+     	ep.start(stream, format, outputStream, _listener);
 		if (timeout > 0)
 			startInputTimers(timeout);
      	

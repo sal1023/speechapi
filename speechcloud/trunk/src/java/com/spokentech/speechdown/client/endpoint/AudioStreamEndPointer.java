@@ -1,16 +1,15 @@
 package com.spokentech.speechdown.client.endpoint;
 
 import java.io.IOException;
-import java.io.OutputStream;
+import java.io.InputStream;
 import javax.sound.sampled.AudioFormat;
 import javax.sound.sampled.AudioInputStream;
 import org.apache.log4j.Logger;
 
 import com.spokentech.speechdown.client.util.CircularDArrayBuffer;
-import com.spokentech.speechdown.common.SpeechEventListener;
 
 /** This Thread records audio, and caches them in an audio buffer. */
-class AudioStreamEndPointer extends Thread {
+public class AudioStreamEndPointer extends EndPointerBase {
 
 	
 	private static int CONSECUTIVE_LOWS_NEEDED_FOR_ENDSPEECH = 40;
@@ -21,47 +20,26 @@ class AudioStreamEndPointer extends Thread {
 	
     private long totalSamplesRead = 0;
 
-    private AudioInputStream astream;
-    private OutputStream ostream;
-    private SpeechEventListener listener;
-    
+
     
     protected int sampleRate;
     protected int bytesPerRead = 3200;
     protected int bytesPerValue;
     protected boolean bigEndian;
     protected boolean signedData;
-    private boolean streamEndReached = false;
+
     private boolean utteranceEndSent = false;
     private boolean utteranceStarted = false;
 
-    /**
-     * Creates the thread with the given name
-     *
-     * @param name the name of the thread
-     */
-    public AudioStreamEndPointer(String name, AudioInputStream audioStream, OutputStream outputStream, SpeechEventListener listener) {
-        super(name);
-        setInputStream(audioStream);
-        ostream = outputStream;
-        this.listener = listener;
-    }
-
-
-    /** Starts the thread, and waits for recorder to be ready */
-    public void start() {
-		super.start();
-    }
-
     
-
     /**
      * Sets the InputStream from which this StreamDataSource reads.
      *
      * @param inputStream the InputStream from which audio data comes
      * @param streamName  the name of the InputStream
      */
-    public void setInputStream(AudioInputStream inputStream) {
+    @Override 
+    public void setInputStream(InputStream inputStream) {
         astream = inputStream;
         streamEndReached = false;
         utteranceEndSent = false;
@@ -93,32 +71,9 @@ class AudioStreamEndPointer extends Thread {
 
 
     }
-    
-    
-    private void closeDataStream() {
-    	_logger.debug("Closing data stream");
-        streamEndReached = true;
-        if (astream != null) {
-        	try {
-	            astream.close();
-            } catch (IOException e) {
-	            // TODO Auto-generated catch block
-	            e.printStackTrace();
-            }
-        }
-    }
-
-    /**
-     * Stops the thread. This method does not return until recording has actually stopped, and all the data has been
-     * read from the audio line.
-     */
-    public void stopRecording() {
-        streamEndReached = true;
-	    closeDataStream();
-    }
    
 
-    public void run() {
+    public void doEndpointing() {
     	
     	// Read the next chunk of data from the TargetDataLine.
     	//byte[] data = new byte[frameSizeInBytes];
@@ -127,7 +82,7 @@ class AudioStreamEndPointer extends Thread {
     	//byte[]	abBuffer = new byte[65536];
     	//byte[] data = new byte[astream.getBufferSize() / 5];
 
-    	AudioFormat	format = astream.getFormat();
+    	AudioFormat	format = ((AudioInputStream)astream).getFormat();
     	double startThreshold = 200.0;
        	double endThreshold = 50.0;
     	int thresholdFrameSize = 20; //in ms
