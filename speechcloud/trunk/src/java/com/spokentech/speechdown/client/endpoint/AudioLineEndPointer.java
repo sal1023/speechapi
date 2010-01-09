@@ -14,7 +14,8 @@ import com.spokentech.speechdown.common.SpeechEventListener;
 
 
 /** This Thread records audio, and caches them in an audio buffer. */
-class AudioLineEndPointer extends Thread {
+@Deprecated 
+class AudioLineEndPointer implements Runnable {
 	
 	private static int CONSECUTIVE_LOWS_NEEDED_FOR_ENDSPEECH = 40;
 	private static int CONSECUTIVE_HIGHS_NEEDED_FOR_STARTSPEECH = 20;
@@ -28,23 +29,19 @@ class AudioLineEndPointer extends Thread {
     private OutputStream ostream;
     private SpeechEventListener listener;
 
-    /**
-     * Creates the thread with the given name
-     *
-     * @param name the name of the thread
-     */
-    public AudioLineEndPointer(String name, TargetDataLine audioLine, OutputStream outputStream, SpeechEventListener listener) {
-        super(name);
-        aline = audioLine;
-        ostream = outputStream;
-        this.listener = listener;
-    }
+	private Thread t;
+
+
 
 
     /** Starts the thread, and waits for recorder to be ready */
-    public void start() {
+    public void start(TargetDataLine audioLine, OutputStream outputStream, SpeechEventListener listener) {
+        aline = audioLine;
+        ostream = outputStream;
+        this.listener = listener;
 		aline.start();
-		super.start();
+    	t=new Thread(this);
+		t.start();
     }
 
 
