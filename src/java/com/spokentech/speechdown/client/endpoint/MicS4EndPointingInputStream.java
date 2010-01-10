@@ -205,6 +205,7 @@ public class MicS4EndPointingInputStream extends EndPointingInputStreamBase  {
     public AFormat getFormat() {
 		return FormatUtils.covertToNeutral(desiredFormat);
     }
+
 	
 	
 }

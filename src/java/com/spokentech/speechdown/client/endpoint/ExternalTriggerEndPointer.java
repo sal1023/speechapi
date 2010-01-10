@@ -1,13 +1,7 @@
 package com.spokentech.speechdown.client.endpoint;
 
 import java.io.IOException;
-import java.io.InputStream;
-import java.io.OutputStream;
-
 import org.apache.log4j.Logger;
-
-import com.spokentech.speechdown.client.util.AFormat;
-import com.spokentech.speechdown.common.SpeechEventListener;
 
 public class ExternalTriggerEndPointer extends EndPointerBase {
 
@@ -84,6 +78,11 @@ public class ExternalTriggerEndPointer extends EndPointerBase {
 		} catch (IOException e) {
 			e.printStackTrace();
 		} 	
+    }
+
+	@Override
+    public boolean requiresServerSideEndPointing() {
+	    return true;
     }
 
 

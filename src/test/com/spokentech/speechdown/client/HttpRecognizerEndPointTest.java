@@ -28,7 +28,7 @@ import com.spokentech.speechdown.client.endpoint.FileS4EndPointingInputStream2;
 import com.spokentech.speechdown.client.endpoint.S4EndPointer;
 import com.spokentech.speechdown.client.endpoint.StreamEndPointingInputStream;
 import com.spokentech.speechdown.client.endpoint.JavaSoundStreamS4EndPointingInputStream;
-import com.spokentech.speechdown.client.endpoint.StreamS4EndPointingInputStream;
+import com.spokentech.speechdown.client.endpoint.StreamEndPointingInputStream;
 import com.spokentech.speechdown.client.util.AFormat;
 import com.spokentech.speechdown.client.util.FormatUtils;
 import com.spokentech.speechdown.common.RecognitionResult;
@@ -50,7 +50,7 @@ public class HttpRecognizerEndPointTest extends TestCase {
 			@Override
 			public void speechEnded() {
 				// TODO Auto-generated method stub
-	            _logger.info("speeeh ended event");
+	            _logger.info("speech ended event");
 			}
 	
 			@Override
@@ -324,7 +324,7 @@ public class HttpRecognizerEndPointTest extends TestCase {
 	       
 	    	//run the test
 	    	S4EndPointer ep = new S4EndPointer();
-	    	StreamS4EndPointingInputStream epStream = new StreamS4EndPointingInputStream(ep);
+	    	StreamEndPointingInputStream epStream = new StreamEndPointingInputStream(ep);
 	    	epStream.setMimeType(s4audio);
 	    	epStream.setupStream(audioInputStream, format);
 	    	epStream.init();
@@ -440,10 +440,14 @@ public class HttpRecognizerEndPointTest extends TestCase {
 	            e.printStackTrace();
             }
 	    	
-            ep.triggerStart();
+           
+           while ( ep.triggerStart() <0) {
+        	   _logger.info("not setup yet");
+           }
+            
             _logger.info("called asynch method. sleeping for 2 secs");
             try {
-	            Thread.sleep(2000);
+	            Thread.sleep(5000);
             } catch (InterruptedException e) {
 	            // TODO Auto-generated catch block
 	            e.printStackTrace();

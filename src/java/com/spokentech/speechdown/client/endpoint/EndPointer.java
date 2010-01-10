@@ -7,13 +7,13 @@ import java.io.OutputStream;
 import com.spokentech.speechdown.client.util.AFormat;
 import com.spokentech.speechdown.common.SpeechEventListener;
 
-interface EndPointer {
+public interface EndPointer {
 
 	/** Starts the thread, and waits for recorder to be ready 
 	 * @throws IOException */
 	public void start(InputStream audioStream,  AFormat format, OutputStream outputStream, SpeechEventListener listener) throws IOException;
 
-	public void triggerStart();
+	public long triggerStart();
 
 	public void triggerEnd();
 
@@ -22,5 +22,7 @@ interface EndPointer {
 	 * read from the audio line.
 	 */
 	public void stopRecording();
+
+	public boolean requiresServerSideEndPointing();
 
 }

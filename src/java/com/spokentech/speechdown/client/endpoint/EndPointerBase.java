@@ -38,10 +38,15 @@ public abstract class EndPointerBase implements EndPointer, Runnable{
     
     }
 
-	public void triggerStart() {
+	public  long triggerStart() {
+		//TODO: Danger that this could be called before start method. which will reset the flags (not to mention the listener has been set yet!)
     	speechStarted=true;
-    	if( listener!= null)
+    	if( listener!= null) {
     	    listener.speechStarted();
+    	    return 1;
+    	} else {
+    		return -1;
+    	}
     }
 
 	public void triggerEnd() {
@@ -57,6 +62,7 @@ public abstract class EndPointerBase implements EndPointer, Runnable{
      * @param streamName  the name of the InputStream
      */
     protected void setInputStream(InputStream inputStream) {
+		_logger.info("setinput stream and reset start flag");
         astream = inputStream;
         streamEndReached = false;
     	speechStarted = false;
