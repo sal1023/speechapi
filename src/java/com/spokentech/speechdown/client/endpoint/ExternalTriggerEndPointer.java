@@ -50,7 +50,7 @@ public class ExternalTriggerEndPointer extends EndPointerBase {
                 closeDataStream();
             }
             
-    		_logger.info(" ...read: " + totalRead);
+    		_logger.info(" ...read: " + totalRead +"flags (started/ended/streamEnded: "+speechStarted+speechEnded+streamEndReached);
     
     		if (totalRead > 0) {
     			//_logger.info(speechStarted+" "+speechEnded);   			

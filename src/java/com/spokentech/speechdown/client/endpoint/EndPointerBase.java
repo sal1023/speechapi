@@ -73,7 +73,7 @@ public abstract class EndPointerBase implements EndPointer, Runnable{
     }
 
 	protected void closeDataStream() {
-    	_logger.debug("Closing data stream");
+    	_logger.info("Closing data stream");
         streamEndReached = true;
         if (astream != null) {
         	try {
