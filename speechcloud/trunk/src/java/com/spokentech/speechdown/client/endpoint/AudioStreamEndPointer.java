@@ -353,4 +353,10 @@ public class AudioStreamEndPointer extends EndPointerBase {
         return (rootMeanSquare);
         //return (LogMath.log10((float)rootMeanSquare) * 20);
     }
+
+
+	@Override
+    public boolean requiresServerSideEndPointing() {
+	    return false;
+    }
 }

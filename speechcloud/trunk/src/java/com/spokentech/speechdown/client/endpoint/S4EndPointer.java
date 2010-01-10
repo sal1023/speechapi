@@ -94,10 +94,14 @@ public  class S4EndPointer implements EndPointer {
         
     }
 
-	public void triggerStart() {
+	public long triggerStart() {
     	speechStarted=true;
-    	if( listener!= null)
+    	if( listener!= null) {
     	    listener.speechStarted();
+    	    return -1;
+    	} else  {
+    	    return 1;
+    	}
     }
 
 	public void triggerEnd() {
@@ -176,6 +180,11 @@ public  class S4EndPointer implements EndPointer {
 	   	   
 	   FrontEnd fe = new FrontEnd (components);
 	   return fe;   
+    }
+
+	@Override
+    public boolean requiresServerSideEndPointing() {
+	    return false;
     }
 
 

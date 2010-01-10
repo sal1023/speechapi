@@ -151,5 +151,7 @@ public class FileS4EndPointingInputStream2 extends EndPointingInputStreamBase im
 		return FormatUtils.covertToNeutral(stream.getFormat());
     }
 
+
+
 	
 }

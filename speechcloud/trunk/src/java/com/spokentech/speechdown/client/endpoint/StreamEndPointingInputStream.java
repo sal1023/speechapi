@@ -1,38 +1,40 @@
 /**
  * This class will read on a audio stream and stream out only the audio between start and end speech.  
- * 
+ * It use Sphinx4 frontend to do the endpointing. 
  *
  * @author Spencer Lord {@literal <}<a href="mailto:spencer@spokentech.com">spencer@spokentech.com</a>{@literal >}
  */
 package com.spokentech.speechdown.client.endpoint;
 
 import java.io.IOException;
-import javax.sound.sampled.AudioInputStream;
+import java.io.InputStream;
+
 import org.apache.log4j.Logger;
+
 import com.spokentech.speechdown.client.util.AFormat;
-import com.spokentech.speechdown.client.util.FormatUtils;
 import com.spokentech.speechdown.common.SpeechEventListener;
+
 
 // TODO: Auto-generated Javadoc
 /**
- * The Class StreamEndPointingInputStream.  This class will read on a audio stream and stream out only the audio between start and end speech.  
+ * The Class StreamS4EndPointingInputStream.  This class will read on a audio stream and stream out only the audio between start and end speech.  
+ * It use Sphinx4 frontend to do the endpointing. 
  */
 public class StreamEndPointingInputStream extends EndPointingInputStreamBase {
-
-
-	private static Logger _logger = Logger.getLogger(StreamEndPointingInputStream.class);
-
-	private AudioInputStream  stream;
-	private AFormat format;
-
-	private String mimeType;
 	
+    private static Logger _logger = Logger.getLogger(StreamEndPointingInputStream.class);
+
+	private InputStream  stream;
+	private AFormat  format;
 	
-	
-    public StreamEndPointingInputStream(EndPointer ep) {
+
+	public StreamEndPointingInputStream(EndPointer ep) {
 	    super(ep);
+	    // TODO Auto-generated constructor stub
     }
 
+
+	private String mimeType;
 	
 	/**
 	 * Gets the mime type.
@@ -42,6 +44,7 @@ public class StreamEndPointingInputStream extends EndPointingInputStreamBase {
     public String getMimeType() {
     	return mimeType;
     }
+
 
 	/**
 	 * Sets the mime type.
@@ -53,25 +56,22 @@ public class StreamEndPointingInputStream extends EndPointingInputStreamBase {
     }
 
 
+    
+	public void init() {
+	}
+	
+    
 	/**
 	 * Sets the up stream.
 	 * 
 	 * @param stream the new up stream
 	 */
-	public void setupStream(AudioInputStream stream, AFormat format) {
+	public void setupStream(InputStream stream, AFormat format) {
 		_logger.info("Setting up the stream");
 		this.stream = stream;
 		this.format = format;
         setupPipedStream();
 	}
-
-	/**
-	 * Inits the.
-	 */
-	public void init() {
-
-	}
-	
 
 	/**
 	 * Shutdown stream.
@@ -86,31 +86,22 @@ public class StreamEndPointingInputStream extends EndPointingInputStreamBase {
 	 * @see com.spokentech.speechdown.client.endpoint.EndPointingInputStream#startAudioTransfer(long, com.spokentech.speechdown.client.SpeechEventListener)
 	 */
 	public void startAudioTransfer(long timeout, SpeechEventListener listener) throws InstantiationException, IOException {
-
+		
 		_listener = new Listener(listener);
 		
 	    // start the endpointer thread
 
      	ep.start(stream, format, outputStream, _listener);
+
 		if (timeout > 0)
 			startInputTimers(timeout);
-     	
+		
 		_state = WAITING_FOR_SPEECH;
 	}
 
 	
 	
-    /* (non-Javadoc)
-     * @see com.spokentech.speechdown.client.endpoint.EndPointingInputStream#stopAudioTransfer()
-     */
-    public synchronized void stopAudioTransfer() {
-    	_logger.debug("Stopping stream");
-    	if (ep != null) {
-    		ep.stopRecording();
-    	}
-    	if (_timer !=null) 
-    	   _timer.cancel();
-    }
+
 	
 	
     /**
@@ -147,10 +138,11 @@ public class StreamEndPointingInputStream extends EndPointingInputStreamBase {
 	/* (non-Javadoc)
 	 * @see com.spokentech.speechdown.client.endpoint.EndPointingInputStream#getFormat1()
 	 */
-
 	@Override
     public AFormat getFormat() {
-		return FormatUtils.covertToNeutral(stream.getFormat());
+		return  this.format;
     }
+
+
 	
 }

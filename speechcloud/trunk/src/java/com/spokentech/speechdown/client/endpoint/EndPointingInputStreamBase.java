@@ -299,5 +299,9 @@ public abstract class EndPointingInputStreamBase implements EndPointingInputStre
 	    }
 	    
 
+	    public EndPointer getEndPointer() {
+		    return ep;
+	    }
+
 	   
 }

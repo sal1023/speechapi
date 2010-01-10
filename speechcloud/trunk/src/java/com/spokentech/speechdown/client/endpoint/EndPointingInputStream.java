@@ -77,4 +77,6 @@ public interface EndPointingInputStream {
 	public void setMimeType(String mimeType);
 
 
+	public EndPointer getEndPointer();
+
 }

@@ -11,20 +11,11 @@ import java.io.InputStream;
 import javax.sound.sampled.AudioFormat;
 import javax.sound.sampled.AudioInputStream;
 
-import java.io.PipedInputStream;
-
 import org.apache.log4j.Logger;
 
-import edu.cmu.sphinx.frontend.DataProcessor;
-import edu.cmu.sphinx.frontend.FrontEnd;
-
-
-import com.spokentech.speechdown.client.endpoint.EndPointingInputStreamBase.Listener;
-import com.spokentech.speechdown.client.sphinx.SpeechDataStreamer;
 import com.spokentech.speechdown.client.util.AFormat;
 import com.spokentech.speechdown.client.util.FormatUtils;
 import com.spokentech.speechdown.common.SpeechEventListener;
-import com.spokentech.speechdown.common.sphinx.AudioStreamDataSource;
 
 import com.spokentech.speechdown.server.recog.StreamDataSource;
 
@@ -187,7 +178,6 @@ public class JavaSoundStreamS4EndPointingInputStream extends EndPointingInputStr
     public AFormat getFormat() {
 		return  this.format;
     }
-
 
 	
 }
