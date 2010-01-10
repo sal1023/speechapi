@@ -29,7 +29,8 @@ public abstract class EndPointerBase implements EndPointer, Runnable{
 
 	
 	public void start(InputStream audioStream,  AFormat format, OutputStream outputStream, SpeechEventListener listener) throws IOException {
-        setInputStream(audioStream);
+		_logger.info("start");
+		setInputStream(audioStream);
         this.ostream = outputStream;
         this.listener = listener;
         this.format = format;
@@ -39,6 +40,7 @@ public abstract class EndPointerBase implements EndPointer, Runnable{
     }
 
 	public  long triggerStart() {
+		_logger.info("Trigger start called");
 		//TODO: Danger that this could be called before start method. which will reset the flags (not to mention the listener has been set yet!)
     	speechStarted=true;
     	if( listener!= null) {
@@ -50,6 +52,7 @@ public abstract class EndPointerBase implements EndPointer, Runnable{
     }
 
 	public void triggerEnd() {
+		_logger.info("Trigger End Called");
     	speechEnded=true;
     	if( listener!= null)
     	    listener.speechEnded();
