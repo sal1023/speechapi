@@ -418,7 +418,6 @@ public class HttpRecognizer {
         	bytesPerValue =new StringBody(String.valueOf(format.getSampleSizeInBits()/8));
         	encoding = new StringBody(format.getEncoding().toString());
         	lmFlag = new StringBody(String.valueOf(lmflg));
-        	_logger.info("SALLLL: "+String.valueOf(epStream.getEndPointer().requiresServerSideEndPointing()));
            	endpointFlag = new StringBody(String.valueOf(epStream.getEndPointer().requiresServerSideEndPointing()));
            	continuousFlag = new StringBody(String.valueOf(Boolean.FALSE));
         	batchModeFlag = new StringBody(String.valueOf(batchMode));

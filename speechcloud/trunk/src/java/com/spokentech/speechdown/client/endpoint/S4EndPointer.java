@@ -113,10 +113,8 @@ public  class S4EndPointer implements EndPointer {
 
 
     
-    /* (non-Javadoc)
-     * @see com.spokentech.speechdown.client.endpoint.EndPointingInputStream#stopAudioTransfer()
-     */
-    protected  void closeDataStream() {
+
+    protected  void closeInputDataStream() {
     	_logger.debug("Stopping stream");
     	if (dataSource != null) {
 	    	try {
@@ -132,7 +130,7 @@ public  class S4EndPointer implements EndPointer {
 
 	public void stopRecording() {
         streamEndReached = true;
-        closeDataStream();
+        //closeInputDataStream();
     }
 
     
