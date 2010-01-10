@@ -15,8 +15,6 @@ public class ExternalTriggerEndPointer extends EndPointerBase {
 	
     private long totalSamplesRead = 0;
     protected int bytesPerRead = 3200;
-    protected int bytesPerValue;
-
     
     public void doEndpointing() {
 
@@ -29,7 +27,7 @@ public class ExternalTriggerEndPointer extends EndPointerBase {
     		
             int read = 0;
             int totalRead = 0;
-            long totalValuesRead = 0;
+
             do {
                 try {
 	                read = astream.read(samplesBuffer, totalRead, bytesToRead - totalRead);
@@ -46,7 +44,6 @@ public class ExternalTriggerEndPointer extends EndPointerBase {
                 speechEnded = true;
             }
             // shrink incomplete frames
-            totalValuesRead += (totalRead / bytesPerValue);
             if (totalRead < bytesToRead) {
                 totalRead = (totalRead % 2 == 0)
                         ? totalRead + 2
