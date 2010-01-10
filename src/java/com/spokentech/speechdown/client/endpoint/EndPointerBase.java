@@ -72,7 +72,7 @@ public abstract class EndPointerBase implements EndPointer, Runnable{
     	speechEnded = false;
     }
 
-	protected void closeDataStream() {
+	protected void closeInputDataStream() {
     	_logger.info("Closing data stream");
         streamEndReached = true;
         if (astream != null) {
@@ -87,7 +87,7 @@ public abstract class EndPointerBase implements EndPointer, Runnable{
 
 	public void stopRecording() {
         streamEndReached = true;
-        closeDataStream();
+        //closeInputDataStream();
     }
 
 	@Override
