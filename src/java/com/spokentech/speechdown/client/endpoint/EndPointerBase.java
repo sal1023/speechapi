@@ -21,8 +21,11 @@ public abstract class EndPointerBase implements EndPointer, Runnable{
 	protected boolean speechEnded = false;
 	private Thread t;
 
+	private boolean preTrigger = false;;
+
 	public EndPointerBase() {
 		super();
+		preTrigger = false;
 	}
 	
 	public abstract void doEndpointing();
@@ -36,6 +39,11 @@ public abstract class EndPointerBase implements EndPointer, Runnable{
         this.format = format;
     	t=new Thread(this);
     	t.start();
+    	if (preTrigger) {
+        	speechStarted=true;
+    	    listener.speechStarted();
+    	    preTrigger = false;
+    	}
     
     }
 
@@ -47,6 +55,7 @@ public abstract class EndPointerBase implements EndPointer, Runnable{
     	    listener.speechStarted();
     	    return 1;
     	} else {
+    		preTrigger = true;
     		return -1;
     	}
     }
