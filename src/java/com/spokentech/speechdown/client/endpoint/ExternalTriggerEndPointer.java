@@ -16,7 +16,7 @@ public class ExternalTriggerEndPointer extends EndPointerBase {
         byte[] samplesBuffer = new byte[bytesToRead];
         
     	while ((!speechEnded) && (!streamEndReached)) {
-    		_logger.info("trying to read: " + samplesBuffer.length);
+    		_logger.debug("trying to read: " + samplesBuffer.length);
     		//int numBytesRead = astream.read(data, 0, data.length);
     		
             int read = 0;
@@ -27,14 +27,15 @@ public class ExternalTriggerEndPointer extends EndPointerBase {
 	                read = astream.read(samplesBuffer, totalRead, bytesToRead - totalRead);
                 } catch (IOException e) {
 	                // TODO Auto-generated catch block
+                	streamEndReached = true;
 	                e.printStackTrace();
                 }
                 if (read > 0) {
                     totalRead += read;
                 }
-            } while (read != -1 && totalRead < bytesToRead);
+            } while (read != -1 && totalRead < bytesToRead && (!streamEndReached));
             if (totalRead <= 0) {
-                closeInputDataStream();
+                //closeInputDataStream();
                 speechEnded = true;
             }
             // shrink incomplete frames
@@ -47,17 +48,17 @@ public class ExternalTriggerEndPointer extends EndPointerBase {
                         .arraycopy(samplesBuffer, 0, shrinkedBuffer, 0,
                                 totalRead);
                 samplesBuffer = shrinkedBuffer;
-                closeInputDataStream();
+                //closeInputDataStream();
             }
             
-    		_logger.info(" ...read: " + totalRead +"flags (started/ended/streamEnded: "+speechStarted+speechEnded+streamEndReached);
+    		_logger.debug(" ...read: " + totalRead +"flags (started/ended/streamEnded: "+speechStarted+speechEnded+streamEndReached);
     
     		if (totalRead > 0) {
-    			//_logger.info(speechStarted+" "+speechEnded);   			
+    			//_logger.debug(speechStarted+" "+speechEnded);   			
     			if (speechStarted) {
     				//always write the entire buffer (even if we find the end we can send a little extra back to the recognizer or if we found the start inside this
     				// buffer a little silence in the beginning should not hurt)
-    				_logger.info("Writing "+totalRead + "bytes");
+    				_logger.debug("Writing "+totalRead + "bytes");
     				try {
     					ostream.write(samplesBuffer, 0, totalRead);
     				} catch (IOException e) {
@@ -67,10 +68,10 @@ public class ExternalTriggerEndPointer extends EndPointerBase {
     		}
     	}
 
-		_logger.info("Done! "+ totalSamplesRead);
+		_logger.debug("Done! "+ totalSamplesRead);
 		
 		// close the input stream
-		closeInputDataStream();
+		//closeInputDataStream();
 		
 		// Close the output stream. 
 		try {
