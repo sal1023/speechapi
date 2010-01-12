@@ -53,7 +53,7 @@ public class AudioStreamEndPointer extends EndPointerBase {
         bigEndian = format.isBigEndian();
 
         String s = format.toString();
-        _logger.info("input format is " + s);
+        _logger.debug("input format is " + s);
 
         if (format.getSampleSizeInBits() % 8 != 0)
             throw new Error("StreamDataSource: bits per sample must be a multiple of 8.");
@@ -100,7 +100,7 @@ public class AudioStreamEndPointer extends EndPointerBase {
         byte[] samplesBuffer = new byte[bytesToRead];
         
     	while ((!speechEnded) && (!streamEndReached)) {
-    		_logger.info("trying to read: " + samplesBuffer.length);
+    		_logger.debug("trying to read: " + samplesBuffer.length);
     		//int numBytesRead = astream.read(data, 0, data.length);
     		
             int read = 0;
@@ -114,13 +114,16 @@ public class AudioStreamEndPointer extends EndPointerBase {
                 } catch (IOException e) {
 	                // TODO Auto-generated catch block
 	                e.printStackTrace();
+                	streamEndReached = true;
                 }
                 if (read > 0) {
                     totalRead += read;
                 }
-            } while (read != -1 && totalRead < bytesToRead);
+            //} while (read != -1 && totalRead < bytesToRead);
+            } while (read != -1 && totalRead < bytesToRead && (!streamEndReached));
+
             if (totalRead <= 0) {
-                closeInputDataStream();
+                //closeInputDataStream();
                 speechEnded = true;
             }
             // shrink incomplete frames
@@ -134,10 +137,10 @@ public class AudioStreamEndPointer extends EndPointerBase {
                         .arraycopy(samplesBuffer, 0, shrinkedBuffer, 0,
                                 totalRead);
                 samplesBuffer = shrinkedBuffer;
-                closeInputDataStream();
+                //closeInputDataStream();
             }
             
-    		_logger.info(" ...read: " + totalRead);
+    		_logger.debug(" ...read: " + totalRead);
     		int sampleSizeInBytes = format.getSampleSizeInBits() / 8;
     		totalSamplesRead += (totalRead / sampleSizeInBytes);
 
@@ -155,7 +158,7 @@ public class AudioStreamEndPointer extends EndPointerBase {
 
     			//loop thru and look for threshold crossings
     			//threshold frames, are a sliding window of data samples.  rms is compared to threshold
-    			_logger.info("Looping thru the double array with "+samples.length + " samples");
+    			_logger.debug("Looping thru the double array with "+samples.length + " samples");
     			for (double d: samples) {
     				count++;
     				tFrame.add(d);
@@ -167,7 +170,7 @@ public class AudioStreamEndPointer extends EndPointerBase {
     					_logger.debug("Got null for threshold frame.  so using the single current value: "+d);
     					rms = d;
     				}
-    				//_logger.info(count+" "+rms+" "+d);
+    				//_logger.debug(count+" "+rms+" "+d);
     				if (!speechStarted) {								// no speech yet so check for the start
     					if (rms > startThreshold) {
     						startCount = startCount+1;
@@ -199,12 +202,12 @@ public class AudioStreamEndPointer extends EndPointerBase {
     				}
 
     			}
-    			//_logger.info(speechStarted+" "+speechEnded);
+    			//_logger.debug(speechStarted+" "+speechEnded);
     			
     			if (speechStarted) {
     				//always write the entire buffer (even if we find the end we can send a little extra back to the recognizer or if we found the start inside this
     				// buffer a little silence in the beginning should not hurt)
-    				_logger.info("Writing "+totalRead + "bytes");
+    				_logger.debug("Writing "+totalRead + "bytes");
     				try {
     					ostream.write(samplesBuffer, 0, totalRead);
     				} catch (IOException e) {
@@ -214,10 +217,10 @@ public class AudioStreamEndPointer extends EndPointerBase {
     		}
     	}
 
-		_logger.info("Done! "+ totalSamplesRead);
+		_logger.debug("Done! "+ totalSamplesRead);
 		
 		// close the input stream
-		closeInputDataStream();
+		//closeInputDataStream();
 		
 		// Close the output stream. 
 		try {
