@@ -28,6 +28,8 @@ import java.net.MalformedURLException;
 import java.net.URL;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.logging.Handler;
+import java.util.logging.Level;
 import java.util.logging.Logger;
 
 import com.spokentech.speechdown.client.util.AFormat;
@@ -106,7 +108,15 @@ public class AudioStreamDataSource extends BaseDataProcessor implements StreamDa
             bytesPerRead++;
         }
         
-        
+        // TODO Go back to a real logger!
+        _logger.setLevel(Level.INFO);
+        // The root logger's handlers default to INFO. We have to
+        // crank them up. We could crank up only some of them
+        // if we wanted, but we will turn them all up.
+         Handler[] handlers =  Logger.getLogger( "" ).getHandlers();
+         for ( int index = 0; index < handlers.length; index++ ) {
+           handlers[index].setLevel( Level.INFO );
+         }
 
             //try {
             //    out = new BufferedWriter(new FileWriter("c:/temp/"+System.currentTimeMillis()));
@@ -308,7 +318,16 @@ public class AudioStreamDataSource extends BaseDataProcessor implements StreamDa
                 _logger.fine("Sending start signal ");
             } else {
                 if (dataStream != null) {
-                    output = readNextFrame();
+                	try {
+                       output = readNextFrame();
+                	} catch (Exception e) {
+                		_logger.info("Exception reading audio! "+ e.getMessage());
+                		if (e instanceof DataProcessingException)
+                			throw new DataProcessingException();
+                		else
+                			//output being null, should just trigger sending the data end signal.  thats what we want.
+                			output = null;
+                	}
                     _logger.fine("Getting the next frame");
                     if (output == null) {
                         if (!utteranceEndSent) {
@@ -376,8 +395,8 @@ public class AudioStreamDataSource extends BaseDataProcessor implements StreamDa
                 closeDataStream();
             }
         } catch (IOException ioe) {
-            ioe.printStackTrace();
-            throw new DataProcessingException("Error reading data");
+            //ioe.printStackTrace();
+            throw new DataProcessingException("Error reading next frame of data in audioInputStream");
         }
         // turn it into an Data object
         double[] doubleData;

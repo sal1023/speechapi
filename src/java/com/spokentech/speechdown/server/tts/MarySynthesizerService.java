@@ -169,7 +169,7 @@ public class MarySynthesizerService implements SynthesizerService {
                 //Voice ref = (voice != null) ? voice : Voice.getDefaultVoice(Locale.ENGLISH);
                 //audioFormat = ref.dbAudioFormat();
             }
-            System.out.println("***: "+format.toString());
+            _logger.debug("***: "+format.toString());
             audioFileFormat = new AudioFileFormat(audioType, format, AudioSystem.NOT_SPECIFIED);
         }
         Request request = new Request(inputType, outputType, voice, "", "", 1, audioFileFormat);

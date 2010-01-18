@@ -1,0 +1,29 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE hibernate-mapping PUBLIC "-//Hibernate/Hibernate Mapping DTD 3.0//EN" "http://hibernate.sourceforge.net/hibernate-mapping-3.0.dtd">
+
+<hibernate-mapping package="com.spokentech.speechdown.server.domain">
+
+    <class name="HttpRequest" table="HTTPREQUESTS">
+        <id name="id" column="HTTP_ID">
+            <generator class="native"/>
+        </id>
+        <property name="date" type="timestamp" column="HTTP_DATE"/>
+
+        <property name="protocol"/>
+        <property name="scheme"/>
+        <property name="method"/>
+        <property name="contextPath"/>
+        <property name="remoteAddr"/>
+        <property name="remoteHost"/>
+        <property name="remotePort"/>
+        <property name="localAddr"/>
+        <property name="localName"/>
+        <property name="localPort"/>
+        <property name="locale"/>
+
+        <one-to-one name="recog" class="RecogRequest"/>
+        <one-to-one name="synth" class="SynthRequest"/>
+               
+    </class>
+
+</hibernate-mapping>

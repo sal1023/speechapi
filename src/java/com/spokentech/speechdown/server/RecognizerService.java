@@ -16,6 +16,7 @@ import org.apache.commons.pool.ObjectPool;
 import org.apache.log4j.Logger;
 import org.jvnet.staxex.StreamingDataHandler;
 import com.spokentech.speechdown.common.RecognitionResult;
+import com.spokentech.speechdown.server.domain.HttpRequest;
 import com.spokentech.speechdown.server.recog.RecEngine;
 import com.spokentech.speechdown.server.util.pool.AbstractPoolableObjectFactory;
 
@@ -133,7 +134,7 @@ public class RecognizerService {
 
 	//grammar method
 	public RecognitionResult Recognize(InputStream as, String grammar, String mimeType, int sampleRate, boolean bigEndian, 
-			                           int bytesPerValue, Encoding encoding, boolean doEndpointing, boolean cmnBatch) {
+			                           int bytesPerValue, Encoding encoding, boolean doEndpointing, boolean cmnBatch, HttpRequest hr) {
 
 		_logger.debug("Before borrow" + System.currentTimeMillis());
 		
@@ -152,7 +153,22 @@ public class RecognizerService {
         _logger.debug("After borrow" + System.currentTimeMillis());
 	
         
-        RecognitionResult results = rengine.recognize(as,mimeType,grammar,sampleRate,bigEndian,bytesPerValue,encoding,doEndpointing, cmnBatch);
+      
+        RecognitionResult results ;
+        try {
+           results = rengine.recognize(as,mimeType,grammar,sampleRate,bigEndian,bytesPerValue,encoding,doEndpointing, cmnBatch, hr);
+        } catch (Exception e) {
+	        _logger.warn("Excption occurred while processing recognition requets "+e.getLocalizedMessage());
+	        
+	        try {
+	        	_grammarRecognizerPool.returnObject(rengine);
+	        } catch (Exception ee) {
+		        // TODO Auto-generated catch block
+	            throw new RuntimeException(ee);
+	        }
+            throw new RuntimeException(e);
+        }
+        
         
         try {
         	_grammarRecognizerPool.returnObject(rengine);
@@ -166,7 +182,7 @@ public class RecognizerService {
 	
 	//language model method (no grammar)
 	public RecognitionResult Recognize(InputStream as, String mimeType, int sampleRate, boolean bigEndian, 
-			                           int bytesPerValue, Encoding encoding, boolean doEndpointing, boolean cmnBatch) {
+			                           int bytesPerValue, Encoding encoding, boolean doEndpointing, boolean cmnBatch, HttpRequest hr) {
 		_logger.debug("Before borrow" + System.currentTimeMillis());
 		
         RecEngine rengine = null;
@@ -181,8 +197,21 @@ public class RecognizerService {
         
         _logger.debug("After borrow" + System.currentTimeMillis());
 	
-        
-        RecognitionResult results = rengine.recognize(as,mimeType,sampleRate,bigEndian,bytesPerValue,encoding, doEndpointing, cmnBatch);
+        RecognitionResult results ;
+        try {
+           results = rengine.recognize(as,mimeType,sampleRate,bigEndian,bytesPerValue,encoding, doEndpointing, cmnBatch,hr);
+        } catch (Exception e) {
+	        _logger.warn("Excption occurred while processing LM recognition requets "+e.getLocalizedMessage());
+
+	        //return engine to pool
+	        try {
+	        	_lmRecognizerPool.returnObject(rengine);
+	        } catch (Exception ee) {
+		        // TODO Auto-generated catch block
+	            throw new RuntimeException(ee);
+	        }
+            throw new RuntimeException(e);
+        }
         
         try {
         	_lmRecognizerPool.returnObject(rengine);
@@ -194,7 +223,7 @@ public class RecognizerService {
     }
 
 	public String Transcribe(InputStream audio, String mimeType, int sampleRate, boolean bigEndian,
-            int bytesPerValue, Encoding encoding, PrintWriter out, HttpServletResponse response) {
+            int bytesPerValue, Encoding encoding, PrintWriter out, HttpServletResponse response, HttpRequest hr) {
 		_logger.debug("Before borrow" + System.currentTimeMillis());
 		
     	
@@ -210,9 +239,22 @@ public class RecognizerService {
         
         _logger.debug("After borrow" + System.currentTimeMillis());
 	
-        
-        String results = rengine.transcribe(audio,mimeType,sampleRate,bigEndian,bytesPerValue,encoding,out,response);
-        
+        String results ;
+        try {
+             results = rengine.transcribe(audio,mimeType,sampleRate,bigEndian,bytesPerValue,encoding,out,response,  hr);
+        } catch (Exception e) {
+	        _logger.warn("Excption occurred while processing transcribe requests "+e.getLocalizedMessage());
+	        
+	        //return the engine to pool
+	        try {
+	        	_lmRecognizerPool.returnObject(rengine);
+	        } catch (Exception ee) {
+		        // TODO Auto-generated catch block
+	            throw new RuntimeException(ee);
+	        }
+            throw new RuntimeException(e);
+        }
+
         try {
         	_lmRecognizerPool.returnObject(rengine);
         } catch (Exception e) {

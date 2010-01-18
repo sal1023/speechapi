@@ -1,0 +1,33 @@
+<?xml version="1.0"?>
+<!DOCTYPE hibernate-mapping PUBLIC
+        "-//Hibernate/Hibernate Mapping DTD 3.0//EN"
+        "http://hibernate.sourceforge.net/hibernate-mapping-3.0.dtd">
+
+<hibernate-mapping package="com.spokentech.speechdown.server.domain">
+
+    <class name="SynthRequest" table="SYNTHREQUESTS">
+
+        
+       <id name="id" column="SYNTH_ID">
+           <generator class="foreign">
+            <param name="property">httpRequest</param>
+           </generator>
+       </id>
+        
+        <property name="date" type="timestamp" column="SYNTH_DATE"/>
+
+        <property name="mimeType"/>
+        <property name="voice"/>
+        <property name="text"/>
+        <property name="sampleRate"/>
+        <property name="bigEndian"/>
+        <property name="bytesPerValue"/>
+        <property name="encoding"/>
+        
+        <one-to-one name="httpRequest" class="HttpRequest" constrained="true"/>
+       
+    </class>
+    
+
+
+</hibernate-mapping>
