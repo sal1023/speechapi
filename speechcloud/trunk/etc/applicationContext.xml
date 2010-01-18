@@ -77,7 +77,7 @@
 		      <value>c:\tmp</value>
 		  </property>
 		  <property name="recordingEnabled">
-				<value>true</value>
+				<value>@serviceLoggingFlag@</value>
 		  </property>
 	</bean>
 	
@@ -89,5 +89,16 @@
 		  </property>
 	</bean>
 
+
+<!--  
+	<bean id="serviceLogger" 
+	      class="com.spokentech.speechdown.server.util.ServiceLogger"
+		  init-method="startup" destroy-method="shutdown">
+
+		  <property name="recordingEnabled">
+				<value>@serviceLoggingFlag@</value>
+		  </property>
+	</bean>
+-->
 
 </beans>

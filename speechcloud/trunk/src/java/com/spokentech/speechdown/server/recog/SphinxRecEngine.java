@@ -23,11 +23,15 @@ import com.spokentech.speechdown.client.util.AFormat;
 import com.spokentech.speechdown.common.RecognitionResult;
 import com.spokentech.speechdown.common.RecognitionResultJsapi;
 import com.spokentech.speechdown.common.SpeechEventListener;
+
 import com.spokentech.speechdown.common.sphinx.AudioStreamDataSource;
 import com.spokentech.speechdown.common.sphinx.IdentityStage;
 import com.spokentech.speechdown.common.sphinx.InsertSpeechSignalStage;
 import com.spokentech.speechdown.common.sphinx.SpeechDataMonitor;
 import com.spokentech.speechdown.common.sphinx.WavWriter;
+import com.spokentech.speechdown.server.domain.HttpRequest;
+import com.spokentech.speechdown.server.domain.RecogRequest;
+import com.spokentech.speechdown.server.util.ServiceLogger;
 import com.spokentech.speechdown.server.util.pool.AbstractPoolableObject;
 
 import edu.cmu.sphinx.decoder.ResultListener;
@@ -167,7 +171,9 @@ public class SphinxRecEngine extends AbstractPoolableObject implements RecEngine
 
 	//Recognize using language mode
     public RecognitionResult recognize(InputStream as, String mimeType, int sampleRate, boolean bigEndian, 
-    	                               int bytesPerValue, Encoding encoding, boolean doEndpointing, boolean cmnBatch) {
+    	                               int bytesPerValue, Encoding encoding, boolean doEndpointing, boolean cmnBatch, HttpRequest hr) {
+
+    	long  start = System.nanoTime();
     	long startTime= System.currentTimeMillis();
 		_logger.info("Using recognizer # "+_id+ ", time: "+startTime);
 	    //SAL
@@ -183,6 +189,56 @@ public class SphinxRecEngine extends AbstractPoolableObject implements RecEngine
 	    //SAL
 	    //_recognizer.deallocate();
 	    
+		long stop = System.nanoTime();
+		long wall = (stop - start)/1000000;
+		long streamLen = _dataSource.getLengthInMs();
+		double ratio = (double)wall/(double)streamLen;
+		_logger.info(ratio+ "  Wall time "+ wall+ " stream length "+ streamLen);
+		
+
+		//temp dont do any of this for now
+		if (1 == 0) {
+		//if (recordingEnabled) {	
+	        RecogRequest rr = new RecogRequest();
+	        
+			String raw = null;
+			String pro = null;
+			if (r != null) {
+				raw = r.getBestFinalResultNoFiller();
+				pro = r.getBestPronunciationResult();
+			}
+	        
+		    Date d = new Date();
+		    rr.setDate(d);
+		    rr.setSampleRate(sampleRate);
+		    rr.setBigEndian(bigEndian);
+		    rr.setBytesPerValue(bytesPerValue);
+		    rr.setCmnBatch(cmnBatch);
+		    rr.setContentType(mimeType);
+		    rr.setEncoding(encoding.toString());
+		    rr.setEndPointing(doEndpointing);
+		    rr.setGrammar(null);
+
+		    rr.setLm(true);
+		    rr.setContinuous(false);
+		    
+		    rr.setTags(null);
+		    rr.setRawResults(raw);
+		    rr.setPronunciation(pro);
+		    
+		    rr.setWallTime(wall);
+		    rr.setStreamLen(streamLen);
+		    
+		    rr.setAudioUri(recorder.getWavName());
+		    rr.setHttpRequest(hr);
+		    
+			ServiceLogger.logRecogRequest(rr,hr);
+		}
+	    long tt = System.nanoTime();
+		long x = (tt - stop)/1000000;
+		_logger.info("  Logging time "+ x);
+		
+	    
 	    if (r != null) {
 	       RecognitionResultJsapi results = new RecognitionResultJsapi(r.getBestResultNoFiller());
 	       return results;
@@ -192,7 +248,9 @@ public class SphinxRecEngine extends AbstractPoolableObject implements RecEngine
     }
 	//recognize using a grammar
 	public RecognitionResult recognize(InputStream as, String mimeType, String grammar, int sampleRate, 
-			                           boolean bigEndian, int bytesPerValue, Encoding encoding, boolean doEndpointing, boolean cmnBatch) {
+			                           boolean bigEndian, int bytesPerValue, Encoding encoding, boolean doEndpointing, boolean cmnBatch, HttpRequest hr) {
+		
+		long  start = System.nanoTime();
     	long startTime= System.currentTimeMillis();
 		_logger.info("Using recognizer # "+_id+ ", time: "+startTime);
 	    //SAL
@@ -229,6 +287,54 @@ public class SphinxRecEngine extends AbstractPoolableObject implements RecEngine
 	    _logger.info("Result: " + (results != null ? results.getText() : null));
 	    //SAL
 	    //_recognizer.deallocate();
+	    
+		long stop = System.nanoTime();
+		long wall = (stop - start)/1000000;
+		long streamLen = _dataSource.getLengthInMs();
+		double ratio = (double)wall/(double)streamLen;
+		_logger.info(ratio+ "  Wall time "+ wall+ " stream length "+ streamLen);
+		
+		//temp dont do any of this for now
+		if (1 == 0) {
+		//if (recordingEnabled) {	
+	        RecogRequest rr = new RecogRequest();
+	        
+			String raw = null;
+			String pro = null;
+			if (r != null) {
+				raw = r.getBestFinalResultNoFiller();
+				pro = r.getBestPronunciationResult();
+			}
+	        
+		    Date d = new Date();
+		    rr.setDate(d);
+		    rr.setSampleRate(sampleRate);
+		    rr.setBigEndian(bigEndian);
+		    rr.setBytesPerValue(bytesPerValue);
+		    rr.setCmnBatch(cmnBatch);
+		    rr.setContentType(mimeType);
+		    rr.setEncoding(encoding.toString());
+		    rr.setEndPointing(doEndpointing);
+		    rr.setGrammar(grammar);
+
+		    rr.setLm(false);
+		    rr.setContinuous(false);
+		    
+		    rr.setTags(results.getText());
+		    rr.setRawResults(raw);
+		    rr.setPronunciation(pro);
+		    
+		    rr.setWallTime(wall);
+		    rr.setStreamLen(streamLen);
+		    
+		    rr.setAudioUri(recorder.getWavName());
+		    rr.setHttpRequest(hr);
+		    
+			ServiceLogger.logRecogRequest(rr,hr);
+		}
+	     long tt = System.nanoTime();
+		long x = (tt - stop)/1000000;
+		_logger.info("  Logging time "+ x);
 	    return results;
     }
 
@@ -287,18 +393,11 @@ public class SphinxRecEngine extends AbstractPoolableObject implements RecEngine
 	    
 		_logger.info("After setting the input stream " + System.currentTimeMillis());
 	    
-		long  start = System.nanoTime();
+
 	    // decode the audio file.
 	    //_logger.debug("Decoding " + audioFileURL);
 		Result r = _recognizer.recognize();
-		long stop = System.nanoTime();
-		long wall = (stop - start)/1000000;
-		long streamLen = _dataSource.getLengthInMs();
-		double ratio = (double)wall/(double)streamLen;
-		_logger.info(ratio+ "  Wall time "+ wall+ " stream length "+ streamLen);
-		if (recordingEnabled) {
-			logResults(r, recorder.getWavName());
-		}
+
 		
 		fe=null;
 	    return r;
@@ -311,12 +410,13 @@ public class SphinxRecEngine extends AbstractPoolableObject implements RecEngine
 		        // TODO Auto-generated catch block
 		        e.printStackTrace();
 	     }
+
 	}
 	
 	
 	@Override
     public String transcribe(InputStream as, String mimeType, int sampleRate, boolean bigEndian,
-            int bytesPerValue, Encoding encoding, PrintWriter out,HttpServletResponse response) {
+            int bytesPerValue, Encoding encoding, PrintWriter out,HttpServletResponse response, HttpRequest hr) {
 		
 		_logger.info("Using recognizer # "+_id);
 	    //SAL
@@ -700,22 +800,7 @@ public class SphinxRecEngine extends AbstractPoolableObject implements RecEngine
 	   return fe;   
     }
 
-	public void logResults(Result r,String wavName) {
-		try {
-			String results = null;
-			if (r == null) {
-				results ="null result";
-			} else {
-				results = r.getBestFinalResultNoFiller();
-			}
-	        outTextFile.write(results+","+wavName+"\n");
-	        outTextFile.flush();
-        } catch (IOException e) {
-	        // TODO Auto-generated catch block
-	        e.printStackTrace();
-        }
-           
-    }
+
 
 
 }

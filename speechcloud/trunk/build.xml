@@ -39,6 +39,10 @@
 	<property name="tritonus_share.jar" value="${lib.dir}/tritonus_share-0.3.6.jar" />	
 	<property name="sphinx4.jar" value="${lib.dir}/sphinx4.jar" />
 	
+	<property name="hibernate.jar" value="${lib.dir}/hibernate3.jar" />
+	<property name="hsqldb.jar" value="${lib.dir}/hsqldb.jar" />
+    <property name="jta.jar" value="${lib.dir}/jta-1.1.jar" />
+	
 	<property name="mary-common.jar" value="${lib.dir}/mary-common.jar" />
 	
 	<property name="jlibrtp.jar" value="${lib.dir}/jlibrtp.jar" />
@@ -83,6 +87,8 @@
 		<pathelement	location="${tritonus_share.jar}" />
 		<pathelement	location="${httpclient.jar}" />
 		<pathelement	location="${httpcore.jar}" />
+		
+		<pathelement	location="${hibernate.jar}" />
 		<!--pathelement	location="${jstl.jar}" /-->
 	    <!--pathelement	location="${standard.jar}" /-->
 	    
@@ -151,7 +157,8 @@
 	</target>
 
 	<target name="create-war" depends="compile-server">
-	
+		
+		<filter token="serviceLoggingFlag" value="false" />
 		<filter token="applicationContext.recognizerService.baseGrammarDir" value="c:/temp" />
 		<filter token="applicationContext.recognizerService.sphinxConfigFile" value="file:///${catalina.home}/webapps/${ant.project.name}/WEB-INF/sphinx-config-2pools.xml" />
 		<filter token="applicationContext.synthesizerService.prefix" value="http://${catalina.host}:${catalina.port}/${ant.project.name}/prompts/" />
@@ -159,16 +166,15 @@
 		<copy todir="${build.war.home}/WEB-INF" overwrite="true" filtering="true">
 			<fileset dir="${basedir}/etc" includes="*.xml" />
 		</copy>
-		<war warfile="${build.war.home}/${war.filename}" webxml="${basedir}/src/webapp/WEB-INF/web.xml">
-			<fileset dir="${basedir}/src/webapp">
-				<exclude name="**/WEB-INF/web.xml" />
-			</fileset>
+		<war warfile="${build.war.home}/${war.filename}" webxml="${build.war.home}/WEB-INF/web.xml">
+
 			<webinf dir="${build.war.home}/WEB-INF" includes="*.xml" />
 			<zipfileset dir="etc/prompts" prefix="prompts" />
 			<zipfileset dir="etc/grammar" prefix="grammar" />
 			<!--zipfileset dir="etc/lm" prefix="lm" /-->
-			<zipfileset dir="${basedir}/etc" prefix="WEB-INF/wsdl" includes="*.wsdl, *.xsd" />
-			<zipfileset dir="${basedir}/etc" prefix="WEB-INF/classes" includes="log4j.xml" />
+			<zipfileset dir="${basedir}/etc" prefix="WEB-INF/wsdl" includes="*.wsdl, *.xsd" />			
+			<zipfileset dir="${basedir}/src/java" prefix="WEB-INF/classes" includes="**/*.hbm.xml" />
+			<zipfileset dir="${basedir}/etc" prefix="WEB-INF/classes" includes="log4j.xml, hibernate.cfg.xml" />
 			<classes dir="${build.classes.home}" />
 			<lib dir="${basedir}/lib" />
 			<lib file="${jstl.jar}" />

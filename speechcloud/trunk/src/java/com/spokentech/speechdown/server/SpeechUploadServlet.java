@@ -9,10 +9,9 @@ import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
-import java.io.OutputStream;
 import java.io.PrintWriter;
+import java.util.Date;
 import java.util.Enumeration;
-
 
 import javax.servlet.ServletConfig;
 import javax.servlet.ServletException;
@@ -40,10 +39,13 @@ import org.springframework.web.context.support.WebApplicationContextUtils;
 import com.spokentech.speechdown.common.RecognitionResult;
 
 import com.spokentech.speechdown.common.HttpCommandFields;
+import com.spokentech.speechdown.server.domain.HttpRequest;
+import com.spokentech.speechdown.server.util.ServiceLogger;
 
 /**
  * Servlet for uploading audio for speech recognition processing.
  *
+ * @author slord
  * @author nielsgodfredsen
  */
 @SuppressWarnings("serial")
@@ -62,6 +64,9 @@ public class SpeechUploadServlet extends HttpServlet {
  	private static final int	EXTERNAL_BUFFER_SIZE = 3200;
 
 	byte[]	abData = new byte[EXTERNAL_BUFFER_SIZE];
+
+
+	private boolean serviceLogEnabled;
 	
 	
 	/* (non-Javadoc)
@@ -72,6 +77,11 @@ public class SpeechUploadServlet extends HttpServlet {
 
 		super.init(config);
 
+		String tmp = config.getInitParameter("serviceLogging");
+		serviceLogEnabled = false;
+		if (tmp.compareToIgnoreCase("true") == 0)
+			serviceLogEnabled = true;
+		
 		String tempDirParam = config.getInitParameter("tempDir");
 		File tempDir = (tempDirParam != null) ? new File(tempDirParam) : null;
 
@@ -98,12 +108,40 @@ public class SpeechUploadServlet extends HttpServlet {
 
 		long start = System.currentTimeMillis();
 		_logger.info("New request came in" + start);
-		Enumeration hnames = request.getHeaderNames();
-	    while (hnames.hasMoreElements()) {
-	        String key = (String) hnames.nextElement();
-	        _logger.debug(key + " -- " + request.getHeader(key));
-	      }
-
+		
+		if (_logger.isDebugEnabled()) {
+			Enumeration hnames = request.getHeaderNames();
+		    while (hnames.hasMoreElements()) {
+		        String key = (String) hnames.nextElement();
+		        _logger.debug(key + " -- " + request.getHeader(key));
+		    }
+		    
+			Enumeration anames = request.getAttributeNames();
+		    while (anames.hasMoreElements()) {
+		        String key = (String) anames.nextElement();
+		        _logger.debug(key + " aa " + request.getAttribute(key));
+		    }
+		    
+			Enumeration pnames = request.getParameterNames();
+		    while (pnames.hasMoreElements()) {
+		        String key = (String) pnames.nextElement();
+		        _logger.debug(key + " pp " + request.getParameter(key));
+		    }
+	
+		    _logger.debug("protocol "+request.getProtocol());
+		    _logger.debug("scheme: "+request.getScheme());	
+		    _logger.debug("method: "+request.getMethod());
+		    _logger.debug("PATH "+request.getContextPath());	
+	
+		    _logger.debug("remote addr :"+request.getRemoteAddr());
+		    _logger.debug("remote host: "+request.getRemoteHost());
+		    _logger.debug("remote port: "+request.getRemotePort());
+		    _logger.debug("Local adr "+request.getLocalAddr());
+		    _logger.debug("Local name "+request.getLocalName());
+		    _logger.debug("Local port "+request.getLocalPort());
+	
+		    _logger.info("loacale: "+request.getLocale()); 
+		}
 		
 		// Check that we have a file upload request
 		if (!ServletFileUpload.isMultipartContent(request)) {
@@ -184,6 +222,23 @@ public class SpeechUploadServlet extends HttpServlet {
 				    if (name.equals("audio") ) {
 				    	audio = stream;
 				    	try {
+			    			//log the http request parameters to the database
+		    		        HttpRequest hr = new HttpRequest();
+			    			if (serviceLogEnabled) {
+			    		        hr.setProtocol(request.getProtocol());
+				    		    hr.setScheme(request.getScheme());	
+				    		    hr.setMethod(request.getMethod());
+				    		    hr.setContextPath(request.getContextPath());	
+				    		    hr.setRemoteAddr(request.getRemoteAddr());
+				    		    hr.setRemoteHost(request.getRemoteHost());
+				    		    hr.setRemotePort(request.getRemotePort());
+				    		    hr.setLocalAddr(request.getLocalAddr());
+				    		    hr.setLocalName(request.getLocalName());
+				    		    hr.setLocalPort(request.getLocalPort());
+				    		    hr.setLocale(request.getLocale().toString()); 
+				    			hr.setDate(new Date());
+			    			    ServiceLogger.logHttpRequest(hr);
+			    			}
 				    		_logger.debug("recognizing audio!  Sample rate= "+sampleRate+", bigEndian= "+ bigEndian+", bytes per value= "+bytesPerValue+", encoding= "+encoding.toString());
 				    		_logger.debug("continuous: "+continuous+" lmflag: "+lmFlag+ " endpointing: "+doEndpointing);
 				    		if (continuous) {
@@ -194,7 +249,7 @@ public class SpeechUploadServlet extends HttpServlet {
 				    			//response.setHeader("Content-Disposition", "attachment; filename=results.txt'");			
 				    			response.setHeader("Transfer-coding","chunked");
 					    		if (lmFlag) {
-					    			textResult = recognizerService.Transcribe(audio,contentType,sampleRate,bigEndian,bytesPerValue,encoding,out,response);
+					    			textResult = recognizerService.Transcribe(audio,contentType,sampleRate,bigEndian,bytesPerValue,encoding,out,response,hr);
 					    		} else {
 							        _logger.debug("recognition result is null");
 								    out.println("recognition result is null");
@@ -203,12 +258,14 @@ public class SpeechUploadServlet extends HttpServlet {
 				    			long stop = System.currentTimeMillis();
 				    			_logger.info("Calling recognizer Service" + stop +" ("+(stop-start) +")" );
 					    		if (lmFlag) {
-					    			result = recognizerService.Recognize(audio,contentType,sampleRate,bigEndian,bytesPerValue,encoding,doEndpointing,cmnBatch);
+					    			result = recognizerService.Recognize(audio,contentType,sampleRate,bigEndian,bytesPerValue,encoding,doEndpointing,cmnBatch,hr);
 					    		} else {
-					    	        result = recognizerService.Recognize(audio, grammarString,contentType,sampleRate,bigEndian,bytesPerValue,encoding,doEndpointing,cmnBatch);
+					    	        result = recognizerService.Recognize(audio, grammarString,contentType,sampleRate,bigEndian,bytesPerValue,encoding,doEndpointing,cmnBatch,hr);
 
 					    	    }
 
+					    		audio.close();
+					    		request.getInputStream().close();
 								PrintWriter out = response.getWriter();	
 								if (result == null) {
 									textResult = null;
@@ -223,6 +280,9 @@ public class SpeechUploadServlet extends HttpServlet {
 				    			_logger.info("Done! " + stop2 +" ("+(stop2-start) +")" );
 					    	    //String filename = Long.toString(System.currentTimeMillis()) + ".wav";
 					    		//writeStreamToFile2(audio,filename);
+				    			
+
+				    						    			
 				    		}
 				    	} catch (Exception e) {
 				    		e.printStackTrace();

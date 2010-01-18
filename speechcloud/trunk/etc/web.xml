@@ -46,6 +46,12 @@
 			<param-name>destinationDir</param-name>
 			<param-value>/TEMP/speechup/destdir</param-value>
 		</init-param>
+		<init-param>
+			<param-name>serviceLogging</param-name>
+			<param-value>@serviceLoggingFlag@</param-value>
+		</init-param>
+		
+		
 	</servlet>
 	<servlet-mapping>
 		<servlet-name>SpeechUploadServlet</servlet-name>
@@ -66,6 +72,10 @@
 		<init-param>
 			<param-name>destinationDir</param-name>
 			<param-value>/TEMP/speechup/destdir</param-value>
+		</init-param>
+		<init-param>
+			<param-name>serviceLogging</param-name>
+			<param-value>@serviceLoggingFlag@</param-value>
 		</init-param>
 	</servlet>
 	<servlet-mapping>

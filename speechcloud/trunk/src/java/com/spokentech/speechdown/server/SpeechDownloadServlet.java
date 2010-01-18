@@ -10,6 +10,7 @@ import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
+import java.util.Date;
 import java.util.Enumeration;
 
 import javax.servlet.ServletConfig;
@@ -37,6 +38,9 @@ import org.springframework.web.context.support.WebApplicationContextUtils;
 import org.tritonus.share.sampled.Encodings;
 
 import com.spokentech.speechdown.common.HttpCommandFields;
+import com.spokentech.speechdown.server.domain.HttpRequest;
+import com.spokentech.speechdown.server.domain.SynthRequest;
+import com.spokentech.speechdown.server.util.ServiceLogger;
 
 /**
  * Servlet for uploading audio for speech recognition processing.
@@ -65,6 +69,8 @@ public class SpeechDownloadServlet extends HttpServlet {
 
 	byte[]	abData = new byte[EXTERNAL_BUFFER_SIZE];
 	
+	private boolean serviceLogEnabled;
+	
 	
 	/* (non-Javadoc)
 	 * @see javax.servlet.GenericServlet#init(javax.servlet.ServletConfig)
@@ -73,6 +79,13 @@ public class SpeechDownloadServlet extends HttpServlet {
 	public void init(ServletConfig config) throws ServletException {
 
 		super.init(config);
+		
+		
+		String tmp = config.getInitParameter("serviceLogging");
+		serviceLogEnabled = false;
+		if (tmp.compareToIgnoreCase("true") == 0)
+			serviceLogEnabled = true;
+		
 
 		String tempDirParam = config.getInitParameter("tempDir");
 		File tempDir = (tempDirParam != null) ? new File(tempDirParam) : null;
@@ -109,7 +122,7 @@ public class SpeechDownloadServlet extends HttpServlet {
 	    String mime = "audio/x-wav";
 	    AudioFormat.Encoding encoding = AudioFormat.Encoding.PCM_SIGNED;
 	    //AudioFileFormat.Type fileFormat = AudioFileFormat.Type.AU; 
-    	
+
         // Get the values of all request parameters
     	Enumeration params = request.getParameterNames();
 	    while (params.hasMoreElements()) {
@@ -176,21 +189,53 @@ public class SpeechDownloadServlet extends HttpServlet {
         out.flush();
         out.close();
 	    
+		if (serviceLogEnabled) {
+			Date d = new Date();
+
+	        HttpRequest hr = new HttpRequest();
+		    hr.setProtocol(request.getProtocol());
+		    hr.setScheme(request.getScheme());	
+		    hr.setMethod(request.getMethod());
+		    hr.setContextPath(request.getContextPath());	
+		    hr.setRemoteAddr(request.getRemoteAddr());
+		    hr.setRemoteHost(request.getRemoteHost());
+		    hr.setRemotePort(request.getRemotePort());
+		    hr.setLocalAddr(request.getLocalAddr());
+		    hr.setLocalName(request.getLocalName());
+		    hr.setLocalPort(request.getLocalPort());
+		    hr.setLocale(request.getLocale().toString()); 
+			hr.setDate(d);
+			
+	
+			SynthRequest sr = new SynthRequest();
+			sr.setBigEndian(bigEndian);
+			sr.setBytesPerValue(bytesPerValue);
+			sr.setDate(d);
+			sr.setEncoding(encoding.toString());
+			sr.setMimeType(mime);
+			sr.setSampleRate(sampleRate);
+			sr.setText(text);
+			sr.setVoice(voice);
+			sr.setHttpRequest(hr);
+
+			ServiceLogger.logHttpRequest(hr);
+			ServiceLogger.logSynthRequest(sr,hr);
+		}
 
     }
 
 	
 	
-
+    //TODO: use the doGetOrPost (something was wrong with getting the params from the post)
 	/* (non-Javadoc)
 	 * @see javax.servlet.http.HttpServlet#doPost(javax.servlet.http.HttpServletRequest, javax.servlet.http.HttpServletResponse)
 	 */
-	@Override
-	@SuppressWarnings("unchecked")
-	public void doPost(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
-		doGetOrPost(request,response);
+	//@Override
+	//@SuppressWarnings("unchecked")
+	//public void doPost(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
+	//	doGetOrPost(request,response);
 
-	}
+	//}
 
 	
 
@@ -308,7 +353,7 @@ public class SpeechDownloadServlet extends HttpServlet {
 		} 
 	}
 	
-	public void oldDoPost(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
+	public void doPost(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
 
 		Enumeration hnames = request.getHeaderNames();
 	    while (hnames.hasMoreElements()) {
@@ -408,6 +453,40 @@ public class SpeechDownloadServlet extends HttpServlet {
 
 	        out.flush();
 	        out.close();
+	        
+			if (serviceLogEnabled) {
+				Date d = new Date();
+
+		        HttpRequest hr = new HttpRequest();
+			    hr.setProtocol(request.getProtocol());
+			    hr.setScheme(request.getScheme());	
+			    hr.setMethod(request.getMethod());
+			    hr.setContextPath(request.getContextPath());	
+			    hr.setRemoteAddr(request.getRemoteAddr());
+			    hr.setRemoteHost(request.getRemoteHost());
+			    hr.setRemotePort(request.getRemotePort());
+			    hr.setLocalAddr(request.getLocalAddr());
+			    hr.setLocalName(request.getLocalName());
+			    hr.setLocalPort(request.getLocalPort());
+			    hr.setLocale(request.getLocale().toString()); 
+				hr.setDate(d);
+				
+		
+				SynthRequest sr = new SynthRequest();
+				sr.setBigEndian(bigEndian);
+				sr.setBytesPerValue(bytesPerValue);
+				sr.setDate(d);
+				sr.setEncoding(encoding.toString());
+				sr.setMimeType(mime);
+				sr.setSampleRate(sampleRate);
+				sr.setText(text);
+				sr.setVoice(voice);
+				sr.setHttpRequest(hr);
+
+				ServiceLogger.logHttpRequest(hr);
+				ServiceLogger.logSynthRequest(sr,hr);
+			}
+	        
 	
 			// store file list and pass control to view jsp
 			//request.setAttribute("fileUploadList", filenames);

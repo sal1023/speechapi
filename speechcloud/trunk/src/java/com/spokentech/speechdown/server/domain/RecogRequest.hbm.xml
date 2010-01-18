@@ -1,0 +1,42 @@
+<?xml version="1.0"?>
+<!DOCTYPE hibernate-mapping PUBLIC
+        "-//Hibernate/Hibernate Mapping DTD 3.0//EN"
+        "http://hibernate.sourceforge.net/hibernate-mapping-3.0.dtd">
+
+
+<hibernate-mapping package="com.spokentech.speechdown.server.domain">
+
+    <class name="RecogRequest" table="RECOGREQUESTS">
+
+        
+       <id name="id" column="RECOG_ID">
+           <generator class="foreign">
+            <param name="property">httpRequest</param>
+           </generator>
+       </id>
+        
+        
+        <property name="date" type="timestamp" column="RECOG_DATE"/>
+
+        <property name="sampleRate"/>
+        <property name="continuous"/>
+        <property name="cmnBatch"/>
+        <property name="lm"/>
+        <property name="endPointing"/>
+        <property name="bigEndian"/>
+        <property name="bytesPerValue"/>
+        <property name="encoding"/>
+        <property name="ContentType"/>
+        <property name="grammar"/>
+        <property name="rawResults"/>
+        <property name="pronunciation"/>
+        <property name="tags"/>
+        <property name="wallTime"/>
+        <property name="streamLen"/>
+        <property name="audioUri"/>
+
+        <one-to-one name="httpRequest" class="HttpRequest" constrained="true"/>
+         
+    </class>
+
+</hibernate-mapping>
