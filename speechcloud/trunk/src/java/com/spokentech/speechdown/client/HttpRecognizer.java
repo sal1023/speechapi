@@ -21,6 +21,7 @@ import java.io.UnsupportedEncodingException;
 import java.net.URL;
 import java.util.Timer;
 import java.util.TimerTask;
+import java.util.logging.Handler;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
@@ -35,6 +36,9 @@ import org.apache.http.entity.mime.content.InputStreamBody;
 import org.apache.http.entity.mime.content.StringBody;
 import org.apache.http.impl.client.DefaultHttpClient;
 import com.spokentech.speechdown.client.endpoint.EndPointingInputStream;
+import com.spokentech.speechdown.client.exceptions.AsynchNotEnabledException;
+import com.spokentech.speechdown.client.exceptions.HttpRecognizerException;
+import com.spokentech.speechdown.client.exceptions.StreamInUseException;
 import com.spokentech.speechdown.client.util.AFormat;
 import com.spokentech.speechdown.common.InvalidRecognitionResultException;
 import com.spokentech.speechdown.common.RecognitionResult;
@@ -96,7 +100,6 @@ public class HttpRecognizer {
 	 * @return the service
 	 */
     public  String getService() {
-        _logger.setLevel(Level.FINE);
     	return service;
     }
 
@@ -107,6 +110,14 @@ public class HttpRecognizer {
 	 */
     public  void setService(String service) {
     	this.service = service;
+        //_logger.setLevel(Level.FINE);
+        // The root logger's handlers default to INFO. We have to
+        // crank them up. We could crank up only some of them
+        // if we wanted, but we will turn them all up.
+        //Handler[] handlers =  Logger.getLogger( "" ).getHandlers();
+        //for ( int index = 0; index < handlers.length; index++ ) {
+        //   handlers[index].setLevel( Level.FINE );
+        //}
     }
 
 
@@ -258,8 +269,15 @@ public class HttpRecognizer {
 	 * 
 	 * @throws InstantiationException the instantiation exception
 	 * @throws IOException Signals that an I/O exception has occurred.
+	 * @throws StreamInUseException 
+	 * @throws AsynchNotEnabledException 
+	 * @throws HttpRecognizerException 
 	 */
-	public  String recognizeAsynch(URL grammarUrl, EndPointingInputStream epStream, boolean lmflg, boolean batchMode, long timeout, SpeechEventListener eventListener ) throws InstantiationException, IOException {
+	public  String recognizeAsynch(URL grammarUrl, EndPointingInputStream epStream, boolean lmflg, boolean batchMode, long timeout, SpeechEventListener eventListener ) throws InstantiationException, IOException, StreamInUseException, AsynchNotEnabledException {
+
+		if (epStream.inUse()) 
+			throw new StreamInUseException();
+
 		InputStream grammarIs = grammarUrl.openStream();
 		AsynchCommand command = null;
 		if (workQ != null) {
@@ -267,6 +285,7 @@ public class HttpRecognizer {
 		   workQ.execute(command);
 		} else {
 			_logger.info("AsycnMode is not enabled.  Use the enableAsynch(int numthreads) to enable ascynh mode");
+			throw new AsynchNotEnabledException();
 	    }
 		return command.getId();
 	}
@@ -285,8 +304,13 @@ public class HttpRecognizer {
 	 * 
 	 * @throws InstantiationException the instantiation exception
 	 * @throws IOException Signals that an I/O exception has occurred.
+	 * @throws HttpRecognizerException 
 	 */
-	public  String recognizeAsynch(String grammar, EndPointingInputStream epStream, boolean lmflg, boolean batchMode, long timeout, SpeechEventListener eventListener ) throws InstantiationException, IOException {
+	public  String recognizeAsynch(String grammar, EndPointingInputStream epStream, boolean lmflg, boolean batchMode, long timeout, SpeechEventListener eventListener ) throws InstantiationException, IOException, StreamInUseException, AsynchNotEnabledException {
+
+		if (epStream.inUse()) 
+			throw new StreamInUseException();
+		
 		InputStream grammarIs = new ByteArrayInputStream(grammar.getBytes());
 		AsynchCommand command = null;
 		if (workQ != null) {
@@ -294,6 +318,7 @@ public class HttpRecognizer {
 		   workQ.execute(command);
 		} else {
 			_logger.info("AsycnMode is not enabled.  Use the enableAsynch(int numthreads) to enable ascynh mode");
+			throw new AsynchNotEnabledException();
 	    }
 		return command.getId();
 	}	
@@ -381,7 +406,6 @@ public class HttpRecognizer {
 	 */
 	public  RecognitionResult recognize(InputStream grammar, EndPointingInputStream epStream, boolean lmflg, boolean batchMode, long timeout, SpeechEventListener eventListener) throws InstantiationException, IOException {
 
-
         //create the listener (listens for end points)  A decorator, so also can  pass events back to client
         speechStarted = false;
         requestCanceled = false;
@@ -396,11 +420,7 @@ public class HttpRecognizer {
     	
     	// one part is the grammar
         InputStreamBody grammarBody = new InputStreamBody(grammar, "plain/text","grammar.gram");
-   
-  
-        //one part is the audio
-        InputStreamBody audioBody = new InputStreamBody(epStream.getInputStream(), epStream.getMimeType(),"audio.wav");      
-        
+
         //parameters are fields (StringBoodys)
     	StringBody sampleRate = null;
     	StringBody bigEndian = null;
@@ -411,7 +431,7 @@ public class HttpRecognizer {
     	StringBody continuousFlag = null;
     	StringBody batchModeFlag = null;
     	AFormat format = epStream.getFormat();
-    	
+
         try {
            	sampleRate = new StringBody(String.valueOf((int)format.getSampleRate()));
         	bigEndian = new StringBody(String.valueOf(format.isBigEndian()));
@@ -438,39 +458,39 @@ public class HttpRecognizer {
 		mpEntity.addPart(HttpCommandFields.CONTINUOUS_FLAG,continuousFlag);
 		mpEntity.addPart(HttpCommandFields.CMN_BATCH, batchModeFlag);
 		
-		
+
 		//add the grammar part
 		mpEntity.addPart("grammar", grammarBody);
 		
+        speechStarted = false;
+        requestCanceled = false;
+	    epStream.startAudioTransfer(timeout, listener);
+		
+        //one part is the audio
+        InputStreamBody audioBody = new InputStreamBody(epStream.getInputStream(), epStream.getMimeType(),"audio.wav");      
 		//add the audio part
 		mpEntity.addPart("audio", audioBody);
 				
 		//set the multipart entity for the post command
 	    httppost.setEntity(mpEntity);
-
+    	_logger.fine("Waiting for Speech start ...");
      	//now wait for a start speech event
-	    
-        speechStarted = false;
-        requestCanceled = false;
-	    epStream.startAudioTransfer(timeout, listener);
-
 		while ((!speechStarted)&&(!requestCanceled)) {
             synchronized (this) {        
                 try {
                     this.wait(1000);
                 } catch (InterruptedException e) {
-                	_logger.fine("Interrupt Excepton while waiting for tts to complete");
+                	_logger.fine("Interrupt Excepton "+speechStarted);
                 }
             }
         }
 		if (requestCanceled) {
-	    	_logger.info("Request  canceled!!!");
+	    	_logger.fine("Request  canceled!!!");
 			return(null);
 		}
 		
     	_logger.fine("Speech started!!!");
 
-	    
 	    //execute the post command
         _logger.fine("executing request " + httppost.getRequestLine());
         HttpResponse response = null;
@@ -693,7 +713,7 @@ public class HttpRecognizer {
 		 * @see com.spokentech.speechdown.client.SpeechEventListener#speechEnded()
 		 */
 		public void speechEnded() {
-		    _logger.fine("Speech Ended");
+		    _logger.fine("HttpRec: Speech Ended");
             super.speechEnded();
 	    }
 
@@ -701,11 +721,11 @@ public class HttpRecognizer {
     	 * @see com.spokentech.speechdown.client.SpeechEventListener#speechStarted()
     	 */
     	public void speechStarted() {
-		    _logger.fine("Speech Started");
+		    _logger.fine("HttpRec: Speech Started");
 			//signal for the blocking call to check for unblocking
-			synchronized (this) {
+			synchronized (HttpRecognizer.this) {
 				speechStarted=true;
-				this.notifyAll();
+				HttpRecognizer.this.notifyAll();
 			}
             super.speechStarted();
 	    }

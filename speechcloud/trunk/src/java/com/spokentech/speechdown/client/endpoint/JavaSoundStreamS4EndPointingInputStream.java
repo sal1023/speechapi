@@ -28,11 +28,6 @@ public class JavaSoundStreamS4EndPointingInputStream extends EndPointingInputStr
 
 	private static Logger _logger = Logger.getLogger(JavaSoundStreamS4EndPointingInputStream.class);
 
-	private InputStream  stream;
-	private AFormat  format;
-
-	StreamDataSource dataSource = null;
-
 	
     public JavaSoundStreamS4EndPointingInputStream(EndPointer ep) {
 	    super(ep);
@@ -62,11 +57,6 @@ public class JavaSoundStreamS4EndPointingInputStream extends EndPointingInputStr
     	this.mimeType = mimeType;
     }
 
-
-    
-	public void init() {
-	}
-	
     
 	/**
 	 * Sets the up stream.
@@ -93,52 +83,6 @@ public class JavaSoundStreamS4EndPointingInputStream extends EndPointingInputStr
 	}
 	
 
-	/**
-	 * Shutdown stream.
-	 */
-	public void shutdownStream() {
-		//TODO:
-		_logger.info("Shutdown stream not implemented!");
-	}
-	
-	
-	/* (non-Javadoc)
-	 * @see com.spokentech.speechdown.client.endpoint.EndPointingInputStream#startAudioTransfer(long, com.spokentech.speechdown.client.SpeechEventListener)
-	 */
-	public void startAudioTransfer(long timeout, SpeechEventListener listener) throws InstantiationException, IOException {
-		
-		_listener = new Listener(listener);
-		
-	    // start the endpointer thread
-
-     	ep.start(stream, format, outputStream, _listener);
-
-		if (timeout > 0)
-			startInputTimers(timeout);
-		
-		_state = WAITING_FOR_SPEECH;
-
-	}
-
-	
-	
-    /* (non-Javadoc)
-     * @see com.spokentech.speechdown.client.endpoint.EndPointingInputStream#stopAudioTransfer()
-     */
-    public synchronized void stopAudioTransfer() {
-    	_logger.debug("Stopping stream");
-    	if (dataSource != null) {
-	    	try {
-		        dataSource.closeDataStream();
-	        } catch (IOException e) {
-		        // TODO Auto-generated catch block
-		        e.printStackTrace();
-	        }
-    	}
-    	if (_timer !=null) 
-    	   _timer.cancel();
-    }
-	
 	
     /**
      * Starts the input timers which trigger no-input-timeout if speech has not started after the specified time.

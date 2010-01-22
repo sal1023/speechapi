@@ -29,7 +29,7 @@ public class MicRecognizerTest extends TestCase {
     
     
 
-    //private static String service = "http://ec2-67-202-5-50.compute-1.amazonaws.com/speechcloud/SpeechUploadServlet";  
+    //private static String service = "http://spokentech.net/speechcloud/SpeechUploadServlet";  
     private static String service = "http://localhost:8090/speechcloud/SpeechUploadServlet";    
     private static AudioFormat desiredFormat;
     private static int sampleRate = 8000;
@@ -55,29 +55,7 @@ public class MicRecognizerTest extends TestCase {
     String s4feature = "audio/x-s4feature";
     String s4audio = "audio/x-s4audio";
     
-    
-    String audioConfigFile="c:/work/speechcloud/etc/sphinxfrontendonly-audio.xml";
-    String featureConfigFile="c:/work/speechcloud/etc/sphinxfrontendonly-feature.xml";
 
-    public String configForMime(String mimeType) {
-    	String configFile = null;
-    	if (mimeType.equals(wav)) {
-            configFile=audioConfigFile;
-    	} else if (mimeType.equals(s4feature)) {
-            configFile=featureConfigFile;
-    	} else if (mimeType.equals(s4audio)) {
-            configFile=audioConfigFile;
-    	} else {
-    		_logger.warn("Unrecognized data mode: "+mimeType+"  Guessing audio/x-wav.");
-    		mimeType = "audio/x-wav";
-    	}
-    	return configFile;
-    }
-    
-    
-    
-	
-	
 	     protected void setUp() {
 		    	recog = new HttpRecognizerJavaSound();
 		    	recog.setService(service);
@@ -134,14 +112,14 @@ public class MicRecognizerTest extends TestCase {
 	        	throw new RuntimeException("Can't find microphone");
 	        }
 	    	boolean doEndpointing = true;
-	    	boolean lmflg = true;
+	    	boolean lmflg = false;
 	        boolean batchFlag = false;
 	    	//RecognitionResult r = recog.recognize(audioLine, grammarUrl, lmflg, doEndpointing);
 	    	//System.out.println("lm result: "+r.getText());	        
 	    	
 	        lmflg = false;
 	        batchFlag = false;
-	        RecognitionResult r = recog.recognize(audioLine, grammarUrl, batchFlag, lmflg,doEndpointing);
+	        RecognitionResult r = recog.recognize(audioLine, grammarUrl,lmflg,doEndpointing,batchFlag);
 	        System.out.println("grammar result: "+r.getText());
 	    	
 	    }

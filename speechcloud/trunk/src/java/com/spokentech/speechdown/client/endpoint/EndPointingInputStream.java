@@ -79,4 +79,7 @@ public interface EndPointingInputStream {
 
 	public EndPointer getEndPointer();
 
+
+	public boolean inUse();
+
 }

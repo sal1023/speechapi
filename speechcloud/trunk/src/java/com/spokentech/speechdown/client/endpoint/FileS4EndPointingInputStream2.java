@@ -16,9 +16,8 @@ import com.spokentech.speechdown.client.util.FormatUtils;
 import com.spokentech.speechdown.common.SpeechEventListener;
 
 
-import com.spokentech.speechdown.server.recog.StreamDataSource;
 
-public class FileS4EndPointingInputStream2 extends EndPointingInputStreamBase implements EndPointingInputStream {
+public class FileS4EndPointingInputStream2 extends EndPointingInputStreamBase  {
 	
 
 	private static Logger _logger = Logger.getLogger(FileS4EndPointingInputStream2.class);
@@ -28,13 +27,8 @@ public class FileS4EndPointingInputStream2 extends EndPointingInputStreamBase im
 	private ConfigurationManager cm;
 
 	private File  file;
-	private AudioInputStream stream;
 	private Type type;
-	
-	private AFormat format;
 
-	StreamDataSource dataSource = null;
-	
 	private String mimeType;
 	
     public FileS4EndPointingInputStream2(EndPointer ep) {
@@ -59,8 +53,6 @@ public class FileS4EndPointingInputStream2 extends EndPointingInputStreamBase im
     }
 
 
-	
-
 	public void setupStream(File file) {
 		_logger.debug("Setting up the file");
 		this.file = file;
@@ -68,7 +60,7 @@ public class FileS4EndPointingInputStream2 extends EndPointingInputStreamBase im
     	try {
     		stream = AudioSystem.getAudioInputStream(file);
     		type = AudioSystem.getAudioFileFormat(file).getType();
-	        AudioFormat f = stream.getFormat();
+	        AudioFormat f = ((AudioInputStream) stream).getFormat();
 	        format = FormatUtils.covertToNeutral(f);
 
     	} catch (Exception e) {
@@ -76,46 +68,6 @@ public class FileS4EndPointingInputStream2 extends EndPointingInputStreamBase im
     	}
         setupPipedStream();
 	}
-
-	
-
-	public void shutdownStream() {
-		//TODO:
-		_logger.info("Shutdown stream not implemented!");
-	}
-	
-	
-	public synchronized void startAudioTransfer(long timeout, SpeechEventListener listener) throws InstantiationException, IOException {
-
-		//setup the listener (it is a decorator)
-		_listener = new Listener(listener);
-		
-	    // start the endpointer thread
-     	ep.start(stream, format, outputStream, _listener);
-
-     	//start the timeout of necessary
-		if (timeout > 0)
-			startInputTimers(timeout);
-		
-		//set the state
-		_state = WAITING_FOR_SPEECH;
-	}
-
-	
-	
-    public synchronized void stopAudioTransfer() {
-    	_logger.debug("Stopping stream");
-    	if (dataSource != null) {
-	    	try {
-		        dataSource.closeDataStream();
-	        } catch (IOException e) {
-		        // TODO Auto-generated catch block
-		        e.printStackTrace();
-	        }
-    	}
-    	if (_timer !=null) 
-    	   _timer.cancel();
-    }
 	
 	
     /**
@@ -148,7 +100,7 @@ public class FileS4EndPointingInputStream2 extends EndPointingInputStreamBase im
 
 	@Override
     public AFormat getFormat() {
-		return FormatUtils.covertToNeutral(stream.getFormat());
+		return FormatUtils.covertToNeutral(((AudioInputStream) stream).getFormat());
     }
 
 

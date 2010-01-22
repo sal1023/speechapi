@@ -25,4 +25,6 @@ public interface EndPointer {
 
 	public boolean requiresServerSideEndPointing();
 
+	public boolean inUse();
+
 }

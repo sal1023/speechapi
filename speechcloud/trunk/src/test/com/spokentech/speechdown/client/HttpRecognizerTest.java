@@ -27,6 +27,7 @@ import com.spokentech.speechdown.client.endpoint.FileS4EndPointingInputStream2;
 import com.spokentech.speechdown.client.endpoint.S4EndPointer;
 import com.spokentech.speechdown.client.endpoint.StreamEndPointingInputStream;
 import com.spokentech.speechdown.client.endpoint.JavaSoundStreamS4EndPointingInputStream;
+import com.spokentech.speechdown.client.exceptions.HttpRecognizerException;
 import com.spokentech.speechdown.client.util.AFormat;
 import com.spokentech.speechdown.client.util.FormatUtils;
 import com.spokentech.speechdown.common.RecognitionResult;
@@ -72,8 +73,8 @@ public class HttpRecognizerTest extends TestCase {
 	   
 	    
 	    //private static String service = "http://ec2-174-129-20-250.compute-1.amazonaws.com/speechcloud/SpeechUploadServlet";    
-	    //private static String service = "http://localhost:8090/speechcloud/SpeechUploadServlet";    
-	    private static String service = "http://spokentech.net/speechcloud/SpeechUploadServlet";   
+	    private static String service = "http://localhost:8090/speechcloud/SpeechUploadServlet";    
+	    //private static String service = "http://spokentech.net/speechcloud/SpeechUploadServlet";   
 	    private static AudioFormat desiredFormat;
 	    private static int sampleRate = 8000;
 	    private static boolean signed = true;
@@ -454,6 +455,9 @@ public class HttpRecognizerTest extends TestCase {
             } catch (IOException e) {
 	            // TODO Auto-generated catch block
 	            e.printStackTrace();
+            } catch (HttpRecognizerException e) {
+	            // TODO Auto-generated catch block
+	            e.printStackTrace();
             }
 	    	
             _logger.info("called asynch method. sleeping for 20 secs");
@@ -489,6 +493,9 @@ public class HttpRecognizerTest extends TestCase {
 	            // TODO Auto-generated catch block
 	            e.printStackTrace();
             } catch (IOException e) {
+	            // TODO Auto-generated catch block
+	            e.printStackTrace();
+            } catch (HttpRecognizerException e) {
 	            // TODO Auto-generated catch block
 	            e.printStackTrace();
             }
@@ -554,7 +561,6 @@ public class HttpRecognizerTest extends TestCase {
 	    	JavaSoundStreamS4EndPointingInputStream epStream = new JavaSoundStreamS4EndPointingInputStream(ep);
 	    	epStream.setMimeType(s4audio);
 	    	epStream.setupStream(audioInputStream);
-	    	epStream.init();
 
 	    	RecognitionResult r = null;
 	    	boolean lmflg = true;
@@ -587,8 +593,7 @@ public class HttpRecognizerTest extends TestCase {
 	    	epStream = new JavaSoundStreamS4EndPointingInputStream(ep);
 	    	epStream.setMimeType(s4audio);
 	    	epStream.setupStream(audioInputStream);
-	    	epStream.init();
-           
+	
 	    	lmflg = false;
 	    	batchFlag = false;
 	        try {

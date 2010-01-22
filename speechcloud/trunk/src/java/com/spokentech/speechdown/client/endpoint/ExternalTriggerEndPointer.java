@@ -36,7 +36,7 @@ public class ExternalTriggerEndPointer extends EndPointerBase {
             } while (read != -1 && totalRead < bytesToRead && (!streamEndReached));
             if (totalRead <= 0) {
                 //closeInputDataStream();
-                speechEnded = true;
+            	streamEndReached = true;
             }
             // shrink incomplete frames
             if (totalRead < bytesToRead) {
@@ -69,6 +69,10 @@ public class ExternalTriggerEndPointer extends EndPointerBase {
     	}
 
 		_logger.debug("Done! "+ totalSamplesRead);
+		speechStarted = false;
+		speechEnded = false;
+		streamEndReached = false;
+		
 		
 		// close the input stream
 		//closeInputDataStream();
