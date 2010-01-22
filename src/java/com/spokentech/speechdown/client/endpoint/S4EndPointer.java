@@ -185,6 +185,12 @@ public  class S4EndPointer implements EndPointer {
 	    return false;
     }
 
+	@Override
+    public boolean inUse() {
+	    // TODO Auto-generated method stub
+	    return false;
+    }
+
 
 
 }

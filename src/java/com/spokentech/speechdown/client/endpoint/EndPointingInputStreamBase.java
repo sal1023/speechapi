@@ -16,6 +16,7 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 
 import com.spokentech.speechdown.client.SpeechEventListenerDecorator;
+import com.spokentech.speechdown.client.util.AFormat;
 import com.spokentech.speechdown.common.SpeechEventListener;
 
 // TODO: Auto-generated Javadoc
@@ -43,9 +44,15 @@ public abstract class EndPointingInputStreamBase implements EndPointingInputStre
 	
 	protected EndPointer ep;;
 	
+	protected InputStream  stream;
+	protected AFormat  format;
+	
+	
     public EndPointingInputStreamBase(EndPointer ep) {
 	    super();
 	    this.ep = ep;
+		_logger.setLevel(Level.INFO);
+	       
     }
 	
 	/**
@@ -53,8 +60,7 @@ public abstract class EndPointingInputStreamBase implements EndPointingInputStre
 	 * endpointed audio stream
 	 */
 	public void setupPipedStream() {
-	       _logger.setLevel(Level.INFO);
-	       
+
 		outputStream = new PipedOutputStream();
 	    try {
 	        //inputStream = new PipedInputStream(outputStream,audioBufferSize);
@@ -72,6 +78,33 @@ public abstract class EndPointingInputStreamBase implements EndPointingInputStre
 		return inputStream;
 	}
 	
+	
+	
+	/* (non-Javadoc)
+	 * @see com.spokentech.speechdown.client.endpoint.EndPointingInputStream#startAudioTransfer(long, com.spokentech.speechdown.client.SpeechEventListener)
+	 */
+	public void startAudioTransfer(long timeout, SpeechEventListener listener) throws InstantiationException, IOException {
+		
+		_listener = new Listener(listener);
+		
+		//setup the outputstream pipe
+        setupPipedStream();
+		
+	    // start the endpointer thread
+     	ep.start(stream, format, outputStream, _listener);
+
+		if (timeout > 0)
+			startInputTimers(timeout);
+		
+		_state = WAITING_FOR_SPEECH;
+	}
+
+	
+
+	public boolean inUse() {
+		return ep.inUse();
+	}
+
 	
 
     public synchronized void stopAudioTransfer() {

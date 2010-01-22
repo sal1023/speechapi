@@ -3,6 +3,7 @@ package com.spokentech.speechdown.client.endpoint;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
+import java.lang.Thread.State;
 
 import org.apache.log4j.Logger;
 
@@ -46,10 +47,23 @@ public abstract class EndPointerBase implements EndPointer, Runnable{
     	}
     
     }
+	
+
+	public boolean inUse() {
+
+		if ( t == null)
+			return false;
+		
+		boolean inUse = true;
+		State s = t.getState();
+		if (s == State.TERMINATED)
+			inUse =false;
+		
+		return inUse;
+	}
+
 
 	public  long triggerStart() {
-		_logger.info("Trigger start called");
-		//TODO: Danger that this could be called before start method. which will reset the flags (not to mention the listener has been set yet!)
     	speechStarted=true;
     	if( listener!= null) {
     	    listener.speechStarted();
@@ -61,10 +75,10 @@ public abstract class EndPointerBase implements EndPointer, Runnable{
     }
 
 	public void triggerEnd() {
-		_logger.info("Trigger End Called");
     	speechEnded=true;
     	if( listener!= null)
     	    listener.speechEnded();
+    	listener=null;
     }
 
 	/**
@@ -74,7 +88,6 @@ public abstract class EndPointerBase implements EndPointer, Runnable{
      * @param streamName  the name of the InputStream
      */
     protected void setInputStream(InputStream inputStream) {
-		_logger.info("setinput stream and reset start flag");
         astream = inputStream;
         streamEndReached = false;
     	speechStarted = false;
@@ -82,7 +95,6 @@ public abstract class EndPointerBase implements EndPointer, Runnable{
     }
 
 	protected void closeInputDataStream() {
-    	_logger.info("Closing data stream");
         streamEndReached = true;
         if (astream != null) {
         	try {
@@ -95,7 +107,7 @@ public abstract class EndPointerBase implements EndPointer, Runnable{
     }
 
 	public void stopRecording() {
-        streamEndReached = true;
+        //streamEndReached = true;
         //closeInputDataStream();
     }
 

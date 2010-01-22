@@ -29,7 +29,9 @@ import com.spokentech.speechdown.client.endpoint.S4EndPointer;
 import com.spokentech.speechdown.client.endpoint.StreamEndPointingInputStream;
 import com.spokentech.speechdown.client.endpoint.JavaSoundStreamS4EndPointingInputStream;
 import com.spokentech.speechdown.client.endpoint.StreamEndPointingInputStream;
+import com.spokentech.speechdown.client.exceptions.AsynchNotEnabledException;
 import com.spokentech.speechdown.client.exceptions.HttpRecognizerException;
+import com.spokentech.speechdown.client.exceptions.StreamInUseException;
 import com.spokentech.speechdown.client.util.AFormat;
 import com.spokentech.speechdown.client.util.FormatUtils;
 import com.spokentech.speechdown.common.RecognitionResult;
@@ -38,7 +40,7 @@ import com.spokentech.speechdown.common.SpeechEventListener;
 
 import junit.framework.TestCase;
 
-public class HttpRecognizerEndPointTest extends TestCase {
+public class HttpRecognizeReuseTest extends TestCase {
 
 		public class Listener implements SpeechEventListener {
 	
@@ -69,7 +71,7 @@ public class HttpRecognizerEndPointTest extends TestCase {
 		}
 
 
-		private static Logger _logger = Logger.getLogger(HttpRecognizerEndPointTest.class);
+		private static Logger _logger = Logger.getLogger(HttpRecognizeReuseTest.class);
 	    public static final String CRLF = "\r\n";
 	    
 	   
@@ -96,7 +98,6 @@ public class HttpRecognizerEndPointTest extends TestCase {
 		File soundFile2 = new File("c:/work/speechcloud/etc/prompts/get_me_a_stock_quote.wav");	 	
 		File soundFile3 = new File("c:/work/speechcloud/etc/prompts/i_would_like_sports_news.wav");	 	
 		File soundFile4 = new File("c:/work/speechcloud/etc/prompts/fourUtterances2.wav");	 	
-		
 		
     	File soundFile0 = new File("c:/work/speechcloud/etc/prompts/cubanson.wav");
     	//File soundFile0 = new File("c:/work/speechcloud/etc/prompts/fabfour.wav");
@@ -131,7 +132,7 @@ public class HttpRecognizerEndPointTest extends TestCase {
 	 
     
 	    
-	    public void testRecognizeFileS4EPGrammar() {
+	    public void testRecognizeS4EP() {
 	    	System.out.println("Starting File EP Test ...");	
 	    	
 	    	long timeout = 10000;     
@@ -158,215 +159,6 @@ public class HttpRecognizerEndPointTest extends TestCase {
             System.out.println("grammar result: "+r.getText());
 	    }
             
-	    public void testRecognizeFileS4EPGrammarAsynch() {
-	    	System.out.println("Starting File EP Test ...");	
-	    	recog.enableAsynchMode(2);
-	    	
-	    	long timeout = 10000;
-	    	S4EndPointer ep = new S4EndPointer();
-	    	FileS4EndPointingInputStream2 epStream = new FileS4EndPointingInputStream2(ep);
-
-	    	epStream.setMimeType(s4audio);
-	    	epStream.setupStream(soundFile2);
-	 
-	    	RecognitionResult r = null;
-	    	
-	    	Listener l = new Listener();
-	    	boolean lmflg = false;
-	    	boolean batchFlag = false;
-	    	String id;
-	        try {	            
-	            id = recog.recognizeAsynch(grammarUrl,  epStream,  lmflg,  batchFlag, timeout,l) ;
-            } catch (InstantiationException e) {
-	            // TODO Auto-generated catch block
-	            e.printStackTrace();
-            } catch (IOException e) {
-	            // TODO Auto-generated catch block
-	            e.printStackTrace();
-            } catch (HttpRecognizerException e) {
-	            // TODO Auto-generated catch block
-	            e.printStackTrace();
-            }
-	    	
-            _logger.info("called asynch method. sleeping for 20 secs");
-            try {
-	            Thread.sleep(20000);
-            } catch (InterruptedException e) {
-	            // TODO Auto-generated catch block
-	            e.printStackTrace();
-            }
-            
-	    }
-	    
-	    public void testRecognizeFileS4EPGrammarAsynchWithCancel() {
-	    	System.out.println("Starting File EP Test ...");	
-	    	recog.enableAsynchMode(2);
-	    	
-	    	long timeout = 10000;    
-	    	S4EndPointer ep = new S4EndPointer();
-	    	FileS4EndPointingInputStream2 epStream = new FileS4EndPointingInputStream2(ep);
-
-	    	epStream.setMimeType(s4audio);
-	    	epStream.setupStream(soundFile2);
-	 
-	    	RecognitionResult r = null;
-	    	
-	    	Listener l = new Listener();
-	    	boolean lmflg = false;
-	    	boolean batchFlag = false;
-	    	String id = null;
-	        try {	            
-	            id = recog.recognizeAsynch(grammarUrl,  epStream,  lmflg,  batchFlag, timeout,l) ;
-            } catch (InstantiationException e) {
-	            // TODO Auto-generated catch block
-	            e.printStackTrace();
-            } catch (IOException e) {
-	            // TODO Auto-generated catch block
-	            e.printStackTrace();
-            } catch (HttpRecognizerException e) {
-	            // TODO Auto-generated catch block
-	            e.printStackTrace();
-            }
-            
-            
-            _logger.info("called asynch method. sleeping for 2 secs");
-            try {
-	            Thread.sleep(2000);
-            } catch (InterruptedException e) {
-	            // TODO Auto-generated catch block
-	            e.printStackTrace();
-            }
-            recog.cancel(id);
-            
-	    }
-	    
-	    public void testRecognizeFileS4EPLm() {
-	    	long timeout = 10000;       	
-	    	S4EndPointer ep = new S4EndPointer();
-	    	FileS4EndPointingInputStream2 epStream = new FileS4EndPointingInputStream2(ep);
-
-	    	epStream.setMimeType(s4audio);
-	    	epStream.setupStream(soundFile2);
-	
-            
-	    	RecognitionResult r = null;
-	    	boolean lmflg = true;
-	    	boolean batchFlag = false;
-	        try {	            
-	            r = recog.recognize(grammarUrl,  epStream,  lmflg,  batchFlag, timeout) ;
-            } catch (InstantiationException e) {
-	            // TODO Auto-generated catch block
-	            e.printStackTrace();
-            } catch (IOException e) {
-	            // TODO Auto-generated catch block
-	            e.printStackTrace();
-            
-            }
-            System.out.println("ENDPOINT TEST: lm  result: "+r.getText());
-	    	
-	    }
-
-	    
-	    
-	    
-	    public void testRecognizeStreamS4JavaSoundEP() {
-	
-	    	System.out.println("Starting S4 EP Stream Test ...");
-
-	    	// get an audio stream for the test from a file
-	    	AudioInputStream	audioInputStream = null;
-	    	Type type = null;
-	    	try {
-	    		audioInputStream = AudioSystem.getAudioInputStream(soundFile2);
-	    		type = AudioSystem.getAudioFileFormat(soundFile2).getType();
-	    	} catch (Exception e) {
-	    		e.printStackTrace();
-	    	}
-	    	
-	    	//run the test
-	    	long timeout = 10000;
-	    	S4EndPointer ep = new S4EndPointer();
-	    	JavaSoundStreamS4EndPointingInputStream epStream = new JavaSoundStreamS4EndPointingInputStream(ep);
-	    	epStream.setMimeType(s4audio);
-	    	epStream.setupStream(audioInputStream);
-
-
-	    	RecognitionResult r = null;
-	    	boolean lmflg = true;
-	    	boolean batchFlag = false;
-	        try {
-	        	r = recog.recognize(grammarUrl,  epStream,  lmflg,  batchFlag, timeout) ;
-            } catch (InstantiationException e) {
-	            // TODO Auto-generated catch block
-	            e.printStackTrace();
-            } catch (IOException e) {
-	            // TODO Auto-generated catch block
-	            e.printStackTrace();
-            }
-	    	
-           System.out.println("lm result: "+r.getText());
-	    }
-	    
-	    public void testRecognizeStreamS4EP() {
-	    	
-	    	System.out.println("Starting EP Stream Test ...");
-
-	    	// get an audio stream for the test from a file
-	    	AudioInputStream	audioInputStream = null;
-	    	Type type = null;
-	    	try {
-	    		audioInputStream = AudioSystem.getAudioInputStream(soundFile2);
-	    		type = AudioSystem.getAudioFileFormat(soundFile2).getType();
-	    	} catch (Exception e) {
-	    		e.printStackTrace();
-	    	}
-           
-       	    // get an audio stream for the test from a file
-            audioInputStream = null;
-	    	type = null;
-
-	    	try {
-	    		audioInputStream = AudioSystem.getAudioInputStream(soundFile2);
-	    		type = AudioSystem.getAudioFileFormat(soundFile2).getType();
-	    	} catch (Exception e) {
-	    		e.printStackTrace();
-	    	}
-	        AudioFormat f = audioInputStream.getFormat();
-	        AFormat format = FormatUtils.covertToNeutral(f);
-	       
-	    	//run the test
-	    	long t1 = System.nanoTime();
-	    	S4EndPointer ep = new S4EndPointer();
-	    	StreamEndPointingInputStream epStream = new StreamEndPointingInputStream(ep);
-	    	epStream.setMimeType(s4audio);
-	    	epStream.setupStream(audioInputStream, format);
-
-	    	long t2 = System.nanoTime();
-	    	long t3 = (t2-t1)/1000000;
-	        _logger.info("took "+t3+ "ms. to create s4 endpointing stream");
-	    	
-	    	
-	    	long timeout = 10000;
-	    	boolean lmflg = false;
-	    	boolean batchFlag = false;
-	    	RecognitionResult r = null;
-	        try {
-	        	r = recog.recognize(grammarUrl,  epStream,  lmflg, batchFlag, timeout) ;
-            } catch (InstantiationException e) {
-	            // TODO Auto-generated catch block
-	            e.printStackTrace();
-            } catch (IOException e) {
-	            // TODO Auto-generated catch block
-	            e.printStackTrace();
-            }
-	    	
-            System.out.println("grammar result: "+r.getText());
-        	
-	    	
-
-	    }
-	    
-	    
 
 
 
@@ -414,6 +206,17 @@ public class HttpRecognizerEndPointTest extends TestCase {
 	            e.printStackTrace();
             }    	
             System.out.println("grammar result: "+r.getText());
+            try {          
+	            r = recog.recognize(grammarUrl,  epStream,  lmflg,  batchFlag, timeout) ;
+            } catch (InstantiationException e) {
+	            // TODO Auto-generated catch block
+	            e.printStackTrace();
+            } catch (IOException e) {
+	            // TODO Auto-generated catch block
+	            e.printStackTrace();
+            }    	
+            System.out.println("grammar result: "+r.getText());
+            
     	
 	    }
 	    
@@ -423,13 +226,13 @@ public class HttpRecognizerEndPointTest extends TestCase {
 	    	
 	    	System.out.println("Starting EP extrernal trigger  Test ...");
 	       	recog.enableAsynchMode(2);
-		    
+		    boolean streamInUse = true;
 	    	// get an audio stream for the test from a file
 	    	AudioInputStream	audioInputStream = null;
 	    	Type type = null;
 	    	try {
-	    		audioInputStream = AudioSystem.getAudioInputStream(soundFile2);
-	    		type = AudioSystem.getAudioFileFormat(soundFile2).getType();
+	    		audioInputStream = AudioSystem.getAudioInputStream(soundFile4);
+	    		type = AudioSystem.getAudioFileFormat(soundFile4).getType();
 	    	} catch (Exception e) {
 	    		e.printStackTrace();
 	    	}
@@ -438,6 +241,7 @@ public class HttpRecognizerEndPointTest extends TestCase {
 	        AudioFormat f = audioInputStream.getFormat();
 	        AFormat format = FormatUtils.covertToNeutral(f);
 	       
+	    	
 	    	long timeout = 10000;
 	    	
 	    	
@@ -454,27 +258,169 @@ public class HttpRecognizerEndPointTest extends TestCase {
 	    	boolean lmflg = false;
 	    	boolean batchFlag = false;
 	    	String id;
-	        try {	            
-	            id = recog.recognizeAsynch(grammarUrl,  epStream,  lmflg,  batchFlag, timeout,l) ;
-            } catch (InstantiationException e) {
-	            // TODO Auto-generated catch block
-	            e.printStackTrace();
-            } catch (IOException e) {
-	            // TODO Auto-generated catch block
-	            e.printStackTrace();
-            } catch (HttpRecognizerException e) {
-	            // TODO Auto-generated catch block
-	            e.printStackTrace();
-            }
+	    	
+	    	streamInUse = true;
+	    	while (streamInUse) {
+		        try {	            
+		        	_logger.info("Calling rec, epStream.inUse() = "+epStream.inUse());
+		            id = recog.recognizeAsynch(grammarUrl,  epStream,  lmflg,  batchFlag, timeout,l) ;
+		        	streamInUse = false;
+	            } catch (InstantiationException e) {
+		            // TODO Auto-generated catch block
+		            e.printStackTrace();
+	            } catch (IOException e) {
+		            // TODO Auto-generated catch block
+		            e.printStackTrace();
+	            } catch (AsynchNotEnabledException e) {
+		            // TODO Auto-generated catch block
+		            e.printStackTrace();
+	            } catch (StreamInUseException e) {
+		            streamInUse = true;
+	            }
+	            if (streamInUse) {
+		            _logger.info("Stream in use, waiting a sec");
+
+	                try {
+	    	            Thread.sleep(1000);
+	                } catch (InterruptedException e) {
+	    	            // TODO Auto-generated catch block
+	    	            e.printStackTrace();
+	                }
+	            	
+	            }
+	        }
 	    	
             ep.triggerStart();
-           //while ( ep.triggerStart() <0) {
-        	//   _logger.info("not setup yet");
-           //}
             
             _logger.info("called asynch method. sleeping for 2 secs");
             try {
-	            Thread.sleep(5000);
+	            Thread.sleep(2000);
+            } catch (InterruptedException e) {
+	            // TODO Auto-generated catch block
+	            e.printStackTrace();
+            }
+            ep.triggerEnd();
+            
+	    	streamInUse = true;
+	    	while (streamInUse) {
+		        try {	    
+		        	_logger.info("Calling rec, epStream.inUse() = "+epStream.inUse());
+		            id = recog.recognizeAsynch(grammarUrl,  epStream,  lmflg,  batchFlag, timeout,l) ;
+		        	streamInUse = false;
+	            } catch (InstantiationException e) {
+		            // TODO Auto-generated catch block
+		            e.printStackTrace();
+	            } catch (IOException e) {
+		            // TODO Auto-generated catch block
+		            e.printStackTrace();
+	            } catch (AsynchNotEnabledException e) {
+		            // TODO Auto-generated catch block
+		            e.printStackTrace();
+	            } catch (StreamInUseException e) {
+		            streamInUse = true;
+	            }
+	            if (streamInUse) {
+		            _logger.info("Stream in use, waiting a sec");
+
+	                try {
+	    	            Thread.sleep(1000);
+	                } catch (InterruptedException e) {
+	    	            // TODO Auto-generated catch block
+	    	            e.printStackTrace();
+	                }
+	            	
+	            }
+	        }
+	    	
+            ep.triggerStart();
+            
+            _logger.info("called asynch method. sleeping for 2 secs");
+            try {
+	            Thread.sleep(2000);
+            } catch (InterruptedException e) {
+	            // TODO Auto-generated catch block
+	            e.printStackTrace();
+            }
+            ep.triggerEnd();
+            
+	    	streamInUse = true;
+	    	while (streamInUse) {
+		        try {	        
+		        	_logger.info("Calling rec, epStream.inUse() = "+epStream.inUse());
+		            id = recog.recognizeAsynch(grammarUrl,  epStream,  lmflg,  batchFlag, timeout,l) ;
+		        	streamInUse = false;
+	            } catch (InstantiationException e) {
+		            // TODO Auto-generated catch block
+		            e.printStackTrace();
+	            } catch (IOException e) {
+		            // TODO Auto-generated catch block
+		            e.printStackTrace();
+	            } catch (AsynchNotEnabledException e) {
+		            // TODO Auto-generated catch block
+		            e.printStackTrace();
+	            } catch (StreamInUseException e) {
+		            streamInUse = true;
+	            }
+	            if (streamInUse) {
+		            _logger.info("Stream in use, waiting a sec");
+
+	                try {
+	    	            Thread.sleep(1000);
+	                } catch (InterruptedException e) {
+	    	            // TODO Auto-generated catch block
+	    	            e.printStackTrace();
+	                }
+	            	
+	            }
+	        }
+	    	
+            ep.triggerStart();
+            
+            _logger.info("called asynch method. sleeping for 2 secs");
+            try {
+	            Thread.sleep(2000);
+            } catch (InterruptedException e) {
+	            // TODO Auto-generated catch block
+	            e.printStackTrace();
+            }
+            ep.triggerEnd();
+            
+	    	streamInUse = true;
+	    	while (streamInUse) {
+		        try {	    
+		        	_logger.info("Calling rec, epStream.inUse() = "+epStream.inUse());
+		            id = recog.recognizeAsynch(grammarUrl,  epStream,  lmflg,  batchFlag, timeout,l) ;
+		        	streamInUse = false;
+	            } catch (InstantiationException e) {
+		            // TODO Auto-generated catch block
+		            e.printStackTrace();
+	            } catch (IOException e) {
+		            // TODO Auto-generated catch block
+		            e.printStackTrace();
+	            } catch (AsynchNotEnabledException e) {
+		            // TODO Auto-generated catch block
+		            e.printStackTrace();
+	            } catch (StreamInUseException e) {
+		            streamInUse = true;
+	            }
+	            if (streamInUse) {
+		            _logger.info("Stream in use, waiting a sec");
+
+	                try {
+	    	            Thread.sleep(1000);
+	                } catch (InterruptedException e) {
+	    	            // TODO Auto-generated catch block
+	    	            e.printStackTrace();
+	                }
+	            	
+	            }
+	        }
+	    	
+            ep.triggerStart();
+            
+            _logger.info("called asynch method. sleeping for 2 secs");
+            try {
+	            Thread.sleep(2000);
             } catch (InterruptedException e) {
 	            // TODO Auto-generated catch block
 	            e.printStackTrace();
@@ -483,35 +429,18 @@ public class HttpRecognizerEndPointTest extends TestCase {
     	
 	    }
 
-
-  public void testExternalTriggerWithoutEndTrigger() {
-	    
-	    	
-	    	System.out.println("Starting EP extrernal trigger  Test ...");
-	       	recog.enableAsynchMode(2);
-		    
-	    	// get an audio stream for the test from a file
-	    	AudioInputStream	audioInputStream = null;
-	    	Type type = null;
-	    	try {
-	    		audioInputStream = AudioSystem.getAudioInputStream(soundFile2);
-	    		type = AudioSystem.getAudioFileFormat(soundFile2).getType();
-	    	} catch (Exception e) {
-	    		e.printStackTrace();
-	    	}
-	    	
-    
-	        AudioFormat f = audioInputStream.getFormat();
-	        AFormat format = FormatUtils.covertToNeutral(f);
-	       
+	    public void testRecognizeS4EPAsynch() {
+	    	System.out.println("Starting File EP Test ...");	
+	    	recog.enableAsynchMode(2);
 	    	
 	    	long timeout = 10000;
-	    	
-	    	ExternalTriggerEndPointer ep = new ExternalTriggerEndPointer();
-	    	StreamEndPointingInputStream epStream = new StreamEndPointingInputStream(ep);
-	    	epStream.setMimeType(wav);
-	    	epStream.setupStream(audioInputStream,format);
-	    	
+	    	S4EndPointer ep = new S4EndPointer();
+	    	FileS4EndPointingInputStream2 epStream = new FileS4EndPointingInputStream2(ep);
+
+	    	epStream.setMimeType(s4audio);
+	    	epStream.setupStream(soundFile2);
+	 
+	    	RecognitionResult r = null;
 	    	
 	    	Listener l = new Listener();
 	    	boolean lmflg = false;
@@ -530,21 +459,21 @@ public class HttpRecognizerEndPointTest extends TestCase {
 	            e.printStackTrace();
             }
 	    	
-            ep.triggerStart();
-           //while ( ep.triggerStart() <0) {
-        	//   _logger.info("not setup yet");
-           //}
-            
-            _logger.info("called asynch method. sleeping for 2 secs");
+            _logger.info("called asynch method. sleeping for 20 secs");
             try {
-	            Thread.sleep(5000);
+	            Thread.sleep(20000);
             } catch (InterruptedException e) {
 	            // TODO Auto-generated catch block
 	            e.printStackTrace();
             }
-            //ep.triggerEnd();
-    	    
+            
 	    }
+	    
+	
+	    
+  
+
+  
 	    
 }
 

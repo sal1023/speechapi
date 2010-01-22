@@ -24,9 +24,7 @@ public class StreamEndPointingInputStream extends EndPointingInputStreamBase {
 	
     private static Logger _logger = Logger.getLogger(StreamEndPointingInputStream.class);
 
-	private InputStream  stream;
-	private AFormat  format;
-	
+
 
 	public StreamEndPointingInputStream(EndPointer ep) {
 	    super(ep);
@@ -55,11 +53,6 @@ public class StreamEndPointingInputStream extends EndPointingInputStreamBase {
     	this.mimeType = mimeType;
     }
 
-
-    
-	public void init() {
-	}
-	
     
 	/**
 	 * Sets the up stream.
@@ -70,37 +63,8 @@ public class StreamEndPointingInputStream extends EndPointingInputStreamBase {
 		_logger.info("Setting up the stream");
 		this.stream = stream;
 		this.format = format;
-        setupPipedStream();
+
 	}
-
-	/**
-	 * Shutdown stream.
-	 */
-	public void shutdownStream() {
-		//TODO:
-		_logger.info("Shutdown stream not implemented!");
-	}
-	
-	
-	/* (non-Javadoc)
-	 * @see com.spokentech.speechdown.client.endpoint.EndPointingInputStream#startAudioTransfer(long, com.spokentech.speechdown.client.SpeechEventListener)
-	 */
-	public void startAudioTransfer(long timeout, SpeechEventListener listener) throws InstantiationException, IOException {
-		
-		_listener = new Listener(listener);
-		
-	    // start the endpointer thread
-
-     	ep.start(stream, format, outputStream, _listener);
-
-		if (timeout > 0)
-			startInputTimers(timeout);
-		
-		_state = WAITING_FOR_SPEECH;
-	}
-
-	
-	
 
 	
 	
