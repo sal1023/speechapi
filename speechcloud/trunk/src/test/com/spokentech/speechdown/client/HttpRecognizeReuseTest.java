@@ -259,35 +259,33 @@ public class HttpRecognizeReuseTest extends TestCase {
 	    	boolean batchFlag = false;
 	    	String id;
 	    	
-	    	streamInUse = true;
+            streamInUse = true;
 	    	while (streamInUse) {
-		        try {	            
-		        	_logger.info("Calling rec, epStream.inUse() = "+epStream.inUse());
-		            id = recog.recognizeAsynch(grammarUrl,  epStream,  lmflg,  batchFlag, timeout,l) ;
-		        	streamInUse = false;
-	            } catch (InstantiationException e) {
-		            // TODO Auto-generated catch block
-		            e.printStackTrace();
-	            } catch (IOException e) {
-		            // TODO Auto-generated catch block
-		            e.printStackTrace();
-	            } catch (AsynchNotEnabledException e) {
-		            // TODO Auto-generated catch block
-		            e.printStackTrace();
-	            } catch (StreamInUseException e) {
-		            streamInUse = true;
-	            }
-	            if (streamInUse) {
+		    	streamInUse = epStream.inUse();
+	    		if (streamInUse) {
 		            _logger.info("Stream in use, waiting a sec");
-
 	                try {
 	    	            Thread.sleep(1000);
 	                } catch (InterruptedException e) {
 	    	            // TODO Auto-generated catch block
 	    	            e.printStackTrace();
 	                }
-	            	
-	            }
+	    		} else
+			        try {	            
+			        	_logger.info("Calling rec, epStream.inUse() = "+epStream.inUse());
+			            id = recog.recognizeAsynch(grammarUrl,  epStream,  lmflg,  batchFlag, timeout,l) ;
+		            } catch (InstantiationException e) {
+			            // TODO Auto-generated catch block
+			            e.printStackTrace();
+		            } catch (IOException e) {
+			            // TODO Auto-generated catch block
+			            e.printStackTrace();
+		            } catch (AsynchNotEnabledException e) {
+			            // TODO Auto-generated catch block
+			            e.printStackTrace();
+		            } catch (StreamInUseException e) {
+			            e.printStackTrace();
+		            }  
 	        }
 	    	
             ep.triggerStart();
@@ -301,35 +299,34 @@ public class HttpRecognizeReuseTest extends TestCase {
             }
             ep.triggerEnd();
             
-	    	streamInUse = true;
+            streamInUse = true;
 	    	while (streamInUse) {
-		        try {	    
-		        	_logger.info("Calling rec, epStream.inUse() = "+epStream.inUse());
-		            id = recog.recognizeAsynch(grammarUrl,  epStream,  lmflg,  batchFlag, timeout,l) ;
-		        	streamInUse = false;
-	            } catch (InstantiationException e) {
-		            // TODO Auto-generated catch block
-		            e.printStackTrace();
-	            } catch (IOException e) {
-		            // TODO Auto-generated catch block
-		            e.printStackTrace();
-	            } catch (AsynchNotEnabledException e) {
-		            // TODO Auto-generated catch block
-		            e.printStackTrace();
-	            } catch (StreamInUseException e) {
-		            streamInUse = true;
-	            }
-	            if (streamInUse) {
+		    	streamInUse = epStream.inUse();
+	    		if (streamInUse) {
 		            _logger.info("Stream in use, waiting a sec");
-
 	                try {
 	    	            Thread.sleep(1000);
 	                } catch (InterruptedException e) {
 	    	            // TODO Auto-generated catch block
 	    	            e.printStackTrace();
 	                }
-	            	
-	            }
+	    		} else
+			        try {	            
+			        	_logger.info("Calling rec, epStream.inUse() = "+epStream.inUse());
+			            id = recog.recognizeAsynch(grammarUrl,  epStream,  lmflg,  batchFlag, timeout,l) ;
+
+		            } catch (InstantiationException e) {
+			            // TODO Auto-generated catch block
+			            e.printStackTrace();
+		            } catch (IOException e) {
+			            // TODO Auto-generated catch block
+			            e.printStackTrace();
+		            } catch (AsynchNotEnabledException e) {
+			            // TODO Auto-generated catch block
+			            e.printStackTrace();
+		            } catch (StreamInUseException e) {
+			            e.printStackTrace();
+		            }  
 	        }
 	    	
             ep.triggerStart();
@@ -343,35 +340,34 @@ public class HttpRecognizeReuseTest extends TestCase {
             }
             ep.triggerEnd();
             
-	    	streamInUse = true;
+            streamInUse = true;
 	    	while (streamInUse) {
-		        try {	        
-		        	_logger.info("Calling rec, epStream.inUse() = "+epStream.inUse());
-		            id = recog.recognizeAsynch(grammarUrl,  epStream,  lmflg,  batchFlag, timeout,l) ;
-		        	streamInUse = false;
-	            } catch (InstantiationException e) {
-		            // TODO Auto-generated catch block
-		            e.printStackTrace();
-	            } catch (IOException e) {
-		            // TODO Auto-generated catch block
-		            e.printStackTrace();
-	            } catch (AsynchNotEnabledException e) {
-		            // TODO Auto-generated catch block
-		            e.printStackTrace();
-	            } catch (StreamInUseException e) {
-		            streamInUse = true;
-	            }
-	            if (streamInUse) {
+		    	streamInUse = epStream.inUse();
+	    		if (streamInUse) {
 		            _logger.info("Stream in use, waiting a sec");
-
 	                try {
 	    	            Thread.sleep(1000);
 	                } catch (InterruptedException e) {
 	    	            // TODO Auto-generated catch block
 	    	            e.printStackTrace();
 	                }
-	            	
-	            }
+	    		} else
+			        try {	            
+			        	_logger.info("Calling rec, epStream.inUse() = "+epStream.inUse());
+			            id = recog.recognizeAsynch(grammarUrl,  epStream,  lmflg,  batchFlag, timeout,l) ;
+
+		            } catch (InstantiationException e) {
+			            // TODO Auto-generated catch block
+			            e.printStackTrace();
+		            } catch (IOException e) {
+			            // TODO Auto-generated catch block
+			            e.printStackTrace();
+		            } catch (AsynchNotEnabledException e) {
+			            // TODO Auto-generated catch block
+			            e.printStackTrace();
+		            } catch (StreamInUseException e) {
+			            e.printStackTrace();
+		            }  
 	        }
 	    	
             ep.triggerStart();
@@ -385,35 +381,34 @@ public class HttpRecognizeReuseTest extends TestCase {
             }
             ep.triggerEnd();
             
-	    	streamInUse = true;
+            streamInUse = true;
 	    	while (streamInUse) {
-		        try {	    
-		        	_logger.info("Calling rec, epStream.inUse() = "+epStream.inUse());
-		            id = recog.recognizeAsynch(grammarUrl,  epStream,  lmflg,  batchFlag, timeout,l) ;
-		        	streamInUse = false;
-	            } catch (InstantiationException e) {
-		            // TODO Auto-generated catch block
-		            e.printStackTrace();
-	            } catch (IOException e) {
-		            // TODO Auto-generated catch block
-		            e.printStackTrace();
-	            } catch (AsynchNotEnabledException e) {
-		            // TODO Auto-generated catch block
-		            e.printStackTrace();
-	            } catch (StreamInUseException e) {
-		            streamInUse = true;
-	            }
-	            if (streamInUse) {
+		    	streamInUse = epStream.inUse();
+	    		if (streamInUse) {
 		            _logger.info("Stream in use, waiting a sec");
-
 	                try {
 	    	            Thread.sleep(1000);
 	                } catch (InterruptedException e) {
 	    	            // TODO Auto-generated catch block
 	    	            e.printStackTrace();
 	                }
-	            	
-	            }
+	    		} else
+			        try {	            
+			        	_logger.info("Calling rec, epStream.inUse() = "+epStream.inUse());
+			            id = recog.recognizeAsynch(grammarUrl,  epStream,  lmflg,  batchFlag, timeout,l) ;
+
+		            } catch (InstantiationException e) {
+			            // TODO Auto-generated catch block
+			            e.printStackTrace();
+		            } catch (IOException e) {
+			            // TODO Auto-generated catch block
+			            e.printStackTrace();
+		            } catch (AsynchNotEnabledException e) {
+			            // TODO Auto-generated catch block
+			            e.printStackTrace();
+		            } catch (StreamInUseException e) {
+			            e.printStackTrace();
+		            }  
 	        }
 	    	
             ep.triggerStart();

@@ -46,6 +46,8 @@ public abstract class EndPointingInputStreamBase implements EndPointingInputStre
 	
 	protected InputStream  stream;
 	protected AFormat  format;
+
+	private boolean busyFlag = false;
 	
 	
     public EndPointingInputStreamBase(EndPointer ep) {
@@ -101,11 +103,18 @@ public abstract class EndPointingInputStreamBase implements EndPointingInputStre
 
 	
 
-	public boolean inUse() {
-		return ep.inUse();
+	public synchronized boolean inUse() {
+		return (busyFlag || ep.inUse());
 	}
 
-	
+	public synchronized boolean checkAndSetIfInUse() {
+		if ((!busyFlag || !ep.inUse())) {
+		   return false;
+		} else {
+			busyFlag = true;
+			return false;
+		}
+	}
 
     public synchronized void stopAudioTransfer() {
     	_logger.fine("Stopping stream");
@@ -114,6 +123,8 @@ public abstract class EndPointingInputStreamBase implements EndPointingInputStre
     	}
     	if (_timer !=null) 
     	   _timer.cancel();
+		busyFlag = false;
+
     }
 	
     /**
