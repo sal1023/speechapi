@@ -275,7 +275,7 @@ public class HttpRecognizer {
 	 */
 	public  String recognizeAsynch(URL grammarUrl, EndPointingInputStream epStream, boolean lmflg, boolean batchMode, long timeout, SpeechEventListener eventListener ) throws InstantiationException, IOException, StreamInUseException, AsynchNotEnabledException {
 
-		if (epStream.inUse()) 
+		if (epStream.checkAndSetIfInUse()) 
 			throw new StreamInUseException();
 
 		InputStream grammarIs = grammarUrl.openStream();
@@ -308,7 +308,7 @@ public class HttpRecognizer {
 	 */
 	public  String recognizeAsynch(String grammar, EndPointingInputStream epStream, boolean lmflg, boolean batchMode, long timeout, SpeechEventListener eventListener ) throws InstantiationException, IOException, StreamInUseException, AsynchNotEnabledException {
 
-		if (epStream.inUse()) 
+		if (epStream.checkAndSetIfInUse()) 
 			throw new StreamInUseException();
 		
 		InputStream grammarIs = new ByteArrayInputStream(grammar.getBytes());

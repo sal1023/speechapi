@@ -82,4 +82,7 @@ public interface EndPointingInputStream {
 
 	public boolean inUse();
 
+
+	public boolean checkAndSetIfInUse();
+
 }
