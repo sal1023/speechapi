@@ -434,7 +434,7 @@ public class SpeechDownloadServlet extends HttpServlet {
 			File f =  null;
 			
 			response.setContentType("audio/x-wav");
-			response.setHeader("Content-Disposition", "attachment; filename=synthesized.wav'");			
+			response.setHeader("Content-Disposition", "attachment; filename=synthesized.wav");			
 			response.setHeader("Transfer-coding","chunked");
 			
 	    	try {
