@@ -19,17 +19,21 @@
     <property name="relativeBeamWidth"           value="1E-80"/>
 
     <property name="absoluteBeamWidth2"  value="25000"/>
-    <property name="relativeBeamWidth2"  value="1E-80"/>
-    <property name="absoluteWordBeamWidth2" value="20"/>
-    <property name="relativeWordBeamWidth2" value="1E-60"/>
+    <property name="relativeBeamWidth2"  value="1E-40"/>
+    <property name="absoluteWordBeamWidth2" value="30"/>
+    <property name="relativeWordBeamWidth2" value="1E-30"/>
     
-    <property name="wordInsertionProbability"    value="0.7"/>
-    <property name="languageWeight"              value="7"/>
-    <property name="silenceInsertionProbability" value="1"/>
+    <property name="acousticLookahead" value="2"/>
+    <property name="smear" value="1.3"/>
+    
+    <property name="wordInsertionProbability"    value="0.2"/>
+    <property name="languageWeight"              value="6.5"/>
+    <property name="silenceInsertionProbability" value="0.1"/>
 
-    <property name="lmwordInsertionProbability" value="0.7"/>
-    <property name="lmlanguageWeight" value="7"/>
-    <property name="lmsilenceInsertionProbability" value=".1"/>
+    <property name="lmwordInsertionProbability" value="0.2"/>
+    <property name="lmlanguageWeight" value="6.5"/>
+    <property name="lmsilenceInsertionProbability" value="0.1"/>
+    <property name="lmfillerInsertionProbability" value="1E-6"/>  
 
     <property name="speechClassifierThreshold" value="13"/>
     
@@ -76,10 +80,10 @@
         <property name="languageModel" value="trigramModel"/>
         <property name="dictionary" value="dictionary"/>
         <property name="addFillerWords" value="false"/>
-        <property name="fillerInsertionProbability" value="1E-10"/>
+        <property name="fillerInsertionProbability" value="${lmfillerInsertionProbability}"/>
         <property name="generateUnitStates" value="false"/>
         <property name="wantUnigramSmear" value="true"/>
-        <property name="unigramSmearWeight" value="1"/>
+        <property name="unigramSmearWeight" value="${smear}"/>
         <property name="wordInsertionProbability" 
                 value="${lmwordInsertionProbability}"/>
         <property name="silenceInsertionProbability" 
@@ -332,7 +336,7 @@
         <property name="growSkipInterval" value="0"/>
         <property name="checkStateOrder" value="false"/>
         <property name="buildWordLattice" value="false"/>
-        <property name="acousticLookaheadFrames" value="1.7"/>
+        <property name="acousticLookaheadFrames" value="${acousticLookahead)"/>
         <property name="relativeBeamWidth" value="${relativeBeamWidth2}"/>
     </component>
 
@@ -380,7 +384,7 @@
         <property name="growSkipInterval" value="0"/>
         <property name="checkStateOrder" value="false"/>
         <property name="buildWordLattice" value="false"/>
-        <property name="acousticLookaheadFrames" value="1.7"/>
+        <property name="acousticLookaheadFrames" value="${acousticLookahead)"/>
         <property name="relativeBeamWidth" value="${relativeBeamWidth2}"/>
     </component>
 
