@@ -22,6 +22,8 @@
  */
 package com.spokentech.speechdown.common.sphinx;
 
+import java.util.logging.Handler;
+import java.util.logging.Level;
 import java.util.logging.Logger;
 
 import edu.cmu.sphinx.frontend.BaseDataProcessor;
@@ -57,6 +59,16 @@ public class SpeechDataMonitor extends BaseDataProcessor {
     public SpeechDataMonitor() {
         super();
         // TODO Auto-generated constructor stub
+        //sal_logger.setLevel(Level.INFO);
+        // The root logger's handlers default to INFO. We have to
+        // crank them up. We could crank up only some of them
+        // if we wanted, but we will turn them all up.
+        //sal Handler[] handlers =  Logger.getLogger( "" ).getHandlers();
+        //sal for ( int index = 0; index < handlers.length; index++ ) {
+        //sal   handlers[index].setLevel( Level.INFO );
+        // sal}
+
+
     }
     
     public void setSpeechEventListener(SpeechEventListener speechEventListener) {
@@ -69,12 +81,16 @@ public class SpeechDataMonitor extends BaseDataProcessor {
     @Override
     public Data getData() throws DataProcessingException {
     	//if (endFlag) {
-    	//	endFlag = false;
-    	//	long duration = 0;
-    	//	DataEndSignal end = new DataEndSignal(duration);
-    	//	return end;
+    		//endFlag = false;
+    		//long duration = 0;
+    		//DataEndSignal end = new DataEndSignal(duration);
+        	//long time = System.currentTimeMillis();
+            //_logger.fine(time+"  >>>>>>>>>>>>>>> Inserted DataEndSignal encountered! "+(time-start)+"  "+ (duration));
+
+    		//return end;
     	//}
         Data data = getPredecessor().getData();
+
         if (data instanceof SpeechStartSignal) {
             broadcastSpeechStartSignal();
 
@@ -83,17 +99,17 @@ public class SpeechDataMonitor extends BaseDataProcessor {
             //endFlag = true;
         } else if (data instanceof DataStartSignal) {
         	start = System.currentTimeMillis();
-            _logger.fine(start+ " <<<<<<<<<<<<<<< DataStartSignal encountered!");
+        	 _logger.fine(start+ " <<<<<<<<<<<<<<< DataStartSignal encountered!");
         } else if (data instanceof DataEndSignal) {
         	long time = System.currentTimeMillis();
-            _logger.fine(time+"  >>>>>>>>>>>>>>> DataEndSignal encountered! "+(time-start));
+        	 _logger.fine(time+"  >>>>>>>>>>>>>>> DataEndSignal encountered! "+(time-start));
         }
         return data;
     }
     
     private void broadcastSpeechStartSignal() {
     	long time = System.currentTimeMillis();
-        _logger.fine(time+"  *************** SpeechStartSignal encountered! "+(time-start));
+    	 _logger.fine(time+"  *************** SpeechStartSignal encountered! "+(time-start));
         if (_speechEventListener != null) {
             _speechEventListener.speechStarted();
         }
@@ -101,7 +117,7 @@ public class SpeechDataMonitor extends BaseDataProcessor {
 
     private void broadcastSpeechEndSignal() {
     	long time = System.currentTimeMillis();
-        _logger.fine(time+ "  *************** SpeechEndSignal encountered!  "+(time-start));
+    	 _logger.fine(time+ "  *************** SpeechEndSignal encountered!  "+(time-start));
         if (_speechEventListener != null) {
             _speechEventListener.speechEnded();
         }

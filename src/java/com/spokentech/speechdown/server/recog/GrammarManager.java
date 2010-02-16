@@ -125,9 +125,12 @@ public class GrammarManager {
 
         // write grammar to filesystem
         File grammarFile = new File(_grammarDir, location.getFilename());
-        FileWriter fw = new FileWriter(grammarFile);
+        FileWriter fw = null;
         try {
+            fw = new FileWriter(grammarFile);
             fw.write(grammarText);
+        }catch (Exception e) {
+        	e.printStackTrace();
         } finally {
             fw.close();
         }

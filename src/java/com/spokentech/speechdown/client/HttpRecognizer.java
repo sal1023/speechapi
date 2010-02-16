@@ -588,7 +588,7 @@ public class HttpRecognizer {
         	encoding = new StringBody(format.getEncoding().toString());
         	lmFlag = new StringBody(String.valueOf(lmflg));
         	endpointFlag = new StringBody(String.valueOf(Boolean.TRUE));
-        	batchModeFlag = new StringBody(String.valueOf(Boolean.FALSE));
+        	batchModeFlag = new StringBody(String.valueOf(Boolean.TRUE));
            	continuousFlag = new StringBody(String.valueOf(Boolean.TRUE));
         } catch (UnsupportedEncodingException e1) {
 	        // TODO Auto-generated catch block
