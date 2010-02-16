@@ -8,11 +8,11 @@ public class ExternalTriggerEndPointer extends EndPointerBase {
 	private static Logger _logger = Logger.getLogger(ExternalTriggerEndPointer.class);
 	
     private long totalSamplesRead = 0;
-    protected int bytesPerRead = 3200;
+    //protected int bytesPerRead = 32000; 
     
     public void doEndpointing() {
 
-        final int bytesToRead = 3200;
+        final int bytesToRead = 32000;
         byte[] samplesBuffer = new byte[bytesToRead];
         
     	while ((!speechEnded) && (!streamEndReached)) {
@@ -77,9 +77,13 @@ public class ExternalTriggerEndPointer extends EndPointerBase {
 		// close the input stream
 		//closeInputDataStream();
 		
+
 		// Close the output stream. 
 		try {
+			ostream.flush();
+			//System.out.println("flushed ostream!");
 			ostream.close();
+			//System.out.println("Closed ostream!");
 		} catch (IOException e) {
 			e.printStackTrace();
 		} 	
@@ -87,7 +91,7 @@ public class ExternalTriggerEndPointer extends EndPointerBase {
 
 	@Override
     public boolean requiresServerSideEndPointing() {
-	    return true;
+	    return false;
     }
 
 
