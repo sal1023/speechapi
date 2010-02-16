@@ -254,6 +254,10 @@ public class SpeechUploadServlet extends HttpServlet {
 							        _logger.debug("recognition result is null");
 								    out.println("recognition result is null");
 					    		}
+					    		audio.close();
+					    		request.getInputStream().close();
+					    		long stop2 =  System.currentTimeMillis();
+				    			_logger.info("Done! " + stop2 +" ("+(stop2-start) +")" );
 				    		} else {
 				    			long stop = System.currentTimeMillis();
 				    			_logger.info("Calling recognizer Service" + stop +" ("+(stop-start) +")" );

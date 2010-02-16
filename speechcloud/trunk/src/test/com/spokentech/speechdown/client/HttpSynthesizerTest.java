@@ -13,6 +13,8 @@ import javax.sound.sampled.DataLine;
 import javax.sound.sampled.LineUnavailableException;
 import javax.sound.sampled.SourceDataLine;
 import javax.sound.sampled.UnsupportedAudioFileException;
+import javax.sound.sampled.AudioFormat.Encoding;
+
 import org.apache.log4j.Logger;
 
 import com.spokentech.speechdown.common.RecognitionResult;
@@ -93,8 +95,11 @@ public class HttpSynthesizerTest extends TestCase {
 		                16000,
 		                false);
 		    	
+		    	 System.out.println("***** "+Encodings.getEncoding("MPEG1L3"));
+		    	
 		    	format2 = new AudioFormat(
-		                Encodings.getEncoding("MPEG1L3"),
+		                //Encodings.getEncoding("MPEG1L3"),
+		    			new Encoding("MPEG1L3"),
 		                44100,
 		                32,
 		                1,
