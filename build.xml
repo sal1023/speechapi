@@ -7,6 +7,7 @@
 	<property file="${basedir}/user.properties" />
 	<property file="${user.home}/build.properties" />
 	<property file="${basedir}/build.properties" />
+	
 
 	<property name="jaxws.home" value="${env.JAXWS_HOME}" />
 	<property name="sphinx.home" value="C:\thirdparty\sphinx4\" />
@@ -23,7 +24,10 @@
 	<property name="build.war.home" value="${build.home}/war" />
 	<property name="name" value="${ant.project.name}" />
 	<property name="war.filename" value="${name}.war" />
-
+	
+	<property name="schema.name" value="${name}.sql" />
+	<property name="sql.dir" value="${basedir}/sql" />
+	
 	<property name="lib.dir" value="${basedir}/lib" />
 	<property name="freetts.jar" value="${lib.dir}/freetts-SNAPSHOT.jar" />
 	<property name="log4j.jar" value="${lib.dir}/log4j-1.2.14.jar" />
@@ -43,10 +47,16 @@
 	<property name="hsqldb.jar" value="${lib.dir}/hsqldb.jar" />
     <property name="jta.jar" value="${lib.dir}/jta-1.1.jar" />
 	
+	
+	
 	<property name="mary-common.jar" value="${lib.dir}/mary-common.jar" />
 	
 	<property name="jlibrtp.jar" value="${lib.dir}/jlibrtp.jar" />
 	<property name="jdom.jar" value="${lib.dir}/jdom.jar" />
+	<property name="dom4j.jar" value="${lib.dir}/dom4j-1.6.1.jar" />
+	
+	<property name="slf4j-api.jar" value="${lib.dir}/slf4j-api-1.5.10.jar" />
+	<property name="slf4j-jcl.jar" value="${lib.dir}/slf4j-jcl-1.5.10.jar" />
 
     <property name="servlet-api.jar" value="${catalina.home}/lib/servlet-api.jar" />
 	<property name="commons-logging.jar" value="${lib.dir}/commons-logging.jar" />
@@ -68,6 +78,27 @@
 	<property name="server.wsdl.location" value="${basedir}/etc/"/>
 	<property name="server.binding.files" value="customfile-server.xml"/>
 
+	<path id="toolslib">
+	 <path location="lib/hibernate-tools.jar" />
+	 <path location="lib/hibernate3.jar" />
+	 <path location="lib/freemarker.jar" />
+	 <path location="${jdbc.driver.jar}" />
+	</path>
+
+	
+	<path id="hib.classpath">
+		<pathelement location="${java.home}/../lib/tools.jar" />
+		<pathelement	location="${hibernate.jar}" />
+		<pathelement	location="${dom4j.jar}" />
+		<pathelement	location="${slf4j-api.jar}" />
+		<pathelement	location="${slf4j-jcl.jar}" />
+		<pathelement	location="${commons-logging.jar}" />
+		 <pathelement  location="lib/hibernate-tools.jar" />
+		 <pathelement location="lib/hibernate3.jar" />
+		 <pathelement location="lib/freemarker.jar" />
+		 <pathelement location="${jdbc.driver.jar}" />
+	</path>
+	
 	<path id="jaxws.classpath">
 		<pathelement location="${java.home}/../lib/tools.jar" />
 		<pathelement	location="${commons-pool.jar}" />
@@ -158,7 +189,7 @@
 
 	<target name="create-war" depends="compile-server">
 		
-		<filter token="serviceLoggingFlag" value="false" />
+		<filter token="serviceLoggingFlag" value="true" />
 		<filter token="applicationContext.recognizerService.baseGrammarDir" value="c:/temp" />
 		<filter token="applicationContext.recognizerService.sphinxConfigFile" value="file:///${catalina.home}/webapps/${ant.project.name}/WEB-INF/sphinx-config-2pools.xml" />
 		<filter token="applicationContext.synthesizerService.prefix" value="http://${catalina.host}:${catalina.port}/${ant.project.name}/prompts/" />
@@ -357,6 +388,37 @@
 	</target>
 	<!-- End Tomcat tasks -->
 
+	<target name="schemaexport">
+	    <taskdef name="schemaexport"
+	        classname="org.hibernate.tool.hbm2ddl.SchemaExportTask"
+	        classpathref="hib.classpath"/>
+	    <schemaexport
+	    	config="${basedir}/etc/hibernate.cfg.xml" 
+	        quiet="no"
+	        text="no"
+	        drop="no"
+	        delimiter=";"
+	        output="schema-export.sql">
+	    	<fileset dir="${dir.classes}" includes="**/*.hbm.xml"/>
+	    </schemaexport>
+	</target>
+	
+	<target name="sal">
+		<taskdef name="hibernatetool"
+		                classname="org.hibernate.tool.ant.HibernateToolTask"
+		                classpathref="hib.classpath"/>
+	
+	
+	    <hibernatetool destdir="${sql.dir}">
+		 <classpath>
+	        <path location="${classes.dir}"/>
+		 </classpath>
+	     <configuration configurationfile="${basedir}/etc/hibernate.cfg.xml" />
+		 <hbm2ddl export="false" outputfilename="${schema.name}.sql"/>
+	
+		</hibernatetool>
+	</target>
+	
 	<target name="help">
 		<echo message="server:				Builds and deploys the service endpoint WAR" />
 		<echo message="client:				Builds the client" />
