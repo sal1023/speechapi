@@ -23,13 +23,21 @@ public class AudioStreamEndPointer extends EndPointerBase {
 
     
     protected int sampleRate;
-    protected int bytesPerRead = 3200;
     protected int bytesPerValue;
     protected boolean bigEndian;
     protected boolean signedData;
 
     private boolean utteranceEndSent = false;
     private boolean utteranceStarted = false;
+    
+	public AudioStreamEndPointer(int bufferSize) {
+	    super(bufferSize);
+    }
+	
+	   
+	public AudioStreamEndPointer() {
+	    super();
+    }
 
     
     /**
@@ -96,7 +104,7 @@ public class AudioStreamEndPointer extends EndPointerBase {
     	int endCount = 0;
        	int startCount = 0;
 
-        final int bytesToRead = 3200;
+
         byte[] samplesBuffer = new byte[bytesToRead];
         
     	while ((!speechEnded) && (!streamEndReached)) {

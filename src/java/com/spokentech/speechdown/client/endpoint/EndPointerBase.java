@@ -12,7 +12,8 @@ import com.spokentech.speechdown.common.SpeechEventListener;
 
 public abstract class EndPointerBase implements EndPointer, Runnable{
 	private static Logger _logger = Logger.getLogger(EndPointerBase.class);
-
+	private static final int DEFAULT_BUFFER_SIZE = 8000;
+	
 	protected InputStream astream;
 	protected OutputStream ostream;
 	protected AFormat format;
@@ -23,10 +24,18 @@ public abstract class EndPointerBase implements EndPointer, Runnable{
 	private Thread t;
 
 	private boolean preTrigger = false;;
+	protected int bytesToRead = DEFAULT_BUFFER_SIZE; 
 
 	public EndPointerBase() {
 		super();
 		preTrigger = false;
+		bytesToRead = DEFAULT_BUFFER_SIZE;
+	}
+	
+	public EndPointerBase(int bufferSize) {
+		super();
+		preTrigger = false;
+		bytesToRead = bufferSize;
 	}
 	
 	public abstract void doEndpointing();
