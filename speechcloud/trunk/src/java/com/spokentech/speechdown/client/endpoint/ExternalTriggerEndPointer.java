@@ -5,14 +5,26 @@ import org.apache.log4j.Logger;
 
 public class ExternalTriggerEndPointer extends EndPointerBase {
 
+	
+
 	private static Logger _logger = Logger.getLogger(ExternalTriggerEndPointer.class);
 	
     private long totalSamplesRead = 0;
-    //protected int bytesPerRead = 32000; 
+ 
+    
+	public ExternalTriggerEndPointer(int bufferSize) {
+	    super(bufferSize);
+    }
+	
+	   
+	public ExternalTriggerEndPointer() {
+	    super();
+    }
+
     
     public void doEndpointing() {
 
-        final int bytesToRead = 32000;
+        //final int  = 32000;
         byte[] samplesBuffer = new byte[bytesToRead];
         
     	while ((!speechEnded) && (!streamEndReached)) {

@@ -352,7 +352,7 @@ public class AudioStreamDataSource extends BaseDataProcessor implements StreamDa
         //        fileListener.audioFileProcFinished(curAudioFile);
 
     	long d = getDuration();
-    	System.out.println("********** End signal duration: "+d);
+    	_logger.fine("********** End signal duration: "+d);
         return new DataEndSignal(d);
     }
 
