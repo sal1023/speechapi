@@ -47,8 +47,10 @@
 
 
     <property name="amPropertiesFile"   value="file:///usr/share/models/accoustic/model2.props" />
-    <property name="amDataLocation" value="file:///usr/share/models/accoustic/m8k.cd_cont_8000"/>
-    <property name="amModelDefinition" value="file:///usr/share/models/accoustic/m8k.cd_cont_8000/mdef"/>
+    <!--property name="amDataLocation" value="file:///usr/share/models/accoustic/m8k.cd_cont_8000"/-->
+    <!--property name="amModelDefinition" value="file:///usr/share/models/accoustic/m8k.cd_cont_8000/mdef"/-->
+    <property name="amDataLocation" value="file:///usr/share/models/accoustic/mcmodel.cd_cont_4000"/>
+    <property name="amModelDefinition" value="file:///usr/share/models/accoustic/mcmodel.cd_cont_4000/mdef"/>
     <property name="dictionaryPath"  value="file:///usr/share/models/dict/cmudict.0.7a"/>
     <property name="fillerPath" value="file:///usr/share/models/dict/mcmodel.filler"/>
 
