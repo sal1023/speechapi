@@ -73,6 +73,9 @@ public class AudioStreamDataSource extends BaseDataProcessor implements StreamDa
     private boolean utteranceStarted = false;
     private long totalValues = 0;
 
+    long firstSample = totalValuesRead;
+    
+    
     private File curAudioFile;
     
     //private BufferedWriter out;

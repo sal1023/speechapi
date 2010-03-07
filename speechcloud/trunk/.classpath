@@ -43,12 +43,16 @@
 	<classpathentry kind="lib" path="lib/en_us.jar"/>
 	<classpathentry kind="lib" path="lib/freetts-SNAPSHOT.jar"/>
 	<classpathentry kind="lib" path="etc"/>
-	<classpathentry kind="lib" path="lib/sphinx4.jar"/>
+	<classpathentry kind="lib" path="lib/sphinx4.jar" sourcepath="/Sphinx-4-SNAPSHOT"/>
 	<classpathentry kind="var" path="OPENMARY_HOME/java/mary-common.jar"/>
 	<classpathentry kind="lib" path="lib/tritonus_mp3-0.3.6.jar"/>
 	<classpathentry kind="lib" path="lib/tritonus_share-0.3.6.jar"/>
 	<classpathentry kind="lib" path="lib/jlibrtp.jar"/>
 	<classpathentry kind="lib" path="lib/cmudict04.jar"/>
 	<classpathentry kind="lib" path="lib/hibernate3.jar"/>
+	<classpathentry kind="lib" path="C:/thirdparty/jersey-archive-1.1.5/lib/jersey-core-1.1.5.jar"/>
+	<classpathentry kind="lib" path="C:/thirdparty/jersey-archive-1.1.5/lib/jersey-server-1.1.5.jar"/>
+	<classpathentry kind="lib" path="C:/thirdparty/jersey-archive-1.1.5/lib/jsr311-api-1.1.1.jar"/>
+	<classpathentry kind="lib" path="lib/xuggle-xuggler.jar"/>
 	<classpathentry kind="output" path="target/eclipse"/>
 </classpath>

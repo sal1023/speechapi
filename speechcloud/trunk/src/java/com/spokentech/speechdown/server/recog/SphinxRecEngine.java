@@ -25,6 +25,7 @@ import com.spokentech.speechdown.common.RecognitionResultJsapi;
 import com.spokentech.speechdown.common.SpeechEventListener;
 
 import com.spokentech.speechdown.common.sphinx.AudioStreamDataSource;
+import com.spokentech.speechdown.common.sphinx.AudioStreamDataSource2;
 import com.spokentech.speechdown.common.sphinx.IdentityStage;
 import com.spokentech.speechdown.common.sphinx.InsertSpeechSignalStage;
 import com.spokentech.speechdown.common.sphinx.SpeechDataMonitor;
@@ -367,11 +368,11 @@ public class SphinxRecEngine extends AbstractPoolableObject implements RecEngine
 				 _logger.warn("Endpointing not supported for feature streams");
 			 }
 		 } else if (parts[1].equals("x-wav")) {
-			 _dataSource = new AudioStreamDataSource();
+			 _dataSource = new AudioStreamDataSource2();
 			 fe = createAudioFrontend(doEndpointing,cmnBatch,(DataProcessor)_dataSource);
 		 } else {
 			 _logger.warn("Unrecognized mime type: "+mimeType + " Trying to process as audio/x-wav");
-			 _dataSource = new AudioStreamDataSource();
+			 _dataSource = new AudioStreamDataSource2();
 			 fe = createAudioFrontend(doEndpointing,cmnBatch,(DataProcessor)_dataSource);
 		 }
 		 if (doEndpointing) {
@@ -456,11 +457,11 @@ public class SphinxRecEngine extends AbstractPoolableObject implements RecEngine
 			 _logger.warn("Feature mode Endpointing not for continuous recognition mode");
 			 _dataSource = new S4DataStreamDataSource();
 		 } else if (parts[1].equals("x-wav")) {
-			 _dataSource = new AudioStreamDataSource();
+			 _dataSource = new AudioStreamDataSource2();
 			 fe = createAudioFrontend(true,true,(DataProcessor) _dataSource);
 		 } else {
 			 _logger.warn("Unrecognized mime type: "+mimeType + " Trying to process as audio/x-wav");
-			 _dataSource = new AudioStreamDataSource();
+			 _dataSource = new AudioStreamDataSource2();
 			 fe = createAudioFrontend(true,true,(DataProcessor) _dataSource);
 		 }
 	     _logger.debug("-----> "+mimeType+ " "+parts[1]);
@@ -759,7 +760,10 @@ public class SphinxRecEngine extends AbstractPoolableObject implements RecEngine
 		boolean isCompletePath = false;
 		int bitsPerSample = 16;
 		boolean isSigned = true;
-		boolean captureUtts = true;
+		
+		//setting this false captures the entire audio from datastart to dataend.  
+		//since not always getting speech signals, need to false,  Revisit when doing more transcription.
+		boolean captureUtts = false;
 		boolean bigEndian = false;
 		recorder = new WavWriter(recordingFilePath,isCompletePath,bitsPerSample,bigEndian,isSigned,captureUtts);
     }

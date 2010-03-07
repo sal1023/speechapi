@@ -12,6 +12,7 @@ import java.io.InputStream;
 import java.io.PrintWriter;
 import java.util.Date;
 import java.util.Enumeration;
+import java.util.Iterator;
 
 import javax.servlet.ServletConfig;
 import javax.servlet.ServletException;
@@ -23,6 +24,7 @@ import javax.sound.sampled.AudioFormat;
 import javax.sound.sampled.AudioInputStream;
 import javax.sound.sampled.AudioSystem;
 
+import org.apache.commons.fileupload.FileItemHeaders;
 import org.apache.commons.fileupload.FileItemIterator;
 import org.apache.commons.fileupload.FileItemStream;
 import org.apache.commons.fileupload.FileUploadException;
@@ -217,7 +219,19 @@ public class SpeechUploadServlet extends HttpServlet {
 			        _logger.debug("File field " + name + " with file name "
 			            + item.getName() + " detected.");
 
-			        
+			        FileItemHeaders h = item.getHeaders();
+			        if (h == null) {
+			        	System.out.println(item.getName() +" has no headers");
+			        } else {
+			        	System.out.println(item.getName() +" has the following headers");
+				        Iterator it = h.getHeaderNames();
+						while (it.hasNext()) {
+						    String hname = (String) it.next();
+						    String head =h.getHeader(hname);
+						    System.out.println(hname+" = "+head);
+						}
+			        }
+
 			        // Process the input stream
 				    if (name.equals("audio") ) {
 				    	audio = stream;
