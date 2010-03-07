@@ -206,16 +206,7 @@ public class HttpRecognizeReuseTest extends TestCase {
 	            e.printStackTrace();
             }    	
             System.out.println("grammar result: "+r.getText());
-            try {          
-	            r = recog.recognize(grammarUrl,  epStream,  lmflg,  batchFlag, timeout) ;
-            } catch (InstantiationException e) {
-	            // TODO Auto-generated catch block
-	            e.printStackTrace();
-            } catch (IOException e) {
-	            // TODO Auto-generated catch block
-	            e.printStackTrace();
-            }    	
-            System.out.println("grammar result: "+r.getText());
+
             
     	
 	    }

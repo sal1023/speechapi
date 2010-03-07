@@ -1,20 +1,12 @@
 <?xml version="1.0" encoding="UTF-8"?>
 
-<project name="speechcloud" basedir="." default="help">
+<project name="speechcloud" basedir="." default="help" xmlns:artifact="antlib:org.apache.maven.artifact.ant">
 
 	<property environment="env" />
 
-	<property file="${basedir}/user.properties" />
-	<property file="${user.home}/build.properties" />
-	<property file="${basedir}/build.properties" />
-	
-
-	<property name="jaxws.home" value="${env.JAXWS_HOME}" />
-	<property name="sphinx.home" value="C:\thirdparty\sphinx4\" />
-	
-	<property name="catalina.home" value="${env.CATALINA_HOME}" />
-	<property name="catalina.host" value="localhost" />
-	<property name="catalina.port" value="8090" />
+	<property file="${basedir}/${user.name}.properties" />
+    <property file="${user.home}/build.properties" />
+    <property file="${basedir}/build.properties" />
 
 	<property name="build.home" value="${basedir}/target/build" />
 	<property name="build.classes.home" value="${build.home}/classes" />
@@ -29,6 +21,12 @@
 	<property name="sql.dir" value="${basedir}/sql" />
 	
 	<property name="lib.dir" value="${basedir}/lib" />
+	
+    <path id="maven-ant-tasks.classpath" path="${lib.dir}/maven-ant-tasks-2.1.0.jar" />
+    <typedef resource="org/apache/maven/artifact/ant/antlib.xml"
+           uri="antlib:org.apache.maven.artifact.ant"
+           classpathref="maven-ant-tasks.classpath" />	
+	
 	<property name="freetts.jar" value="${lib.dir}/freetts-SNAPSHOT.jar" />
 	<property name="log4j.jar" value="${lib.dir}/log4j-1.2.14.jar" />
 	<property name="spring.jar" value="${lib.dir}/spring-2.5.5.jar" />
@@ -46,9 +44,7 @@
 	<property name="hibernate.jar" value="${lib.dir}/hibernate3.jar" />
 	<property name="hsqldb.jar" value="${lib.dir}/hsqldb.jar" />
     <property name="jta.jar" value="${lib.dir}/jta-1.1.jar" />
-	
-	
-	
+
 	<property name="mary-common.jar" value="${lib.dir}/mary-common.jar" />
 	
 	<property name="jlibrtp.jar" value="${lib.dir}/jlibrtp.jar" />
@@ -64,6 +60,9 @@
 	<property name="commons-io.jar" value="${lib.dir}/commons-io-1.4.jar" />
 	<property name="jstl.jar" value="${catalina.home}/webapps/examples/WEB-INF/lib/jstl.jar" />
 	<property name="standard.jar" value="${catalina.home}/webapps/examples/WEB-INF/lib/standard.jar" />
+	
+	
+    <property name="xuggle-xuggler.jar" value="${lib.dir}/xuggle-xuggler.jar" />
 	
 	<property name="verbose" value="true" />
 
@@ -127,6 +126,9 @@
 		<pathelement	location="${jlibrtp.jar}" />
 		<pathelement	location="${jdom.jar}" />
 
+		<pathelement	location="${xuggle-xuggler.jar}" />
+		
+		
 		<fileset dir="${jaxws.home}/lib">
 			<include name="*.jar" />
 			<exclude name="j2ee.jar" />
@@ -145,6 +147,41 @@
 		<pathelement	location="${httpclient.jar}" />
 		<pathelement	location="${httpcore.jar}" />
 	</path>
+	
+	
+	
+
+    <artifact:dependencies pathId="rest.dependency.classpath">
+      <dependency groupId="com.sun.jersey" 
+              artifactId="jersey-server"
+              version="1.1.5"/>
+      
+      <!--dependency groupId="com.sun.grizzly" 
+              artifactId="grizzly-servlet-webserver"
+              version="1.8.6.4"/>
+      <artifact:remoteRepository id="maven2-repository.dev.java.net"
+                             url="http://download.java.net/maven/2/" />
+      <artifact:remoteRepository id="maven-repository.dev.java.net"
+                             url="http://download.java.net/maven/1" 
+                             layout="legacy" /-->
+    </artifact:dependencies>
+      <artifact:dependencies filesetId="rest.dependency.fileset"
+                             useScope="runtime"
+                             versionsId="dependency.versions">
+          <dependency groupId="com.sun.jersey" 
+              artifactId="jersey-server"
+              version="1.1.5"/>
+         <dependency groupId="com.sun.jersey" 
+              artifactId="jersey-spring"
+              version="1.0"/>
+      <artifact:remoteRepository id="maven2-repository.dev.java.net"
+                             url="http://download.java.net/maven/2/" />
+      <artifact:remoteRepository id="maven-repository.dev.java.net"
+                             url="http://download.java.net/maven/1" 
+                             layout="legacy" />
+    </artifact:dependencies>
+
+	
 
 	<taskdef name="apt" classname="com.sun.tools.ws.ant.Apt">
 		<classpath refid="jaxws.classpath" />
@@ -160,7 +197,10 @@
 		<mkdir dir="${build.client.classes.home}" />
 		<mkdir dir="${build.generated.home}" />
 		<mkdir dir="${build.war.home}/WEB-INF" />
+	    <mkdir dir="${build.war.home}/lib" />
 	</target>
+	
+	
 
 	<target name="build-server-java" depends="setup">
 		<apt
@@ -186,6 +226,68 @@
 	<target name="clean">
 		<delete dir="${build.home}" includeEmptyDirs="true" />
 	</target>
+	
+	
+	    
+    <!-- ********************************************************** -->
+    <!-- *                                                        * -->
+    <!-- * Create the acoustic model  jar.                        * -->
+    <!-- *                                                        * -->
+    <!-- ********************************************************** -->
+    
+    <target name="jar-model"
+            description="Jar the accoustic model.">
+        <jar destfile="${build.war.home}/lib/${accoustic.model.name}.jar"
+             basedir="${accoustic.model.dir}"
+             filesonly="true"
+             compress="true"/>
+    </target>
+	
+	
+	<target name="create-gae-war" depends="compile-server,jar-model">
+		
+		<filter token="serviceLoggingFlag" value="true" />
+		<filter token="applicationContext.recognizerService.baseGrammarDir" value="c:/temp" />
+		<filter token="applicationContext.recognizerService.sphinxConfigFile" value="file:///${catalina.home}/webapps/${ant.project.name}/WEB-INF/sphinx-config-2pools.xml" />
+		<filter token="applicationContext.synthesizerService.prefix" value="http://${catalina.host}:${catalina.port}/${ant.project.name}/prompts/" />
+		<filter token="applicationContext.synthesizerService.promptDir" value="${catalina.home}/webapps/${ant.project.name}/prompts" />
+		<copy todir="${build.war.home}/WEB-INF" overwrite="true" filtering="true">
+			<fileset dir="${basedir}/etc" includes="*.xml" />
+		</copy>
+		
+		
+		<copy todir="${build.war.home}/WEB-INF/lib">
+           <fileset refid="rest.dependency.fileset" />
+           <mapper classpathref="maven-ant-tasks.classpath"
+               classname="org.apache.maven.artifact.ant.VersionMapper"
+               from="${dependency.versions}" to="flatten" />
+        </copy>
+
+		
+	
+
+		<war warfile="${build.war.home}/gae-${war.filename}" webxml="${build.war.home}/WEB-INF/web.xml">
+
+			<webinf dir="${build.war.home}/WEB-INF" includes="*.xml" />
+			<zipfileset dir="etc/prompts" prefix="prompts" />
+			<zipfileset dir="etc/grammar" prefix="grammar" />
+			<!--zipfileset dir="etc/lm" prefix="lm" /-->
+			<zipfileset dir="${basedir}/etc" prefix="WEB-INF/wsdl" includes="*.wsdl, *.xsd" />			
+			<zipfileset dir="${basedir}/src/java" prefix="WEB-INF/classes" includes="**/*.hbm.xml" />
+			<zipfileset dir="${basedir}/etc" prefix="WEB-INF/classes" includes="log4j.xml, hibernate.cfg.xml" />
+			<classes dir="${build.classes.home}" />
+			<lib dir="${basedir}/lib" />
+			<lib file="${jstl.jar}" />
+			<lib file="${standard.jar}" />
+		    <lib file="${language.model}" />
+		    <lib file="${build.war.home}/lib/${accoustic.model.name}.jar" />
+
+			<lib dir="${build.war.home}/WEB-INF/lib" />
+			
+		</war>
+	</target>	
+	         
+
 
 	<target name="create-war" depends="compile-server">
 		
@@ -197,6 +299,17 @@
 		<copy todir="${build.war.home}/WEB-INF" overwrite="true" filtering="true">
 			<fileset dir="${basedir}/etc" includes="*.xml" />
 		</copy>
+		
+		<copy todir="${build.war.home}/WEB-INF/lib">
+           <fileset refid="rest.dependency.fileset" />
+           <mapper classpathref="maven-ant-tasks.classpath"
+               classname="org.apache.maven.artifact.ant.VersionMapper"
+               from="${dependency.versions}" to="flatten" />
+        </copy>
+
+		
+	
+
 		<war warfile="${build.war.home}/${war.filename}" webxml="${build.war.home}/WEB-INF/web.xml">
 
 			<webinf dir="${build.war.home}/WEB-INF" includes="*.xml" />
@@ -210,6 +323,8 @@
 			<lib dir="${basedir}/lib" />
 			<lib file="${jstl.jar}" />
 			<lib file="${standard.jar}" />
+			<lib dir="${build.war.home}/WEB-INF/lib" />
+			
 		</war>
 	</target>
 
@@ -303,6 +418,8 @@
     
     <target name="compile-server" depends="import-wsdl-server">
       <echo message="compile-server" />
+
+
       <javac srcdir="${basedir}/src/java"
         destdir="${build.classes.home}"
         includes="**/server/**, **/common/**"
@@ -310,6 +427,7 @@
         failonerror="true">
         <classpath>
         		<path refid="jaxws.classpath" />
+        		<path refid="rest.dependency.classpath" />
 				<pathelement location="${build.classes.home}" />
 		</classpath>
 	   </javac>
@@ -345,6 +463,11 @@
               <binding dir="." includes="${customization.binding.files}"/>
            </wsimport>
     </target> 
+    
+
+    
+
+    
 
 	<!-- ============================================================== -->
 	<!-- Tomcat tasks - remove these if you don't have Tomcat installed -->
@@ -418,6 +541,8 @@
 	
 		</hibernatetool>
 	</target>
+	
+	
 	
 	<target name="help">
 		<echo message="server:				Builds and deploys the service endpoint WAR" />
