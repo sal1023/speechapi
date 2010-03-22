@@ -61,7 +61,8 @@
 		</init-param>
 		<init-param>
 			<param-name>serviceLogging</param-name>
-			<param-value>@serviceLoggingFlag@</param-value>
+		    <param-value>false</param-value>
+			<!--param-value>@serviceLoggingFlag@</param-value-->
 		</init-param>
 		
 		
@@ -88,7 +89,8 @@
 		</init-param>
 		<init-param>
 			<param-name>serviceLogging</param-name>
-			<param-value>@serviceLoggingFlag@</param-value>
+		    <param-value>false</param-value>
+			<!--param-value>@serviceLoggingFlag@</param-value-->
 		</init-param>
 	</servlet>
 	<servlet-mapping>
