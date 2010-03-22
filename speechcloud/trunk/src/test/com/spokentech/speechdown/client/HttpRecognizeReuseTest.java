@@ -32,8 +32,8 @@ import com.spokentech.speechdown.client.endpoint.StreamEndPointingInputStream;
 import com.spokentech.speechdown.client.exceptions.AsynchNotEnabledException;
 import com.spokentech.speechdown.client.exceptions.HttpRecognizerException;
 import com.spokentech.speechdown.client.exceptions.StreamInUseException;
-import com.spokentech.speechdown.client.util.AFormat;
 import com.spokentech.speechdown.client.util.FormatUtils;
+import com.spokentech.speechdown.common.AFormat;
 import com.spokentech.speechdown.common.RecognitionResult;
 import com.spokentech.speechdown.common.SpeechEventListener;
 
@@ -77,8 +77,8 @@ public class HttpRecognizeReuseTest extends TestCase {
 	   
 	    
 	    //private static String service = "http://ec2-174-129-20-250.compute-1.amazonaws.com/speechcloud/SpeechUploadServlet";    
-	    //private static String service = "http://localhost:8090/speechcloud/SpeechUploadServlet";    
-	    private static String service = "http://spokentech.net/speechcloud/SpeechUploadServlet";   
+	    private static String service = "http://localhost:8090/speechcloud/SpeechUploadServlet";    
+	    //private static String service = "http://spokentech.net/speechcloud/SpeechUploadServlet";   
 	    private static AudioFormat desiredFormat;
 	    private static int sampleRate = 8000;
 	    private static boolean signed = true;
@@ -246,8 +246,8 @@ public class HttpRecognizeReuseTest extends TestCase {
 	        _logger.info("took "+t3+ "ms. to create x trig endpointing stream");
 	    	
 	    	Listener l = new Listener();
-	    	boolean lmflg = false;
-	    	boolean batchFlag = false;
+	    	boolean lmflg = true;
+	    	boolean batchFlag = true;
 	    	String id;
 	    	
             streamInUse = true;

@@ -29,8 +29,8 @@ import org.speechforge.cairo.rtp.server.sphinx.SourceAudioFormat;
 import edu.cmu.sphinx.frontend.DataProcessor;
 import edu.cmu.sphinx.frontend.FrontEnd;
 import com.spokentech.speechdown.client.sphinx.SpeechDataStreamer;
-import com.spokentech.speechdown.client.util.AFormat;
 import com.spokentech.speechdown.client.util.FormatUtils;
+import com.spokentech.speechdown.common.AFormat;
 import com.spokentech.speechdown.common.SpeechEventListener;
 
 // TODO: Auto-generated Javadoc

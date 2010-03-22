@@ -3,7 +3,7 @@ package com.spokentech.speechdown.server.recog;
 import java.io.IOException;
 import java.io.InputStream;
 
-import com.spokentech.speechdown.client.util.AFormat;
+import com.spokentech.speechdown.common.AFormat;
 
 
 import edu.cmu.sphinx.frontend.Data;

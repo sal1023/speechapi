@@ -28,8 +28,8 @@ import com.spokentech.speechdown.client.endpoint.S4EndPointer;
 import com.spokentech.speechdown.client.endpoint.StreamEndPointingInputStream;
 import com.spokentech.speechdown.client.endpoint.JavaSoundStreamS4EndPointingInputStream;
 import com.spokentech.speechdown.client.exceptions.HttpRecognizerException;
-import com.spokentech.speechdown.client.util.AFormat;
 import com.spokentech.speechdown.client.util.FormatUtils;
+import com.spokentech.speechdown.common.AFormat;
 import com.spokentech.speechdown.common.RecognitionResult;
 import com.spokentech.speechdown.common.SpeechEventListener;
 
@@ -62,6 +62,8 @@ public class HttpRecognizerTest extends TestCase {
             public void recognitionComplete(RecognitionResult rr) {
 	            // TODO Auto-generated method stub
 	            _logger.info("recognition complete: "+rr.getText());
+	            if (rr.isCflag())
+	            	_logger.info("confidence is "+rr.getConfidence());
             }
 	
 		}
@@ -74,8 +76,8 @@ public class HttpRecognizerTest extends TestCase {
 	    //private static String service = "http://ec2-204-236-206-143.compute-1.amazonaws.com/speechcloud/SpeechUploadServlet";    
 
 	    //private static String service = "http://ec2-174-129-20-250.compute-1.amazonaws.com/speechcloud/SpeechUploadServlet";    
-	    //private static String service = "http://localhost:8090/speechcloud/SpeechUploadServlet";    
-	    private static String service = "http://spokentech.net/speechcloud/SpeechUploadServlet";   
+	    private static String service = "http://localhost:8090/speechcloud/SpeechUploadServlet";    
+	    //private static String service = "http://spokentech.net/speechcloud/SpeechUploadServlet";   
 	    private static AudioFormat desiredFormat;
 	    private static int sampleRate = 8000;
 	    private static boolean signed = true;
@@ -94,7 +96,8 @@ public class HttpRecognizerTest extends TestCase {
 		File soundFile1 = new File("c:/work/speechcloud/etc/prompts/lookupsports.wav");	 	
 		File soundFile2 = new File("c:/work/speechcloud/etc/prompts/get_me_a_stock_quote.wav");	 	
 		File soundFile3 = new File("c:/work/speechcloud/etc/prompts/i_would_like_sports_news.wav");	 	
-	
+		File soundFile4 = new File("c:/work/speechcloud/etc/prompts/fire_and_ice_frost_add_64kb.mp3");	 	
+		
 		
     	File soundFile0 = new File("c:/work/speechcloud/etc/prompts/cubanson.wav");
     	//File soundFile0 = new File("c:/work/speechcloud/etc/prompts/fabfour.wav");
@@ -131,19 +134,20 @@ public class HttpRecognizerTest extends TestCase {
 	    	Type type = null;
 	    	try {
 	    		audioInputStream = AudioSystem.getAudioInputStream(soundFile0);
-	    		type = AudioSystem.getAudioFileFormat(soundFile2).getType();
+	    		type = AudioSystem.getAudioFileFormat(soundFile0).getType();
 	    	} catch (Exception e) {
 	    		e.printStackTrace();
 	    	}
 	    	String mimeType = null;
-			if (type == AudioFileFormat.Type.WAVE) {
-				//Always a audio/x-wav
+			//mimeType = "audio/mpeg";
+			//if (type == AudioFileFormat.Type.WAVE) {
+			//	//Always a audio/x-wav
 				mimeType = "audio/x-wav";
-			} else if (type == AudioFileFormat.Type.AU) {
-				mimeType = "audio/x-au";
-			} else {
-				_logger.warn("unhanlded format type "+type.getExtension());
-			}
+			//} else if (type == AudioFileFormat.Type.AU) {
+			//	mimeType = "audio/x-au";
+			//} else {
+			//	_logger.warn("unhanlded format type "+type.getExtension());
+			//}
 	    	
 	        AudioFormat f = audioInputStream.getFormat();
 	        AFormat format = FormatUtils.covertToNeutral(f);
@@ -153,7 +157,7 @@ public class HttpRecognizerTest extends TestCase {
 			long start = System.nanoTime();
             try {
 		    	boolean lmflg = true;
-		    	InputStream s = recog.transcribe(audioInputStream, format,mimeType, grammarUrl, lmflg);
+		    	InputStream s = recog.transcribe(audioInputStream, format, mimeType, grammarUrl, lmflg);
 
                 int c;
                 while ((c = s.read()) != -1) {
@@ -182,7 +186,9 @@ public class HttpRecognizerTest extends TestCase {
 	    	RecognitionResult r = recog.recognize(fname, grammarUrl, lmflg, doEndpointing,batchMode);
 			long stop = System.nanoTime();
 			long wall = (stop - start)/1000000;
-	    	System.out.println("FILE TEST: Batch mode, Server Endpointing, LM result: "+r.getText() + " took "+wall+ " ms");    	
+	    	System.out.println("FILE TEST: Batch mode, Server Endpointing, LM result: "+r.getText() + " took "+wall+ " ms");
+	    	if (r.isCflag())
+	    		System.out.println("confidence is "+r.getConfidence());
 	    }
 	    
 	    public void testRecognizeFileGrammarBatch() {
@@ -446,7 +452,7 @@ public class HttpRecognizerTest extends TestCase {
 	    	
 	    	Listener l = new Listener();
 	    	boolean lmflg = false;
-	    	boolean batchFlag = false;
+	    	boolean batchFlag = true;
 	    	String id;
 	        try {	            
 	            id = recog.recognizeAsynch(grammarUrl,  epStream,  lmflg,  batchFlag, timeout,l) ;
@@ -470,6 +476,46 @@ public class HttpRecognizerTest extends TestCase {
             }
             
 	    }
+	    public void testRecognizeFileS4EPGrammarAsynchLM() {
+	    	System.out.println("Starting File EP Test ...");	
+	    	recog.enableAsynchMode(2);
+	    	
+	    	long timeout = 10000;
+	    	S4EndPointer ep = new S4EndPointer();
+	    	FileS4EndPointingInputStream2 epStream = new FileS4EndPointingInputStream2(ep);
+
+	    	epStream.setMimeType(s4audio);
+	    	epStream.setupStream(soundFile2);
+	 
+	    	RecognitionResult r = null;
+	    	
+	    	Listener l = new Listener();
+	    	boolean lmflg = true;
+	    	boolean batchFlag = true;
+	    	String id;
+	        try {	            
+	            id = recog.recognizeAsynch(grammarUrl,  epStream,  lmflg,  batchFlag, timeout,l) ;
+            } catch (InstantiationException e) {
+	            // TODO Auto-generated catch block
+	            e.printStackTrace();
+            } catch (IOException e) {
+	            // TODO Auto-generated catch block
+	            e.printStackTrace();
+            } catch (HttpRecognizerException e) {
+	            // TODO Auto-generated catch block
+	            e.printStackTrace();
+            }
+	    	
+            _logger.info("called asynch method. sleeping for 20 secs");
+            try {
+	            Thread.sleep(20000);
+            } catch (InterruptedException e) {
+	            // TODO Auto-generated catch block
+	            e.printStackTrace();
+            }
+            
+	    }
+	    
 	    
 	    public void testRecognizeFileS4EPGrammarAsynchWithCancel() {
 	    	System.out.println("Starting File EP Test ...");	

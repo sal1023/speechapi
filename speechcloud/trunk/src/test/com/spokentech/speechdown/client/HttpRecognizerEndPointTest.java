@@ -23,6 +23,7 @@ import javax.sound.sampled.AudioFileFormat.Type;
 import org.apache.log4j.Logger;
 
 import com.spokentech.speechdown.client.endpoint.AudioStreamEndPointer;
+import com.spokentech.speechdown.client.endpoint.EndPointer;
 import com.spokentech.speechdown.client.endpoint.ExternalTriggerEndPointer;
 import com.spokentech.speechdown.client.endpoint.FileS4EndPointingInputStream2;
 import com.spokentech.speechdown.client.endpoint.S4EndPointer;
@@ -30,8 +31,8 @@ import com.spokentech.speechdown.client.endpoint.StreamEndPointingInputStream;
 import com.spokentech.speechdown.client.endpoint.JavaSoundStreamS4EndPointingInputStream;
 import com.spokentech.speechdown.client.endpoint.StreamEndPointingInputStream;
 import com.spokentech.speechdown.client.exceptions.HttpRecognizerException;
-import com.spokentech.speechdown.client.util.AFormat;
 import com.spokentech.speechdown.client.util.FormatUtils;
+import com.spokentech.speechdown.common.AFormat;
 import com.spokentech.speechdown.common.RecognitionResult;
 import com.spokentech.speechdown.common.SpeechEventListener;
 
@@ -64,6 +65,8 @@ public class HttpRecognizerEndPointTest extends TestCase {
             public void recognitionComplete(RecognitionResult rr) {
 	            // TODO Auto-generated method stub
 	            _logger.info("recognition complete: "+rr.getText());
+	            if (rr.isCflag())
+	            	System.out.println("confidence is "+rr.getConfidence());
             }
 	
 		}
@@ -74,9 +77,10 @@ public class HttpRecognizerEndPointTest extends TestCase {
 	    
 	   
 	    
-	    private static String service = "http://ec2-67-202-43-190.compute-1.amazonaws.com/speechcloud/SpeechUploadServlet";    
-	    //private static String service = "http://localhost:8090/speechcloud/SpeechUploadServlet";    
-	    //private static String service = "http://spokentech.net/speechcloud/SpeechUploadServlet";   
+	    //private static String service = "http://ec2-174-129-20-250.compute-1.amazonaws.com/speechcloud/SpeechUploadServlet";    
+	    private static String service = "http://localhost:8090/speechcloud/SpeechUploadServlet";    
+	    //private static String service = "http://spokentech.net:/speechcloud/SpeechUploadServlet";   
+	    
 	    private static AudioFormat desiredFormat;
 	    private static int sampleRate = 8000;
 	    private static boolean signed = true;
@@ -90,6 +94,7 @@ public class HttpRecognizerEndPointTest extends TestCase {
 	    
 		private String grammar = "file:///work/speechcloud/etc/grammar/example.gram";    
 		URL grammarUrl = null;
+		URL grammarUrl2 = null;
 		HttpRecognizerJavaSound recog;
 		
 		File soundFile1 = new File("c:/work/speechcloud/etc/prompts/lookupsports.wav");	 	
@@ -251,7 +256,7 @@ public class HttpRecognizerEndPointTest extends TestCase {
             
 	    	RecognitionResult r = null;
 	    	boolean lmflg = true;
-	    	boolean batchFlag = false;
+	    	boolean batchFlag = true;
 	        try {	            
 	            r = recog.recognize(grammarUrl,  epStream,  lmflg,  batchFlag, timeout) ;
             } catch (InstantiationException e) {
@@ -263,7 +268,8 @@ public class HttpRecognizerEndPointTest extends TestCase {
             
             }
             System.out.println("ENDPOINT TEST: lm  result: "+r.getText());
-	    	
+            if (r.isCflag())
+            	System.out.println("confidence is "+r.getConfidence());
 	    }
 
 	    
@@ -452,7 +458,7 @@ public class HttpRecognizerEndPointTest extends TestCase {
 	    	
 	    	Listener l = new Listener();
 	    	boolean lmflg = false;
-	    	boolean batchFlag = false;
+	    	boolean batchFlag = true;
 	    	String id;
 	        try {	            
 	            id = recog.recognizeAsynch(grammarUrl,  epStream,  lmflg,  batchFlag, timeout,l) ;
@@ -482,6 +488,128 @@ public class HttpRecognizerEndPointTest extends TestCase {
             ep.triggerEnd();
     	
 	    }
+	    
+	    
+	    public void testBasicStreamInputExternalTriggerEPLMSynch() {
+	    	    	
+	    	System.out.println("Starting EP extrernal trigger  Test ...");
+
+	    	// get an audio stream for the test from a file
+	    	AudioInputStream	audioInputStream = null;
+	    	Type type = null;
+	    	try {
+	    		audioInputStream = AudioSystem.getAudioInputStream(soundFile2);
+	    		type = AudioSystem.getAudioFileFormat(soundFile2).getType();
+	    	} catch (Exception e) {
+	    		e.printStackTrace();
+	    	}
+	    	
+    
+	        AudioFormat f = audioInputStream.getFormat();
+	        AFormat format = FormatUtils.covertToNeutral(f);
+	       
+	    	long timeout = 10000;
+	    	
+	    	
+	    	long t1 = System.nanoTime();
+	    	ExternalTriggerEndPointer ep = new ExternalTriggerEndPointer();
+	    	StreamEndPointingInputStream epStream = new StreamEndPointingInputStream(ep);
+	    	epStream.setMimeType(wav);
+	    	epStream.setupStream(audioInputStream,format);
+	    	long t2 = System.nanoTime();
+	    	long t3 = (t2-t1)/1000000;
+	        _logger.info("took "+t3+ "ms. to create x trig endpointing stream");
+	    	
+	        Thread t = new Thread(new Triggerer(ep));
+	        t.start();
+	        
+	    	Listener l = new Listener();
+	    	boolean lmflg = true;
+	    	boolean batchFlag = true;
+	    	RecognitionResult result = null;
+	        try {	            
+	            result = recog.recognize(grammarUrl2,  epStream,  lmflg,  batchFlag, timeout,l) ;
+            } catch (InstantiationException e) {
+	            // TODO Auto-generated catch block
+	            e.printStackTrace();
+            } catch (IOException e) {
+	            // TODO Auto-generated catch block
+	            e.printStackTrace();
+            }
+	    	
+
+            _logger.info("recognition complete: "+result.getText());
+            if (result.isCflag())
+            	System.out.println("confidence is "+result.getConfidence());
+    	
+	    }
+	    
+
+	    public void testBasicStreamInputExternalTriggerEPLM() {
+	    
+	    	
+	    	System.out.println("Starting EP extrernal trigger  Test ...");
+	       	recog.enableAsynchMode(2);
+		    
+	    	// get an audio stream for the test from a file
+	    	AudioInputStream	audioInputStream = null;
+	    	Type type = null;
+	    	try {
+	    		audioInputStream = AudioSystem.getAudioInputStream(soundFile2);
+	    		type = AudioSystem.getAudioFileFormat(soundFile2).getType();
+	    	} catch (Exception e) {
+	    		e.printStackTrace();
+	    	}
+	    	
+    
+	        AudioFormat f = audioInputStream.getFormat();
+	        AFormat format = FormatUtils.covertToNeutral(f);
+	       
+	    	long timeout = 10000;
+	    	
+	    	
+	    	long t1 = System.nanoTime();
+	    	ExternalTriggerEndPointer ep = new ExternalTriggerEndPointer();
+	    	StreamEndPointingInputStream epStream = new StreamEndPointingInputStream(ep);
+	    	epStream.setMimeType(wav);
+	    	epStream.setupStream(audioInputStream,format);
+	    	long t2 = System.nanoTime();
+	    	long t3 = (t2-t1)/1000000;
+	        _logger.info("took "+t3+ "ms. to create x trig endpointing stream");
+	    	
+	    	Listener l = new Listener();
+	    	boolean lmflg = true;
+	    	boolean batchFlag = true;
+	    	String id;
+	        try {	            
+	            id = recog.recognizeAsynch(grammarUrl2,  epStream,  lmflg,  batchFlag, timeout,l) ;
+            } catch (InstantiationException e) {
+	            // TODO Auto-generated catch block
+	            e.printStackTrace();
+            } catch (IOException e) {
+	            // TODO Auto-generated catch block
+	            e.printStackTrace();
+            } catch (HttpRecognizerException e) {
+	            // TODO Auto-generated catch block
+	            e.printStackTrace();
+            }
+	    	
+            ep.triggerStart();
+           //while ( ep.triggerStart() <0) {
+        	//   _logger.info("not setup yet");
+           //}
+            
+            _logger.info("called asynch method. sleeping for 2 secs");
+            try {
+	            Thread.sleep(5000);
+            } catch (InterruptedException e) {
+	            // TODO Auto-generated catch block
+	            e.printStackTrace();
+            }
+            ep.triggerEnd();
+    	
+	    }
+
 
 
   public void testExternalTriggerWithoutEndTrigger() {
@@ -545,6 +673,35 @@ public class HttpRecognizerEndPointTest extends TestCase {
             //ep.triggerEnd();
     	    
 	    }
+  
+  		private static class Triggerer implements Runnable {
+  			
+  
+  			public Triggerer(ExternalTriggerEndPointer ep) {
+	            super();
+	            this.ep = ep;
+            }
+
+  			ExternalTriggerEndPointer ep = null;
+  			
+  			public void run() {
+  				
+  				ep.triggerStart();
+     	
+                  //Pause for 5 seconds
+                  try {
+	                Thread.sleep(5000);
+                } catch (InterruptedException e) {
+	                // TODO Auto-generated catch block
+	                e.printStackTrace();
+                }
+                
+                ep.triggerEnd();
+
+
+  			}
+		}
+
 	    
 }
 

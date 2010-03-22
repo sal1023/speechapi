@@ -93,7 +93,19 @@ public class RecognitionResultJsapi extends RecognitionResult{
         setNewResult(rawResult,ruleGrammar);
     }
     
-    public void setNewResult(Result r, RuleGrammar ruleGrammar) {
+    public RecognitionResultJsapi(String textResult, double confidence) {
+    	cflag = true;
+    	this.confidence = confidence;
+    	noGrammar = true;
+        _text = textResult;
+        _ruleGrammar = null;
+        commonInit();
+    	
+    }
+
+
+
+	public void setNewResult(Result r, RuleGrammar ruleGrammar) {
         _rawResult = r;
         _ruleGrammar =ruleGrammar;
         noGrammar = false;

@@ -3,6 +3,8 @@ package com.spokentech.speechdown.client.util;
 import javax.media.Format;
 import javax.sound.sampled.AudioFormat;
 
+import com.spokentech.speechdown.common.AFormat;
+
 public class FormatUtils {
 
 	

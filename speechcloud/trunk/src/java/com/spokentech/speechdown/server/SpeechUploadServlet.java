@@ -38,6 +38,7 @@ import org.apache.log4j.Logger;
 import org.springframework.context.ApplicationContext;
 import org.springframework.web.context.support.WebApplicationContextUtils;
 
+import com.spokentech.speechdown.common.AFormat;
 import com.spokentech.speechdown.common.RecognitionResult;
 
 import com.spokentech.speechdown.common.HttpCommandFields;
@@ -55,6 +56,15 @@ public class SpeechUploadServlet extends HttpServlet {
 
 	private static Logger _logger = Logger.getLogger(SpeechUploadServlet.class);
 
+	//Format default values (used when sent separately as form fields)
+    static final int DEFAULT_SAMPLE_RATE = 8000;
+    static final boolean DEAFUALT_BIG_ENDIAN = true;
+    static final int DEFAULT_BYTESPERVALUE = 2;
+    static final String DEFAULT_ENCODING = AudioFormat.Encoding.PCM_SIGNED.toString();
+    static final int DEFAULT_FRAMESIZEINBYTES = 2;
+    static final int DEFAULT_FRAMERATE = 8000;
+    static final boolean DEFAULT_SIGNED = true;
+    static final int DEFAULT_CHANNELS = 1;
 
 	private DiskFileItemFactory factory;
 	private File destinationDir;
@@ -152,16 +162,19 @@ public class SpeechUploadServlet extends HttpServlet {
 			return;
 		}
 		
-	    //set the audio format parameters to default values
-	    int sampleRate = 8000;
-	    boolean bigEndian = true;
+
+
+		
 	    boolean lmFlag = false;
 	    boolean continuous = false;
 	    boolean doEndpointing = false;
 	    boolean cmnBatch = false;
-
-	    int bytesPerValue = 2;
-	    AudioFormat.Encoding encoding = AudioFormat.Encoding.PCM_SIGNED;
+	    
+		//set the audio format parameters to default values
+		boolean formatSpecified = false;
+	    AFormat af = new AFormat(DEFAULT_ENCODING, DEFAULT_SAMPLE_RATE, DEFAULT_BYTESPERVALUE*8,  DEFAULT_CHANNELS,  DEAFUALT_BIG_ENDIAN,
+	    		DEFAULT_SIGNED,  DEFAULT_FRAMESIZEINBYTES,  DEFAULT_FRAMERATE);
+	    
 
 		// Create a new file upload handler
 		ServletFileUpload upload = new ServletFileUpload();
@@ -183,22 +196,19 @@ public class SpeechUploadServlet extends HttpServlet {
 			    	String value = Streams.asString(stream);
 			        _logger.debug("Form field " + name + " with value " + value + " detected.");
 			        try { 
+			        	//form fields used to specify format, if not specified using format data in attachment header
 				        if (name.equals(HttpCommandFields.SAMPLE_RATE_FIELD_NAME)) {
-				        	sampleRate = Integer.parseInt(value);
-			        	} else if (name.equals(HttpCommandFields.CONTINUOUS_FLAG)) {
-				        	continuous  = Boolean.parseBoolean(value);
-			        	} else if (name.equals(HttpCommandFields.CMN_BATCH)) {
-				        	cmnBatch  = Boolean.parseBoolean(value);
-			        	} else if (name.equals(HttpCommandFields.ENDPOINTING_FLAG)) {
-				        	doEndpointing  = Boolean.parseBoolean(value);
-				        } else if (name.equals(HttpCommandFields.LANGUAGE_MODEL_FLAG)) {
-				        	lmFlag = Boolean.parseBoolean(value);
+				        	af.setSampleRate((double)Integer.parseInt(value));
+		        		    formatSpecified = true;
 				        } else if (name.equals(HttpCommandFields.BIG_ENDIAN_FIELD_NAME)) {
-				        	bigEndian = Boolean.parseBoolean(value);
+				        	af.setBigEndian( Boolean.parseBoolean(value));
+		        		    formatSpecified = true;
 			        	} else if (name.equals(HttpCommandFields.BYTES_PER_VALUE_FIELD_NAME)) {
-				        	bytesPerValue = Integer.parseInt(value);
+				        	af.setSampleSizeInBits( Integer.parseInt(value)*8);
+		        		    formatSpecified = true;
 		        		} else if (name.equals(HttpCommandFields.ENCODING_FIELD_NAME)) {
-		        			if (value.equals(AudioFormat.Encoding.ALAW.toString())) {
+		        		    formatSpecified = true;
+		        			/*if (value.equals(AudioFormat.Encoding.ALAW.toString())) {
 		        				encoding = AudioFormat.Encoding.ALAW;
 		        			} else if (value.equals(AudioFormat.Encoding.ULAW.toString())) {
 		        				encoding = AudioFormat.Encoding.ULAW;
@@ -208,7 +218,17 @@ public class SpeechUploadServlet extends HttpServlet {
 		        				encoding = AudioFormat.Encoding.PCM_UNSIGNED;
 		        			} else {
 		        				_logger.warn("Unsupported encoding: "+value);
-		        			}
+		        			}*/
+		        			af.setEncoding(value);
+		        	    //Other form feilds
+			        	} else if (name.equals(HttpCommandFields.CONTINUOUS_FLAG)) {
+				        	continuous  = Boolean.parseBoolean(value);
+			        	} else if (name.equals(HttpCommandFields.CMN_BATCH)) {
+				        	cmnBatch  = Boolean.parseBoolean(value);
+			        	} else if (name.equals(HttpCommandFields.ENDPOINTING_FLAG)) {
+				        	doEndpointing  = Boolean.parseBoolean(value);
+				        } else if (name.equals(HttpCommandFields.LANGUAGE_MODEL_FLAG)) {
+				        	lmFlag = Boolean.parseBoolean(value);
 				        } else {
 				        	_logger.warn("Unrecognized field "+name+ " = "+value);
 				        }
@@ -253,7 +273,11 @@ public class SpeechUploadServlet extends HttpServlet {
 				    			hr.setDate(new Date());
 			    			    ServiceLogger.logHttpRequest(hr);
 			    			}
-				    		_logger.debug("recognizing audio!  Sample rate= "+sampleRate+", bigEndian= "+ bigEndian+", bytes per value= "+bytesPerValue+", encoding= "+encoding.toString());
+			    			if (formatSpecified) {
+				    		   _logger.debug("recognizing audio!  Sample rate= "+af.getSampleRate()+", bigEndian= "+ af.isBigEndian()+", bytes per value= "+af.getSampleSizeInBits()+", encoding= "+af.getEncoding());
+			    			} else {			    				
+			    				af = null;
+			    			}
 				    		_logger.debug("continuous: "+continuous+" lmflag: "+lmFlag+ " endpointing: "+doEndpointing);
 				    		if (continuous) {
 						        
@@ -263,7 +287,7 @@ public class SpeechUploadServlet extends HttpServlet {
 				    			//response.setHeader("Content-Disposition", "attachment; filename=results.txt'");			
 				    			response.setHeader("Transfer-coding","chunked");
 					    		if (lmFlag) {
-					    			textResult = recognizerService.Transcribe(audio,contentType,sampleRate,bigEndian,bytesPerValue,encoding,out,response,hr);
+					    			textResult = recognizerService.Transcribe(audio,contentType,af,out,response,hr);
 					    		} else {
 							        _logger.debug("recognition result is null");
 								    out.println("recognition result is null");
@@ -276,9 +300,9 @@ public class SpeechUploadServlet extends HttpServlet {
 				    			long stop = System.currentTimeMillis();
 				    			_logger.info("Calling recognizer Service" + stop +" ("+(stop-start) +")" );
 					    		if (lmFlag) {
-					    			result = recognizerService.Recognize(audio,contentType,sampleRate,bigEndian,bytesPerValue,encoding,doEndpointing,cmnBatch,hr);
+					    			result = recognizerService.Recognize(audio,contentType,af,doEndpointing,cmnBatch,hr);
 					    		} else {
-					    	        result = recognizerService.Recognize(audio, grammarString,contentType,sampleRate,bigEndian,bytesPerValue,encoding,doEndpointing,cmnBatch,hr);
+					    	        result = recognizerService.Recognize(audio, grammarString,contentType,af,doEndpointing,cmnBatch,hr);
 
 					    	    }
 
@@ -287,11 +311,11 @@ public class SpeechUploadServlet extends HttpServlet {
 								PrintWriter out = response.getWriter();	
 								if (result == null) {
 									textResult = null;
-									_logger.debug("recognition result is null");
+									_logger.info("recognition result is null");
 									out.println("recognition result is null");
 								}else {
 									textResult = result.toString();
-									_logger.debug(textResult);
+									_logger.info(textResult);
 									out.println(textResult);
 								}
 					    		long stop2 =  System.currentTimeMillis();

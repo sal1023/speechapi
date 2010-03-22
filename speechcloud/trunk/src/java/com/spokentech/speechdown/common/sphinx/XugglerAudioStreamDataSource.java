@@ -16,16 +16,11 @@ import edu.cmu.sphinx.frontend.util.AudioFileProcessListener;
 import edu.cmu.sphinx.frontend.util.DataUtil;
 import edu.cmu.sphinx.util.props.*;
 
-import javax.sound.sampled.AudioFormat;
-import javax.sound.sampled.AudioInputStream;
-import javax.sound.sampled.AudioSystem;
-import javax.sound.sampled.UnsupportedAudioFileException;
-
 import java.io.File;
+
 import java.io.IOException;
 import java.io.InputStream;
-import java.net.MalformedURLException;
-import java.net.URL;
+
 import java.util.ArrayList;
 import java.util.List;
 import java.util.logging.Handler;
@@ -35,7 +30,17 @@ import java.util.logging.Logger;
 import com.spokentech.speechdown.common.AFormat;
 import com.spokentech.speechdown.server.recog.StreamDataSource;
 
-import java.io.PipedInputStream;
+import com.xuggle.xuggler.IAudioResampler;
+import com.xuggle.xuggler.IAudioSamples;
+import com.xuggle.xuggler.ICodec;
+import com.xuggle.xuggler.IContainer;
+import com.xuggle.xuggler.IError;
+
+import com.xuggle.xuggler.IPacket;
+
+import com.xuggle.xuggler.IStream;
+import com.xuggle.xuggler.IStreamCoder;
+
 /**
  * An AudioFileDataSource generates a stream of audio data from a given audion file. All required information concerning
  * the audio format are read directly from the file . One would need to call {@link #setAudioFile(java.io.File,String)}
@@ -48,8 +53,8 @@ import java.io.PipedInputStream;
  * @author Holger Brandl
  */
 
-public class AudioStreamDataSource extends BaseDataProcessor implements StreamDataSource {
-	private static Logger _logger = Logger.getLogger(AudioStreamDataSource.class.getName());
+public class XugglerAudioStreamDataSource extends BaseDataProcessor implements StreamDataSource {
+	private static Logger _logger = Logger.getLogger(XugglerAudioStreamDataSource.class.getName());
     /** SphinxProperty for the number of bytes to read from the InputStream each time. */
     @S4Integer(defaultValue = 1024)
     public static final String PROP_BYTES_PER_READ = "bytesPerRead";
@@ -59,6 +64,13 @@ public class AudioStreamDataSource extends BaseDataProcessor implements StreamDa
     @S4ComponentList(type = Configurable.class)
     public static final String AUDIO_FILE_LISTENERS = "audioFileListners";
     protected List<AudioFileProcessListener> fileListeners = new ArrayList<AudioFileProcessListener>();
+
+	//Xuggler
+    private IAudioResampler mASampler = null;
+	private IPacket packet;
+	
+    int audioStreamId = -1;
+    IStreamCoder audioCoder = null;
 
 
     protected InputStream dataStream;
@@ -73,12 +85,14 @@ public class AudioStreamDataSource extends BaseDataProcessor implements StreamDa
     private boolean utteranceStarted = false;
     private long totalValues = 0;
 
-    long firstSample = totalValuesRead;
-    
-    
     private File curAudioFile;
     
+    int TargetRate = 8000;
+    
     //private BufferedWriter out;
+    
+    IContainer container ;
+    
 
     @Override
     public void newProperties(PropertySheet ps) throws PropertyException {
@@ -101,6 +115,11 @@ public class AudioStreamDataSource extends BaseDataProcessor implements StreamDa
     @Override
     public void initialize() {
         super.initialize();
+        
+        
+        // Create a Xuggler container object
+        container = IContainer.make();
+        packet = IPacket.make();     
 
         // reset all stream tags
         streamEndReached = false;
@@ -120,105 +139,9 @@ public class AudioStreamDataSource extends BaseDataProcessor implements StreamDa
          for ( int index = 0; index < handlers.length; index++ ) {
            handlers[index].setLevel( Level.INFO );
          }
-
-            //try {
-            //    out = new BufferedWriter(new FileWriter("c:/temp/"+System.currentTimeMillis()));
-            //} catch (IOException e) {
-            //    // TODO Auto-generated catch block
-            //    e.printStackTrace();
-            //}
-            //        out.close();
-
     }
 
 
-    /**
-     * Sets the audio file from which the data-stream will be generated of.
-     *
-     * @param audioFile  The location of the audio file to use
-     * @param streamName The name of the InputStream. if <code>null</code> the complete path of the audio file will be
-     *                   uses as stream name.
-     */
-    public void setAudioFile(File audioFile, String streamName) {
-        try {
-            setAudioFile(audioFile.toURI().toURL(), streamName);
-        } catch (MalformedURLException e) {
-            e.printStackTrace();
-        }
-    }
-
-
-    /**
-     * Sets the audio file from which the data-stream will be generated of.
-     *
-     * @param audioFileURL The location of the audio file to use
-     * @param streamName   The name of the InputStream. if <code>null</code> the complete path of the audio file will be
-     *                     uses as stream name.
-     */
-    public void setAudioFile(URL audioFileURL, String streamName) {
-        // first close the last stream if there's such a one
-        if (dataStream != null) {
-            try {
-                dataStream.close();
-            } catch (IOException e) {
-                e.printStackTrace();
-            }
-
-            dataStream = null;
-        }
-
-        assert audioFileURL != null;
-        if (streamName != null)
-            streamName = audioFileURL.getPath();
-
-        AudioInputStream audioStream = null;
-        try {
-            audioStream = AudioSystem.getAudioInputStream(audioFileURL);
-        } catch (UnsupportedAudioFileException e) {
-            System.err.println("Audio file format not supported: " + e);
-            e.printStackTrace();
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
-
-        curAudioFile = new File(audioFileURL.getFile());
-        for (AudioFileProcessListener fileListener : fileListeners)
-            fileListener.audioFileProcStarted(curAudioFile);
-
-        setInputStream(audioStream, streamName);
-    }
-    
-    /**
-     * Sets the InputStream from which this StreamDataSource reads.
-     *
-     * @param inputStream the InputStream from which audio data comes
-     * @param streamName  the name of the InputStream
-     *  @deprecated
-     */
-   public void setInputStream(PipedInputStream inputStream, String streamName) {
-        dataStream = inputStream;
-        streamEndReached = false;
-        utteranceEndSent = false;
-        utteranceStarted = false;
-        totalValuesRead = 0;
-
-        _logger.fine("inputstream "+inputStream);
-
-        //AudioFormat format = inputStream.getFormat();
-        this.sampleRate = 8000; 
-        this.bigEndian = false;
-        this.bytesPerValue = 2;
-
-        // test whether all files in the stream have the same format
-        //if (encoding.equals(AudioFormat.Encoding.PCM_SIGNED))
-            signedData = true;
-        //else if (encoding.equals(AudioFormat.Encoding.PCM_UNSIGNED))
-         //   signedData = false;
-        //else
-       //     throw new RuntimeException("used file encoding is not supported");
-
-        totalValuesRead = 0;
-    }
 
 
     /**
@@ -233,34 +156,68 @@ public class AudioStreamDataSource extends BaseDataProcessor implements StreamDa
         utteranceEndSent = false;
         utteranceStarted = false;
         totalValues = 0;
+        
+        
+        if(container.open(inputStream, null) < 0)
+           throw new IllegalArgumentException("could not open input stream");
+           
+        // query how many streams the call to open found
+        int numStreams = container.getNumStreams();
+        
+        // and iterate through the streams to find the first audio stream
+        audioStreamId = -1;
+        audioCoder = null; 
+        for(int i = 0; i < numStreams; i++) {
+          // Find the stream object
+          IStream stream = container.getStream(i);
+          // Get the pre-configured decoder that can decode this stream;
+          IStreamCoder coder = stream.getStreamCoder();
+          System.out.println("CODER: "+coder.toString());
+        
+          if (coder.getCodecType() == ICodec.Type.CODEC_TYPE_AUDIO) {
+            audioStreamId = i;
+            audioCoder = coder;
+            break;
+          }
+        }
+        
+        if (audioStreamId == -1)
+          throw new RuntimeException("could not find audio stream in container");
+        
+        /*
+         * Now we have found the audio stream in this file.  Let's open up our decoder so it can
+         * do work.
+         */
+        if (audioCoder.open() < 0)
+          throw new RuntimeException("could not open audio decoder for container ");
+        
+        if (audioCoder.getSampleRate() != TargetRate) {
+          mASampler = IAudioResampler.make(
+              1, audioCoder.getChannels(),
+              TargetRate, audioCoder.getSampleRate());
+          sampleRate = mASampler.getOutputRate();
+          if (mASampler == null) {
+            throw new RuntimeException("could not open audio resampler for stream");
+          }
+        } else {
+          sampleRate = TargetRate;
+          mASampler = null;
+        }
 
-        if (!(inputStream instanceof AudioInputStream)) 
-            throw new RuntimeException("Not an  audio input stream");
 
-        AudioFormat format = ((AudioInputStream) inputStream).getFormat();
-        sampleRate = (int) format.getSampleRate();
-        bigEndian = format.isBigEndian();
-
-        String s = format.toString();
-        logger.fine("input format is " + s);
-
-        if (format.getSampleSizeInBits() % 8 != 0)
-            throw new Error("StreamDataSource: bits per sample must be a multiple of 8.");
-        bytesPerValue = format.getSampleSizeInBits() / 8;
-
-        // test wether all files in the stream have the same format
-
-        AudioFormat.Encoding encoding = format.getEncoding();
-        if (encoding.equals(AudioFormat.Encoding.PCM_SIGNED))
-            signedData = true;
-        else if (encoding.equals(AudioFormat.Encoding.PCM_UNSIGNED))
-            signedData = false;
-        else
-            throw new RuntimeException("used file encoding is not supported");
-
+        bigEndian = false;
+        bytesPerValue = 2;
+        signedData = true;
+ 
         totalValuesRead = 0;
     }
 
+    
+  
+
+
+
+    
     
 
 
@@ -276,19 +233,70 @@ public class AudioStreamDataSource extends BaseDataProcessor implements StreamDa
         utteranceEndSent = false;
         utteranceStarted = false;
         totalValues = 0;
-
-        //int sampleRate, boolean bigEndian, int bytesPerValue, String encoding
-        _logger.fine("inputstream "+inputStream);
-
-        //AudioFormat format = inputStream.getFormat();
-        this.sampleRate = (int) format.getSampleRate(); 
-        this.bigEndian = format.isBigEndian();
-        this.bytesPerValue = format.getSampleSizeInBits()/8;
-
-        signedData =format.isSigned();
         
- 
+        
+        int cRetCode = container.open(inputStream, null);
+        	
+            if (cRetCode != 0) {
+                IError err = IError.make(cRetCode);
+                System.out.println("IContainer.open() returned an error: "
+                        + err.getType() + ", " + err.getDescription());
+                System.out.println(err.toString());
+                //return;
+            }
+          // throw new IllegalArgumentException("could not open input stream");
+           
+        // query how many streams the call to open found
+        int numStreams = container.getNumStreams();
+        
+        System.out.println("Number of Streams: "+numStreams);
+        // and iterate through the streams to find the first audio stream
+        audioStreamId = -1;
+        audioCoder = null; 
+        for(int i = 0; i < numStreams; i++) {
+          // Find the stream object
+          IStream stream = container.getStream(i);
+          // Get the pre-configured decoder that can decode this stream;
+          IStreamCoder coder = stream.getStreamCoder();
+          System.out.println("CODER["+i+"]: "+coder.toString() + "Type is:" +coder.getCodecType());
+        
+          if (coder.getCodecType() == ICodec.Type.CODEC_TYPE_AUDIO) {
+            audioStreamId = i;
+            audioCoder = coder;
+            break;
+          }
+        }
+        
+        if (audioStreamId == -1)
+          throw new RuntimeException("could not find audio stream in container");
+        
+        /*
+         * Now we have found the audio stream in this file.  Let's open up our decoder so it can
+         * do work.
+         */
+        if (audioCoder.open() < 0)
+          throw new RuntimeException("could not open audio decoder for container ");
+        
+        if (audioCoder.getSampleRate() != TargetRate) {
+          mASampler = IAudioResampler.make(
+              1, audioCoder.getChannels(),
+              TargetRate, audioCoder.getSampleRate());
+          sampleRate = mASampler.getOutputRate();
+          if (mASampler == null) {
+            throw new RuntimeException("could not open audio resampler for stream");
+          }
+        } else {
+          mASampler = null;
+          sampleRate = TargetRate;
+        }
 
+
+              
+        bigEndian = false;
+        bytesPerValue = 2;
+        signedData = true;
+ 
+ 
         totalValuesRead = 0;
     }
     
@@ -322,7 +330,7 @@ public class AudioStreamDataSource extends BaseDataProcessor implements StreamDa
             } else {
                 if (dataStream != null) {
                 	try {
-                       output = readNextFrame();
+                       output = readNextFrame2();
                 	} catch (Exception e) {
                   		//e.printStackTrace();
                 		_logger.fine("Exception reading audio! "+ e.getMessage());
@@ -333,7 +341,7 @@ public class AudioStreamDataSource extends BaseDataProcessor implements StreamDa
                 			//output being null, should just trigger sending the data end signal.  thats what we want.
                 			output = null;
                 	}
-                    _logger.fine("Getting the next frame");
+                    _logger.fine("Got the next frame ");
                     if (output == null) {
                         if (!utteranceEndSent) {
                             output = createDataEndSignal();
@@ -350,16 +358,134 @@ public class AudioStreamDataSource extends BaseDataProcessor implements StreamDa
 
 
     private DataEndSignal createDataEndSignal() {
-        //if (!(this instanceof ConcatAudioFileDataSource))
-        //    for (AudioFileProcessListener fileListener : fileListeners)
-        //        fileListener.audioFileProcFinished(curAudioFile);
-
     	long d = getDuration();
     	_logger.fine("********** End signal duration: "+d);
         return new DataEndSignal(d);
     }
 
 
+    
+
+    /**
+     * Returns the next Data from the input stream, or null if there is none available
+     *
+     * @return a Data or null
+     * @throws java.io.IOException
+     */
+    private Data readNextFrame2() throws DataProcessingException {      	
+    /*
+     * Now, we start walking through the container looking at each packet.
+     */
+    	
+
+
+    while (container.readNextPacket(packet) >= 0) {
+      /*
+       * Now we have a packet, let's see if it belongs to our audio stream
+       */
+      if (packet.getStreamIndex() == audioStreamId) {
+        /*
+         * We allocate a set of samples with the same number of channels as the
+         * coder tells us is in this buffer.
+         * 
+         * We also pass in a buffer size (1024 in our example), although Xuggler
+         * will probably allocate more space than just the 1024 (it's not important why).
+         */
+        IAudioSamples samples = IAudioSamples.make(1024, audioCoder.getChannels());
+        IAudioSamples reSamples = IAudioSamples.make(1024, audioCoder.getChannels());
+        
+        /*
+         * A packet can actually contain multiple sets of samples (or frames of samples
+         * in audio-decoding speak).  So, we may need to call decode audio multiple
+         * times at different offsets in the packet's data.  We capture that here.
+         */
+        int offset = 0;
+        
+        /*
+         * Keep going until we've processed all data
+         */
+        _logger.fine(">> PacketSize "+packet.getSize());
+        while(offset < packet.getSize()) {
+          int bytesDecoded = audioCoder.decodeAudio(samples, packet, offset);
+
+          if (bytesDecoded < 0)
+            throw new RuntimeException("got error decoding audio in:");
+          offset += bytesDecoded;
+          _logger.fine(">> "+bytesDecoded +"  "+offset+ " "+samples.getNumSamples());
+          /*
+           * Some decoder will consume data in a packet, but will not be able to construct
+           * a full set of samples yet.  Therefore you should always check if you
+           * got a complete set of samples from the decoder
+           */
+          
+          int bytesResampled=0;
+          if (mASampler != null && samples.getNumSamples() >0) {
+        	  bytesResampled = mASampler.resample(reSamples, samples, samples.getNumSamples());
+          }  else {
+            reSamples = samples;
+          }
+          _logger.fine(">> Resamples"+bytesResampled +"  "+offset +" "+reSamples.getNumSamples());
+
+        }
+
+        // get a double array object
+
+        
+        byte[] rawBytes = reSamples.getData().getByteArray(0, reSamples.getSize());
+        // turn it into an Data object
+        double[] doubleData;
+        if (bigEndian) {
+            doubleData = DataUtil.bytesToValues(rawBytes, 0, rawBytes.length, bytesPerValue, signedData);
+        } else {
+            doubleData = DataUtil.littleEndianBytesToValues(rawBytes, 0, rawBytes.length, bytesPerValue, signedData);
+        }
+        
+        //double[] doubleData = new double[reSamples.getSize()];
+        //reSamples.getData().get(0, doubleData, 0, (int)reSamples.getNumSamples());
+        //_logger.fine(">> CALLED GETDDATA");
+
+
+        if (doubleData != null) {
+           _logger.fine(">>writing double data,  "+ doubleData.length+ " values"+doubleData[0]+ " "+doubleData[doubleData.length-1]);
+        } else { 
+        	_logger.fine(">>doubleData was null");
+        }
+        
+
+        long collectTime = System.currentTimeMillis();
+        return new DoubleData(doubleData, sampleRate, collectTime, 0);
+        
+      } else {
+        /*
+         * This packet isn't part of our audio stream, so we just silently drop it.
+         */
+        do {} while(false);
+      }
+            
+    }
+
+    return null;
+
+  }
+    
+    private void cleanUp() {
+	    /*
+	     * Technically since we're exiting anyway, these will be cleaned up by 
+	     * the garbage collector... but because we're nice people and want
+	     * to be invited places for Christmas, we're going to show how to clean up.
+	     */
+	    
+	    if (audioCoder != null) {
+	      audioCoder.close();
+	      audioCoder = null;
+	    }
+	    if (container !=null) {
+	      container.close();
+	      container = null;
+	    }
+    }
+    
+    
     /**
      * Returns the next Data from the input stream, or null if there is none available
      *
@@ -433,6 +559,7 @@ public class AudioStreamDataSource extends BaseDataProcessor implements StreamDa
     public void closeDataStream() throws IOException {
     	 _logger.fine("Closing data stream");
         streamEndReached = true;
+        cleanUp();
         //if (dataStream != null) {
         //    dataStream.close();
         //}
@@ -482,8 +609,6 @@ public class AudioStreamDataSource extends BaseDataProcessor implements StreamDa
 
 	    return (1000*totalValues)/sampleRate;
     }
-
-
 
 
 }
