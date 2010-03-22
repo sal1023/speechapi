@@ -78,7 +78,7 @@ public class SpeechEventListenerDecorator implements SpeechEventListener {
 
 	@Override
     public void recognitionComplete(RecognitionResult rr) {
-        _logger.fine("recognition complete()");
+        _logger.fine("***recognition complete()");
         if (_speechEventListener != null) {
             _speechEventListener.recognitionComplete(rr);
         }

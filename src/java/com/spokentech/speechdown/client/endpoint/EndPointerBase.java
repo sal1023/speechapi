@@ -7,7 +7,7 @@ import java.lang.Thread.State;
 
 import org.apache.log4j.Logger;
 
-import com.spokentech.speechdown.client.util.AFormat;
+import com.spokentech.speechdown.common.AFormat;
 import com.spokentech.speechdown.common.SpeechEventListener;
 
 public abstract class EndPointerBase implements EndPointer, Runnable{
@@ -85,6 +85,7 @@ public abstract class EndPointerBase implements EndPointer, Runnable{
 
 	public void triggerEnd() {
     	speechEnded=true;
+    	//closeOutputDataStream();
     	if( listener!= null)
     	    listener.speechEnded();
     	listener=null;
@@ -103,6 +104,21 @@ public abstract class EndPointerBase implements EndPointer, Runnable{
     	speechEnded = false;
     }
 
+    
+	protected void closeOutputDataStream() {
+        streamEndReached = true;
+        _logger.debug("Closing output stream");
+        if (ostream != null) {
+            _logger.debug("Not null output stream");
+        	try {
+                ostream.close();
+            } catch (IOException e) {
+                // TODO Auto-generated catch block
+                e.printStackTrace();
+            }
+        }
+    }
+    
 	protected void closeInputDataStream() {
         streamEndReached = true;
         if (astream != null) {

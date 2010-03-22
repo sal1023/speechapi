@@ -44,9 +44,43 @@ public class RecognitionResult {
     protected Result _rawResult;
     protected String _text;
     protected List<RuleMatch> _ruleMatches;
-
-    protected boolean noGrammar = false;
     
+    protected boolean cflag = false;
+
+	protected double confidence;
+
+	protected boolean noGrammar = false;
+	
+	
+    /**
+     * @return the cflag
+     */
+    public boolean isCflag() {
+    	return cflag;
+    }
+
+	/**
+     * @param cflag the cflag to set
+     */
+    public void setCflag(boolean cflag) {
+    	this.cflag = cflag;
+    }
+    
+    /**
+     * @return the confidence
+     */
+    public double getConfidence() {
+    	return confidence;
+    }
+
+
+	/**
+     * @param confidence the confidence to set
+     */
+    public void setConfidence(double confidence) {
+    	this.confidence = confidence;
+    }
+
     /**
      * @return the noGrammar
      */
@@ -64,7 +98,6 @@ public class RecognitionResult {
     }
     
 
-
     /**
      * TODOC
      * @return Returns the original result.
@@ -72,7 +105,6 @@ public class RecognitionResult {
     public Result getRawResult() {
         return _rawResult;
     }
-
 
 
     /**
@@ -97,14 +129,24 @@ public class RecognitionResult {
     @Override
     public String toString() {
     	if (_text != null) {
-	        StringBuilder sb = new StringBuilder(_text);
-	        if (_ruleMatches != null) {
-	            for (RuleMatch ruleMatch : _ruleMatches) {
-	                sb.append('<').append(ruleMatch.getRule());
-	                sb.append(':').append(ruleMatch.getTag()).append('>');
-	            }
-	        }
-	        return sb.toString();
+    		
+        	// TODO: quick and dirty approach to passing back confidence
+        	if (cflag) {
+		        StringBuilder sb = new StringBuilder("**");
+		        sb.append(_text);
+		        sb.append('<').append("confidence");
+		        sb.append(':').append(Double.toString(confidence)).append('>');
+		        return sb.toString();
+        	} else {
+		        StringBuilder sb = new StringBuilder(_text);
+		        if (_ruleMatches != null) {
+		            for (RuleMatch ruleMatch : _ruleMatches) {
+		                sb.append('<').append(ruleMatch.getRule());
+		                sb.append(':').append(ruleMatch.getTag()).append('>');
+		            }
+		        }
+		        return sb.toString();
+        	}
     	} else {
     		return ("null text result");
     	}
@@ -117,8 +159,6 @@ public class RecognitionResult {
      * @return RecognitionResult
      */
     public static  RecognitionResult constructResultFromString(String inputString) throws InvalidRecognitionResultException {
-        
-
 
         if (inputString == null)
             throw new InvalidRecognitionResultException();
@@ -129,7 +169,48 @@ public class RecognitionResult {
             result._text = "out of grammar";
             return result;
         }
+        
         inputString = inputString.trim();
+        System.out.println(inputString);
+        //TODO: remove this quick and dirty method of passing back the confidence score
+        if(inputString.startsWith("**")) {
+            int firstBracketIndex =inputString.indexOf("<");
+            if (firstBracketIndex >2) {
+                result._text = inputString.substring(2, firstBracketIndex);      //raw result are at the begining before the first ruleMatch
+                _logger.fine("--> "+result._text);
+                if (result == null)
+                    throw new InvalidRecognitionResultException();
+                
+                String theTags = inputString.substring(inputString.indexOf("<"));
+                theTags = theTags.trim();
+                _logger.fine(theTags);
+                String ruleMatches[] = theTags.split("<|>|><");
+                _logger.fine("number of rule matches: " + ruleMatches.length);
+                
+                for (int i=0; i<ruleMatches.length;i++) {
+                    _logger.fine("**** "+ i + "th **** " + ruleMatches[i]);
+                    //if ((ruleMatches[i].length() > 3) &&(ruleMatches[i].contains(tagRuleDelimiter)) ){
+                    if (ruleMatches[i].length() > 3  ){
+                        _logger.fine(" confidence tag in position # "+i+"  " +ruleMatches[i]);
+                       String rule[] = ruleMatches[i].split(tagRuleDelimiter);
+                       if (rule.length == 2 ) {
+                    	   result.setCflag(true);
+                    	   result.setConfidence(Double.parseDouble(rule[1]));
+                          _logger.fine("Confidence value in position # "+i+"  " + rule.length+ " "+ruleMatches[i]);
+                       } else {
+                           _logger.fine(" Invalid rule match # "+i+"  " + rule.length+ " "+ruleMatches[i]);
+                           throw new InvalidRecognitionResultException();
+                       }
+                    } else {
+                        _logger.fine("Bad Tag Rule In Result1: "+ruleMatches[i]);
+                    }
+                }   
+            }
+            return result;
+        }
+        
+        
+
         int firstBracketIndex =inputString.indexOf("<");
         if (firstBracketIndex >0) {
             result._text = inputString.substring(0, firstBracketIndex);      //raw result are at the begining before the first ruleMatch

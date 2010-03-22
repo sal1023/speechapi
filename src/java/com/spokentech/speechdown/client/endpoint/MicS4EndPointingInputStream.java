@@ -18,8 +18,8 @@ import edu.cmu.sphinx.frontend.FrontEnd;
 import com.spokentech.speechdown.client.endpoint.EndPointingInputStreamBase.Listener;
 import com.spokentech.speechdown.client.sphinx.Microphone2;
 import com.spokentech.speechdown.client.sphinx.SpeechDataStreamer;
-import com.spokentech.speechdown.client.util.AFormat;
 import com.spokentech.speechdown.client.util.FormatUtils;
+import com.spokentech.speechdown.common.AFormat;
 import com.spokentech.speechdown.common.SpeechEventListener;
 
 // TODO: Auto-generated Javadoc

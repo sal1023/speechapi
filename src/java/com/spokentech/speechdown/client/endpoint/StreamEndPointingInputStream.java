@@ -11,7 +11,7 @@ import java.io.InputStream;
 
 import org.apache.log4j.Logger;
 
-import com.spokentech.speechdown.client.util.AFormat;
+import com.spokentech.speechdown.common.AFormat;
 import com.spokentech.speechdown.common.SpeechEventListener;
 
 

@@ -39,7 +39,7 @@ import com.spokentech.speechdown.client.endpoint.EndPointingInputStream;
 import com.spokentech.speechdown.client.exceptions.AsynchNotEnabledException;
 import com.spokentech.speechdown.client.exceptions.HttpRecognizerException;
 import com.spokentech.speechdown.client.exceptions.StreamInUseException;
-import com.spokentech.speechdown.client.util.AFormat;
+import com.spokentech.speechdown.common.AFormat;
 import com.spokentech.speechdown.common.InvalidRecognitionResultException;
 import com.spokentech.speechdown.common.RecognitionResult;
 import com.spokentech.speechdown.common.SpeechEventListener;
@@ -278,7 +278,9 @@ public class HttpRecognizer {
 		if (epStream.checkAndSetIfInUse()) 
 			throw new StreamInUseException();
 
-		InputStream grammarIs = grammarUrl.openStream();
+		InputStream grammarIs = null;
+		if (grammarUrl != null) 
+		    grammarIs = grammarUrl.openStream();
 		AsynchCommand command = null;
 		if (workQ != null) {
 		   command = new AsynchCommand(AsynchCommand.CommandType.recognize, service, grammarIs, epStream, lmflg, batchMode, timeout, eventListener);
@@ -382,7 +384,9 @@ public class HttpRecognizer {
 	 */
 	public  RecognitionResult recognize(URL grammarUrl, EndPointingInputStream epStream, boolean lmflg, boolean batchMode, long timeout, SpeechEventListener eventListener) throws InstantiationException, IOException {
 
-		InputStream is = grammarUrl.openStream();
+		InputStream is = null;
+		if (grammarUrl!=null)
+			is = grammarUrl.openStream();
 
 		RecognitionResult r = recognize(is, epStream,lmflg,batchMode,timeout,eventListener);
 		return r;
@@ -418,8 +422,11 @@ public class HttpRecognizer {
     	//create the multipart entity
     	MultipartEntity mpEntity = new MultipartEntity();
     	
-    	// one part is the grammar
-        InputStreamBody grammarBody = new InputStreamBody(grammar, "plain/text","grammar.gram");
+    	InputStreamBody grammarBody =null;
+    	if (!lmflg) {
+    	   // one part is the grammar
+           grammarBody = new InputStreamBody(grammar, "plain/text","grammar.gram");
+    	}
 
         //parameters are fields (StringBoodys)
     	StringBody sampleRate = null;
@@ -460,8 +467,10 @@ public class HttpRecognizer {
 		
 
 		//add the grammar part
-		mpEntity.addPart("grammar", grammarBody);
-		
+    	if (!lmflg) {
+		   mpEntity.addPart("grammar", grammarBody);
+    	}
+    	
         speechStarted = false;
         requestCanceled = false;
 	    epStream.startAudioTransfer(timeout, listener);
@@ -613,7 +622,7 @@ public class HttpRecognizer {
 			fname = "audio.au";
 		} else {
 			fname = "audio.wav";
-			_logger.info("unhanlded mime type "+mimeType);
+			_logger.fine("unhanlded mime type "+mimeType);
 		}
 
 

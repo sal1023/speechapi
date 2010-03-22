@@ -4,9 +4,12 @@ import java.io.FileWriter;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.PrintWriter;
+import java.text.DecimalFormat;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Date;
+import java.util.Iterator;
+import java.util.List;
 import java.util.Timer;
 import java.util.TimerTask;
 
@@ -19,13 +22,13 @@ import javax.speech.recognition.RuleParse;
 
 import org.apache.log4j.Logger;
 
-import com.spokentech.speechdown.client.util.AFormat;
+import com.spokentech.speechdown.common.AFormat;
 import com.spokentech.speechdown.common.RecognitionResult;
 import com.spokentech.speechdown.common.RecognitionResultJsapi;
 import com.spokentech.speechdown.common.SpeechEventListener;
 
 import com.spokentech.speechdown.common.sphinx.AudioStreamDataSource;
-import com.spokentech.speechdown.common.sphinx.AudioStreamDataSource2;
+import com.spokentech.speechdown.common.sphinx.XugglerAudioStreamDataSource;
 import com.spokentech.speechdown.common.sphinx.IdentityStage;
 import com.spokentech.speechdown.common.sphinx.InsertSpeechSignalStage;
 import com.spokentech.speechdown.common.sphinx.SpeechDataMonitor;
@@ -38,6 +41,7 @@ import com.spokentech.speechdown.server.util.pool.AbstractPoolableObject;
 import edu.cmu.sphinx.decoder.ResultListener;
 
 import edu.cmu.sphinx.decoder.scorer.AbstractScorer;
+import edu.cmu.sphinx.decoder.search.Token;
 import edu.cmu.sphinx.frontend.DataBlocker;
 import edu.cmu.sphinx.frontend.DataProcessor;
 import edu.cmu.sphinx.frontend.FrontEnd;
@@ -59,7 +63,13 @@ import edu.cmu.sphinx.linguist.acoustic.tiedstate.Sphinx3Loader;
 import edu.cmu.sphinx.recognizer.Recognizer;
 import edu.cmu.sphinx.recognizer.StateListener;
 import edu.cmu.sphinx.recognizer.Recognizer.State;
+import edu.cmu.sphinx.result.ConfidenceResult;
+import edu.cmu.sphinx.result.ConfidenceScorer;
+import edu.cmu.sphinx.result.ConfusionSet;
+import edu.cmu.sphinx.result.Path;
 import edu.cmu.sphinx.result.Result;
+import edu.cmu.sphinx.result.WordResult;
+import edu.cmu.sphinx.util.LogMath;
 import edu.cmu.sphinx.util.props.ConfigurationManager;
 import edu.cmu.sphinx.util.props.PropertyException;
 import edu.cmu.sphinx.util.props.PropertySheet;
@@ -68,6 +78,9 @@ import edu.cmu.sphinx.util.props.PropertySheet;
 public class SphinxRecEngine extends AbstractPoolableObject implements RecEngine {
 
     private static Logger _logger = Logger.getLogger(SphinxRecEngine.class);
+    
+    private static DecimalFormat format = new DecimalFormat("#.#####");
+
     
 	public static final short WAITING_FOR_SPEECH = 0;
 	public static final short SPEECH_IN_PROGRESS = 1;
@@ -114,6 +127,8 @@ public class SphinxRecEngine extends AbstractPoolableObject implements RecEngine
 	LDA lda;
 	DeltasFeatureExtractor deltasFeatureExtractor;
 	private WavWriter recorder; 
+	
+	private  ConfidenceScorer cs;
 	
     private boolean transcribeMode = false;
     
@@ -166,6 +181,10 @@ public class SphinxRecEngine extends AbstractPoolableObject implements RecEngine
     	createFrontEndElements();
     	
     	
+    	// obtain scorer from configuration manager
+        cs = (ConfidenceScorer) cm.lookup("confidenceScorer");
+
+    	
     }
     
 
@@ -173,8 +192,7 @@ public class SphinxRecEngine extends AbstractPoolableObject implements RecEngine
 
 
 	//Recognize using language mode
-    public RecognitionResult recognize(InputStream as, String mimeType, int sampleRate, boolean bigEndian, 
-    	                               int bytesPerValue, Encoding encoding, boolean doEndpointing, boolean cmnBatch, HttpRequest hr) {
+    public RecognitionResult recognize(InputStream as, String mimeType, AFormat af, boolean doEndpointing, boolean cmnBatch, HttpRequest hr) {
 
     	long  start = System.nanoTime();
     	long startTime= System.currentTimeMillis();
@@ -186,7 +204,7 @@ public class SphinxRecEngine extends AbstractPoolableObject implements RecEngine
         //set the search manager in real time (to the one configured for language models)
         //_decoder.setSearchManager(_lmSearchManager);
         
-	    Result r = doRecognize(as, mimeType, sampleRate, bigEndian, bytesPerValue, encoding, doEndpointing, cmnBatch);
+	    Result r = doRecognize(as, mimeType, af, doEndpointing, cmnBatch);
 
 	    _logger.info("Result: " + (r != null ? r.getBestFinalResultNoFiller() : null));
 	    //SAL
@@ -200,8 +218,7 @@ public class SphinxRecEngine extends AbstractPoolableObject implements RecEngine
 		
 
 		//temp dont do any of this for now
-		if (1 == 0) {
-		//if (recordingEnabled) {	
+		/*if (recordingEnabled) {	
 	        RecogRequest rr = new RecogRequest();
 	        
 			String raw = null;
@@ -237,21 +254,64 @@ public class SphinxRecEngine extends AbstractPoolableObject implements RecEngine
 		    
 			ServiceLogger.logRecogRequest(rr,hr);
 		}
+		*/
 	    long tt = System.nanoTime();
 		long x = (tt - stop)/1000000;
 		_logger.debug("  Logging time "+ x);
 		
-	    
-	    if (r != null) {
-	       RecognitionResultJsapi results = new RecognitionResultJsapi(r.getBestResultNoFiller());
+		
+		//Do i need this?  
+        _logger.info("LM stopping audio "+_state);
+        synchronized (SphinxRecEngine.this) {
+        	 stopAudioTransfer();
+        	_state = COMPLETE;
+        }
+	
+		
+		if (r != null) {
+			ConfidenceResult cr = cs.score(r);
+			Path best = cr.getBestHypothesis();
+			LogMath lm = best.getLogMath();
+			double confidence = best.getLogMath().logToLinear((float) best.getConfidence());
+
+			/* confidence of the best path */
+			System.out.println(best.getTranscription());
+			System.out.println
+               ("     (confidence: " +
+                        format.format(best.getLogMath().logToLinear
+                                ((float) best.getConfidence()))
+                        + ')');
+			System.out.println();
+
+			/*
+			 * print out confidence of individual words
+	        * in the best path
+	        */
+	        WordResult[] words = best.getWords();
+	        for (WordResult wr : words) {
+	            printWordConfidence(wr);
+	        }
+	        System.out.println();
+	        
+	        
+	        //List<Token> tokes = r.getResultTokens();
+	
+	  	  	//Iterator<Token> iterator = tokes.iterator();
+	  	    //while ( iterator.hasNext() ){
+	  	    //   Token t =  iterator.next();
+	  	    //   System.out.println(lm.logToLinear(t.getScore())+ "  "+ t.getWordPath(false, false));
+	  	       				     // t.getWordPath() 				     
+	  	    //}
+
+	       RecognitionResultJsapi results = new RecognitionResultJsapi(r.getBestResultNoFiller(),confidence);
+	       System.out.println("returning results: "+results);
 	       return results;
 	    } else {
 	    	return null;
 	    }
     }
 	//recognize using a grammar
-	public RecognitionResult recognize(InputStream as, String mimeType, String grammar, int sampleRate, 
-			                           boolean bigEndian, int bytesPerValue, Encoding encoding, boolean doEndpointing, boolean cmnBatch, HttpRequest hr) {
+	public RecognitionResult recognize(InputStream as, String mimeType, String grammar, AFormat af, boolean doEndpointing, boolean cmnBatch, HttpRequest hr) {
 
 		long  start = System.nanoTime();
     	long startTime= System.currentTimeMillis();
@@ -284,7 +344,7 @@ public class SphinxRecEngine extends AbstractPoolableObject implements RecEngine
         }
         _logger.debug("After load grammar" + System.currentTimeMillis());
  
-	    Result r = doRecognize(as, mimeType, sampleRate, bigEndian, bytesPerValue, encoding,doEndpointing,  cmnBatch);
+	    Result r = doRecognize(as, mimeType, af, doEndpointing,  cmnBatch);
 	    
 	    RecognitionResultJsapi results = new RecognitionResultJsapi(r, _jsgfGrammar.getRuleGrammar());
 	    _logger.info("Result: " + (results != null ? results.getText() : null));
@@ -298,8 +358,7 @@ public class SphinxRecEngine extends AbstractPoolableObject implements RecEngine
 		_logger.info(ratio+ "  Wall time "+ wall+ " stream length "+ streamLen);
 		
 		//temp dont do any of this for now
-		if (1 == 0) {
-		//if (recordingEnabled) {	
+		/*if (recordingEnabled) {	
 	        RecogRequest rr = new RecogRequest();
 	        
 			String raw = null;
@@ -334,46 +393,58 @@ public class SphinxRecEngine extends AbstractPoolableObject implements RecEngine
 		    rr.setHttpRequest(hr);
 		    
 			ServiceLogger.logRecogRequest(rr,hr);
-		}
+		}*/
 	     long tt = System.nanoTime();
 		long x = (tt - stop)/1000000;
 		_logger.debug("  Logging time "+ x);
 	    return results;
     }
 
-	private Result doRecognize(InputStream as, String mimeType, int sampleRate, boolean bigEndian,
-            int bytesPerValue, Encoding encoding, boolean doEndpointing, boolean cmnBatch) {
+	private Result doRecognize(InputStream as, String mimeType, AFormat af, boolean doEndpointing, boolean cmnBatch) {
 	    //TODO: Timers for recog timeout
 		
 		transcribeMode = false;
 		//setup the recorder
 		// reuse this rather than construct a new one each time
+		//TODO: Test if this is needed!
 		if (recordingEnabled) {
-			recorder.setBigEndian(bigEndian);
-			recorder.setBitsPerSample(bytesPerValue*8);
-			recorder.setSampleRate(sampleRate);
+			recorder.setBigEndian(true);
+			recorder.setBitsPerSample(16);
+			recorder.setSampleRate(8000);
 			recorder.setSigned(true);
 		}
 	
-	    // configure the audio input for the recognizer
-
-		 String parts[] = mimeType.split("/");
-		 if (parts[1].equals("x-s4audio")) {
-			 _dataSource = new S4DataStreamDataSource();
-			 fe = createAudioFrontend(doEndpointing,cmnBatch,(DataProcessor)_dataSource);
-		 } else if (parts[1].equals("x-s4feature")) {
-			 _dataSource = new S4DataStreamDataSource();
-			 fe = createFeatureFrontend((DataProcessor)_dataSource);
-			 if (doEndpointing) {
-				 _logger.warn("Endpointing not supported for feature streams");
+	     // configure the audio input for the recognizer
+	 	 // if the format is null, that indicates that no format was passed in
+		 // use xuggler front end and let xuggler get the format from the header
+		 if (af == null) {
+			 _dataSource = new XugglerAudioStreamDataSource();
+			 fe = createAudioFrontend(true,true,(DataProcessor) _dataSource);
+			 
+		 // if the format is not (it wa specified) use a front end based on mimetype.
+	     // used for realtime mode
+	     // TODO: maybve could remove the wav case below which uses audiostreamdatasource  and use xuggler (So more encodings work) 
+		 // with real time mode (but that is if the format is in the header of the attachment created by the realtime clients)
+		 }else {
+			 String parts[] = mimeType.split("/");
+			 if (parts[1].equals("x-s4audio")) {
+				 _dataSource = new S4DataStreamDataSource();
+				 fe = createAudioFrontend(doEndpointing,cmnBatch,(DataProcessor)_dataSource);
+			 } else if (parts[1].equals("x-s4feature")) {
+				 _dataSource = new S4DataStreamDataSource();
+				 fe = createFeatureFrontend((DataProcessor)_dataSource);
+				 if (doEndpointing) {
+					 _logger.warn("Endpointing not supported for feature streams");
+				 }
+			 } else if (parts[1].equals("x-wav")) {
+				 _dataSource = new AudioStreamDataSource();
+				 fe = createAudioFrontend(doEndpointing,cmnBatch,(DataProcessor)_dataSource);
+			 } else {
+				// _logger.warn("Unrecognized mime type: "+mimeType + " Trying to process as audio/x-wav");
+				 _dataSource = new XugglerAudioStreamDataSource();
+				 fe = createAudioFrontend(doEndpointing,cmnBatch,(DataProcessor)_dataSource);
 			 }
-		 } else if (parts[1].equals("x-wav")) {
-			 _dataSource = new AudioStreamDataSource2();
-			 fe = createAudioFrontend(doEndpointing,cmnBatch,(DataProcessor)_dataSource);
-		 } else {
-			 _logger.warn("Unrecognized mime type: "+mimeType + " Trying to process as audio/x-wav");
-			 _dataSource = new AudioStreamDataSource2();
-			 fe = createAudioFrontend(doEndpointing,cmnBatch,(DataProcessor)_dataSource);
+		     _logger.debug("-----> "+mimeType+ " "+parts[1]);
 		 }
 		 if (doEndpointing) {
 			//TODO: start the timer
@@ -381,7 +452,7 @@ public class SphinxRecEngine extends AbstractPoolableObject implements RecEngine
 		 }
 
 		 
-	     _logger.debug("-----> "+mimeType+ " "+parts[1]);
+
 
 	     //set the first stage of the front end
 		 fe.setDataSource((DataProcessor) _dataSource);
@@ -391,9 +462,10 @@ public class SphinxRecEngine extends AbstractPoolableObject implements RecEngine
 		 _scorer.setFrontEnd(fe);
 	     
 		 
-		 AFormat af = new AFormat(encoding.toString(), sampleRate, bytesPerValue*8, 1, bigEndian, true, bytesPerValue, sampleRate);
-		 _dataSource.setInputStream(as, "ws-audiostream", af);
-	    
+		 //AFormat af = new AFormat(encoding.toString(), sampleRate, bytesPerValue*8, 1, bigEndian, true, bytesPerValue, sampleRate);
+		 //_dataSource.setInputStream(as, "ws-audiostream", af);
+		 _dataSource.setInputStream(as, "ws-audiostream",af);
+		    
 		_logger.debug("After setting the input stream " + System.currentTimeMillis());
 	    
 
@@ -423,8 +495,7 @@ public class SphinxRecEngine extends AbstractPoolableObject implements RecEngine
 	
 	
 	@Override
-    public String transcribe(InputStream as, String mimeType, int sampleRate, boolean bigEndian,
-            int bytesPerValue, Encoding encoding, PrintWriter out,HttpServletResponse response, HttpRequest hr) {
+    public String transcribe(InputStream as, String mimeType, AFormat af, PrintWriter out,HttpServletResponse response, HttpRequest hr) {
 		
 		_logger.debug("Using recognizer # "+_id);
 	    //SAL
@@ -432,7 +503,7 @@ public class SphinxRecEngine extends AbstractPoolableObject implements RecEngine
         _logger.debug("After allocate" + System.currentTimeMillis());
         
 
-	    String r = doTranscribe(as, mimeType, sampleRate, bigEndian, bytesPerValue, encoding, out, response);
+	    String r = doTranscribe(as, mimeType, af, out, response);
 
 	    //SAL
 	    //_recognizer.deallocate();
@@ -440,8 +511,8 @@ public class SphinxRecEngine extends AbstractPoolableObject implements RecEngine
 
     }
 	
-	private String doTranscribe(InputStream as, String mimeType, int sampleRate, boolean bigEndian,
-            int bytesPerValue, Encoding encoding, PrintWriter out,HttpServletResponse response) {
+	
+	private String doTranscribe(InputStream as, String mimeType, AFormat af, PrintWriter out,HttpServletResponse response) {
 	    //TODO: Timers for recog timeout
 	
 		transcribeMode = true;
@@ -449,31 +520,45 @@ public class SphinxRecEngine extends AbstractPoolableObject implements RecEngine
 		FrontEnd fe = null;
 	    // configure the audio input for the recognizer
 
-		 String parts[] = mimeType.split("/");
-		 if (parts[1].equals("x-s4audio")) {
-			 _dataSource = new S4DataStreamDataSource();
+		
+	 	 // if the format is null, that indicates that no format was passed in
+		 // use xuggler front end and let xuggler get the format from the header
+		 if (af == null) {
+			 _dataSource = new XugglerAudioStreamDataSource();
 			 fe = createAudioFrontend(true,true,(DataProcessor) _dataSource);
-		 } else if (parts[1].equals("x-s4feature")) {
-			 _logger.warn("Feature mode Endpointing not for continuous recognition mode");
-			 _dataSource = new S4DataStreamDataSource();
-		 } else if (parts[1].equals("x-wav")) {
-			 _dataSource = new AudioStreamDataSource2();
-			 fe = createAudioFrontend(true,true,(DataProcessor) _dataSource);
+			 
+		 // if the format is not (it wa specified) use a front end based on mimetype.
+	     // used for realtime mode
+	     // TODO: maybve could remove the wav case below which uses audiostreamdatasource  and use xuggler (So more encodings work) 
+		 // with real time mode (but that is if the format is in the header of the attachment created by the realtime clients)
 		 } else {
-			 _logger.warn("Unrecognized mime type: "+mimeType + " Trying to process as audio/x-wav");
-			 _dataSource = new AudioStreamDataSource2();
-			 fe = createAudioFrontend(true,true,(DataProcessor) _dataSource);
+			 String parts[] = mimeType.split("/");
+			 if (parts[1].equals("x-s4audio")) {
+				 _dataSource = new S4DataStreamDataSource();
+				 fe = createAudioFrontend(true,true,(DataProcessor) _dataSource);
+			 } else if (parts[1].equals("x-s4feature")) {
+				 _logger.warn("Feature mode Endpointing not for continuous recognition mode");
+				 _dataSource = new S4DataStreamDataSource();
+			 } else if (parts[1].equals("x-wav")) {
+				 _dataSource = new AudioStreamDataSource();
+				 fe = createAudioFrontend(true,true,(DataProcessor) _dataSource);
+			 } else {
+				 //_logger.warn("Unrecognized mime type: "+mimeType + " Trying to process as audio/x-wav");
+				 _dataSource = new XugglerAudioStreamDataSource();
+				 fe = createAudioFrontend(true,true,(DataProcessor) _dataSource);
+			 }
+		     _logger.debug("-----> "+mimeType+ " "+parts[1]);
 		 }
-	     _logger.debug("-----> "+mimeType+ " "+parts[1]);
 	     //set the first stage of the front end
 		 fe.setDataSource((DataProcessor) _dataSource);
 		 
 		 // set the front end in the scorer in realtime
 		 _scorer.setFrontEnd(fe);
 		 
-		 AFormat af = new AFormat(encoding.toString(), sampleRate, bytesPerValue*8, 1, bigEndian, true, bytesPerValue, sampleRate);
-		 _dataSource.setInputStream(as, "ws-audiostream", af);
-	    
+		// AFormat af = new AFormat(encoding.toString(), sampleRate, bytesPerValue*8, 1, bigEndian, true, bytesPerValue, sampleRate);
+		 //_dataSource.setInputStream(as, "ws-audiostream", af);
+		 _dataSource.setInputStream(as, "ws-audiostream",af);
+
 		_logger.debug("After setting the input stream" + System.currentTimeMillis());
 	    
 	    // decode the audio file.
@@ -484,7 +569,7 @@ public class SphinxRecEngine extends AbstractPoolableObject implements RecEngine
 		Result result;
         while ((result = _recognizer.recognize())!= null) {
 
-            String resultText = result.getBestResultNoFiller();
+            String resultText = result.getTimedBestResult(false, true);
             _logger.debug(resultText);
             out.println(resultText);
             totalResult = totalResult+resultText;
@@ -660,7 +745,7 @@ public class SphinxRecEngine extends AbstractPoolableObject implements RecEngine
 
 			@Override
 	        public void speechStarted() {
-	            _logger.debug("speechStarted()");
+	            _logger.info("speechStarted()");
 
 	            synchronized (SphinxRecEngine.this) {
 	                if (_state == WAITING_FOR_SPEECH) {
@@ -674,7 +759,7 @@ public class SphinxRecEngine extends AbstractPoolableObject implements RecEngine
 	        }
 	        
         	public void speechEnded() {
-	            _logger.debug("speechEnded()");
+	            _logger.info("speechEnded()");
 	            synchronized (SphinxRecEngine.this) {
 	            	if (!transcribeMode)
 	            	    stopAudioTransfer();
@@ -684,7 +769,7 @@ public class SphinxRecEngine extends AbstractPoolableObject implements RecEngine
 	        }
 
         	public void noInputTimeout() {
-	            _logger.debug("no input timeout()");
+	            _logger.info("no input timeout()");
 	            synchronized (SphinxRecEngine.this) {
 	            	stopAudioTransfer();
 	            	_state = COMPLETE;
@@ -833,6 +918,30 @@ public class SphinxRecEngine extends AbstractPoolableObject implements RecEngine
 	        e.printStackTrace();
         }
            
+    }
+	
+    /**
+     * Prints out the word and its confidence score.
+     *
+     * @param wr the WordResult to print
+     */
+    private static void printWordConfidence(WordResult wr) {
+        String word = wr.getPronunciation().getWord().getSpelling();
+
+        System.out.print(word);
+
+        /* pad spaces between the word and its score */
+        int entirePadLength = 10;
+        if (word.length() < entirePadLength) {
+            for (int i = word.length(); i < entirePadLength; i++) {
+                System.out.print(" ");
+            }
+        }
+
+        System.out.println
+                (" (confidence: " +
+                        format.format
+                                (wr.getLogMath().logToLinear((float) wr.getConfidence())) + ')');
     }
 
 }

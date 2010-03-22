@@ -13,8 +13,8 @@ import javax.sound.sampled.AudioInputStream;
 
 import org.apache.log4j.Logger;
 
-import com.spokentech.speechdown.client.util.AFormat;
 import com.spokentech.speechdown.client.util.FormatUtils;
+import com.spokentech.speechdown.common.AFormat;
 import com.spokentech.speechdown.common.SpeechEventListener;
 
 import com.spokentech.speechdown.server.recog.StreamDataSource;

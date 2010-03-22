@@ -1,4 +1,4 @@
-package com.spokentech.speechdown.client.util;
+package com.spokentech.speechdown.common;
 
 public class AFormat {	
 	

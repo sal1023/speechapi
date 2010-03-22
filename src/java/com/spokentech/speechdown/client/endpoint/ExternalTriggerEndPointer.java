@@ -93,9 +93,10 @@ public class ExternalTriggerEndPointer extends EndPointerBase {
 		// Close the output stream. 
 		try {
 			ostream.flush();
-			//System.out.println("flushed ostream!");
+			_logger.debug("flushed ostream!");
 			ostream.close();
-			//System.out.println("Closed ostream!");
+			_logger.debug("Closed ostream!");
+			ostream = null;
 		} catch (IOException e) {
 			e.printStackTrace();
 		} 	

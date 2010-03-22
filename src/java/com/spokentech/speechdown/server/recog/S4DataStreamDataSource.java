@@ -22,7 +22,7 @@ import java.io.ObjectInputStream;
 
 import org.apache.log4j.Logger;
 
-import com.spokentech.speechdown.client.util.AFormat;
+import com.spokentech.speechdown.common.AFormat;
 
 public class S4DataStreamDataSource extends BaseDataProcessor implements StreamDataSource {
 	private static Logger _logger = Logger.getLogger(S4DataStreamDataSource.class);
