@@ -29,6 +29,7 @@ import com.spokentech.speechdown.client.util.WerUtils;
 import com.spokentech.speechdown.common.AFormat;
 import com.spokentech.speechdown.common.RecognitionResult;
 import com.spokentech.speechdown.common.SpeechEventListener;
+import com.spokentech.speechdown.common.Utterance.OutputFormat;
 
 
 import junit.framework.TestCase;
@@ -152,7 +153,7 @@ public class HttpTranscriptionTest extends TestCase {
 			long start = System.nanoTime();
             try {
 		    	boolean lmflg = true;
-		    	InputStream s = recog.transcribe(audioInputStream, format,mimeType, grammarUrl, lmflg);
+		    	InputStream s = recog.transcribe(audioInputStream, format,mimeType, grammarUrl, lmflg,OutputFormat.text);
 
                 int c;
                 while ((c = s.read()) != -1) {
@@ -187,7 +188,7 @@ public class HttpTranscriptionTest extends TestCase {
 	    	boolean doEndpointing = true;
 	    	boolean batchMode = true;
 			long start = System.nanoTime();
-	    	RecognitionResult r = recog.recognize(fname, grammarUrl, lmflg, doEndpointing,batchMode);
+	    	RecognitionResult r = recog.recognize(fname, grammarUrl, lmflg, doEndpointing,batchMode,OutputFormat.json);
 			long stop = System.nanoTime();
 			long wall = (stop - start)/1000000;
 	    	System.out.println("FILE TEST: Batch mode, Server Endpointing, LM result: "+r.getText() + " took "+wall+ " ms");    	
@@ -241,11 +242,11 @@ public class HttpTranscriptionTest extends TestCase {
 	    	boolean doEndpointing = true;
 	    	boolean lmflg = true;
 	    	boolean batchFlag = false;
-	    	RecognitionResult r = recog.recognize(audioLine, grammarUrl, lmflg, batchFlag, doEndpointing);
+	    	RecognitionResult r = recog.recognize(audioLine, grammarUrl, lmflg, batchFlag, doEndpointing,OutputFormat.text);
 	    	System.out.println("lm result: "+r.getText());	        
 	    	
 	        lmflg = false;
-	        r = recog.recognize(audioLine, grammarUrl, lmflg,doEndpointing,batchFlag);
+	        r = recog.recognize(audioLine, grammarUrl, lmflg,doEndpointing,batchFlag,OutputFormat.text);
 	        System.out.println("grammar result: "+r.getText());
 	    	
 	    }

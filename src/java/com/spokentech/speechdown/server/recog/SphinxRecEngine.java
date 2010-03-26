@@ -8,25 +8,26 @@ import java.text.DecimalFormat;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Date;
-import java.util.Iterator;
 import java.util.List;
 import java.util.Timer;
 import java.util.TimerTask;
 
 import javax.servlet.http.HttpServletResponse;
 import javax.sound.sampled.AudioInputStream;
-import javax.sound.sampled.AudioFormat.Encoding;
 import javax.speech.recognition.GrammarException;
 import javax.speech.recognition.RuleGrammar;
 import javax.speech.recognition.RuleParse;
 
 import org.apache.log4j.Logger;
 
+import com.google.gson.Gson;
 import com.spokentech.speechdown.common.AFormat;
 import com.spokentech.speechdown.common.RecognitionResult;
 import com.spokentech.speechdown.common.RecognitionResultJsapi;
 import com.spokentech.speechdown.common.SpeechEventListener;
+import com.spokentech.speechdown.common.Utterance;
 
+import com.spokentech.speechdown.common.Utterance.OutputFormat;
 import com.spokentech.speechdown.common.sphinx.AudioStreamDataSource;
 import com.spokentech.speechdown.common.sphinx.XugglerAudioStreamDataSource;
 import com.spokentech.speechdown.common.sphinx.IdentityStage;
@@ -34,14 +35,12 @@ import com.spokentech.speechdown.common.sphinx.InsertSpeechSignalStage;
 import com.spokentech.speechdown.common.sphinx.SpeechDataMonitor;
 import com.spokentech.speechdown.common.sphinx.WavWriter;
 import com.spokentech.speechdown.server.domain.HttpRequest;
-import com.spokentech.speechdown.server.domain.RecogRequest;
-import com.spokentech.speechdown.server.util.ServiceLogger;
+import com.spokentech.speechdown.server.util.ResultUtils;
 import com.spokentech.speechdown.server.util.pool.AbstractPoolableObject;
 
 import edu.cmu.sphinx.decoder.ResultListener;
 
 import edu.cmu.sphinx.decoder.scorer.AbstractScorer;
-import edu.cmu.sphinx.decoder.search.Token;
 import edu.cmu.sphinx.frontend.DataBlocker;
 import edu.cmu.sphinx.frontend.DataProcessor;
 import edu.cmu.sphinx.frontend.FrontEnd;
@@ -65,7 +64,6 @@ import edu.cmu.sphinx.recognizer.StateListener;
 import edu.cmu.sphinx.recognizer.Recognizer.State;
 import edu.cmu.sphinx.result.ConfidenceResult;
 import edu.cmu.sphinx.result.ConfidenceScorer;
-import edu.cmu.sphinx.result.ConfusionSet;
 import edu.cmu.sphinx.result.Path;
 import edu.cmu.sphinx.result.Result;
 import edu.cmu.sphinx.result.WordResult;
@@ -132,6 +130,10 @@ public class SphinxRecEngine extends AbstractPoolableObject implements RecEngine
 	
     private boolean transcribeMode = false;
     
+    Gson gson = new Gson();
+	  
+
+    
     public SphinxRecEngine(ConfigurationManager cm, GrammarManager grammarManager,String prefixId, int id, String recordingFilePath, boolean recordingEnabled) throws IOException, PropertyException, InstantiationException {
 
     	_logger.debug("Creating a recognizer "+prefixId +"recognizer"+id);
@@ -192,7 +194,7 @@ public class SphinxRecEngine extends AbstractPoolableObject implements RecEngine
 
 
 	//Recognize using language mode
-    public RecognitionResult recognize(InputStream as, String mimeType, AFormat af, boolean doEndpointing, boolean cmnBatch, HttpRequest hr) {
+    public RecognitionResult recognize(InputStream as, String mimeType, AFormat af, OutputFormat outMode, boolean doEndpointing, boolean cmnBatch, HttpRequest hr) {
 
     	long  start = System.nanoTime();
     	long startTime= System.currentTimeMillis();
@@ -204,7 +206,7 @@ public class SphinxRecEngine extends AbstractPoolableObject implements RecEngine
         //set the search manager in real time (to the one configured for language models)
         //_decoder.setSearchManager(_lmSearchManager);
         
-	    Result r = doRecognize(as, mimeType, af, doEndpointing, cmnBatch);
+	    Result r = doRecognize(as, mimeType, af, outMode, doEndpointing, cmnBatch);
 
 	    _logger.info("Result: " + (r != null ? r.getBestFinalResultNoFiller() : null));
 	    //SAL
@@ -267,51 +269,30 @@ public class SphinxRecEngine extends AbstractPoolableObject implements RecEngine
         	_state = COMPLETE;
         }
 	
-		
+  
 		if (r != null) {
-			ConfidenceResult cr = cs.score(r);
-			Path best = cr.getBestHypothesis();
-			LogMath lm = best.getLogMath();
-			double confidence = best.getLogMath().logToLinear((float) best.getConfidence());
-
-			/* confidence of the best path */
-			System.out.println(best.getTranscription());
-			System.out.println
-               ("     (confidence: " +
-                        format.format(best.getLogMath().logToLinear
-                                ((float) best.getConfidence()))
-                        + ')');
-			System.out.println();
-
-			/*
-			 * print out confidence of individual words
-	        * in the best path
-	        */
-	        WordResult[] words = best.getWords();
-	        for (WordResult wr : words) {
-	            printWordConfidence(wr);
-	        }
-	        System.out.println();
-	        
-	        
-	        //List<Token> tokes = r.getResultTokens();
+			//TODO: change to return Utterance object that can be serialized to json or plant text (see transcribe method)
+	        //if (outMode == OutputFormat.text) {
+				ConfidenceResult cr = cs.score(r);
+				Path best = cr.getBestHypothesis();
+				double confidence = best.getLogMath().logToLinear((float) best.getConfidence());
 	
-	  	  	//Iterator<Token> iterator = tokes.iterator();
-	  	    //while ( iterator.hasNext() ){
-	  	    //   Token t =  iterator.next();
-	  	    //   System.out.println(lm.logToLinear(t.getScore())+ "  "+ t.getWordPath(false, false));
-	  	       				     // t.getWordPath() 				     
-	  	    //}
-
-	       RecognitionResultJsapi results = new RecognitionResultJsapi(r.getBestResultNoFiller(),confidence);
-	       System.out.println("returning results: "+results);
-	       return results;
+		        RecognitionResultJsapi results = new RecognitionResultJsapi(r.getBestResultNoFiller(),confidence);
+		        System.out.println("returning results: "+results);
+		        return results;
+	        //} else if (outMode == OutputFormat.json) {
+	        //	Utterance utterance = ResultUtils.getAllResults(result, false, false,cs);
+	        //    resultText = gson.toJson(utterance);
+	        //} else {
+	        //	_logger.warn("Unrecognized output format: "+outMode+ "  ,using plain text mode as a default.");
+	        //}
+	        	
 	    } else {
 	    	return null;
 	    }
     }
 	//recognize using a grammar
-	public RecognitionResult recognize(InputStream as, String mimeType, String grammar, AFormat af, boolean doEndpointing, boolean cmnBatch, HttpRequest hr) {
+	public RecognitionResult recognize(InputStream as, String mimeType, String grammar, AFormat af, OutputFormat outMode,  boolean doEndpointing, boolean cmnBatch, HttpRequest hr) {
 
 		long  start = System.nanoTime();
     	long startTime= System.currentTimeMillis();
@@ -344,7 +325,7 @@ public class SphinxRecEngine extends AbstractPoolableObject implements RecEngine
         }
         _logger.debug("After load grammar" + System.currentTimeMillis());
  
-	    Result r = doRecognize(as, mimeType, af, doEndpointing,  cmnBatch);
+	    Result r = doRecognize(as, mimeType, af, outMode, doEndpointing,  cmnBatch);
 	    
 	    RecognitionResultJsapi results = new RecognitionResultJsapi(r, _jsgfGrammar.getRuleGrammar());
 	    _logger.info("Result: " + (results != null ? results.getText() : null));
@@ -400,7 +381,7 @@ public class SphinxRecEngine extends AbstractPoolableObject implements RecEngine
 	    return results;
     }
 
-	private Result doRecognize(InputStream as, String mimeType, AFormat af, boolean doEndpointing, boolean cmnBatch) {
+	private Result doRecognize(InputStream as, String mimeType, AFormat af, OutputFormat outMode, boolean doEndpointing, boolean cmnBatch) {
 	    //TODO: Timers for recog timeout
 		
 		transcribeMode = false;
@@ -440,7 +421,7 @@ public class SphinxRecEngine extends AbstractPoolableObject implements RecEngine
 				 _dataSource = new AudioStreamDataSource();
 				 fe = createAudioFrontend(doEndpointing,cmnBatch,(DataProcessor)_dataSource);
 			 } else {
-				// _logger.warn("Unrecognized mime type: "+mimeType + " Trying to process as audio/x-wav");
+				 //TODO: Check if xuggler is installed on this machine
 				 _dataSource = new XugglerAudioStreamDataSource();
 				 fe = createAudioFrontend(doEndpointing,cmnBatch,(DataProcessor)_dataSource);
 			 }
@@ -479,6 +460,23 @@ public class SphinxRecEngine extends AbstractPoolableObject implements RecEngine
 			logResults(r, recorder.getWavName());
 		}
 		
+		
+     
+        String resultText;
+        if (outMode == OutputFormat.text) {
+        	resultText = r.getBestFinalResultNoFiller();  
+  	
+        } else if (outMode == OutputFormat.json) {
+        	Utterance utterance = ResultUtils.getAllResults(r, false, false,cs);
+            resultText = gson.toJson(utterance);
+        	
+        } else {
+        	resultText = r.getBestFinalResultNoFiller();  
+        	_logger.warn("Inrecognized output format: "+outMode+ "  ,using plain text mode as a default.");
+        }
+		_logger.info(resultText);
+        
+        
 		fe=null;
 	    return r;
     }
@@ -495,7 +493,7 @@ public class SphinxRecEngine extends AbstractPoolableObject implements RecEngine
 	
 	
 	@Override
-    public String transcribe(InputStream as, String mimeType, AFormat af, PrintWriter out,HttpServletResponse response, HttpRequest hr) {
+    public String transcribe(InputStream as, String mimeType, AFormat af,  OutputFormat outMode, PrintWriter out,HttpServletResponse response, HttpRequest hr) {
 		
 		_logger.debug("Using recognizer # "+_id);
 	    //SAL
@@ -503,7 +501,7 @@ public class SphinxRecEngine extends AbstractPoolableObject implements RecEngine
         _logger.debug("After allocate" + System.currentTimeMillis());
         
 
-	    String r = doTranscribe(as, mimeType, af, out, response);
+	    String r = doTranscribe(as, mimeType, af, outMode, out, response);
 
 	    //SAL
 	    //_recognizer.deallocate();
@@ -512,10 +510,13 @@ public class SphinxRecEngine extends AbstractPoolableObject implements RecEngine
     }
 	
 	
-	private String doTranscribe(InputStream as, String mimeType, AFormat af, PrintWriter out,HttpServletResponse response) {
+	private String doTranscribe(InputStream as, String mimeType, AFormat af, OutputFormat outMode, PrintWriter out,HttpServletResponse response) {
 	    //TODO: Timers for recog timeout
 	
 		transcribeMode = true;
+		
+
+	    List<Utterance> utterances = new ArrayList<Utterance>();
 		
 		FrontEnd fe = null;
 	    // configure the audio input for the recognizer
@@ -543,7 +544,7 @@ public class SphinxRecEngine extends AbstractPoolableObject implements RecEngine
 				 _dataSource = new AudioStreamDataSource();
 				 fe = createAudioFrontend(true,true,(DataProcessor) _dataSource);
 			 } else {
-				 //_logger.warn("Unrecognized mime type: "+mimeType + " Trying to process as audio/x-wav");
+				 //TODO: Check if xuggler is installed on this machine
 				 _dataSource = new XugglerAudioStreamDataSource();
 				 fe = createAudioFrontend(true,true,(DataProcessor) _dataSource);
 			 }
@@ -566,12 +567,27 @@ public class SphinxRecEngine extends AbstractPoolableObject implements RecEngine
 	    //List<Result> resultList = new ArrayList<Result>();
 		String totalResult ="";
 
+		//List<Utterance> utterences = new ArrayList<Utterance>();
 		Result result;
         while ((result = _recognizer.recognize())!= null) {
 
-            String resultText = result.getTimedBestResult(false, true);
+            String resultText = null;      
+	        
+	        if (outMode == OutputFormat.text) {
+	        	resultText = result.getBestFinalResultNoFiller();  
+      	
+	        } else if (outMode == OutputFormat.json) {
+	        	Utterance utterance = ResultUtils.getAllResults(result, false, false,cs);
+	            resultText = gson.toJson(utterance);
+	        	
+	        } else {
+	        	resultText = result.getBestFinalResultNoFiller();  
+	        	_logger.warn("Inrecognized output format: "+outMode+ "  ,using plain text mode as a default.");
+	        }
             _logger.debug(resultText);
-            out.println(resultText);
+            out.println(resultText); 	        	
+	        
+
             totalResult = totalResult+resultText;
 
             //chunked encoded, so flush for realtime streaming
@@ -590,7 +606,11 @@ public class SphinxRecEngine extends AbstractPoolableObject implements RecEngine
 	    return totalResult;
     }
 	
-	
+
+
+
+
+
 	/* (non-Javadoc)
      * @see com.spokentech.speechdown.server.recog.RecEngine#recognize(javax.sound.sampled.AudioInputStream, java.lang.String)
      */
@@ -927,9 +947,8 @@ public class SphinxRecEngine extends AbstractPoolableObject implements RecEngine
      */
     private static void printWordConfidence(WordResult wr) {
         String word = wr.getPronunciation().getWord().getSpelling();
-
         System.out.print(word);
-
+        
         /* pad spaces between the word and its score */
         int entirePadLength = 10;
         if (word.length() < entirePadLength) {

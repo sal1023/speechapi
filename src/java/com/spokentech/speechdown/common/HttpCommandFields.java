@@ -8,6 +8,7 @@ public class HttpCommandFields {
     public static final String ENDPOINTING_FLAG = "doEndpointing";
     public static final String DATA_MODE = "dataMode";
     public static final String CMN_BATCH = "CmnBatchFlag";
+    public static final String OUTPUT_MODE = "outputMode";  //text or json (default to text)
     
     
 	//Common Recognizer and Synthesizer field names

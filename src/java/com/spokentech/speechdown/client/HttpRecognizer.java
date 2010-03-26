@@ -43,6 +43,7 @@ import com.spokentech.speechdown.common.AFormat;
 import com.spokentech.speechdown.common.InvalidRecognitionResultException;
 import com.spokentech.speechdown.common.RecognitionResult;
 import com.spokentech.speechdown.common.SpeechEventListener;
+import com.spokentech.speechdown.common.Utterance.OutputFormat;
 
 // TODO: Auto-generated Javadoc
 /**
@@ -136,7 +137,7 @@ public class HttpRecognizer {
 	 * 
 	 * @return the recognition result
 	 */
-	public RecognitionResult recognize(InputStream inputStream, AFormat format, String mimeType, URL grammarUrl, boolean lmflg, boolean doEndpointing, boolean batchMode) {
+	public RecognitionResult recognize(InputStream inputStream, AFormat format, String mimeType, URL grammarUrl, boolean lmflg, boolean doEndpointing, boolean batchMode, OutputFormat outMode) {
 	    // Plain old http approach    	
     	HttpClient httpclient = new DefaultHttpClient();
         HttpPost httppost = new HttpPost(service);
@@ -156,7 +157,8 @@ public class HttpRecognizer {
 	        }
         }
         
-        _logger.fine("Actual format: " + format);    	
+        _logger.fine("Actual format: " + format);  
+        StringBody outputFormat = null;
     	StringBody sampleRate = null;
     	StringBody bigEndian = null;
     	StringBody bytesPerValue = null;
@@ -166,10 +168,20 @@ public class HttpRecognizer {
     	StringBody batchModeFlag = null;
     	StringBody continuousFlag = null;
         try {
-        	sampleRate = new StringBody(String.valueOf((int)format.getSampleRate()));
-        	bigEndian = new StringBody(String.valueOf(format.isBigEndian()));
-        	bytesPerValue =new StringBody(String.valueOf(format.getSampleSizeInBits()/8));
-        	encoding = new StringBody(format.getEncoding().toString());
+        	if (format != null) {
+	        	sampleRate = new StringBody(String.valueOf((int)format.getSampleRate()));
+	        	bigEndian = new StringBody(String.valueOf(format.isBigEndian()));
+	        	bytesPerValue =new StringBody(String.valueOf(format.getSampleSizeInBits()/8));
+	        	encoding = new StringBody(format.getEncoding().toString());
+				mpEntity.addPart(HttpCommandFields.SAMPLE_RATE_FIELD_NAME, sampleRate);
+				mpEntity.addPart(HttpCommandFields.BIG_ENDIAN_FIELD_NAME, bigEndian);
+				mpEntity.addPart(HttpCommandFields.BYTES_PER_VALUE_FIELD_NAME, bytesPerValue);
+				mpEntity.addPart(HttpCommandFields.ENCODING_FIELD_NAME, encoding);
+        	}
+        	if (outMode!= null) {
+        		outputFormat = new StringBody(outMode.name());
+    			mpEntity.addPart(HttpCommandFields.OUTPUT_MODE, outputFormat);
+        	}
         	lmFlag = new StringBody(String.valueOf(lmflg));
         	endpointFlag = new StringBody(String.valueOf(doEndpointing));
         	batchModeFlag = new StringBody(String.valueOf(batchMode));
@@ -179,11 +191,7 @@ public class HttpRecognizer {
 	        e1.printStackTrace();
         }
         
-        //add the form field parts
-		mpEntity.addPart(HttpCommandFields.SAMPLE_RATE_FIELD_NAME, sampleRate);
-		mpEntity.addPart(HttpCommandFields.BIG_ENDIAN_FIELD_NAME, bigEndian);
-		mpEntity.addPart(HttpCommandFields.BYTES_PER_VALUE_FIELD_NAME, bytesPerValue);
-		mpEntity.addPart(HttpCommandFields.ENCODING_FIELD_NAME, encoding);
+
 		mpEntity.addPart(HttpCommandFields.LANGUAGE_MODEL_FLAG, lmFlag);
 		mpEntity.addPart(HttpCommandFields.ENDPOINTING_FLAG, endpointFlag);
 		mpEntity.addPart(HttpCommandFields.CMN_BATCH, batchModeFlag);
@@ -273,7 +281,7 @@ public class HttpRecognizer {
 	 * @throws AsynchNotEnabledException 
 	 * @throws HttpRecognizerException 
 	 */
-	public  String recognizeAsynch(URL grammarUrl, EndPointingInputStream epStream, boolean lmflg, boolean batchMode, long timeout, SpeechEventListener eventListener ) throws InstantiationException, IOException, StreamInUseException, AsynchNotEnabledException {
+	public  String recognizeAsynch(URL grammarUrl, EndPointingInputStream epStream, boolean lmflg, boolean batchMode, OutputFormat outMode, long timeout, SpeechEventListener eventListener ) throws InstantiationException, IOException, StreamInUseException, AsynchNotEnabledException {
 
 		if (epStream.checkAndSetIfInUse()) 
 			throw new StreamInUseException();
@@ -283,7 +291,7 @@ public class HttpRecognizer {
 		    grammarIs = grammarUrl.openStream();
 		AsynchCommand command = null;
 		if (workQ != null) {
-		   command = new AsynchCommand(AsynchCommand.CommandType.recognize, service, grammarIs, epStream, lmflg, batchMode, timeout, eventListener);
+		   command = new AsynchCommand(AsynchCommand.CommandType.recognize, service, grammarIs, epStream, lmflg, batchMode, outMode, timeout, eventListener);
 		   workQ.execute(command);
 		} else {
 			_logger.info("AsycnMode is not enabled.  Use the enableAsynch(int numthreads) to enable ascynh mode");
@@ -308,7 +316,7 @@ public class HttpRecognizer {
 	 * @throws IOException Signals that an I/O exception has occurred.
 	 * @throws HttpRecognizerException 
 	 */
-	public  String recognizeAsynch(String grammar, EndPointingInputStream epStream, boolean lmflg, boolean batchMode, long timeout, SpeechEventListener eventListener ) throws InstantiationException, IOException, StreamInUseException, AsynchNotEnabledException {
+	public  String recognizeAsynch(String grammar, EndPointingInputStream epStream, boolean lmflg, boolean batchMode, OutputFormat outMode, long timeout, SpeechEventListener eventListener ) throws InstantiationException, IOException, StreamInUseException, AsynchNotEnabledException {
 
 		if (epStream.checkAndSetIfInUse()) 
 			throw new StreamInUseException();
@@ -316,7 +324,7 @@ public class HttpRecognizer {
 		InputStream grammarIs = new ByteArrayInputStream(grammar.getBytes());
 		AsynchCommand command = null;
 		if (workQ != null) {
-		   command = new AsynchCommand(AsynchCommand.CommandType.recognize, service, grammarIs, epStream, lmflg, batchMode, timeout, eventListener);
+		   command = new AsynchCommand(AsynchCommand.CommandType.recognize, service, grammarIs, epStream, lmflg, batchMode, outMode, timeout, eventListener);
 		   workQ.execute(command);
 		} else {
 			_logger.info("AsycnMode is not enabled.  Use the enableAsynch(int numthreads) to enable ascynh mode");
@@ -339,8 +347,8 @@ public class HttpRecognizer {
 	 * @throws InstantiationException the instantiation exception
 	 * @throws IOException Signals that an I/O exception has occurred.
 	 */
-	public  RecognitionResult recognize(URL grammarUrl, EndPointingInputStream epStream, boolean lmflg, boolean batchMode, long timeout ) throws InstantiationException, IOException {
-		return recognize( grammarUrl,  epStream,  lmflg,  batchMode,  timeout, null);
+	public  RecognitionResult recognize(URL grammarUrl, EndPointingInputStream epStream, boolean lmflg, boolean batchMode, OutputFormat outMode, long timeout ) throws InstantiationException, IOException {
+		return recognize( grammarUrl,  epStream,  lmflg,  batchMode,  outMode,timeout, null);
 	}
 
 	
@@ -359,10 +367,10 @@ public class HttpRecognizer {
 	 * @throws InstantiationException the instantiation exception
 	 * @throws IOException Signals that an I/O exception has occurred.
 	 */
-	public  RecognitionResult recognize(String grammar, EndPointingInputStream epStream, boolean lmflg, boolean batchMode, long timeout, SpeechEventListener eventListener) throws InstantiationException, IOException {
+	public  RecognitionResult recognize(String grammar, EndPointingInputStream epStream, boolean lmflg, boolean batchMode, OutputFormat outMode, long timeout, SpeechEventListener eventListener) throws InstantiationException, IOException {
 		//String charset = Charset.defaultCharset;
 		InputStream is = new ByteArrayInputStream(grammar.getBytes());
-		RecognitionResult r = recognize(is, epStream,lmflg,batchMode,timeout,eventListener);
+		RecognitionResult r = recognize(is, epStream,lmflg,batchMode, outMode,timeout,eventListener);
 		return r;
 	}
 	
@@ -382,13 +390,13 @@ public class HttpRecognizer {
 	 * @throws InstantiationException the instantiation exception
 	 * @throws IOException Signals that an I/O exception has occurred.
 	 */
-	public  RecognitionResult recognize(URL grammarUrl, EndPointingInputStream epStream, boolean lmflg, boolean batchMode, long timeout, SpeechEventListener eventListener) throws InstantiationException, IOException {
+	public  RecognitionResult recognize(URL grammarUrl, EndPointingInputStream epStream, boolean lmflg, boolean batchMode, OutputFormat outMode, long timeout, SpeechEventListener eventListener) throws InstantiationException, IOException {
 
 		InputStream is = null;
 		if (grammarUrl!=null)
 			is = grammarUrl.openStream();
 
-		RecognitionResult r = recognize(is, epStream,lmflg,batchMode,timeout,eventListener);
+		RecognitionResult r = recognize(is, epStream,lmflg,batchMode,outMode,timeout,eventListener);
 		return r;
 	}
 		
@@ -408,7 +416,7 @@ public class HttpRecognizer {
 	 * @throws InstantiationException the instantiation exception
 	 * @throws IOException Signals that an I/O exception has occurred.
 	 */
-	public  RecognitionResult recognize(InputStream grammar, EndPointingInputStream epStream, boolean lmflg, boolean batchMode, long timeout, SpeechEventListener eventListener) throws InstantiationException, IOException {
+	public  RecognitionResult recognize(InputStream grammar, EndPointingInputStream epStream, boolean lmflg, boolean batchMode, OutputFormat outMode, long timeout, SpeechEventListener eventListener) throws InstantiationException, IOException {
 
         //create the listener (listens for end points)  A decorator, so also can  pass events back to client
         speechStarted = false;
@@ -429,6 +437,7 @@ public class HttpRecognizer {
     	}
 
         //parameters are fields (StringBoodys)
+        StringBody outputFormat = null;
     	StringBody sampleRate = null;
     	StringBody bigEndian = null;
     	StringBody bytesPerValue = null;
@@ -440,10 +449,20 @@ public class HttpRecognizer {
     	AFormat format = epStream.getFormat();
 
         try {
-           	sampleRate = new StringBody(String.valueOf((int)format.getSampleRate()));
-        	bigEndian = new StringBody(String.valueOf(format.isBigEndian()));
-        	bytesPerValue =new StringBody(String.valueOf(format.getSampleSizeInBits()/8));
-        	encoding = new StringBody(format.getEncoding().toString());
+        	if (format != null) {
+	        	sampleRate = new StringBody(String.valueOf((int)format.getSampleRate()));
+	        	bigEndian = new StringBody(String.valueOf(format.isBigEndian()));
+	        	bytesPerValue =new StringBody(String.valueOf(format.getSampleSizeInBits()/8));
+	        	encoding = new StringBody(format.getEncoding().toString());
+				mpEntity.addPart(HttpCommandFields.SAMPLE_RATE_FIELD_NAME, sampleRate);
+				mpEntity.addPart(HttpCommandFields.BIG_ENDIAN_FIELD_NAME, bigEndian);
+				mpEntity.addPart(HttpCommandFields.BYTES_PER_VALUE_FIELD_NAME, bytesPerValue);
+				mpEntity.addPart(HttpCommandFields.ENCODING_FIELD_NAME, encoding);
+        	}
+        	if (outMode!= null) {
+        		outputFormat = new StringBody(outMode.name());
+    			mpEntity.addPart(HttpCommandFields.OUTPUT_MODE, outputFormat);
+        	}
         	lmFlag = new StringBody(String.valueOf(lmflg));
            	endpointFlag = new StringBody(String.valueOf(epStream.getEndPointer().requiresServerSideEndPointing()));
            	continuousFlag = new StringBody(String.valueOf(Boolean.FALSE));
@@ -456,10 +475,6 @@ public class HttpRecognizer {
         //add the form field parts
 		//mpEntity.addPart("dataMode", dataStreamMode);
 
-		mpEntity.addPart(HttpCommandFields.SAMPLE_RATE_FIELD_NAME, sampleRate);
-		mpEntity.addPart(HttpCommandFields.BIG_ENDIAN_FIELD_NAME, bigEndian);
-		mpEntity.addPart(HttpCommandFields.BYTES_PER_VALUE_FIELD_NAME, bytesPerValue);
-		mpEntity.addPart(HttpCommandFields.ENCODING_FIELD_NAME, encoding);
 		mpEntity.addPart(HttpCommandFields.LANGUAGE_MODEL_FLAG, lmFlag);
 		mpEntity.addPart(HttpCommandFields.ENDPOINTING_FLAG, endpointFlag);
 		mpEntity.addPart(HttpCommandFields.CONTINUOUS_FLAG,continuousFlag);
@@ -548,7 +563,7 @@ public class HttpRecognizer {
 	
 	
 	/**
-	 * Recognize.
+	 * Transcribe.
 	 * 
 	 * @param format the format of the inputstreamd (note the is needed in plain input streams unlike audioInputstreams where this information is included in the stream.
 	 * @param grammarUrl the grammar url.  If lmFlag is false, you must set the grammar file url.  (JSGF is supported)
@@ -561,7 +576,7 @@ public class HttpRecognizer {
 	 * @throws IOException Signals that an I/O exception has occurred.
 	 * @throws IllegalStateException the illegal state exception
 	 */
-	public InputStream transcribe(InputStream inputStream, AFormat format, String mimeType, URL grammarUrl, boolean lmflg) throws IllegalStateException, IOException {
+	public InputStream transcribe(InputStream inputStream, AFormat format, String mimeType, URL grammarUrl, boolean lmflg, OutputFormat outMode) throws IllegalStateException, IOException {
 	    // Plain old http approach    	
     	HttpClient httpclient = new DefaultHttpClient();
         HttpPost httppost = new HttpPost(service);
@@ -581,7 +596,8 @@ public class HttpRecognizer {
 	        }
         }
         
-        _logger.fine("Actual format: " + format);    	
+        _logger.fine("Actual format: " + format);  
+        StringBody outputFormat = null;
     	StringBody sampleRate = null;
     	StringBody bigEndian = null;
     	StringBody bytesPerValue = null;
@@ -591,10 +607,20 @@ public class HttpRecognizer {
     	StringBody batchModeFlag = null;
     	StringBody continuousFlag = null;
         try {
-        	sampleRate = new StringBody(String.valueOf((int)format.getSampleRate()));
-        	bigEndian = new StringBody(String.valueOf(format.isBigEndian()));
-        	bytesPerValue =new StringBody(String.valueOf(format.getSampleSizeInBits()/8));
-        	encoding = new StringBody(format.getEncoding().toString());
+        	if (format != null) {
+	        	sampleRate = new StringBody(String.valueOf((int)format.getSampleRate()));
+	        	bigEndian = new StringBody(String.valueOf(format.isBigEndian()));
+	        	bytesPerValue =new StringBody(String.valueOf(format.getSampleSizeInBits()/8));
+	        	encoding = new StringBody(format.getEncoding().toString());
+				mpEntity.addPart(HttpCommandFields.SAMPLE_RATE_FIELD_NAME, sampleRate);
+				mpEntity.addPart(HttpCommandFields.BIG_ENDIAN_FIELD_NAME, bigEndian);
+				mpEntity.addPart(HttpCommandFields.BYTES_PER_VALUE_FIELD_NAME, bytesPerValue);
+				mpEntity.addPart(HttpCommandFields.ENCODING_FIELD_NAME, encoding);
+        	}
+        	if (outMode!= null) {
+        		outputFormat = new StringBody(outMode.name());
+    			mpEntity.addPart(HttpCommandFields.OUTPUT_MODE, outputFormat);
+        	}
         	lmFlag = new StringBody(String.valueOf(lmflg));
         	endpointFlag = new StringBody(String.valueOf(Boolean.TRUE));
         	batchModeFlag = new StringBody(String.valueOf(Boolean.TRUE));
@@ -605,10 +631,12 @@ public class HttpRecognizer {
         }
         
         //add the form field parts
-		mpEntity.addPart(HttpCommandFields.SAMPLE_RATE_FIELD_NAME, sampleRate);
-		mpEntity.addPart(HttpCommandFields.BIG_ENDIAN_FIELD_NAME, bigEndian);
-		mpEntity.addPart(HttpCommandFields.BYTES_PER_VALUE_FIELD_NAME, bytesPerValue);
-		mpEntity.addPart(HttpCommandFields.ENCODING_FIELD_NAME, encoding);
+    	if (format != null) {
+			mpEntity.addPart(HttpCommandFields.SAMPLE_RATE_FIELD_NAME, sampleRate);
+			mpEntity.addPart(HttpCommandFields.BIG_ENDIAN_FIELD_NAME, bigEndian);
+			mpEntity.addPart(HttpCommandFields.BYTES_PER_VALUE_FIELD_NAME, bytesPerValue);
+			mpEntity.addPart(HttpCommandFields.ENCODING_FIELD_NAME, encoding);
+    	}
 		mpEntity.addPart(HttpCommandFields.LANGUAGE_MODEL_FLAG, lmFlag);
 		mpEntity.addPart(HttpCommandFields.ENDPOINTING_FLAG, endpointFlag);
 		mpEntity.addPart(HttpCommandFields.CMN_BATCH, batchModeFlag);

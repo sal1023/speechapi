@@ -380,6 +380,7 @@ public class XugglerAudioStreamDataSource extends BaseDataProcessor implements S
 
 
     while (container.readNextPacket(packet) >= 0) {
+        long firstSample = totalValuesRead;
       /*
        * Now we have a packet, let's see if it belongs to our audio stream
        */
@@ -424,6 +425,7 @@ public class XugglerAudioStreamDataSource extends BaseDataProcessor implements S
           }  else {
             reSamples = samples;
           }
+          
           _logger.fine(">> Resamples"+bytesResampled +"  "+offset +" "+reSamples.getNumSamples());
 
         }
@@ -451,9 +453,9 @@ public class XugglerAudioStreamDataSource extends BaseDataProcessor implements S
         	_logger.fine(">>doubleData was null");
         }
         
-
+        totalValuesRead = totalValuesRead + reSamples.getNumSamples();
         long collectTime = System.currentTimeMillis();
-        return new DoubleData(doubleData, sampleRate, collectTime, 0);
+        return new DoubleData(doubleData, sampleRate, collectTime, firstSample);
         
       } else {
         /*

@@ -32,6 +32,7 @@ import com.spokentech.speechdown.client.util.FormatUtils;
 import com.spokentech.speechdown.common.AFormat;
 import com.spokentech.speechdown.common.RecognitionResult;
 import com.spokentech.speechdown.common.SpeechEventListener;
+import com.spokentech.speechdown.common.Utterance.OutputFormat;
 
 
 import junit.framework.TestCase;
@@ -157,7 +158,7 @@ public class HttpRecognizerTest extends TestCase {
 			long start = System.nanoTime();
             try {
 		    	boolean lmflg = true;
-		    	InputStream s = recog.transcribe(audioInputStream, format, mimeType, grammarUrl, lmflg);
+		    	InputStream s = recog.transcribe(audioInputStream, format, mimeType, grammarUrl, lmflg,OutputFormat.json);
 
                 int c;
                 while ((c = s.read()) != -1) {
@@ -174,6 +175,42 @@ public class HttpRecognizerTest extends TestCase {
 	    	System.out.println("FILE TEST: Batch mode, Server Endpointing, LM result: " + " took "+wall+ " ms");    	
 	    }
 		    
+	    
+	    public void testTranscribeNoFormat() {
+	    	System.out.println("Starting Transcribe Test ...");
+	        
+	    	AudioInputStream audioInputStream = null;
+	    	Type type = null;
+	    	try {
+	    		audioInputStream = AudioSystem.getAudioInputStream(soundFile4);
+	    		type = AudioSystem.getAudioFileFormat(soundFile4).getType();
+	    	} catch (Exception e) {
+	    		e.printStackTrace();
+	    	}
+	    	String mimeType = null;
+
+	    	mimeType = "audio/x-wav";
+    	
+	    	
+			long start = System.nanoTime();
+            try {
+		    	boolean lmflg = true;
+		    	InputStream s = recog.transcribe(audioInputStream, null, mimeType, grammarUrl, lmflg,OutputFormat.json);
+
+                int c;
+                while ((c = s.read()) != -1) {
+                    System.out.write(c);
+                }
+
+            } catch (IOException e) {
+	            // TODO Auto-generated catch block
+	            e.printStackTrace();
+            }
+            
+			long stop = System.nanoTime();
+			long wall = (stop - start)/1000000;
+	    	System.out.println("FILE TEST: Batch mode, Server Endpointing, LM result: " + " took "+wall+ " ms");    	
+	    }
 	     
 
 	    public void testRecognizeFileLmBatch() {
@@ -183,7 +220,7 @@ public class HttpRecognizerTest extends TestCase {
 	    	boolean doEndpointing = true;
 	    	boolean batchMode = true;
 			long start = System.nanoTime();
-	    	RecognitionResult r = recog.recognize(fname, grammarUrl, lmflg, doEndpointing,batchMode);
+	    	RecognitionResult r = recog.recognize(fname, grammarUrl, lmflg, doEndpointing,batchMode,OutputFormat.text);
 			long stop = System.nanoTime();
 			long wall = (stop - start)/1000000;
 	    	System.out.println("FILE TEST: Batch mode, Server Endpointing, LM result: "+r.getText() + " took "+wall+ " ms");
@@ -198,7 +235,7 @@ public class HttpRecognizerTest extends TestCase {
 	    	boolean doEndpointing = true;
 	    	boolean batchMode = true;
 			long start = System.nanoTime();
-	    	RecognitionResult r = recog.recognize(fname, grammarUrl, lmflg, doEndpointing,batchMode);
+	    	RecognitionResult r = recog.recognize(fname, grammarUrl, lmflg, doEndpointing,batchMode,OutputFormat.json);
 			long stop = System.nanoTime();
 			long wall = (stop - start)/1000000;
 	    	System.out.println("FILE TEST: Batch mode, Server Endpointing, Grammar result: "+r.getText() + " took "+wall+ " ms");
@@ -211,7 +248,7 @@ public class HttpRecognizerTest extends TestCase {
 	    	boolean doEndpointing = true;
 	    	boolean batchMode = false;
 			long start = System.nanoTime();
-	    	RecognitionResult r = recog.recognize(fname, grammarUrl, lmflg, doEndpointing,batchMode);
+	    	RecognitionResult r = recog.recognize(fname, grammarUrl, lmflg, doEndpointing,batchMode,OutputFormat.text);
 			long stop = System.nanoTime();
 			long wall = (stop - start)/1000000;
 	    	System.out.println("FILETEST: Live mode, Server Endpointing, LM result: "+r.getText() + " took "+wall+ " ms");    	
@@ -224,7 +261,7 @@ public class HttpRecognizerTest extends TestCase {
 	    	boolean doEndpointing = true;
 	    	boolean batchMode = false;
 			long start = System.nanoTime();
-	    	RecognitionResult r = recog.recognize(fname, grammarUrl, lmflg, doEndpointing,batchMode);
+	    	RecognitionResult r = recog.recognize(fname, grammarUrl, lmflg, doEndpointing,batchMode,OutputFormat.text);
 			long stop = System.nanoTime();
 			long wall = (stop - start)/1000000;
 	    	System.out.println("FILE TEST: Live mode, Server endpointing, Grammar result: "+r.getText() + " took "+wall+ " ms");
@@ -253,7 +290,7 @@ public class HttpRecognizerTest extends TestCase {
 	    	boolean batchMode = true;
 			long start = System.nanoTime();
 
-	    	RecognitionResult r = recog.recognize(audioInputStream, type, null, lmflg, doEndpointing,batchMode);
+	    	RecognitionResult r = recog.recognize(audioInputStream, type, null, lmflg, doEndpointing,batchMode,OutputFormat.text);
 			long stop = System.nanoTime();
 			long wall = (stop - start)/1000000;
 	    	System.out.println("STREAM TEST: Batch mode, No endpointing, LM result: "+r.getText() + " took "+wall+ " ms");	    	
@@ -301,7 +338,7 @@ public class HttpRecognizerTest extends TestCase {
 	    	boolean lmflg = false;
 	    	boolean batchMode =false;
 	    	long start = System.nanoTime();
-	    	RecognitionResult r = recog.recognize(audioInputStream, format, mimeType, grammarUrl, lmflg, doEndpointing,batchMode);
+	    	RecognitionResult r = recog.recognize(audioInputStream, format, mimeType, grammarUrl, lmflg, doEndpointing,batchMode,OutputFormat.text);
 	    	long stop = System.nanoTime();
 	    	long wall = (stop - start)/1000000;
 	    	System.out.println("STREAM TEST: Live mode, No Endpointing Grammar result: "+r.getText() + " took "+wall+ " ms");   	
@@ -344,7 +381,7 @@ public class HttpRecognizerTest extends TestCase {
 	    	
 	    	
 	    	long start = System.nanoTime();
-	    	RecognitionResult r = recog.recognize(audioInputStream, format, mimeType, grammarUrl, lmflg,doEndpointing, batchMode);
+	    	RecognitionResult r = recog.recognize(audioInputStream, format, mimeType, grammarUrl, lmflg,doEndpointing, batchMode,OutputFormat.text);
 	    	long stop = System.nanoTime();
 	    	long wall = (stop - start)/1000000;
 	    	System.out.println("STREAM TEST: Live mode, Endpointing, with parameter Grammar result: "+r.getText() + " took "+wall+ " ms");   	
@@ -383,7 +420,7 @@ public class HttpRecognizerTest extends TestCase {
 	    	boolean doEndpointing = true;
 	    	boolean batchMode = false;
 	    	long start = System.nanoTime();
-	    	RecognitionResult r = recog.recognize(audioInputStream, format, mimeType, null, lmflg,doEndpointing, batchMode);
+	    	RecognitionResult r = recog.recognize(audioInputStream, format, mimeType, null, lmflg,doEndpointing, batchMode,OutputFormat.text);
 	    	long stop = System.nanoTime();
 	    	long wall = (stop - start)/1000000;
 	    	System.out.println("STREAM TEST: Live mode, Endpointing, with parameter LM result: "+r.getText() + " took "+wall+ " ms");   	
@@ -425,7 +462,7 @@ public class HttpRecognizerTest extends TestCase {
 	    	boolean lmflg = false;
 	    	boolean batchFlag = false;
 	        try {	            
-	            r = recog.recognize(grammarUrl,  epStream,  lmflg,  batchFlag, timeout) ;
+	            r = recog.recognize(grammarUrl,  epStream,  lmflg,  batchFlag,OutputFormat.text, timeout) ;
             } catch (InstantiationException e) {
 	            // TODO Auto-generated catch block
 	            e.printStackTrace();
@@ -455,7 +492,7 @@ public class HttpRecognizerTest extends TestCase {
 	    	boolean batchFlag = true;
 	    	String id;
 	        try {	            
-	            id = recog.recognizeAsynch(grammarUrl,  epStream,  lmflg,  batchFlag, timeout,l) ;
+	            id = recog.recognizeAsynch(grammarUrl,  epStream,  lmflg,  batchFlag,OutputFormat.text, timeout,l) ;
             } catch (InstantiationException e) {
 	            // TODO Auto-generated catch block
 	            e.printStackTrace();
@@ -494,7 +531,7 @@ public class HttpRecognizerTest extends TestCase {
 	    	boolean batchFlag = true;
 	    	String id;
 	        try {	            
-	            id = recog.recognizeAsynch(grammarUrl,  epStream,  lmflg,  batchFlag, timeout,l) ;
+	            id = recog.recognizeAsynch(grammarUrl,  epStream,  lmflg,  batchFlag,OutputFormat.text, timeout,l) ;
             } catch (InstantiationException e) {
 	            // TODO Auto-generated catch block
 	            e.printStackTrace();
@@ -535,7 +572,7 @@ public class HttpRecognizerTest extends TestCase {
 	    	boolean batchFlag = false;
 	    	String id = null;
 	        try {	            
-	            id = recog.recognizeAsynch(grammarUrl,  epStream,  lmflg,  batchFlag, timeout,l) ;
+	            id = recog.recognizeAsynch(grammarUrl,  epStream,  lmflg,  batchFlag,OutputFormat.text, timeout,l) ;
             } catch (InstantiationException e) {
 	            // TODO Auto-generated catch block
 	            e.printStackTrace();
@@ -572,7 +609,7 @@ public class HttpRecognizerTest extends TestCase {
 	    	boolean lmflg = true;
 	    	boolean batchFlag = false;
 	        try {	            
-	            r = recog.recognize(grammarUrl,  epStream,  lmflg,  batchFlag, timeout) ;
+	            r = recog.recognize(grammarUrl,  epStream,  lmflg,  batchFlag,OutputFormat.text, timeout) ;
             } catch (InstantiationException e) {
 	            // TODO Auto-generated catch block
 	            e.printStackTrace();
@@ -613,7 +650,7 @@ public class HttpRecognizerTest extends TestCase {
 	    	boolean lmflg = true;
 	    	boolean batchFlag = false;
 	        try {
-	        	r = recog.recognize(grammarUrl,  epStream,  lmflg,  batchFlag, timeout) ;
+	        	r = recog.recognize(grammarUrl,  epStream,  lmflg,  batchFlag,OutputFormat.text, timeout) ;
             } catch (InstantiationException e) {
 	            // TODO Auto-generated catch block
 	            e.printStackTrace();
@@ -644,7 +681,7 @@ public class HttpRecognizerTest extends TestCase {
 	    	lmflg = false;
 	    	batchFlag = false;
 	        try {
-	        	r = recog.recognize(grammarUrl,  epStream,  lmflg, batchFlag, timeout) ;
+	        	r = recog.recognize(grammarUrl,  epStream,  lmflg, batchFlag,OutputFormat.text, timeout) ;
             } catch (InstantiationException e) {
 	            // TODO Auto-generated catch block
 	            e.printStackTrace();
@@ -711,11 +748,11 @@ public class HttpRecognizerTest extends TestCase {
 	    	boolean doEndpointing = true;
 	    	boolean lmflg = true;
 	    	boolean batchFlag = false;
-	    	RecognitionResult r = recog.recognize(audioLine, grammarUrl, lmflg, batchFlag, doEndpointing);
+	    	RecognitionResult r = recog.recognize(audioLine, grammarUrl, lmflg, batchFlag, doEndpointing,OutputFormat.text);
 	    	System.out.println("lm result: "+r.getText());	        
 	    	
 	        lmflg = false;
-	        r = recog.recognize(audioLine, grammarUrl, lmflg,doEndpointing,batchFlag);
+	        r = recog.recognize(audioLine, grammarUrl, lmflg,doEndpointing,batchFlag,OutputFormat.text);
 	        System.out.println("grammar result: "+r.getText());
 	    	
 	    }
@@ -741,7 +778,7 @@ public class HttpRecognizerTest extends TestCase {
 	    	boolean lmflg = true;
 	    	boolean batchFlag = false;
 	        try {          
-	            r = recog.recognize(grammarUrl,  epStream,  lmflg,  batchFlag, timeout) ;
+	            r = recog.recognize(grammarUrl,  epStream,  lmflg,  batchFlag,OutputFormat.text, timeout) ;
             } catch (InstantiationException e) {
 	            // TODO Auto-generated catch block
 	            e.printStackTrace();
@@ -754,7 +791,7 @@ public class HttpRecognizerTest extends TestCase {
 	    	lmflg = false;
 	    	batchFlag = false;
 	        try {          
-	            r = recog.recognize(grammarUrl,  epStream,  lmflg, batchFlag, timeout) ;
+	            r = recog.recognize(grammarUrl,  epStream,  lmflg, batchFlag,OutputFormat.text, timeout) ;
             } catch (InstantiationException e) {
 	            // TODO Auto-generated catch block
 	            e.printStackTrace();

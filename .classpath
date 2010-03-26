@@ -33,10 +33,6 @@
 	<classpathentry kind="var" path="CATALINA_HOME/lib/servlet-api.jar"/>
 	<classpathentry kind="lib" path="lib/jaxws-spring-1.8.jar"/>
 	<classpathentry kind="lib" path="lib/spring-2.5.5.jar"/>
-	<classpathentry kind="lib" path="lib/httpclient-4.0-beta2.jar"/>
-	<classpathentry kind="lib" path="lib/httpmime-4.0-beta2.jar"/>
-	<classpathentry kind="lib" path="lib/httpcore-4.0.jar"/>
-	<classpathentry kind="lib" path="lib/apache-mime4j-0.5.jar"/>
 	<classpathentry kind="con" path="org.eclipse.jdt.junit.JUNIT_CONTAINER/3"/>
 	<classpathentry kind="lib" path="C:/Program Files/Java/jre6/lib/plugin.jar"/>
 	<classpathentry kind="lib" path="lib/cairo-rtp-SNAPSHOT.jar"/>
@@ -54,5 +50,10 @@
 	<classpathentry kind="lib" path="C:/thirdparty/jersey-archive-1.1.5/lib/jersey-server-1.1.5.jar"/>
 	<classpathentry kind="lib" path="C:/thirdparty/jersey-archive-1.1.5/lib/jsr311-api-1.1.1.jar"/>
 	<classpathentry kind="lib" path="lib/xuggle-xuggler.jar"/>
+	<classpathentry kind="lib" path="lib/apache-mime4j-0.6.jar"/>
+	<classpathentry kind="lib" path="lib/httpclient-4.0.1.jar"/>
+	<classpathentry kind="lib" path="lib/httpcore-4.0.1.jar"/>
+	<classpathentry kind="lib" path="lib/httpmime-4.0.1.jar"/>
+	<classpathentry kind="var" path="M2_REPO/com/google/code/gson/gson/1.4/gson-1.4.jar"/>
 	<classpathentry kind="output" path="target/eclipse"/>
 </classpath>
