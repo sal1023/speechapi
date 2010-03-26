@@ -18,6 +18,7 @@ import org.jvnet.staxex.StreamingDataHandler;
 
 import com.spokentech.speechdown.common.AFormat;
 import com.spokentech.speechdown.common.RecognitionResult;
+import com.spokentech.speechdown.common.Utterance.OutputFormat;
 import com.spokentech.speechdown.server.domain.HttpRequest;
 import com.spokentech.speechdown.server.recog.RecEngine;
 import com.spokentech.speechdown.server.util.pool.AbstractPoolableObjectFactory;
@@ -135,7 +136,7 @@ public class RecognizerService {
     }
 
 	//grammar method
-	public RecognitionResult Recognize(InputStream as, String grammar, String mimeType, AFormat af, boolean doEndpointing, boolean cmnBatch, HttpRequest hr) {
+	public RecognitionResult Recognize(InputStream as, String grammar, String mimeType, AFormat af, OutputFormat outMode, boolean doEndpointing, boolean cmnBatch, HttpRequest hr) {
 
 		_logger.debug("Before borrow" + System.currentTimeMillis());
 		
@@ -157,7 +158,7 @@ public class RecognizerService {
       
         RecognitionResult results ;
         try {
-           results = rengine.recognize(as,mimeType,grammar,af,doEndpointing, cmnBatch, hr);
+           results = rengine.recognize(as,mimeType,grammar,af,outMode, doEndpointing, cmnBatch, hr);
         } catch (Exception e) {
 	        _logger.warn("Excption occurred while processing recognition requets "+e.getLocalizedMessage());
 	        
@@ -182,7 +183,7 @@ public class RecognizerService {
 
 	
 	//language model method (no grammar)
-	public RecognitionResult Recognize(InputStream as, String mimeType, AFormat af, boolean doEndpointing, boolean cmnBatch, HttpRequest hr) {
+	public RecognitionResult Recognize(InputStream as, String mimeType, AFormat af, OutputFormat outMode, boolean doEndpointing, boolean cmnBatch, HttpRequest hr) {
 		_logger.debug("Before borrow" + System.currentTimeMillis());
 		
         RecEngine rengine = null;
@@ -199,7 +200,7 @@ public class RecognizerService {
 	
         RecognitionResult results ;
         try {
-           results = rengine.recognize(as,mimeType,af, doEndpointing, cmnBatch,hr);
+           results = rengine.recognize(as,mimeType,af, outMode, doEndpointing, cmnBatch,hr);
         } catch (Exception e) {
 	        _logger.warn("Excption occurred while processing LM recognition requets "+e.getLocalizedMessage());
 
@@ -222,7 +223,7 @@ public class RecognizerService {
 	    return results;	
     }
 
-	public String Transcribe(InputStream audio, String mimeType, AFormat af, PrintWriter out, HttpServletResponse response, HttpRequest hr) {
+	public String Transcribe(InputStream audio, String mimeType, AFormat af, OutputFormat outMode, PrintWriter out, HttpServletResponse response, HttpRequest hr) {
 		_logger.debug("Before borrow" + System.currentTimeMillis());
 		
     	
@@ -240,7 +241,7 @@ public class RecognizerService {
 	
         String results ;
         try {
-             results = rengine.transcribe(audio,mimeType, af,out,response,  hr);
+             results = rengine.transcribe(audio,mimeType, af,outMode, out,response,  hr);
         } catch (Exception e) {
 	        _logger.warn("Excption occurred while processing transcribe requests "+e.getLocalizedMessage());
 	        e.printStackTrace();

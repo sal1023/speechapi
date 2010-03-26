@@ -39,8 +39,8 @@
     
     
     
-    <property name="languageModelFile"          value="file:\\\C:\work\models\lm\lm_giga_64k_vp_3gram.arpa.DMP"/>
-
+    <!--property name="languageModelFile"          value="file:\\\C:\work\models\lm\lm_giga_64k_vp_3gram.arpa.DMP"/-->
+    <property name="languageModelFile"          value="file:\\\C:\work\models\lm\wsj5kc.Z.DMP"/>
 	<!-- these are only needed to create the pool of recognizers.  Should be able to find a better way to create a recognizer without a grammar -->
     <property name="grammarLocation"             value="resource:/com.spokentech.speechdown.server.RecognizerService!/../../grammar"/>
     <property name="grammarName"                 value="example"/>
@@ -196,7 +196,7 @@
     
     <component name="confidenceScorer"
                type="edu.cmu.sphinx.result.MAPConfidenceScorer">
-        <property name="languageWeight" value="${languageWeight}"/>
+        <property name="languageWeight" value="${lmlanguageWeight}"/>
     </component>
 
 
@@ -336,6 +336,7 @@
         <property name="growSkipInterval" value="0"/>
         <property name="checkStateOrder" value="false"/>
         <property name="buildWordLattice" value="false"/>
+        <property name="keepAllTokens" value="true"/>
         <property name="acousticLookaheadFrames" value="${acousticLookahead)"/>
         <property name="relativeBeamWidth" value="${relativeBeamWidth2}"/>
     </component>
@@ -383,6 +384,7 @@
         <property name="activeListManager" value="lm-ActiveListManager2"/>
         <property name="growSkipInterval" value="0"/>
         <property name="checkStateOrder" value="false"/>
+        <property name="keepAllTokens" value="true"/>
         <property name="buildWordLattice" value="false"/>
         <property name="acousticLookaheadFrames" value="${acousticLookahead)"/>
         <property name="relativeBeamWidth" value="${relativeBeamWidth2}"/>

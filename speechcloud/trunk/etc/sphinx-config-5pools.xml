@@ -38,7 +38,8 @@
     <property name="speechClassifierThreshold" value="13"/>
     
     
-    
+    <property name="languageModelFile"          value="file:///usr/share/models/language/wsj5kc.Z.DMP"/>
+    wsj5kc.Z.DMP
     <property name="languageModelFile"          value="file:///usr/share/models/language/lm_giga_64k_vp_3gram.arpa.DMP"/>
 
 	<!-- these are only needed to create the pool of recognizers.  Should be able to find a better way to create a recognizer without a grammar -->
@@ -199,7 +200,7 @@
     
     <component name="confidenceScorer"
                type="edu.cmu.sphinx.result.MAPConfidenceScorer">
-        <property name="languageWeight" value="${languageWeight}"/>
+        <property name="languageWeight" value="${lmlanguageWeight}"/>
     </component>
 
 
@@ -431,6 +432,7 @@
    <component name="lm-SearchManager1" 
               type="edu.cmu.sphinx.decoder.search.WordPruningBreadthFirstSearchManager">
         <property name="logMath" value="logMath"/>
+        <property name="keepAllTokens" value="true"/>
         <property name="linguist" value="lexTreeLinguist"/>
         <property name="pruner" value="lm-pruner1"/>
         <property name="scorer" value="lm-scorer1"/>
@@ -478,6 +480,7 @@
    <component name="lm-SearchManager2" 
               type="edu.cmu.sphinx.decoder.search.WordPruningBreadthFirstSearchManager">
         <property name="logMath" value="logMath"/>
+        <property name="keepAllTokens" value="true"/>
         <property name="linguist" value="lexTreeLinguist"/>
         <property name="pruner" value="lm-pruner2"/>
         <property name="scorer" value="lm-scorer2"/>
@@ -526,6 +529,7 @@
    <component name="lm-SearchManager3" 
               type="edu.cmu.sphinx.decoder.search.WordPruningBreadthFirstSearchManager">
         <property name="logMath" value="logMath"/>
+                <property name="keepAllTokens" value="true"/>
         <property name="linguist" value="lexTreeLinguist"/>
         <property name="pruner" value="lm-pruner3"/>
         <property name="scorer" value="lm-scorer3"/>
@@ -574,7 +578,8 @@
    <component name="lm-SearchManager4" 
               type="edu.cmu.sphinx.decoder.search.WordPruningBreadthFirstSearchManager">
         <property name="logMath" value="logMath"/>
-        <property name="linguist" value="lexTreeLinguist"/>
+                <property name="keepAllTokens" value="true"/>
+                <property name="linguist" value="lexTreeLinguist"/>
         <property name="pruner" value="lm-pruner4"/>
         <property name="scorer" value="lm-scorer4"/>
         <property name="activeListManager" value="lm-ActiveListManager4"/>
@@ -632,6 +637,7 @@
    <component name="lm-SearchManager5" 
               type="edu.cmu.sphinx.decoder.search.WordPruningBreadthFirstSearchManager">
         <property name="logMath" value="logMath"/>
+                <property name="keepAllTokens" value="true"/>
         <property name="linguist" value="lexTreeLinguist"/>
         <property name="pruner" value="lm-pruner5"/>
         <property name="scorer" value="lm-scorer5"/>

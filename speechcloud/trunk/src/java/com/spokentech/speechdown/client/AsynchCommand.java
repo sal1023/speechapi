@@ -8,6 +8,7 @@ import java.util.logging.Logger;
 
 import com.spokentech.speechdown.client.endpoint.EndPointingInputStream;
 import com.spokentech.speechdown.common.SpeechEventListener;
+import com.spokentech.speechdown.common.Utterance.OutputFormat;
 
 public class AsynchCommand implements Runnable {
 
@@ -18,7 +19,7 @@ public class AsynchCommand implements Runnable {
 	
 
 	public AsynchCommand(CommandType type, String service, InputStream grammarIs,
-            EndPointingInputStream epStream, boolean lmflg, boolean batchMode, long timeout,
+            EndPointingInputStream epStream, boolean lmflg, boolean batchMode, OutputFormat outMode, long timeout,
             SpeechEventListener eventListener) {
 	    super();
 	    this.type = type;
@@ -27,6 +28,7 @@ public class AsynchCommand implements Runnable {
 	    this.epStream = epStream;
 	    this.lmflg = lmflg;
 	    this.batchMode = batchMode;
+	    this.outMode = outMode;
 	    this.timeout = timeout;
 	    this.eventListener = eventListener;
 	    this.id = UUID.randomUUID().toString();
@@ -42,6 +44,7 @@ public class AsynchCommand implements Runnable {
 	private long timeout;
 	private SpeechEventListener eventListener;
 	private HttpRecognizer httpRecognizer;
+	private OutputFormat outMode;
 	
 	private String id;
 	
@@ -73,7 +76,7 @@ public class AsynchCommand implements Runnable {
 				//TODO: make it thread safe so the same HttpRecognizer can be reused (pass the recognizer object in the command)
 			    httpRecognizer = new HttpRecognizer();
 				httpRecognizer.setService(service);
-	            httpRecognizer.recognize(grammarIs, epStream, lmflg, batchMode, timeout,eventListener);
+	            httpRecognizer.recognize(grammarIs, epStream, lmflg, batchMode,outMode, timeout,eventListener);
             } catch (InstantiationException e) {
 	            // TODO Auto-generated catch block
 	            e.printStackTrace();

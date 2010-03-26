@@ -42,6 +42,7 @@ import com.spokentech.speechdown.common.AFormat;
 import com.spokentech.speechdown.common.RecognitionResult;
 
 import com.spokentech.speechdown.common.HttpCommandFields;
+import com.spokentech.speechdown.common.Utterance.OutputFormat;
 import com.spokentech.speechdown.server.domain.HttpRequest;
 import com.spokentech.speechdown.server.util.ServiceLogger;
 
@@ -162,13 +163,18 @@ public class SpeechUploadServlet extends HttpServlet {
 			return;
 		}
 		
-
-
+		//System.out.println(request.toString());
+		//Enumeration enumer = request.getParameterNames();
+	    //while (enumer.hasMoreElements()) {
+	    //    String key = (String) enumer.nextElement();
+	    //    _logger.debug(key + " -- " + request.getParameter(key));
+	    //}
 		
 	    boolean lmFlag = false;
 	    boolean continuous = false;
 	    boolean doEndpointing = false;
 	    boolean cmnBatch = false;
+	    OutputFormat outMode = OutputFormat.text;
 	    
 		//set the audio format parameters to default values
 		boolean formatSpecified = false;
@@ -229,6 +235,8 @@ public class SpeechUploadServlet extends HttpServlet {
 				        	doEndpointing  = Boolean.parseBoolean(value);
 				        } else if (name.equals(HttpCommandFields.LANGUAGE_MODEL_FLAG)) {
 				        	lmFlag = Boolean.parseBoolean(value);
+				        } else if (name.equals(HttpCommandFields.OUTPUT_MODE)) {
+				        	outMode = OutputFormat.valueOf(value);
 				        } else {
 				        	_logger.warn("Unrecognized field "+name+ " = "+value);
 				        }
@@ -287,7 +295,7 @@ public class SpeechUploadServlet extends HttpServlet {
 				    			//response.setHeader("Content-Disposition", "attachment; filename=results.txt'");			
 				    			response.setHeader("Transfer-coding","chunked");
 					    		if (lmFlag) {
-					    			textResult = recognizerService.Transcribe(audio,contentType,af,out,response,hr);
+					    			textResult = recognizerService.Transcribe(audio,contentType,af,outMode,out,response,hr);
 					    		} else {
 							        _logger.debug("recognition result is null");
 								    out.println("recognition result is null");
@@ -300,9 +308,9 @@ public class SpeechUploadServlet extends HttpServlet {
 				    			long stop = System.currentTimeMillis();
 				    			_logger.info("Calling recognizer Service" + stop +" ("+(stop-start) +")" );
 					    		if (lmFlag) {
-					    			result = recognizerService.Recognize(audio,contentType,af,doEndpointing,cmnBatch,hr);
+					    			result = recognizerService.Recognize(audio,contentType,af,outMode, doEndpointing,cmnBatch,hr);
 					    		} else {
-					    	        result = recognizerService.Recognize(audio, grammarString,contentType,af,doEndpointing,cmnBatch,hr);
+					    	        result = recognizerService.Recognize(audio, grammarString,contentType,af,outMode, doEndpointing,cmnBatch,hr);
 
 					    	    }
 

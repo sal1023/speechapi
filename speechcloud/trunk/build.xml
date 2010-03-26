@@ -147,8 +147,7 @@
 		<pathelement	location="${httpclient.jar}" />
 		<pathelement	location="${httpcore.jar}" />
 	</path>
-	
-	
+
 	
 
     <artifact:dependencies pathId="rest.dependency.classpath">
@@ -156,16 +155,25 @@
               artifactId="jersey-server"
               version="1.1.5"/>
       
+       <dependency groupId="com.google.code.gson" 
+              artifactId="gson"
+              version="1.4"/>   
+      
       <!--dependency groupId="com.sun.grizzly" 
               artifactId="grizzly-servlet-webserver"
-              version="1.8.6.4"/>
+              version="1.8.6.4"/-->
       <artifact:remoteRepository id="maven2-repository.dev.java.net"
                              url="http://download.java.net/maven/2/" />
       <artifact:remoteRepository id="maven-repository.dev.java.net"
                              url="http://download.java.net/maven/1" 
-                             layout="legacy" /-->
+                             layout="legacy" />
+      <artifact:remoteRepository id="gson"
+                             url="http://google-gson.googlecode.com/svn/mavenrepo" />
     </artifact:dependencies>
-      <artifact:dependencies filesetId="rest.dependency.fileset"
+    
+    
+    
+    <artifact:dependencies filesetId="rest.dependency.fileset"
                              useScope="runtime"
                              versionsId="dependency.versions">
           <dependency groupId="com.sun.jersey" 
@@ -174,11 +182,17 @@
          <dependency groupId="com.sun.jersey" 
               artifactId="jersey-spring"
               version="1.0"/>
+              
+         <dependency groupId="com.google.code.gson" 
+              artifactId="gson"
+              version="1.4"/> 
       <artifact:remoteRepository id="maven2-repository.dev.java.net"
                              url="http://download.java.net/maven/2/" />
       <artifact:remoteRepository id="maven-repository.dev.java.net"
                              url="http://download.java.net/maven/1" 
                              layout="legacy" />
+      <artifact:remoteRepository id="gson"
+                             url="http://google-gson.googlecode.com/svn/mavenrepo" />
     </artifact:dependencies>
 
 	

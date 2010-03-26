@@ -36,6 +36,7 @@ import com.spokentech.speechdown.client.util.FormatUtils;
 import com.spokentech.speechdown.common.AFormat;
 import com.spokentech.speechdown.common.RecognitionResult;
 import com.spokentech.speechdown.common.SpeechEventListener;
+import com.spokentech.speechdown.common.Utterance.OutputFormat;
 
 
 import junit.framework.TestCase;
@@ -147,7 +148,7 @@ public class HttpRecognizeReuseTest extends TestCase {
 	    	boolean lmflg = false;
 	    	boolean batchFlag = false;
 	        try {	            
-	            r = recog.recognize(grammarUrl,  epStream,  lmflg,  batchFlag, timeout) ;
+	            r = recog.recognize(grammarUrl,  epStream,  lmflg,  batchFlag,OutputFormat.text, timeout) ;
             } catch (InstantiationException e) {
 	            // TODO Auto-generated catch block
 	            e.printStackTrace();
@@ -197,7 +198,7 @@ public class HttpRecognizeReuseTest extends TestCase {
 	    	boolean lmflg = false;
 	    	boolean batchFlag = true;
 	        try {          
-	            r = recog.recognize(grammarUrl,  epStream,  lmflg,  batchFlag, timeout) ;
+	            r = recog.recognize(grammarUrl,  epStream,  lmflg,  batchFlag,OutputFormat.text, timeout) ;
             } catch (InstantiationException e) {
 	            // TODO Auto-generated catch block
 	            e.printStackTrace();
@@ -264,7 +265,7 @@ public class HttpRecognizeReuseTest extends TestCase {
 	    		} else
 			        try {	            
 			        	_logger.info("Calling rec, epStream.inUse() = "+epStream.inUse());
-			            id = recog.recognizeAsynch(grammarUrl,  epStream,  lmflg,  batchFlag, timeout,l) ;
+			            id = recog.recognizeAsynch(grammarUrl,  epStream,  lmflg,  batchFlag,OutputFormat.text, timeout,l) ;
 		            } catch (InstantiationException e) {
 			            // TODO Auto-generated catch block
 			            e.printStackTrace();
@@ -304,7 +305,7 @@ public class HttpRecognizeReuseTest extends TestCase {
 	    		} else
 			        try {	            
 			        	_logger.info("Calling rec, epStream.inUse() = "+epStream.inUse());
-			            id = recog.recognizeAsynch(grammarUrl,  epStream,  lmflg,  batchFlag, timeout,l) ;
+			            id = recog.recognizeAsynch(grammarUrl,  epStream,  lmflg,  batchFlag,OutputFormat.text, timeout,l) ;
 
 		            } catch (InstantiationException e) {
 			            // TODO Auto-generated catch block
@@ -345,7 +346,7 @@ public class HttpRecognizeReuseTest extends TestCase {
 	    		} else
 			        try {	            
 			        	_logger.info("Calling rec, epStream.inUse() = "+epStream.inUse());
-			            id = recog.recognizeAsynch(grammarUrl,  epStream,  lmflg,  batchFlag, timeout,l) ;
+			            id = recog.recognizeAsynch(grammarUrl,  epStream,  lmflg,  batchFlag,OutputFormat.text, timeout,l) ;
 
 		            } catch (InstantiationException e) {
 			            // TODO Auto-generated catch block
@@ -386,7 +387,7 @@ public class HttpRecognizeReuseTest extends TestCase {
 	    		} else
 			        try {	            
 			        	_logger.info("Calling rec, epStream.inUse() = "+epStream.inUse());
-			            id = recog.recognizeAsynch(grammarUrl,  epStream,  lmflg,  batchFlag, timeout,l) ;
+			            id = recog.recognizeAsynch(grammarUrl,  epStream,  lmflg,  batchFlag,OutputFormat.text, timeout,l) ;
 
 		            } catch (InstantiationException e) {
 			            // TODO Auto-generated catch block
@@ -433,7 +434,7 @@ public class HttpRecognizeReuseTest extends TestCase {
 	    	boolean batchFlag = false;
 	    	String id;
 	        try {	            
-	            id = recog.recognizeAsynch(grammarUrl,  epStream,  lmflg,  batchFlag, timeout,l) ;
+	            id = recog.recognizeAsynch(grammarUrl,  epStream,  lmflg,  batchFlag,OutputFormat.text, timeout,l) ;
             } catch (InstantiationException e) {
 	            // TODO Auto-generated catch block
 	            e.printStackTrace();
