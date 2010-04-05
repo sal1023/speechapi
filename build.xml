@@ -35,7 +35,7 @@
 	<property name="commons-cli.jar" value="${lib.dir}/commons-cli-1.0.jar" />
 	<property name="httpmime.jar" value="${lib.dir}/httpmime-4.0.1.jar" />
 	<property name="mime4j.jar" value="${lib.dir}/apache-mime4j-0.6.jar" />
-	<property name="httpclient.jar" value="${lib.dir}/httpclient-4.0,1.jar" />
+	<property name="httpclient.jar" value="${lib.dir}/httpclient-4.0.1.jar" />
 	<property name="httpcore.jar" value="${lib.dir}/httpcore-4.0.1.jar" />
 	<property name="cairo-rtp.jar" value="${lib.dir}/cairo-rtp-SNAPSHOT.jar" />	
 	<property name="tritonus_share.jar" value="${lib.dir}/tritonus_share-0.3.6.jar" />	
@@ -306,6 +306,7 @@
 	<target name="create-war" depends="compile-server">
 		
 		<filter token="serviceLoggingFlag" value="true" />
+		<filter token="application.context" value="/WEB-INF/dev-applicationContext.xml" />
 		<filter token="applicationContext.recognizerService.baseGrammarDir" value="c:/temp" />
 		<filter token="applicationContext.recognizerService.sphinxConfigFile" value="file:///${catalina.home}/webapps/${ant.project.name}/WEB-INF/sphinx-config-2pools.xml" />
 		<filter token="applicationContext.synthesizerService.prefix" value="http://${catalina.host}:${catalina.port}/${ant.project.name}/prompts/" />
@@ -339,6 +340,44 @@
 			<lib file="${standard.jar}" />
 			<lib dir="${build.war.home}/WEB-INF/lib" />
 			
+		</war>
+	</target>
+	
+	
+	<target name="create-ami-war" depends="compile-server">
+		
+		<filter token="serviceLoggingFlag" value="true" />
+		<filter token="applicationContext.recognizerService.baseGrammarDir" value="c:/temp" />
+		<filter token="application.context" value="/WEB-INF/ami-applicationContext2.xml" />
+		<filter token="applicationContext.recognizerService.sphinxConfigFile" value="file:///${catalina.home}/webapps/${ant.project.name}/WEB-INF/sphinx-config-5pools.xml" />
+		<filter token="applicationContext.synthesizerService.prefix" value="http://${catalina.host}:${catalina.port}/${ant.project.name}/prompts/" />
+		<filter token="applicationContext.synthesizerService.promptDir" value="${catalina.home}/webapps/${ant.project.name}/prompts" />
+		<copy todir="${build.war.home}/WEB-INF" overwrite="true" filtering="true">
+			<fileset dir="${basedir}/etc" includes="*.xml" />
+		</copy>
+		
+		<copy todir="${build.war.home}/WEB-INF/lib">
+           <fileset refid="rest.dependency.fileset" />
+           <mapper classpathref="maven-ant-tasks.classpath"
+               classname="org.apache.maven.artifact.ant.VersionMapper"
+               from="${dependency.versions}" to="flatten" />
+        </copy>
+
+		<war warfile="${build.war.home}/${war.filename}" webxml="${build.war.home}/WEB-INF/web.xml">
+
+			<webinf dir="${build.war.home}/WEB-INF" includes="*.xml" />
+			<zipfileset dir="etc/prompts" prefix="prompts" />
+			<zipfileset dir="etc/grammar" prefix="grammar" />
+			<!--zipfileset dir="etc/lm" prefix="lm" /-->
+			<zipfileset dir="${basedir}/etc" prefix="WEB-INF/wsdl" includes="*.wsdl, *.xsd" />			
+			<zipfileset dir="${basedir}/src/java" prefix="WEB-INF/classes" includes="**/*.hbm.xml" />
+			<zipfileset dir="${basedir}/etc" prefix="WEB-INF/classes" includes="log4j.xml, hibernate.cfg.xml" />
+			<classes dir="${build.classes.home}" />
+			<lib dir="${basedir}/lib" />
+			<lib file="${jstl.jar}" />
+			<lib file="${standard.jar}" />
+			<lib dir="${build.war.home}/WEB-INF/lib" />
+
 		</war>
 	</target>
 

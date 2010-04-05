@@ -8,6 +8,12 @@
     <display-name>Speech Cloud Application</display-name>
 	<description>Web application for uploading and processing speech audio files.</description>
 
+    <context-param>
+       <param-name>contextConfigLocation</param-name>
+       <param-value>@application.context@</param-value>
+    </context-param>
+
+
     <listener>
         <listener-class>org.springframework.web.context.ContextLoaderListener</listener-class>
     </listener>
