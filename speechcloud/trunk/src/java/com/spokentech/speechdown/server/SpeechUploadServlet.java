@@ -80,7 +80,8 @@ public class SpeechUploadServlet extends HttpServlet {
 
 
 	private boolean serviceLogEnabled;
-	
+
+
 	
 	/* (non-Javadoc)
 	 * @see javax.servlet.GenericServlet#init(javax.servlet.ServletConfig)
@@ -171,6 +172,9 @@ public class SpeechUploadServlet extends HttpServlet {
 	    //}
 		
 	    boolean lmFlag = false;
+		String gMode = "lm";
+		String lmId = "default";
+		String amId = "default";
 	    boolean continuous = false;
 	    boolean doEndpointing = false;
 	    boolean cmnBatch = false;
@@ -234,9 +238,20 @@ public class SpeechUploadServlet extends HttpServlet {
 			        	} else if (name.equals(HttpCommandFields.ENDPOINTING_FLAG)) {
 				        	doEndpointing  = Boolean.parseBoolean(value);
 				        } else if (name.equals(HttpCommandFields.LANGUAGE_MODEL_FLAG)) {
-				        	lmFlag = Boolean.parseBoolean(value);
+				        	// for backwards compatability with lmflag
+			        		lmFlag = Boolean.parseBoolean(value);
+			        		gMode="jsgf";
+			        		if (lmFlag)
+			        			gMode="lm";
+				        } else if (name.equals(HttpCommandFields.GRAMMAR_MODE)) {
+				        	gMode = value;
+				        } else if (name.equals(HttpCommandFields.ACOUSTIC_MODEL_ID)) {
+				        	amId = value;
+				        } else if (name.equals(HttpCommandFields.LANGUAGE_MODEL_ID)) {
+				        	lmId = value;
 				        } else if (name.equals(HttpCommandFields.OUTPUT_MODE)) {
 				        	outMode = OutputFormat.valueOf(value);
+
 				        } else {
 				        	_logger.warn("Unrecognized field "+name+ " = "+value);
 				        }
@@ -294,7 +309,7 @@ public class SpeechUploadServlet extends HttpServlet {
 				    			response.setContentType("text/plain");
 				    			//response.setHeader("Content-Disposition", "attachment; filename=results.txt'");			
 				    			response.setHeader("Transfer-coding","chunked");
-					    		if (lmFlag) {
+					    		if (gMode.equalsIgnoreCase("lm")) {
 					    			textResult = recognizerService.Transcribe(audio,contentType,af,outMode,out,response,hr);
 					    		} else {
 							        _logger.debug("recognition result is null");
@@ -307,12 +322,21 @@ public class SpeechUploadServlet extends HttpServlet {
 				    		} else {
 				    			long stop = System.currentTimeMillis();
 				    			_logger.info("Calling recognizer Service" + stop +" ("+(stop-start) +")" );
-					    		if (lmFlag) {
-					    			result = recognizerService.Recognize(audio,contentType,af,outMode, doEndpointing,cmnBatch,hr);
-					    		} else {
+				    		
+				        	
+					          	if (gMode.equalsIgnoreCase("simple")) {
+					          		String jsgfGrammar = simpleToJsgf(grammarString);
+					          		_logger.debug("New Gram:\n"+jsgfGrammar);
+					    	        result = recognizerService.Recognize(audio, jsgfGrammar,contentType,af,outMode, doEndpointing,cmnBatch,hr);
+					          	} else if (gMode.equalsIgnoreCase("jsgf") ) {
 					    	        result = recognizerService.Recognize(audio, grammarString,contentType,af,outMode, doEndpointing,cmnBatch,hr);
-
-					    	    }
+					          	}  else if (gMode.equalsIgnoreCase("lm")) {
+					    			result = recognizerService.Recognize(audio,contentType,af,outMode, doEndpointing,cmnBatch,hr);
+					          	} else {
+					          		_logger.warn("Unrecognized grammar mode: "+gMode+" using defualt language model");
+					    			result = recognizerService.Recognize(audio,contentType,af,outMode, doEndpointing,cmnBatch,hr);
+					          	}
+					          		
 
 					    		audio.close();
 					    		request.getInputStream().close();
@@ -355,6 +379,8 @@ public class SpeechUploadServlet extends HttpServlet {
 		}
 	}
 
+
+
 	/* (non-Javadoc)
 	 * @see javax.servlet.http.HttpServlet#doGet(javax.servlet.http.HttpServletRequest, javax.servlet.http.HttpServletResponse)
 	 */
@@ -378,7 +404,16 @@ public class SpeechUploadServlet extends HttpServlet {
 	}
 
 	
+	private String simpleToJsgf(String grammarString) {
 
+	    StringBuffer result = new StringBuffer("#JSGF V1.0;\ngrammar simple;\npublic <main> =(");
+
+	    result.append(grammarString.replace(",", "|"));
+	    result.append(")*;\n");
+
+	    return result.toString();
+
+    }
 	
 	public void writeStreamToFile2(InputStream inputStream, String fileName) {
 		

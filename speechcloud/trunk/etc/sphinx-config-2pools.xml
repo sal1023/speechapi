@@ -335,7 +335,7 @@
         <property name="activeListManager" value="lm-ActiveListManager1"/>
         <property name="growSkipInterval" value="0"/>
         <property name="checkStateOrder" value="false"/>
-        <property name="buildWordLattice" value="false"/>
+        <property name="buildWordLattice" value="true"/>
         <property name="keepAllTokens" value="true"/>
         <property name="acousticLookaheadFrames" value="${acousticLookahead)"/>
         <property name="relativeBeamWidth" value="${relativeBeamWidth2}"/>
@@ -385,7 +385,7 @@
         <property name="growSkipInterval" value="0"/>
         <property name="checkStateOrder" value="false"/>
         <property name="keepAllTokens" value="true"/>
-        <property name="buildWordLattice" value="false"/>
+        <property name="buildWordLattice" value="true"/>
         <property name="acousticLookaheadFrames" value="${acousticLookahead)"/>
         <property name="relativeBeamWidth" value="${relativeBeamWidth2}"/>
     </component>

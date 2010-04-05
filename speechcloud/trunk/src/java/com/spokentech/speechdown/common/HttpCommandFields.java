@@ -3,13 +3,16 @@ package com.spokentech.speechdown.common;
 public class HttpCommandFields {
 	
 	// Recognizer  field names
-    public static final String LANGUAGE_MODEL_FLAG = "lmFlag";
+    public static final String LANGUAGE_MODEL_FLAG = "lmFlag";     //being replaced by gMode (more than 2 options)
     public static final String CONTINUOUS_FLAG = "continuousFlag";
     public static final String ENDPOINTING_FLAG = "doEndpointing";
     public static final String DATA_MODE = "dataMode";
     public static final String CMN_BATCH = "CmnBatchFlag";
     public static final String OUTPUT_MODE = "outputMode";  //text or json (default to text)
-    
+    public static final String GRAMMAR_MODE = "gMode";		//simple, jsgf, lm (replacing lmFlag)
+    public static final String LANGUAGE_MODEL_ID = "lmId";	
+    public static final String ACOUSTIC_MODEL_ID = "amId";
+
     
 	//Common Recognizer and Synthesizer field names
     public static final String SAMPLE_RATE_FIELD_NAME = "sampleRate";

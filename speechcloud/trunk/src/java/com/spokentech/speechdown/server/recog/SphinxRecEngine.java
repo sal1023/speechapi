@@ -127,6 +127,7 @@ public class SphinxRecEngine extends AbstractPoolableObject implements RecEngine
 	private WavWriter recorder; 
 	
 	private  ConfidenceScorer cs;
+	private  LogMath logm;
 	
     private boolean transcribeMode = false;
     
@@ -185,6 +186,8 @@ public class SphinxRecEngine extends AbstractPoolableObject implements RecEngine
     	
     	// obtain scorer from configuration manager
         cs = (ConfidenceScorer) cm.lookup("confidenceScorer");
+        ResultUtils.setLogm((LogMath) cm.lookup("logMath"));
+        
 
     	
     }
@@ -463,18 +466,22 @@ public class SphinxRecEngine extends AbstractPoolableObject implements RecEngine
 		
      
         String resultText;
-        if (outMode == OutputFormat.text) {
-        	resultText = r.getBestFinalResultNoFiller();  
-  	
-        } else if (outMode == OutputFormat.json) {
-        	Utterance utterance = ResultUtils.getAllResults(r, false, false,cs);
-            resultText = gson.toJson(utterance);
-        	
+        if (r != null) {
+	        if (outMode == OutputFormat.text) {
+	        	resultText = r.getBestFinalResultNoFiller();  
+	  	
+	        } else if (outMode == OutputFormat.json) {
+	        	Utterance utterance = ResultUtils.getAllResults(r, false, false,cs);
+	            resultText = gson.toJson(utterance);
+	        	
+	        } else {
+	        	resultText = r.getBestFinalResultNoFiller();  
+	        	_logger.warn("Inrecognized output format: "+outMode+ "  ,using plain text mode as a default.");
+	        }
+			_logger.info(resultText);
         } else {
-        	resultText = r.getBestFinalResultNoFiller();  
-        	_logger.warn("Inrecognized output format: "+outMode+ "  ,using plain text mode as a default.");
+        	_logger.info("Null results...");
         }
-		_logger.info(resultText);
         
         
 		fe=null;

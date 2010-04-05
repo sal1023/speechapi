@@ -29,6 +29,7 @@ import edu.cmu.sphinx.result.ConfidenceScorer;
 import edu.cmu.sphinx.result.Path;
 import edu.cmu.sphinx.result.Result;
 import edu.cmu.sphinx.result.WordResult;
+import edu.cmu.sphinx.util.LogMath;
 
 
 public class ResultUtils {
@@ -38,8 +39,17 @@ public class ResultUtils {
 
     protected final static String OUTOFGRAMMAR = "<unk>";
     
+    private static LogMath logm = null;
     
-	   /**
+
+	/**
+     * @param logm the logm to set
+     */
+    public static void setLogm(LogMath logm) {
+    	ResultUtils.logm = logm;
+    }
+
+	/**
      * Returns the string of words (with timestamp) for this token.
      *
      * @param wantFiller     true if we want filler words included, false otherwise
@@ -89,54 +99,61 @@ public class ResultUtils {
      *
      * @param wantFiller     true if we want filler words included, false otherwise
      * @param wordTokenFirst true if the word tokens come before other types of tokens
-	 * @param cs 
+     * @param cs 
      * @return the string of words
      */
     public static Utterance getAllResults(Result r,
-    		                            boolean wantFiller,
-                                        boolean wordTokenFirst, ConfidenceScorer cs) {
-        Token token = r.getBestToken();
-        Utterance u;
-        if (token == null) {
-            return null;
-        } else {
-        	 WordResult[] words = null;
-        	 double confidence = 0;
-        	if (cs!=null) {
-	        	ConfidenceResult cr = cs.score(r);
-				Path best = cr.getBestHypothesis();				
-				//LogMath lm = best.getLogMath();
-				confidence = best.getLogMath().logToLinear((float) best.getConfidence());
+    		boolean wantFiller,
+    		boolean wordTokenFirst, ConfidenceScorer cs) {
+    	Token token = r.getBestToken();
+    	Utterance u;
+    	if (token == null) {
+    		return null;
+    	} else {
 
-		        words = best.getWords();
-		        //for (WordResult wr : words) {
-		        //    printWordConfidence(wr);
-		        //}
-        	}
-            if (wordTokenFirst) {
-                u = getTimedWordPath(token, wantFiller);
-            } else {
-                u = getTimedWordTokenLastPath(token, wantFiller);
-            }
-            
-            
-			u.setConfidence(confidence);
+    		if (wordTokenFirst) {
+    			u = getTimedWordPath(token, wantFiller);
+    		} else {
+    			u = getTimedWordTokenLastPath(token, wantFiller);
+    		}
+
+    		//need to reverse the words (sphinx gives them in reverse order)
 			Collections.reverse(u.getWords());
-			
-			List l = u.getWords();
-			int c = 0;
-			//_logger.debug(words.length+"/"+u.getWords().size());
-	        for (WordResult wr : words) {
-	        	if(!wr.isFiller()) {
-	        		u.getWords().get(c).setConfidence(wr.getConfidence()) ;
-	        		//_logger.debug(c+" , "+ wr.getPronunciation().getWord().getSpelling()+" / "+u.getWords().get(c).getWord());
-	        		c++;
-	        	}
-	        }
+    		
+    		// add the confidence data to the utterance
+    		if (cs!=null) {
+    			ConfidenceResult cr = cs.score(r);
+    			Path best = cr.getBestHypothesis();				
+    			//LogMath lm = best.getLogMath();
+    			
+    			double confidence = best.getLogMath().logToLinear((float) best.getConfidence());
+    			u.setConfidence(confidence);
+    			
+    			WordResult[]  words = best.getWords();
+    			for (WordResult wr : words) {
+    				printWordConfidence(wr);
+    			}
 
-        	
-        	return u;
-        }
+    			List l = u.getWords();
+    			int c = 0;
+    			_logger.debug(words.length+"/"+u.getWords().size());
+    			
+    			//loop thru the confidence words
+    			for (WordResult wr : words) {
+    				if(!wr.isFiller()) {
+    					WordData x = u.getWords().get(c);
+
+    					x.setConfidence(wr.getLogMath().logToLinear((float) wr.getConfidence())) ;
+    	
+    					_logger.debug(c+": "+x.toString());
+    					_logger.debug(c+" , "+ wr.getPronunciation().getWord().getSpelling()+" / "+u.getWords().get(c).getWord());
+    					c++;
+    				}
+    			}
+    		}
+
+    		return u;
+    	}
     }
     
     
@@ -205,6 +222,12 @@ public class ResultUtils {
         while (token != null) {
             if (token.isWord()) {
                 if (word != null) {
+                	//_logger.debug("*** "+token.getWord().getSpelling() + " "+
+                	//			  logm.logToLinear( (float)(token.getAcousticScore() )) + " "+
+                	//			  logm.logToLinear( (float)(token.getLanguageScore() ))+ " "+
+                	//			  logm.logToLinear( (float)(token.getScore() )) );
+
+                	
                     if (wantFiller || !word.isFiller()) {
                         WordData w = addWord(wtoken, word,wantFiller,
                                 (FloatData) lastFeature,
@@ -247,6 +270,8 @@ public class ResultUtils {
                 startFeature.getSampleRate());
         float endTime = endFeature == null ? -1 : ((float) endFeature.getFirstSampleNumber() /
                 endFeature.getSampleRate());
+
+        
         
         WordData w = new WordData();
         w.setStartTime(startTime);
@@ -296,4 +321,28 @@ public class ResultUtils {
             }
             return sb.toString();
     }
+    
+    /**
+     * Prints out the word and its confidence score.
+     *
+     * @param wr the WordResult to print
+     */
+    private static void printWordConfidence(WordResult wr) {
+        String word = wr.getPronunciation().getWord().getSpelling();
+        System.out.print(word);
+        
+        /* pad spaces between the word and its score */
+        int entirePadLength = 10;
+        if (word.length() < entirePadLength) {
+            for (int i = word.length(); i < entirePadLength; i++) {
+                System.out.print(" ");
+            }
+        }
+
+        System.out.println
+                (" (confidence: " +
+                        format.format
+                                (wr.getLogMath().logToLinear((float) wr.getConfidence())) + ')');
+    }
+
 }
