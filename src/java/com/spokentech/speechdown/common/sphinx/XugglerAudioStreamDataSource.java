@@ -236,12 +236,17 @@ public class XugglerAudioStreamDataSource extends BaseDataProcessor implements S
         
         
         int cRetCode = container.open(inputStream, null);
+        System.out.println("container ope ret code :"+cRetCode);
         	
             if (cRetCode != 0) {
                 IError err = IError.make(cRetCode);
-                System.out.println("IContainer.open() returned an error: "
+                if (err == null) {
+                	  System.out.println("Null error code");
+                } else {
+                   System.out.println("IContainer.open() returned an error: "
                         + err.getType() + ", " + err.getDescription());
-                System.out.println(err.toString());
+                   System.out.println(err.toString());
+                }
                 //return;
             }
           // throw new IllegalArgumentException("could not open input stream");

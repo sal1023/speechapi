@@ -153,7 +153,7 @@ public class HttpTranscriptionTest extends TestCase {
 			long start = System.nanoTime();
             try {
 		    	boolean lmflg = true;
-		    	InputStream s = recog.transcribe(audioInputStream, format,mimeType, grammarUrl, lmflg,OutputFormat.text);
+		    	InputStream s = recog.transcribe(audioInputStream, format,mimeType, grammarUrl, lmflg,OutputFormat.json);
 
                 int c;
                 while ((c = s.read()) != -1) {

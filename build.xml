@@ -44,6 +44,8 @@
 	<property name="hibernate.jar" value="${lib.dir}/hibernate3.jar" />
 	<property name="hsqldb.jar" value="${lib.dir}/hsqldb.jar" />
     <property name="jta.jar" value="${lib.dir}/jta-1.1.jar" />
+    
+    <property name="postgresql-jdbc-driver.jar" value="${lib.dir}/postgresql-8.4-701.jdbc4.jar" />
 
 	<property name="mary-common.jar" value="${lib.dir}/mary-common.jar" />
 	
@@ -88,6 +90,7 @@
 	<path id="hib.classpath">
 		<pathelement location="${java.home}/../lib/tools.jar" />
 		<pathelement	location="${hibernate.jar}" />
+		<pathelement	location="${postgresql-jdbc-driver.jar}" />
 		<pathelement	location="${dom4j.jar}" />
 		<pathelement	location="${slf4j-api.jar}" />
 		<pathelement	location="${slf4j-jcl.jar}" />
@@ -96,6 +99,8 @@
 		 <pathelement location="lib/hibernate3.jar" />
 		 <pathelement location="lib/freemarker.jar" />
 		 <pathelement location="${jdbc.driver.jar}" />
+		 <pathelement location="${basedir}/src/java" />
+		 <pathelement location="${build.classes.home}" />
 	</path>
 	
 	<path id="jaxws.classpath">
@@ -569,15 +574,28 @@
 	        classname="org.hibernate.tool.hbm2ddl.SchemaExportTask"
 	        classpathref="hib.classpath"/>
 	    <schemaexport
-	    	config="${basedir}/etc/hibernate.cfg.xml" 
+	    	config="${basedir}/etc/postgresql-hibernate.cfg.xml" 
 	        quiet="no"
 	        text="no"
 	        drop="no"
 	        delimiter=";"
 	        output="schema-export.sql">
-	    	<fileset dir="${dir.classes}" includes="**/*.hbm.xml"/>
+	    	<fileset dir="${build.classes.home}" includes="**/*.hbm.xml"/>
 	    </schemaexport>
 	</target>
+	
+	<target name="schemavalidate">
+        <taskdef name="schemavalidator"
+            classname="org.hibernate.tool.hbm2ddl.SchemaValidatorTask"
+	        classpathref="hib.classpath"/>
+    
+        <schemavalidator
+	    	config="${basedir}/etc/hibernate.cfg.xml">
+            <fileset dir="src">
+                <include name="**/*.hbm.xml"/>
+            </fileset>
+        </schemavalidator>
+    </target>
 	
 	<target name="sal">
 		<taskdef name="hibernatetool"

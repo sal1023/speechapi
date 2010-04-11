@@ -180,6 +180,14 @@ public class SpeechUploadServlet extends HttpServlet {
 	    boolean cmnBatch = false;
 	    OutputFormat outMode = OutputFormat.text;
 	    
+	    
+    	String developerId =null;	
+    	String developerSecret = null;
+       	String userId = null;
+    	
+    
+	    
+	    
 		//set the audio format parameters to default values
 		boolean formatSpecified = false;
 	    AFormat af = new AFormat(DEFAULT_ENCODING, DEFAULT_SAMPLE_RATE, DEFAULT_BYTESPERVALUE*8,  DEFAULT_CHANNELS,  DEAFUALT_BIG_ENDIAN,
@@ -251,7 +259,13 @@ public class SpeechUploadServlet extends HttpServlet {
 				        	lmId = value;
 				        } else if (name.equals(HttpCommandFields.OUTPUT_MODE)) {
 				        	outMode = OutputFormat.valueOf(value);
-
+				        	
+				        } else if (name.equals(HttpCommandFields.DEVELOPER_ID)) {
+				        	developerId = value;
+				        } else if (name.equals(HttpCommandFields.DEVELOPER_SECRET)) {
+				        	developerSecret = value;
+				        } else if (name.equals(HttpCommandFields.USER_ID)) {
+				        	userId = value;
 				        } else {
 				        	_logger.warn("Unrecognized field "+name+ " = "+value);
 				        }
@@ -294,8 +308,12 @@ public class SpeechUploadServlet extends HttpServlet {
 				    		    hr.setLocalPort(request.getLocalPort());
 				    		    hr.setLocale(request.getLocale().toString()); 
 				    			hr.setDate(new Date());
-			    			    ServiceLogger.logHttpRequest(hr);
+				    			hr.setDeveloperId(developerId);
+				    			hr.setUserId(userId);
+			    			    //ServiceLogger.logHttpRequest(hr);
 			    			}
+			    			_logger.info("SESSIONID: "+request.getRequestedSessionId());
+			    			//if format not specified, then set it to null.  that indicates that the front end should  try to extract it from the input streams header
 			    			if (formatSpecified) {
 				    		   _logger.debug("recognizing audio!  Sample rate= "+af.getSampleRate()+", bigEndian= "+ af.isBigEndian()+", bytes per value= "+af.getSampleSizeInBits()+", encoding= "+af.getEncoding());
 			    			} else {			    				

@@ -3,11 +3,11 @@
 
 <hibernate-mapping package="com.spokentech.speechdown.server.domain">
 
-    <class name="HttpRequest" table="HTTPREQUESTS">
-        <id name="id" column="HTTP_ID">
+    <class name="HttpRequest" table="saas_httprequest">
+        <id name="id" column="id">
             <generator class="native"/>
         </id>
-        <property name="date" type="timestamp" column="HTTP_DATE"/>
+        <property name="date" type="timestamp" column="timestamp"/>
 
         <property name="protocol"/>
         <property name="scheme"/>
@@ -20,9 +20,21 @@
         <property name="localName"/>
         <property name="localPort"/>
         <property name="locale"/>
+        <property name="developerId"/>
+        <property name="userId"/>
+        
+        <many-to-one  name="recog" 
+                      class="RecogRequest"  
+                      column="recog_id" not-null="false" 
+                      cascade="all" 
+                      unique="true" />
 
-        <one-to-one name="recog" class="RecogRequest"/>
-        <one-to-one name="synth" class="SynthRequest"/>
+        <many-to-one  name="synth" 
+                      class="SynthRequest"  
+                      column="synth_id" not-null="false" 
+                      cascade="all" 
+                      unique="true" />
+
                
     </class>
 

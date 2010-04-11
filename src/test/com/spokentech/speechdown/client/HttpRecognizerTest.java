@@ -220,7 +220,7 @@ public class HttpRecognizerTest extends TestCase {
 	    	boolean doEndpointing = true;
 	    	boolean batchMode = true;
 			long start = System.nanoTime();
-	    	RecognitionResult r = recog.recognize(fname, grammarUrl, lmflg, doEndpointing,batchMode,OutputFormat.text);
+	    	RecognitionResult r = recog.recognize(fname, grammarUrl, lmflg, doEndpointing,batchMode,OutputFormat.json);
 			long stop = System.nanoTime();
 			long wall = (stop - start)/1000000;
 	    	System.out.println("FILE TEST: Batch mode, Server Endpointing, LM result: "+r.getText() + " took "+wall+ " ms");

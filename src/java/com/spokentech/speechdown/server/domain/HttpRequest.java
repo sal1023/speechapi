@@ -19,8 +19,37 @@ public class HttpRequest {
     private Date date;
 	private  SynthRequest synth;
     private  RecogRequest recog;
+	private String developerId;
+	private String userId;
+
+
+       
     
-    
+	/**
+     * @return the developerId
+     */
+    public String getDeveloperId() {
+    	return developerId;
+    }
+	/**
+     * @param developerId the developerId to set
+     */
+    public void setDeveloperId(String developerId) {
+    	this.developerId = developerId;
+    }
+	/**
+     * @return the userId
+     */
+    public String getUserId() {
+    	return userId;
+    }
+	/**
+     * @param userId the userId to set
+     */
+    public void setUserId(String userId) {
+    	this.userId = userId;
+    }
+ 
     /**
      * @return the synth
      */

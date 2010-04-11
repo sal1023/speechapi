@@ -19,6 +19,10 @@ public class HttpCommandFields {
     public static final String BIG_ENDIAN_FIELD_NAME = "bigEndian";
     public static final String BYTES_PER_VALUE_FIELD_NAME = "bytesPerValue";
     public static final String ENCODING_FIELD_NAME = "encoding";
+    
+    public static final String DEVELOPER_ID = "developerId";
+    public static final String DEVELOPER_SECRET = "developerSecret";
+    public static final String USER_ID = "userId";
   
     //Recognizer attachment names
     public static final String GRAMMAR = "grammar";
