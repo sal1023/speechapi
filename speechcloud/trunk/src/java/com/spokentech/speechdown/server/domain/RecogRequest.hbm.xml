@@ -6,17 +6,15 @@
 
 <hibernate-mapping package="com.spokentech.speechdown.server.domain">
 
-    <class name="RecogRequest" table="RECOGREQUESTS">
+    <class name="RecogRequest" table="saas_recogrequest">
 
         
-       <id name="id" column="RECOG_ID">
-           <generator class="foreign">
-            <param name="property">httpRequest</param>
-           </generator>
-       </id>
+        <id name="id" column="id">
+            <generator class="native"/>
+        </id>
         
         
-        <property name="date" type="timestamp" column="RECOG_DATE"/>
+        <property name="date" type="timestamp" column="timestamp"/>
 
         <property name="sampleRate"/>
         <property name="continuous"/>
@@ -27,15 +25,15 @@
         <property name="bytesPerValue"/>
         <property name="encoding"/>
         <property name="ContentType"/>
-        <property name="grammar"/>
-        <property name="rawResults"/>
-        <property name="pronunciation"/>
+        <property name="grammar" type="text"/>
+        <property name="rawResults" type="text"/>
+        <property name="pronunciation" type="text"/>
         <property name="tags"/>
         <property name="wallTime"/>
         <property name="streamLen"/>
         <property name="audioUri"/>
 
-        <one-to-one name="httpRequest" class="HttpRequest" constrained="true"/>
+        <!--one-to-one name="httpRequest" class="HttpRequest" constrained="true"/-->
          
     </class>
 

@@ -122,6 +122,12 @@ public class SpeechDownloadServlet extends HttpServlet {
 	    String mime = "audio/x-wav";
 	    AudioFormat.Encoding encoding = AudioFormat.Encoding.PCM_SIGNED;
 	    //AudioFileFormat.Type fileFormat = AudioFileFormat.Type.AU; 
+	    
+    	String developerId =null;	
+    	String developerSecret = null;
+       	String userId = null;
+    	
+    
 
         // Get the values of all request parameters
     	Enumeration params = request.getParameterNames();
@@ -162,6 +168,12 @@ public class SpeechDownloadServlet extends HttpServlet {
     			} else {
     				_logger.warn("Unsupported encoding: "+value);
     			}
+	        } else if (name.equals(HttpCommandFields.DEVELOPER_ID)) {
+	        	developerId = value;
+	        } else if (name.equals(HttpCommandFields.DEVELOPER_SECRET)) {
+	        	developerSecret = value;
+	        } else if (name.equals(HttpCommandFields.USER_ID)) {
+	        	userId = value;
 	        } else {
 	        	_logger.warn("Unrecognized field "+name+ " = "+value);
 	        }
@@ -216,10 +228,8 @@ public class SpeechDownloadServlet extends HttpServlet {
 			sr.setSampleRate(sampleRate);
 			sr.setText(text);
 			sr.setVoice(voice);
-			sr.setHttpRequest(hr);
-
+			hr.setSynth(sr);
 			ServiceLogger.logHttpRequest(hr);
-			ServiceLogger.logSynthRequest(sr,hr);
 		}
 
     }
@@ -373,6 +383,10 @@ public class SpeechDownloadServlet extends HttpServlet {
 	    
 		// Create a new file upload handler
 		ServletFileUpload upload = new ServletFileUpload();
+		
+    	String developerId =null;	
+    	String developerSecret = null;
+       	String userId = null;
 
 
     	//TODO: grammar must be the first item processed in the iterator
@@ -415,6 +429,12 @@ public class SpeechDownloadServlet extends HttpServlet {
 		        			} else {
 		        				_logger.warn("Unsupported encoding: "+value);
 		        			}
+		    	        } else if (name.equals(HttpCommandFields.DEVELOPER_ID)) {
+		    	        	developerId = value;
+		    	        } else if (name.equals(HttpCommandFields.DEVELOPER_SECRET)) {
+		    	        	developerSecret = value;
+		    	        } else if (name.equals(HttpCommandFields.USER_ID)) {
+		    	        	userId = value;
 				        } else {
 				        	_logger.warn("Unrecognized field "+name+ " = "+value);
 				        }
@@ -481,10 +501,10 @@ public class SpeechDownloadServlet extends HttpServlet {
 				sr.setSampleRate(sampleRate);
 				sr.setText(text);
 				sr.setVoice(voice);
-				sr.setHttpRequest(hr);
-
+				hr.setSynth(sr);
 				ServiceLogger.logHttpRequest(hr);
-				ServiceLogger.logSynthRequest(sr,hr);
+				//sr.setHttpRequest(hr);
+				//ServiceLogger.logHttpRequest(hr);
 			}
 	        
 	

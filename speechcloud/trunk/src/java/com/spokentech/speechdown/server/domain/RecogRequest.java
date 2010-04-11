@@ -23,20 +23,20 @@ public class RecogRequest {
 	private long streamLen;
 	private String audioUri;
 	
-	private  HttpRequest httpRequest;
+	//private  HttpRequest httpRequest;
 	
 	/**
      * @return the httpRequest
      */
-    public HttpRequest getHttpRequest() {
-    	return httpRequest;
-    }
+    //public HttpRequest getHttpRequest() {
+    //	return httpRequest;
+    //}
 	/**
      * @param httpRequest the httpRequest to set
      */
-    public void setHttpRequest(HttpRequest httpRequest) {
-    	this.httpRequest = httpRequest;
-    }
+    //public void setHttpRequest(HttpRequest httpRequest) {
+    //	this.httpRequest = httpRequest;
+    //}
 	/**
      * @return the audioUri
      */
