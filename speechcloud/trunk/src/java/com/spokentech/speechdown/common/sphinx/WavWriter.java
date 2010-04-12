@@ -59,23 +59,67 @@ public class WavWriter extends BaseDataProcessor {
     /** The SphinxProperty specifying whether the input data is signed. */
     @S4Boolean(defaultValue = false)
     public static final String PROP_CAPTURE_UTTERANCES = "captureUtterances";
+
+	private static final String SPEECHAPI_URI = "http://localhost:8000/audio/";
+	
     /** The default value of PROP_SIGNED_DATA. */
     protected boolean captureUtts;
 
-    private ByteArrayOutputStream baos;
+	private ByteArrayOutputStream baos;
     private DataOutputStream dos;
 
     private int sampleRate;
     private boolean isInSpeech;
     
-    private String wavName;
+    private String wavFullPathName;
+    private String wavFileName;
+
+    
+    private String developerId;
+
+	private String wavUri;
 
 
     /**
+     * @return the developerId
+     */
+    public String getDeveloperId() {
+    	return developerId;
+    }
+
+	/**
+     * @param developerId the developerId to set
+     */
+    public void setDeveloperId(String developerId) {
+    	this.developerId = developerId;
+    }
+
+	/**
+     * @return the captureUtts
+     */
+    public boolean isCaptureUtts() {
+    	return captureUtts;
+    }
+
+	/**
+     * @param captureUtts the captureUtts to set
+     */
+    public void setCaptureUtts(boolean captureUtts) {
+    	this.captureUtts = captureUtts;
+    }
+    
+    /**
      * @return the wavName
      */
-    public String getWavName() {
-    	return wavName;
+    public String getWavUri() {
+    	return wavUri;
+    }
+    
+    /**
+     * @return the wavName
+     */
+    public String getWavFileName() {
+    	return wavFileName;
     }
 
 	public WavWriter(String dumpFilePath, boolean isCompletePath, int bitsPerSample, boolean isBigEndian, boolean isSigned, boolean captureUtts) {
@@ -193,12 +237,52 @@ public class WavWriter extends BaseDataProcessor {
         if ((data instanceof DataEndSignal && !captureUtts) || (data instanceof SpeechEndSignal && captureUtts)) {
         	
 
-            if (isCompletePath)
-                wavName = dumpFilePath;
-            else
-                wavName = dumpFilePath + getNextFreeIndex(dumpFilePath) + ".wav";
+            if (isCompletePath) {
+                wavFullPathName = dumpFilePath;
+            } else {            	
+        	    StringBuffer fullpathname = new StringBuffer(dumpFilePath);
+        	    StringBuffer furi = new StringBuffer(SPEECHAPI_URI);
+        	    StringBuffer fname = new StringBuffer();
 
-            writeFile(wavName);
+        	    fullpathname.append("/");
+        	    fullpathname.append("/");
+
+        	    if ((developerId == null) ||(developerId.length() <1)) {
+        	    	developerId = "guest";
+        	    }
+        	    //String fpath=fname.toString();
+        	    fullpathname.append(developerId);
+        	    furi.append(developerId);
+        	    fname.append(developerId);
+
+        	    fullpathname.append("-");
+        	    furi.append("-");
+        	    fname.append("-");
+
+        	    
+        	    
+        	    int x = getNextFreeIndex(dumpFilePath);
+        	    fullpathname.append(x);
+        	    furi.append(x);
+        	    fname.append(x);
+
+
+        	    fullpathname.append( ".wav");
+        	    furi.append( ".wav");
+        	    fname.append( ".wav");
+
+
+        	    wavFullPathName = fullpathname.toString();
+        	    wavUri = furi.toString();        	    
+        	    wavFileName = fname.toString();
+        	    
+        	    //System.out.println(wavFileName);
+        	    //System.out.println(wavUri);
+        	    //System.out.println(wavFullPathName);
+
+        	    
+            }
+            writeFile(wavFullPathName);
 
             isInSpeech = false;
         }

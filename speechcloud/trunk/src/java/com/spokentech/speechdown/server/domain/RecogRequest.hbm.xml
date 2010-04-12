@@ -32,6 +32,7 @@
         <property name="wallTime"/>
         <property name="streamLen"/>
         <property name="audioUri"/>
+        <property name="audioFileName"/>
 
         <!--one-to-one name="httpRequest" class="HttpRequest" constrained="true"/-->
          

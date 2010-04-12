@@ -23,6 +23,7 @@ public class HttpCommandFields {
     public static final String DEVELOPER_ID = "developerId";
     public static final String DEVELOPER_SECRET = "developerSecret";
     public static final String USER_ID = "userId";
+    public static final String DEVELOPER_DEFINED = "devDefined";
   
     //Recognizer attachment names
     public static final String GRAMMAR = "grammar";

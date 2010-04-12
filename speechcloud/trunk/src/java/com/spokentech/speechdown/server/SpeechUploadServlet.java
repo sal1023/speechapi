@@ -183,7 +183,8 @@ public class SpeechUploadServlet extends HttpServlet {
 	    
     	String developerId =null;	
     	String developerSecret = null;
-       	String userId = null;
+     	String userId = null;
+     	String developerDefined = null;
     	
     
 	    
@@ -266,6 +267,8 @@ public class SpeechUploadServlet extends HttpServlet {
 				        	developerSecret = value;
 				        } else if (name.equals(HttpCommandFields.USER_ID)) {
 				        	userId = value;
+				        } else if (name.equals(HttpCommandFields.DEVELOPER_DEFINED)) {
+				        	developerDefined = value;
 				        } else {
 				        	_logger.warn("Unrecognized field "+name+ " = "+value);
 				        }
@@ -310,6 +313,7 @@ public class SpeechUploadServlet extends HttpServlet {
 				    			hr.setDate(new Date());
 				    			hr.setDeveloperId(developerId);
 				    			hr.setUserId(userId);
+				    			hr.setDevDefined(developerDefined);
 			    			    //ServiceLogger.logHttpRequest(hr);
 			    			}
 			    			_logger.info("SESSIONID: "+request.getRequestedSessionId());
