@@ -21,10 +21,20 @@ public class HttpRequest {
     private  RecogRequest recog;
 	private String developerId;
 	private String userId;
-
-
+	private String devDefined;
        
-    
+	/**
+     * @return the devDefined
+     */
+    public String getDevDefined() {
+    	return devDefined;
+    }
+	/**
+     * @param devDefined the devDefined to set
+     */
+    public void setDevDefined(String devDefined) {
+    	this.devDefined = devDefined;
+    }
 	/**
      * @return the developerId
      */

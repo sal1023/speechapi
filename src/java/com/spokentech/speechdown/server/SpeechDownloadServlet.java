@@ -126,7 +126,8 @@ public class SpeechDownloadServlet extends HttpServlet {
     	String developerId =null;	
     	String developerSecret = null;
        	String userId = null;
-    	
+     	String developerDefined = null;
+
     
 
         // Get the values of all request parameters
@@ -174,6 +175,8 @@ public class SpeechDownloadServlet extends HttpServlet {
 	        	developerSecret = value;
 	        } else if (name.equals(HttpCommandFields.USER_ID)) {
 	        	userId = value;
+	        } else if (name.equals(HttpCommandFields.DEVELOPER_DEFINED)) {
+	        	developerDefined = value;
 	        } else {
 	        	_logger.warn("Unrecognized field "+name+ " = "+value);
 	        }
@@ -217,7 +220,9 @@ public class SpeechDownloadServlet extends HttpServlet {
 		    hr.setLocalPort(request.getLocalPort());
 		    hr.setLocale(request.getLocale().toString()); 
 			hr.setDate(d);
-			
+			hr.setDeveloperId(developerId);
+			hr.setUserId(userId);
+			hr.setDevDefined(developerDefined);
 	
 			SynthRequest sr = new SynthRequest();
 			sr.setBigEndian(bigEndian);
@@ -387,6 +392,7 @@ public class SpeechDownloadServlet extends HttpServlet {
     	String developerId =null;	
     	String developerSecret = null;
        	String userId = null;
+     	String developerDefined = null;
 
 
     	//TODO: grammar must be the first item processed in the iterator
@@ -435,6 +441,8 @@ public class SpeechDownloadServlet extends HttpServlet {
 		    	        	developerSecret = value;
 		    	        } else if (name.equals(HttpCommandFields.USER_ID)) {
 		    	        	userId = value;
+				        } else if (name.equals(HttpCommandFields.DEVELOPER_DEFINED)) {
+				        	developerDefined = value;
 				        } else {
 				        	_logger.warn("Unrecognized field "+name+ " = "+value);
 				        }
@@ -491,7 +499,10 @@ public class SpeechDownloadServlet extends HttpServlet {
 			    hr.setLocale(request.getLocale().toString()); 
 				hr.setDate(d);
 				
-		
+    			hr.setDeveloperId(developerId);
+    			hr.setUserId(userId);
+    			hr.setDevDefined(developerDefined);
+    			
 				SynthRequest sr = new SynthRequest();
 				sr.setBigEndian(bigEndian);
 				sr.setBytesPerValue(bytesPerValue);

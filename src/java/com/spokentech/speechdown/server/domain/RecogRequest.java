@@ -22,9 +22,11 @@ public class RecogRequest {
 	private long wallTime;
 	private long streamLen;
 	private String audioUri;
+	private String audioFileName;
 	
 	//private  HttpRequest httpRequest;
 	
+
 	/**
      * @return the httpRequest
      */
@@ -37,6 +39,20 @@ public class RecogRequest {
     //public void setHttpRequest(HttpRequest httpRequest) {
     //	this.httpRequest = httpRequest;
     //}
+	
+	/**
+     * @return the audioFileName
+     */
+    public String getAudioFileName() {
+    	return audioFileName;
+    }
+	/**
+     * @param audioFileName the audioFileName to set
+     */
+    public void setAudioFileName(String audioFileName) {
+    	this.audioFileName = audioFileName;
+    }
+	
 	/**
      * @return the audioUri
      */

@@ -74,7 +74,7 @@
 				<value>@applicationContext.recognizerService.sphinxConfigFile@</value>
 		  </property>
 		  <property name="recordingFilePath">
-		      <value>c:\tmp</value>
+		      <value>C:\work\website\htdocs\audio</value>
 		  </property>
 		  <property name="recordingEnabled">
 				<value>@serviceLoggingFlag@</value>

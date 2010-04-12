@@ -168,8 +168,9 @@ public class SphinxRecEngine extends AbstractPoolableObject implements RecEngine
         SimpleDateFormat dateformatMMDDYYYY = new SimpleDateFormat("MMddyyyy");
  
         StringBuilder nowMMDDYYYY = new StringBuilder( dateformatMMDDYYYY.format( dateNow ) );
-    	this.recordingFilePath = recordingFilePath+"/"+nowMMDDYYYY+"-";
-    	
+    	//this.recordingFilePath = recordingFilePath+"/"+nowMMDDYYYY+"-";
+    	this.recordingFilePath = recordingFilePath;
+    	System.out.println("PATH "+recordingFilePath);
     	
     	// todo:  should be a single filerwriter (but then it must be threadsafe), else each recognizer maybe should have its own file...
     	// Not really sure of what happens when there is a many Filewriters with the same filename
@@ -204,13 +205,22 @@ public class SphinxRecEngine extends AbstractPoolableObject implements RecEngine
     	long  start = System.nanoTime();
     	long startTime= System.currentTimeMillis();
 		_logger.info("Using recognizer # "+_id+ ", time: "+startTime);
-	    //SAL
-		//_recognizer.allocate();
 
+		
+		//setup the recorder
+		//TODO: Test if this is needed!
+		if (recordingEnabled) {
+			recorder.setBigEndian(true);
+			recorder.setBitsPerSample(16);
+			recorder.setSampleRate(8000);
+			recorder.setSigned(true);
+			
+			//this is needed (other stuff maybe not)
+			recorder.setCaptureUtts(true);
 
-        //set the search manager in real time (to the one configured for language models)
-        //_decoder.setSearchManager(_lmSearchManager);
-        
+		}
+		
+		
 	    Result r = doRecognize(as, mimeType, af, outMode, doEndpointing, cmnBatch);
 
 	    _logger.info("Result: " + (r != null ? r.getBestFinalResultNoFiller() : null));
@@ -257,8 +267,9 @@ public class SphinxRecEngine extends AbstractPoolableObject implements RecEngine
 		    rr.setWallTime(wall);
 		    rr.setStreamLen(streamLen);
 		    
-		    rr.setAudioUri(recorder.getWavName());
-		    System.out.println("Recorder file name: "+recorder.getWavName());
+		    rr.setAudioUri(recorder.getWavUri());
+		    rr.setAudioFileName(recorder.getWavFileName());
+
 		    //rr.setHttpRequest(hr);
 			//ServiceLogger.logRecogRequest(rr,hr);
 		    
@@ -307,14 +318,8 @@ public class SphinxRecEngine extends AbstractPoolableObject implements RecEngine
 		long  start = System.nanoTime();
     	long startTime= System.currentTimeMillis();
 		_logger.info("Using recognizer # "+_id+ ", time: "+startTime);
-	    //SAL
-		//_recognizer.allocate();
         _logger.debug("After allocate" + System.currentTimeMillis());
-        
-        //set the search manager in real time (to the one configured for jsgf grammars)
-        //_decoder.setSearchManager(_jsgfSearchManager);
-		//_jsgfSearchManager.allocate();
-		
+    
 		GrammarLocation grammarLocation = null;
 	    try {
 	        grammarLocation = _grammarManager.saveGrammar(grammar);
@@ -333,15 +338,27 @@ public class SphinxRecEngine extends AbstractPoolableObject implements RecEngine
 	        // TODO Auto-generated catch block
 	        e.printStackTrace();
         }
+        
+		//setup the recorder
+		//TODO: Test if this is needed!
+		if (recordingEnabled) {
+			recorder.setBigEndian(true);
+			recorder.setBitsPerSample(16);
+			recorder.setSampleRate(8000);
+			recorder.setSigned(true);
+			
+			//this is needed (other stuff maybe not)
+			recorder.setCaptureUtts(true);
+
+		}
+        
         _logger.debug("After load grammar" + System.currentTimeMillis());
  
 	    Result r = doRecognize(as, mimeType, af, outMode, doEndpointing,  cmnBatch);
 	    
 	    RecognitionResultJsapi results = new RecognitionResultJsapi(r, _jsgfGrammar.getRuleGrammar());
 	    _logger.info("Result: " + (results != null ? results.getText() : null));
-	    //SAL
-	    //_recognizer.deallocate();
-	    
+ 
 		long stop = System.nanoTime();
 		long wall = (stop - start)/1000000;
 		long streamLen = _dataSource.getLengthInMs();
@@ -383,7 +400,8 @@ public class SphinxRecEngine extends AbstractPoolableObject implements RecEngine
 		    rr.setWallTime(wall);
 		    rr.setStreamLen(streamLen);
 		    
-		    rr.setAudioUri(recorder.getWavName());
+		    rr.setAudioUri(recorder.getWavUri());
+		    rr.setAudioFileName(recorder.getWavFileName());
 
 		    //rr.setHttpRequest(hr);
 			//ServiceLogger.logRecogRequest(rr,hr);
@@ -402,15 +420,7 @@ public class SphinxRecEngine extends AbstractPoolableObject implements RecEngine
 	    //TODO: Timers for recog timeout
 		
 		transcribeMode = false;
-		//setup the recorder
-		// reuse this rather than construct a new one each time
-		//TODO: Test if this is needed!
-		if (recordingEnabled) {
-			recorder.setBigEndian(true);
-			recorder.setBitsPerSample(16);
-			recorder.setSampleRate(8000);
-			recorder.setSigned(true);
-		}
+
 	
 	     // configure the audio input for the recognizer
 	 	 // if the format is null, that indicates that no format was passed in
@@ -474,7 +484,7 @@ public class SphinxRecEngine extends AbstractPoolableObject implements RecEngine
 		
 		//for now record results to a file (eventually need to start using the database recording)
 		if (recordingEnabled) {
-			logResults(r, recorder.getWavName());
+			logResults(r, recorder.getWavFileName());
 		}
 		
 		
@@ -521,6 +531,12 @@ public class SphinxRecEngine extends AbstractPoolableObject implements RecEngine
 		//_recognizer.allocate();
         _logger.debug("After allocate" + System.currentTimeMillis());
         
+		if (recordingEnabled) {
+			recorder.setCaptureUtts(false);
+			recorder.setDeveloperId(hr.getDeveloperId());
+		}
+        
+        
 		long  start = System.nanoTime();
 
 	    String r = doTranscribe(as, mimeType, af, outMode, out, response);
@@ -529,6 +545,7 @@ public class SphinxRecEngine extends AbstractPoolableObject implements RecEngine
 		long wall = (stop - start)/1000000;
 		long streamLen = _dataSource.getLengthInMs();
 		double ratio = (double)wall/(double)streamLen;
+		
 	    
 		if (recordingEnabled) {	
 	        RecogRequest rr = new RecogRequest();
@@ -554,7 +571,8 @@ public class SphinxRecEngine extends AbstractPoolableObject implements RecEngine
 		    rr.setWallTime(wall);
 		    rr.setStreamLen(streamLen);
 		    
-		    rr.setAudioUri(recorder.getWavName());
+		    rr.setAudioUri(recorder.getWavUri());
+		    rr.setAudioFileName(recorder.getWavFileName());
 
 		    hr.setRecog(rr);
 		    ServiceLogger.logHttpRequest(hr);

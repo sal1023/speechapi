@@ -22,6 +22,7 @@
         <property name="locale"/>
         <property name="developerId"/>
         <property name="userId"/>
+        <property name="devDefined"/>
         
         <many-to-one  name="recog" 
                       class="RecogRequest"  
