@@ -1,9 +1,13 @@
 package com.spokentech.speechdown.server.tts;
 
+import java.io.BufferedInputStream;
+import java.io.BufferedOutputStream;
 import java.io.ByteArrayInputStream;
+import java.io.ByteArrayOutputStream;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
+import java.io.FileOutputStream;
 import java.io.FilenameFilter;
 import java.io.InputStream;
 import java.io.InputStreamReader;
@@ -11,10 +15,12 @@ import java.io.OutputStream;
 import java.io.UnsupportedEncodingException;
 import java.net.URL;
 import java.net.URLClassLoader;
+import java.util.Date;
 import java.util.Locale;
 import java.lang.reflect.Method;
 import javax.sound.sampled.AudioFileFormat;
 import javax.sound.sampled.AudioFormat;
+import javax.sound.sampled.AudioInputStream;
 import javax.sound.sampled.AudioSystem;
 import javax.sound.sampled.UnsupportedAudioFileException;
 import javax.sound.sampled.AudioFileFormat.Type;
@@ -22,6 +28,9 @@ import javax.sound.sampled.AudioFileFormat.Type;
 import org.apache.log4j.Logger;
 
 import com.spokentech.speechdown.server.SynthesizerService;
+import com.spokentech.speechdown.server.domain.HttpRequest;
+import com.spokentech.speechdown.server.domain.SynthRequest;
+import com.spokentech.speechdown.server.util.ServiceLogger;
 
 import de.dfki.lt.mary.Mary;
 import de.dfki.lt.mary.MaryDataType;
@@ -37,7 +46,23 @@ public class MarySynthesizerService implements SynthesizerService {
 	Mary mary;
 	String prefix;
 	String maryDir;
+	private boolean recordingEnabled;
   
+	/**
+     * @return the recordingEnabled
+     */
+    public boolean isRecordingEnabled() {
+    	return recordingEnabled;
+    }
+
+	/**
+     * @param recordingEnabled the recordingEnabled to set
+     */
+    public void setRecordingEnabled(boolean recordingEnabled) {
+    	this.recordingEnabled = recordingEnabled;
+    }
+
+	private String recordingFilePath;
 
 	/**
      * @return the maryDir
@@ -127,11 +152,13 @@ public class MarySynthesizerService implements SynthesizerService {
 
 
 
-	public void streamTTS(String text, AudioFormat format,String mime, String voiceName, OutputStream out) throws UnsupportedAudioFileException {
+	public void streamTTS(String text, AudioFormat format,String mime, String voiceName, OutputStream out,HttpRequest hr) throws UnsupportedAudioFileException {
     	
 
         String  inputTypeName = "TEXT_EN";
         String  outputTypeName = "AUDIO";
+
+        long  start = System.nanoTime();
 
         MaryDataType inputType = MaryDataType.get(inputTypeName);
         MaryDataType outputType = MaryDataType.get(outputTypeName);
@@ -179,6 +206,40 @@ public class MarySynthesizerService implements SynthesizerService {
 	        request.readInputData( new InputStreamReader(bs, "UTF-8"));
 	        request.process();
 	        request.writeOutputData(out);
+
+
+
+			if (recordingEnabled) {
+		        float sr = request.getAudioFileFormat().getFormat().getSampleRate();
+		        //TODO: streamlen is always coming out to be zero.
+				float flen = request.getAudioFileFormat().getByteLength();
+				//float flen = request.getAudio().getFrameLen();
+				float sampleSize = request.getAudioFileFormat().getFormat().getSampleSizeInBits()/8;
+				int streamLen = (int) (flen/(sr * sampleSize));
+				
+				long stop = System.nanoTime();
+				long wall = (stop - start)/1000000;
+				double ratio = (double)wall/(double)streamLen;
+				
+			    hr.getSynth().setStreamLen(streamLen);
+			    hr.getSynth().setWallTime(wall);
+				ServiceLogger.logHttpRequest(hr);
+
+			}
+			
+			
+	        ///ByteArrayOutputStream baos = new ByteArrayOutputStream();
+	        // The byte array constitutes a full wave file, including the headers.
+	        // And now, play the audio data:
+	        ///request.writeOutputData(baos);
+
+	        ///AudioInputStream ais = AudioSystem.getAudioInputStream(
+	        ///    new ByteArrayInputStream(baos.toByteArray()));
+	        ///writeStreamToFile(ais,"c:/tmp/sal.mp3"); 
+	        ///AudioFormat x = request.getAudioFileFormat().getFormat();
+
+	        ///_logger.info("****: "+x);
+	        
         } catch (FileNotFoundException e) {
 	        // TODO Auto-generated catch block
 	        e.printStackTrace();
@@ -207,5 +268,30 @@ public class MarySynthesizerService implements SynthesizerService {
 	    return null;
     }
     
+	private void writeStreamToFile(InputStream inStream, String fileName) {
+		try {
+
+	           
+			File f = new File(fileName);
+			BufferedOutputStream out = new BufferedOutputStream(new FileOutputStream(f));
+	
+			BufferedInputStream in = new BufferedInputStream(inStream);
+	
+			byte[] buffer = new byte[256]; 
+			while (true) { 
+				int bytesRead = in.read(buffer);
+				//_logger.trace("Read "+ bytesRead + "bytes.");
+				if (bytesRead == -1) break; 
+				out.write(buffer, 0, bytesRead); 
+			} 
+			_logger.info("Closing streams");
+			in.close(); 
+			out.close(); 
+		} 
+		catch (Exception e) { 
+			_logger.warn("upload Exception"); e.printStackTrace(); 
+			e.printStackTrace();
+		} 
+	}
     
 }

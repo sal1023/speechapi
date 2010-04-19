@@ -15,6 +15,9 @@ public class SynthRequest {
 	private boolean bigEndian;
 	private int bytesPerValue;
 	private String encoding ;
+	private long wallTime;
+	private long streamLen;
+	
 	//private  HttpRequest httpRequest;
 	
 	/**
@@ -54,6 +57,32 @@ public class SynthRequest {
     public void setDate(Date date) {
     	this.date = date;
     }
+	/**
+     * @return the wallTime
+     */
+    public long getWallTime() {
+    	return wallTime;
+    }
+	/**
+     * @param wallTime the wallTime to set
+     */
+    public void setWallTime(long wallTime) {
+    	this.wallTime = wallTime;
+    }
+	/**
+     * @return the streamLen
+     */
+    public long getStreamLen() {
+    	return streamLen;
+    }
+	/**
+     * @param streamLen the streamLen to set
+     */
+    public void setStreamLen(long streamLen) {
+    	this.streamLen = streamLen;
+    }
+
+    
 	/**
      * @return the mimeType
      */
