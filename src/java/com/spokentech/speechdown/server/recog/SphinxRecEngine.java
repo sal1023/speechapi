@@ -170,7 +170,6 @@ public class SphinxRecEngine extends AbstractPoolableObject implements RecEngine
         StringBuilder nowMMDDYYYY = new StringBuilder( dateformatMMDDYYYY.format( dateNow ) );
     	//this.recordingFilePath = recordingFilePath+"/"+nowMMDDYYYY+"-";
     	this.recordingFilePath = recordingFilePath;
-    	System.out.println("PATH "+recordingFilePath);
     	
     	// todo:  should be a single filerwriter (but then it must be threadsafe), else each recognizer maybe should have its own file...
     	// Not really sure of what happens when there is a many Filewriters with the same filename
@@ -215,17 +214,13 @@ public class SphinxRecEngine extends AbstractPoolableObject implements RecEngine
 			recorder.setSampleRate(8000);
 			recorder.setSigned(true);
 			
-			//this is needed (other stuff maybe not)
-			recorder.setCaptureUtts(true);
-
+			recorder.setCaptureUtts(false);
+			recorder.setDeveloperId(hr.getDeveloperId());
+			recorder.startRecording();
 		}
 		
-		
 	    Result r = doRecognize(as, mimeType, af, outMode, doEndpointing, cmnBatch);
-
 	    _logger.info("Result: " + (r != null ? r.getBestFinalResultNoFiller() : null));
-	    //SAL
-	    //_recognizer.deallocate();
 	    
 		long stop = System.nanoTime();
 		long wall = (stop - start)/1000000;
@@ -233,9 +228,9 @@ public class SphinxRecEngine extends AbstractPoolableObject implements RecEngine
 		double ratio = (double)wall/(double)streamLen;
 		_logger.info(ratio+ "  Wall time "+ wall+ " stream length "+ streamLen);
 		
-
-		//temp dont do any of this for now
 		if (recordingEnabled) {	
+			recorder.stopRecording();
+			
 	        RecogRequest rr = new RecogRequest();
 	        
 			String raw = null;
@@ -247,10 +242,13 @@ public class SphinxRecEngine extends AbstractPoolableObject implements RecEngine
 	        
 		    Date d = new Date();
 		    rr.setDate(d);
-		    rr.setEncoding(af.getEncoding());
-		    rr.setSampleRate((int)af.getSampleRate());
-		    rr.setBigEndian(af.isBigEndian());
-		    rr.setBytesPerValue(af.getSampleSizeInBits()/8);
+
+		    if (af  != null) {
+			    rr.setEncoding(af.getEncoding());
+			    rr.setSampleRate((int)af.getSampleRate());
+			    rr.setBigEndian(af.isBigEndian());
+			    rr.setBytesPerValue(af.getSampleSizeInBits()/8);
+		    }
 		    rr.setCmnBatch(cmnBatch);
 		    rr.setContentType(mimeType);
 
@@ -340,16 +338,17 @@ public class SphinxRecEngine extends AbstractPoolableObject implements RecEngine
         }
         
 		//setup the recorder
-		//TODO: Test if this is needed!
+
 		if (recordingEnabled) {
+			//TODO: Test if setting the format in the recorder is needed!
 			recorder.setBigEndian(true);
 			recorder.setBitsPerSample(16);
 			recorder.setSampleRate(8000);
 			recorder.setSigned(true);
-			
-			//this is needed (other stuff maybe not)
-			recorder.setCaptureUtts(true);
 
+			recorder.setDeveloperId(hr.getDeveloperId());
+			recorder.setCaptureUtts(false);
+			recorder.startRecording();
 		}
         
         _logger.debug("After load grammar" + System.currentTimeMillis());
@@ -365,8 +364,9 @@ public class SphinxRecEngine extends AbstractPoolableObject implements RecEngine
 		double ratio = (double)wall/(double)streamLen;
 		_logger.info(ratio+ "  Wall time "+ wall+ " stream length "+ streamLen);
 		
-		//temp dont do any of this for now
 		if (recordingEnabled) {	
+			recorder.stopRecording();
+
 	        RecogRequest rr = new RecogRequest();
 	        
 			String raw = null;
@@ -379,10 +379,12 @@ public class SphinxRecEngine extends AbstractPoolableObject implements RecEngine
 		    Date d = new Date();
 		    rr.setDate(d);
 		    
-		    rr.setEncoding(af.getEncoding());
-		    rr.setSampleRate((int)af.getSampleRate());
-		    rr.setBigEndian(af.isBigEndian());
-		    rr.setBytesPerValue(af.getSampleSizeInBits()/8);
+		    if (af  != null) {
+			    rr.setEncoding(af.getEncoding());
+			    rr.setSampleRate((int)af.getSampleRate());
+			    rr.setBigEndian(af.isBigEndian());
+			    rr.setBytesPerValue(af.getSampleSizeInBits()/8);
+		    }
 		    
 		    rr.setCmnBatch(cmnBatch);
 		    rr.setContentType(mimeType);
@@ -448,8 +450,9 @@ public class SphinxRecEngine extends AbstractPoolableObject implements RecEngine
 				 _dataSource = new AudioStreamDataSource();
 				 fe = createAudioFrontend(doEndpointing,cmnBatch,(DataProcessor)_dataSource);
 			 } else {
+				 _dataSource = new AudioStreamDataSource();
 				 //TODO: Check if xuggler is installed on this machine
-				 _dataSource = new XugglerAudioStreamDataSource();
+				 //_dataSource = new XugglerAudioStreamDataSource();
 				 fe = createAudioFrontend(doEndpointing,cmnBatch,(DataProcessor)_dataSource);
 			 }
 		     _logger.debug("-----> "+mimeType+ " "+parts[1]);
@@ -483,9 +486,9 @@ public class SphinxRecEngine extends AbstractPoolableObject implements RecEngine
 
 		
 		//for now record results to a file (eventually need to start using the database recording)
-		if (recordingEnabled) {
-			logResults(r, recorder.getWavFileName());
-		}
+		//if (recordingEnabled) {
+		//	logResults(r, recorder.getWavFileName());
+		//}
 		
 		
      
@@ -534,6 +537,7 @@ public class SphinxRecEngine extends AbstractPoolableObject implements RecEngine
 		if (recordingEnabled) {
 			recorder.setCaptureUtts(false);
 			recorder.setDeveloperId(hr.getDeveloperId());
+			recorder.startRecording();
 		}
         
         
@@ -548,15 +552,18 @@ public class SphinxRecEngine extends AbstractPoolableObject implements RecEngine
 		
 	    
 		if (recordingEnabled) {	
+			recorder.stopRecording();
 	        RecogRequest rr = new RecogRequest();
 	        
 		    Date d = new Date();
 		    rr.setDate(d);
 		    
-		    rr.setEncoding(af.getEncoding());
-		    rr.setSampleRate((int)af.getSampleRate());
-		    rr.setBigEndian(af.isBigEndian());
-		    rr.setBytesPerValue(af.getSampleSizeInBits()/8);
+		    if (af  != null) {
+			    rr.setEncoding(af.getEncoding());
+			    rr.setSampleRate((int)af.getSampleRate());
+			    rr.setBigEndian(af.isBigEndian());
+			    rr.setBytesPerValue(af.getSampleSizeInBits()/8);
+		    }
 		    
 		    rr.setCmnBatch(true);
 		    rr.setContentType(mimeType);

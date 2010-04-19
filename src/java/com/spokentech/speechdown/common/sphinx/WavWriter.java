@@ -79,6 +79,8 @@ public class WavWriter extends BaseDataProcessor {
 
 	private String wavUri;
 
+	private long y=0;
+
 
     /**
      * @return the developerId
@@ -228,62 +230,16 @@ public class WavWriter extends BaseDataProcessor {
         if (data instanceof DataStartSignal)
             sampleRate = ((DataStartSignal) data).getSampleRate();
 
-        if (data instanceof DataStartSignal || (data instanceof SpeechStartSignal && captureUtts)) {
-            baos = new ByteArrayOutputStream();
-            dos = new DataOutputStream(baos);
-        }
+
+        //TODO: Find out why the data and speech signals are not received in a relable way.
+        //(was modified because the signals were not received in a reliable way for all situations, thus recording was unrelaible too)
+        //if (data instanceof DataStartSignal || (data instanceof SpeechStartSignal && captureUtts)) {
+        //    startRecording();
+        //}
 
 
         if ((data instanceof DataEndSignal && !captureUtts) || (data instanceof SpeechEndSignal && captureUtts)) {
-        	
-
-            if (isCompletePath) {
-                wavFullPathName = dumpFilePath;
-            } else {            	
-        	    StringBuffer fullpathname = new StringBuffer(dumpFilePath);
-        	    StringBuffer furi = new StringBuffer(SPEECHAPI_URI);
-        	    StringBuffer fname = new StringBuffer();
-
-        	    fullpathname.append("/");
-        	    fullpathname.append("/");
-
-        	    if ((developerId == null) ||(developerId.length() <1)) {
-        	    	developerId = "guest";
-        	    }
-        	    //String fpath=fname.toString();
-        	    fullpathname.append(developerId);
-        	    furi.append(developerId);
-        	    fname.append(developerId);
-
-        	    fullpathname.append("-");
-        	    furi.append("-");
-        	    fname.append("-");
-
-        	    
-        	    
-        	    int x = getNextFreeIndex(dumpFilePath);
-        	    fullpathname.append(x);
-        	    furi.append(x);
-        	    fname.append(x);
-
-
-        	    fullpathname.append( ".wav");
-        	    furi.append( ".wav");
-        	    fname.append( ".wav");
-
-
-        	    wavFullPathName = fullpathname.toString();
-        	    wavUri = furi.toString();        	    
-        	    wavFileName = fname.toString();
-        	    
-        	    //System.out.println(wavFileName);
-        	    //System.out.println(wavUri);
-        	    //System.out.println(wavFullPathName);
-
-        	    
-            }
-            writeFile(wavFullPathName);
-
+        //    stopRecording();
             isInSpeech = false;
         }
 
@@ -291,6 +247,7 @@ public class WavWriter extends BaseDataProcessor {
             isInSpeech = true;
 
         if ((data instanceof DoubleData || data instanceof FloatData) && (isInSpeech || !captureUtts)) {
+
             DoubleData dd = data instanceof DoubleData ? (DoubleData) data : DataUtil.FloatData2DoubleData((FloatData) data);
             double[] values = dd.getValues();
 
@@ -301,13 +258,83 @@ public class WavWriter extends BaseDataProcessor {
                     e.printStackTrace();
                 }
             }
+        	//System.out.println("data size is now: "+dos.size()+ " "+baos.size());
+        //} else {
+        	//System.out.println(data.getClass().getName()+" "+isInSpeech+" "+captureUtts);
         }
 
         return data;
     }
 
+	public void stopRecording() {
+	    if (isCompletePath) {
+	        wavFullPathName = dumpFilePath;
+	    } else {            	
+	        StringBuffer fullpathname = new StringBuffer(dumpFilePath);
+	        StringBuffer furi = new StringBuffer(SPEECHAPI_URI);
+	        StringBuffer fname = new StringBuffer();
 
+	        fullpathname.append("/");
+
+	        if ((developerId == null) ||(developerId.length() <1)) {
+	        	developerId = "guest";
+	        }
+	        //String fpath=fname.toString();
+	        fullpathname.append(developerId);
+	        furi.append(developerId);
+	        fname.append(developerId);
+
+	        fullpathname.append("-");
+	        furi.append("-");
+	        fname.append("-");
+
+	        
+	        String x = Long.toString(System.currentTimeMillis());
+	        //int x = getNextFreeIndex(fullpathname.toString());
+	        fullpathname.append(x);
+	        furi.append(x);
+	        fname.append(x);
+
+	        fullpathname.append("-");
+	        furi.append("-");
+	        fname.append("-");
+
+	        
+	        y++;
+	        fullpathname.append(y);
+	        furi.append(y);
+	        fname.append(y);
+	        
+	        fullpathname.append( ".wav");
+	        furi.append( ".wav");
+	        fname.append( ".wav");
+
+
+	        wavFullPathName = fullpathname.toString();
+	        wavUri = furi.toString();        	    
+	        wavFileName = fname.toString();
+	        
+	        //System.out.println(wavFileName);
+	        //System.out.println(wavUri);
+	        //System.out.println(wavFullPathName);
+
+	        
+	    }
+	    writeFile(wavFullPathName);
+        isInSpeech = false;
+    }
+
+	public void startRecording() {
+        isInSpeech = true;
+	    baos = new ByteArrayOutputStream();
+	    dos = new DataOutputStream(baos);
+    }
+
+
+    //TODO:  Find a more efficient way of getting a unique filename!
     private static int getNextFreeIndex(String outPattern) {
+    	
+    	
         int fileIndex = 0;
         while (new File(outPattern + fileIndex + ".wav").isFile())
             fileIndex++;
@@ -322,7 +349,6 @@ public class WavWriter extends BaseDataProcessor {
         super.initialize();
 
         assert dumpFilePath != null;
-        baos = new ByteArrayOutputStream();
  
         
     }
@@ -417,10 +443,21 @@ public class WavWriter extends BaseDataProcessor {
     * @param wavName name of the file to be written
     */
     protected void writeFile(String wavName) {
+    	//System.out.println("writing file "+wavName+" "+baos.size()+" "+dos.size());
         AudioFormat wavFormat = new AudioFormat(sampleRate, bitsPerSample, 1, isSigned, true);
         AudioFileFormat.Type outputType = getTargetType("wav");
 
+        try {
+	        dos.flush();
+	        dos.close();
+
+        } catch (IOException e1) {
+	        // TODO Auto-generated catch block
+	        e1.printStackTrace();
+        }
+    	//System.out.println("writing file "+wavName+" "+baos.size()+" "+dos.size());
         byte[] abAudioData = baos.toByteArray();
+    	//System.out.println("writing file "+wavName+" "+abAudioData.length);
         ByteArrayInputStream bais = new ByteArrayInputStream(abAudioData);
         AudioInputStream ais = new AudioInputStream(bais, wavFormat, abAudioData.length / wavFormat.getFrameSize());
 

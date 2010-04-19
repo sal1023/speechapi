@@ -187,27 +187,13 @@ public class SpeechDownloadServlet extends HttpServlet {
         AudioFormat format = new AudioFormat(encoding, sampleRate, bytesPerValue*8, 1, bytesPerValue, sampleRate, bigEndian);
 		//run the synthesizer
 		
-		response.setContentType("audio/x-wav");
-		response.setHeader("Content-Disposition", "attachment; filename=synthesized.wav'");			
+		response.setContentType(mime);
+		response.setHeader("Content-Disposition", "attachment; filename=synthesized.mp3");			
 		response.setHeader("Transfer-coding","chunked");
 		
-    	try {
-    		_logger.debug("sythesizing audio!  Sample rate= "+sampleRate+", bigEndian= "+ bigEndian+", bytes per value= "+bytesPerValue+", encoding= "+encoding.toString());
-    	     //f = synthesizerService.ttsFile(text,format,fileFormat);
-    	     synthesizerService.streamTTS(text,format,mime,voice,response.getOutputStream());
-    	} catch (Exception e) {
-    		e.printStackTrace();
-    	}
-    	
-		OutputStream out = response.getOutputStream();
-
-        out.flush();
-        out.close();
-	    
+        HttpRequest hr = new HttpRequest();
 		if (serviceLogEnabled) {
 			Date d = new Date();
-
-	        HttpRequest hr = new HttpRequest();
 		    hr.setProtocol(request.getProtocol());
 		    hr.setScheme(request.getScheme());	
 		    hr.setMethod(request.getMethod());
@@ -220,10 +206,11 @@ public class SpeechDownloadServlet extends HttpServlet {
 		    hr.setLocalPort(request.getLocalPort());
 		    hr.setLocale(request.getLocale().toString()); 
 			hr.setDate(d);
+			
 			hr.setDeveloperId(developerId);
 			hr.setUserId(userId);
 			hr.setDevDefined(developerDefined);
-	
+			
 			SynthRequest sr = new SynthRequest();
 			sr.setBigEndian(bigEndian);
 			sr.setBytesPerValue(bytesPerValue);
@@ -234,8 +221,21 @@ public class SpeechDownloadServlet extends HttpServlet {
 			sr.setText(text);
 			sr.setVoice(voice);
 			hr.setSynth(sr);
-			ServiceLogger.logHttpRequest(hr);
 		}
+		
+    	try {
+    		_logger.debug("sythesizing audio!  Sample rate= "+sampleRate+", bigEndian= "+ bigEndian+", bytes per value= "+bytesPerValue+", encoding= "+encoding.toString());
+    	     //f = synthesizerService.ttsFile(text,format,fileFormat);
+    	     synthesizerService.streamTTS(text,format,mime,voice,response.getOutputStream(),hr);
+    	} catch (Exception e) {
+    		e.printStackTrace();
+    	}
+    	
+		OutputStream out = response.getOutputStream();
+
+        out.flush();
+        out.close();
+	    
 
     }
 
@@ -461,31 +461,14 @@ public class SpeechDownloadServlet extends HttpServlet {
 			//run the synthesizer
 			File f =  null;
 			
-			response.setContentType("audio/x-wav");
-			response.setHeader("Content-Disposition", "attachment; filename=synthesized.wav");			
+			response.setContentType(mime);
+			response.setHeader("Content-Disposition", "attachment; filename=synthesized.mp3");			
 			response.setHeader("Transfer-coding","chunked");
 			
-	    	try {
-	    		_logger.debug("sythesizing audio!  Sample rate= "+sampleRate+", bigEndian= "+ bigEndian+", bytes per value= "+bytesPerValue+", encoding= "+encoding.toString());
-	    	     //f = synthesizerService.ttsFile(text,format,fileFormat);
-	    	     synthesizerService.streamTTS(text,format,mime,voice,response.getOutputStream());
-	    	} catch (Exception e) {
-	    		e.printStackTrace();
-	    	}
-	    	
-	    	
-	    	//TODO: Get a stream in the first place (no need to go to a file first)
-	    	//take the output file and put in the response stream
-			OutputStream out = response.getOutputStream();
-
-
-	        out.flush();
-	        out.close();
-	        
+			
+	        HttpRequest hr = new HttpRequest();
 			if (serviceLogEnabled) {
 				Date d = new Date();
-
-		        HttpRequest hr = new HttpRequest();
 			    hr.setProtocol(request.getProtocol());
 			    hr.setScheme(request.getScheme());	
 			    hr.setMethod(request.getMethod());
@@ -513,10 +496,25 @@ public class SpeechDownloadServlet extends HttpServlet {
 				sr.setText(text);
 				sr.setVoice(voice);
 				hr.setSynth(sr);
-				ServiceLogger.logHttpRequest(hr);
-				//sr.setHttpRequest(hr);
-				//ServiceLogger.logHttpRequest(hr);
 			}
+			
+	    	try {
+	    		_logger.debug("sythesizing audio!  Sample rate= "+sampleRate+", bigEndian= "+ bigEndian+", bytes per value= "+bytesPerValue+", encoding= "+encoding.toString());
+	    	     //f = synthesizerService.ttsFile(text,format,fileFormat);
+	    	     synthesizerService.streamTTS(text,format,mime,voice,response.getOutputStream(),hr);
+	    	} catch (Exception e) {
+	    		e.printStackTrace();
+	    	}
+	    	
+	    	
+	    	//TODO: Get a stream in the first place (no need to go to a file first)
+	    	//take the output file and put in the response stream
+			OutputStream out = response.getOutputStream();
+
+
+	        out.flush();
+	        out.close();
+
 	        
 	
 			// store file list and pass control to view jsp

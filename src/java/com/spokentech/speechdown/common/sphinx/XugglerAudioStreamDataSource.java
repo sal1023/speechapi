@@ -1,14 +1,4 @@
-/*
- * Copyright 1999-2002 Carnegie Mellon University.
- * Portions Copyright 2002 Sun Microsystems, Inc.
- * Portions Copyright 2002 Mitsubishi Electric Research Laboratories.
- * All Rights Reserved.  Use is subject to license terms.
- *
- * See the file "license.terms" for information on usage and
- * redistribution of this file, and for a DISCLAIMER OF ALL
- * WARRANTIES.
- *
- */
+
 package com.spokentech.speechdown.common.sphinx;
 
 import edu.cmu.sphinx.frontend.*;
@@ -41,17 +31,7 @@ import com.xuggle.xuggler.IPacket;
 import com.xuggle.xuggler.IStream;
 import com.xuggle.xuggler.IStreamCoder;
 
-/**
- * An AudioFileDataSource generates a stream of audio data from a given audion file. All required information concerning
- * the audio format are read directly from the file . One would need to call {@link #setAudioFile(java.io.File,String)}
- * to set the input file, and call {@link #getData} to obtain the Data frames.
- * <p/>
- * Using JavaSound as backend this class is able to handle all sound files supported by JavaSound. Beside the built-in
- * support for .wav, .au and .aiff. Using plugins (cf.  http://www.jsresources.org/ ) it can be extended to support
- * .ogg, .mp3, .speex and others.
- *
- * @author Holger Brandl
- */
+
 
 public class XugglerAudioStreamDataSource extends BaseDataProcessor implements StreamDataSource {
 	private static Logger _logger = Logger.getLogger(XugglerAudioStreamDataSource.class.getName());
@@ -613,8 +593,7 @@ public class XugglerAudioStreamDataSource extends BaseDataProcessor implements S
 
 	@Override
     public long getLengthInMs() {
-
-	    return (1000*totalValues)/sampleRate;
+		return (long) (((double) totalValuesRead / (double) sampleRate) * 1000.0);
     }
 
 
