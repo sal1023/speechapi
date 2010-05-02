@@ -47,6 +47,14 @@ public class HttpSynthesizer {
     private static Logger _logger = Logger.getLogger(HttpSynthesizer.class.getName());
 
     
+	public HttpSynthesizer(String devId, String key) {
+		this.devId = devId;
+		this.key = key;
+    }
+	
+	private volatile String devId;
+	private volatile String key;
+	
     private String service;
     
     
@@ -69,7 +77,10 @@ public class HttpSynthesizer {
     	this.service = service;
     }
 
-
+    public InputStream  synthesize(String userId,  String text,  AudioFormat format, String mimeType, String voiceName) {
+    	return synthesize(this.devId, this.key, userId, text, format, mimeType,voiceName);
+    }
+    	
 	//format = new AudioFormat ((float) sampleRate, sampleSizeInBits, channels, signed, bigEndian);
 	/**
      * Synthesize the text string and the synthesized audio in the specifeid format.
@@ -81,7 +92,7 @@ public class HttpSynthesizer {
      * 
      * @return the input stream
      */
-    public InputStream  synthesize(String text,  AudioFormat format, String mimeType, String voiceName) {
+    public InputStream  synthesize(String developerId, String devKey, String userId,  String text,  AudioFormat format, String mimeType, String voiceName) {
 		
     	// Plain old http approach    	
     	HttpClient httpclient = new DefaultHttpClient();
@@ -94,7 +105,7 @@ public class HttpSynthesizer {
         // support mark/reset.  That is needed for stremaing using http chunk encoding on the servlet side using file upload.
 
 
-        _logger.fine("Format: " + format);    	
+        _logger.info("Format: " + format);    	
     	StringBody sampleRate = null;
     	StringBody bigEndian = null;
     	StringBody bytesPerValue = null;
@@ -102,6 +113,11 @@ public class HttpSynthesizer {
     	StringBody mime = null;
     	StringBody voice = null;
     	StringBody textBody = null;
+    	
+    	StringBody dId = null;
+    	StringBody uId = null;
+    	StringBody keyy = null;
+    	
         try {
         	sampleRate = new StringBody(String.valueOf((int)format.getSampleRate()));
         	bigEndian = new StringBody(String.valueOf(format.isBigEndian()));
@@ -110,6 +126,19 @@ public class HttpSynthesizer {
         	mime = new StringBody(mimeType);
          	voice = new StringBody(voiceName);
           	textBody = new StringBody(text);
+          	
+    		if (devId != null) {
+            	dId = new StringBody(developerId);
+    		    mpEntity.addPart(HttpCommandFields.DEVELOPER_ID,dId);
+    		}
+    		if (userId != null) {
+            	uId = new StringBody(userId);
+    		    mpEntity.addPart(HttpCommandFields.USER_ID,uId);
+    		}
+    		if (key != null) {
+            	keyy = new StringBody(devKey);
+    		    mpEntity.addPart(HttpCommandFields.DEVELOPER_SECRET,keyy);
+    		}       	
 
         } catch (UnsupportedEncodingException e1) {
 	        // TODO Auto-generated catch block
@@ -125,11 +154,12 @@ public class HttpSynthesizer {
 		mpEntity.addPart(HttpCommandFields.VOICE_NAME, voice);
 		mpEntity.addPart(HttpCommandFields.TEXT, textBody);
         
-        
+
+		
         httppost.setEntity(mpEntity);
     
         
-        _logger.fine("executing request " + httppost.getRequestLine());
+        _logger.info("executing request " + httppost.getRequestLine());
         HttpResponse response = null;
         try {
 	        response = httpclient.execute(httppost);
@@ -142,11 +172,11 @@ public class HttpSynthesizer {
         }
         HttpEntity resEntity = response.getEntity();
 
-        _logger.fine("----------------------------------------");
-        _logger.fine(response.getStatusLine().toString());
+        _logger.info("----------------------------------------");
+        _logger.info(response.getStatusLine().toString());
         if (resEntity != null) {
-            _logger.fine("Response content length: " + resEntity.getContentLength());
-            _logger.fine("Chunked?: " + resEntity.isChunked());
+            _logger.info("Response content length: " + resEntity.getContentLength());
+            _logger.info("Chunked?: " + resEntity.isChunked());
 
         }
         InputStream s = null;

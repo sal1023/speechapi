@@ -16,12 +16,18 @@ public class AsynchCommand implements Runnable {
     private static Logger _logger = Logger.getLogger(AsynchCommand.class.getName());
 	
    public enum CommandType {recognize, synthesize}
-	
 
-	public AsynchCommand(CommandType type, String service, InputStream grammarIs,
+
+
+
+
+	public AsynchCommand(String devid, String userid, String key, CommandType type, String service, InputStream grammarIs,
             EndPointingInputStream epStream, boolean lmflg, boolean batchMode, OutputFormat outMode, long timeout,
             SpeechEventListener eventListener) {
 	    super();
+	    this.devId = devid;
+	    this.userId = userid;
+	    this.key = key;
 	    this.type = type;
 	    this.service = service;
 	    this.grammarIs = grammarIs;
@@ -34,7 +40,9 @@ public class AsynchCommand implements Runnable {
 	    this.id = UUID.randomUUID().toString();
     }
 
-
+	private String devId;
+	private String userId;
+	private String key;		
     private CommandType type;
 	private String service;
 	private InputStream grammarIs;
@@ -66,6 +74,7 @@ public class AsynchCommand implements Runnable {
 	}
 
 
+
 	
 	@Override
     public void run() {
@@ -74,9 +83,9 @@ public class AsynchCommand implements Runnable {
 				_logger.info("running command");
 				//not thread safe so creating a new recognizer.  It is pretty lightweight so not much overhead but still ...
 				//TODO: make it thread safe so the same HttpRecognizer can be reused (pass the recognizer object in the command)
-			    httpRecognizer = new HttpRecognizer();
+			    httpRecognizer = new HttpRecognizer(devId, key);
 				httpRecognizer.setService(service);
-	            httpRecognizer.recognize(grammarIs, epStream, lmflg, batchMode,outMode, timeout,eventListener);
+	            httpRecognizer.recognize(userId, grammarIs, epStream, lmflg, batchMode,outMode, timeout,eventListener);
             } catch (InstantiationException e) {
 	            // TODO Auto-generated catch block
 	            e.printStackTrace();

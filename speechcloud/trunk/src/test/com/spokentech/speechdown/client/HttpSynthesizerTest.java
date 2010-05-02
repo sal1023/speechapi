@@ -57,9 +57,9 @@ public class HttpSynthesizerTest extends TestCase {
     public static final String CRLF = "\r\n";
     
    
-    //private static String service = "http://spokentech.net/speechcloud/SpeechDownloadServlet";  
+    private static String service = "http://spokentech.net/speechcloud/SpeechDownloadServlet";  
     //private static String service = "http://ec2-174-129-20-250.compute-1.amazonaws.com/speechcloud/SpeechDownloadServlet";  
-    private static String service = "http://localhost:8090/speechcloud/SpeechDownloadServlet";    
+    //private static String service = "http://localhost:8090/speechcloud/SpeechDownloadServlet";    
 
     private static int sampleRate = 16000;
     private static boolean signed = true;
@@ -80,21 +80,24 @@ public class HttpSynthesizerTest extends TestCase {
     private  AudioFormat format;
     private  AudioFormat format2;
     private  AudioFormat format3;
+	private String devId ="HttpSynthesizerTest";
+	private String key = null;
+	private String userId =null;
 	
 	     protected void setUp() {
-		    	synth = new HttpSynthesizer();
+		    	synth = new HttpSynthesizer(devId, key );
 		    	synth.setService(service);	 
 		    	
 		        //format = new AudioFormat ((float) sampleRate, sampleSizeInBits, channels, signed, bigEndian);
 		
 		    	format = new AudioFormat(
 		                AudioFormat.Encoding.PCM_SIGNED,
-		                32000,
+		                16000,
 		                16,
 		                1,
 		                2,
 		                16000,
-		                false);
+		                true);
 		    	
 		    	 System.out.println("***** "+Encodings.getEncoding("MPEG1L3"));
 		    	
@@ -104,8 +107,8 @@ public class HttpSynthesizerTest extends TestCase {
 		                44100,
 		                32,
 		                1,
-		                2,
-		                11025,
+		                4,
+		                44100,
 		                true);
 		    	
 		        format3 = new AudioFormat ( 44100, 32, channels, signed, bigEndian);             
@@ -131,7 +134,7 @@ public class HttpSynthesizerTest extends TestCase {
 	    	text = "To be or not to be, that is the question. Whether tis nobler in the mind to suffer the slings and arrows of outrageous fortune, or to take arms against a sea of troubles, And by opposing end them. To die—to sleep";
 			voice = "hmm-jmk";
 	    	outFileName = "to-be.mp3";
-	    	stream = synth.synthesize(text, format2, mpeg, voice);
+	    	stream = synth.synthesize(userId, text, format2, mpeg, voice);
 	        if (stream != null) {
 	        	writeStreamToFile(stream,outFileName);
 	        }
@@ -139,7 +142,7 @@ public class HttpSynthesizerTest extends TestCase {
 	    	text = "this is a only a test";
 	    	voice = "jmk-arctic";
 	    	outFileName = "this-is.wav";
-	    	stream = synth.synthesize(text, format, wav, voice);
+	    	stream = synth.synthesize(userId , text, format, wav, voice);
 	        if (stream != null) {
 	        	writeStreamToFile(stream,outFileName);
 	        	/*try {
@@ -162,7 +165,7 @@ public class HttpSynthesizerTest extends TestCase {
 	    	text = "A man, a plan, a canal, panama";
 			voice = "slt-arctic";
 	    	outFileName = "a-man.wav";
-	    	 stream = synth.synthesize(text, format, wav, voice);
+	    	 stream = synth.synthesize(userId, text, format, wav, voice);
 	        if (stream != null) {
 	        	writeStreamToFile(stream,outFileName);
 	        	/*try {
@@ -185,7 +188,7 @@ public class HttpSynthesizerTest extends TestCase {
 	    	text = "If a server wants to start sending a response before knowing its total length (like with long script output), it might use the simple chunked transfer-encoding, which breaks the complete response into smaller chunks and sends them in series. ";
 			voice = "hmm-slt";
 	    	outFileName = "If-a-server.mp3";
-	    	 stream = synth.synthesize(text, format2, mpeg, voice);
+	    	 stream = synth.synthesize(userId, text, format2, mpeg, voice);
 	        if (stream != null) {
 	        	writeStreamToFile(stream,outFileName);
 	
@@ -196,17 +199,14 @@ public class HttpSynthesizerTest extends TestCase {
 			//voice = "slt-arctic";
 			 //voice = "hmm-bdl";
 			 //voice = "bdl-arctic";
-			 //voice = "misspelled";
-
-
-
-	        
+			 //voice = "misspelled";     
 	    }
         
 
 	public void writeStreamToFile(InputStream inStream, String fileName) {
 		try {
 
+	           
 			File f = new File(fileName);
 			BufferedOutputStream out = new BufferedOutputStream(new FileOutputStream(f));
 	

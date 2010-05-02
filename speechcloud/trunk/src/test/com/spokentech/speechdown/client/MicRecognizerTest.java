@@ -56,9 +56,12 @@ public class MicRecognizerTest extends TestCase {
     String s4feature = "audio/x-s4feature";
     String s4audio = "audio/x-s4audio";
     
-
+	private String devId ="MicRecognizerTest";
+	private String userId = null;
+	private String key = null;
+	
 	     protected void setUp() {
-		    	recog = new HttpRecognizerJavaSound();
+		    	recog = new HttpRecognizerJavaSound(devId,key);
 		    	recog.setService(service);
 
 		    	try {
@@ -120,7 +123,7 @@ public class MicRecognizerTest extends TestCase {
 	    	
 	        lmflg = false;
 	        batchFlag = false;
-	        RecognitionResult r = recog.recognize(audioLine, grammarUrl,lmflg,doEndpointing,batchFlag,OutputFormat.text);
+	        RecognitionResult r = recog.recognize(userId, audioLine, grammarUrl,lmflg,doEndpointing,batchFlag,OutputFormat.text);
 	        System.out.println("grammar result: "+r.getText());
 	    	
 	    }

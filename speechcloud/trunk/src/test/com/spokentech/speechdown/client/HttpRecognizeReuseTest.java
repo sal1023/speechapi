@@ -78,8 +78,8 @@ public class HttpRecognizeReuseTest extends TestCase {
 	   
 	    
 	    //private static String service = "http://ec2-174-129-20-250.compute-1.amazonaws.com/speechcloud/SpeechUploadServlet";    
-	    private static String service = "http://localhost:8090/speechcloud/SpeechUploadServlet";    
-	    //private static String service = "http://spokentech.net/speechcloud/SpeechUploadServlet";   
+	    //private static String service = "http://localhost:8090/speechcloud/SpeechUploadServlet";    
+	    private static String service = "http://www.speechapi.com:8000/speechcloud/SpeechUploadServlet";   
 	    private static AudioFormat desiredFormat;
 	    private static int sampleRate = 8000;
 	    private static boolean signed = true;
@@ -113,11 +113,13 @@ public class HttpRecognizeReuseTest extends TestCase {
 	    String audioConfigFile="c:/work/speechcloud/etc/sphinxfrontendonly-audio.xml";
 	    String featureConfigFile="c:/work/speechcloud/etc/sphinxfrontendonly-feature.xml";
 	
-	    
+		private String devId ="HttpRecognizerReuseTest";
+		private String userId = null;
+		private String key = null;
 
 	     protected void setUp() {
 	     	    long t1 = System.nanoTime();
-		    	recog = new HttpRecognizerJavaSound();
+		    	recog = new HttpRecognizerJavaSound(devId, key);
 		    	recog.setService(service);
 		    	long t2 = System.nanoTime();
 		    	long t3 = (t2-t1)/1000000;
@@ -148,7 +150,7 @@ public class HttpRecognizeReuseTest extends TestCase {
 	    	boolean lmflg = false;
 	    	boolean batchFlag = false;
 	        try {	            
-	            r = recog.recognize(grammarUrl,  epStream,  lmflg,  batchFlag,OutputFormat.text, timeout) ;
+	            r = recog.recognize(userId, grammarUrl,  epStream,  lmflg,  batchFlag,OutputFormat.text, timeout) ;
             } catch (InstantiationException e) {
 	            // TODO Auto-generated catch block
 	            e.printStackTrace();
@@ -198,7 +200,7 @@ public class HttpRecognizeReuseTest extends TestCase {
 	    	boolean lmflg = false;
 	    	boolean batchFlag = true;
 	        try {          
-	            r = recog.recognize(grammarUrl,  epStream,  lmflg,  batchFlag,OutputFormat.text, timeout) ;
+	            r = recog.recognize(userId, grammarUrl,  epStream,  lmflg,  batchFlag,OutputFormat.text, timeout) ;
             } catch (InstantiationException e) {
 	            // TODO Auto-generated catch block
 	            e.printStackTrace();
@@ -265,7 +267,7 @@ public class HttpRecognizeReuseTest extends TestCase {
 	    		} else
 			        try {	            
 			        	_logger.info("Calling rec, epStream.inUse() = "+epStream.inUse());
-			            id = recog.recognizeAsynch(grammarUrl,  epStream,  lmflg,  batchFlag,OutputFormat.text, timeout,l) ;
+			            id = recog.recognizeAsynch(devId,key,userId, grammarUrl,  epStream,  lmflg,  batchFlag,OutputFormat.text, timeout,l) ;
 		            } catch (InstantiationException e) {
 			            // TODO Auto-generated catch block
 			            e.printStackTrace();
@@ -305,7 +307,7 @@ public class HttpRecognizeReuseTest extends TestCase {
 	    		} else
 			        try {	            
 			        	_logger.info("Calling rec, epStream.inUse() = "+epStream.inUse());
-			            id = recog.recognizeAsynch(grammarUrl,  epStream,  lmflg,  batchFlag,OutputFormat.text, timeout,l) ;
+			            id = recog.recognizeAsynch(devId,key,userId, grammarUrl,  epStream,  lmflg,  batchFlag,OutputFormat.text, timeout,l) ;
 
 		            } catch (InstantiationException e) {
 			            // TODO Auto-generated catch block
@@ -346,7 +348,7 @@ public class HttpRecognizeReuseTest extends TestCase {
 	    		} else
 			        try {	            
 			        	_logger.info("Calling rec, epStream.inUse() = "+epStream.inUse());
-			            id = recog.recognizeAsynch(grammarUrl,  epStream,  lmflg,  batchFlag,OutputFormat.text, timeout,l) ;
+			            id = recog.recognizeAsynch(devId,key,userId, grammarUrl,  epStream,  lmflg,  batchFlag,OutputFormat.text, timeout,l) ;
 
 		            } catch (InstantiationException e) {
 			            // TODO Auto-generated catch block
@@ -387,7 +389,7 @@ public class HttpRecognizeReuseTest extends TestCase {
 	    		} else
 			        try {	            
 			        	_logger.info("Calling rec, epStream.inUse() = "+epStream.inUse());
-			            id = recog.recognizeAsynch(grammarUrl,  epStream,  lmflg,  batchFlag,OutputFormat.text, timeout,l) ;
+			            id = recog.recognizeAsynch(devId,key,userId, grammarUrl,  epStream,  lmflg,  batchFlag,OutputFormat.text, timeout,l) ;
 
 		            } catch (InstantiationException e) {
 			            // TODO Auto-generated catch block
@@ -434,7 +436,7 @@ public class HttpRecognizeReuseTest extends TestCase {
 	    	boolean batchFlag = false;
 	    	String id;
 	        try {	            
-	            id = recog.recognizeAsynch(grammarUrl,  epStream,  lmflg,  batchFlag,OutputFormat.text, timeout,l) ;
+	            id = recog.recognizeAsynch(devId,key,userId, grammarUrl,  epStream,  lmflg,  batchFlag,OutputFormat.text, timeout,l) ;
             } catch (InstantiationException e) {
 	            // TODO Auto-generated catch block
 	            e.printStackTrace();
