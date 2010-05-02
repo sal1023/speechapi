@@ -235,6 +235,8 @@ public class SphinxRecEngine extends AbstractPoolableObject implements RecEngine
 	        
 			String raw = null;
 			String pro = null;
+			
+			//getting the best result and pronunciation twice (at least in the json output mode case)
 			if (r != null) {
 				raw = r.getBestFinalResultNoFiller();
 				pro = r.getBestPronunciationResult();
@@ -272,7 +274,12 @@ public class SphinxRecEngine extends AbstractPoolableObject implements RecEngine
 			//ServiceLogger.logRecogRequest(rr,hr);
 		    
 		    hr.setRecog(rr);
-		    ServiceLogger.logHttpRequest(hr);
+		    try {
+	            ServiceLogger.logHttpRequest(hr);
+            } catch (Exception e) {
+            	_logger.warn("exception thrown while recording http request");
+	            e.printStackTrace();
+            }
 
 		}
 		
@@ -291,20 +298,26 @@ public class SphinxRecEngine extends AbstractPoolableObject implements RecEngine
   
 		if (r != null) {
 			//TODO: change to return Utterance object that can be serialized to json or plant text (see transcribe method)
-	        //if (outMode == OutputFormat.text) {
+			//current approach is a bit of a hack, by constructing with a json flag.
+	        if (outMode == OutputFormat.text) {
+			
 				ConfidenceResult cr = cs.score(r);
 				Path best = cr.getBestHypothesis();
 				double confidence = best.getLogMath().logToLinear((float) best.getConfidence());
-	
+			
+	            //TODO: 
 		        RecognitionResultJsapi results = new RecognitionResultJsapi(r.getBestResultNoFiller(),confidence);
 		        System.out.println("returning results: "+results);
 		        return results;
-	        //} else if (outMode == OutputFormat.json) {
-	        //	Utterance utterance = ResultUtils.getAllResults(result, false, false,cs);
-	        //    resultText = gson.toJson(utterance);
-	        //} else {
-	        //	_logger.warn("Unrecognized output format: "+outMode+ "  ,using plain text mode as a default.");
-	        //}
+	        } else if (outMode == OutputFormat.json) {
+	        	Utterance utterance = ResultUtils.getAllResults(r, false, false,cs);
+	            String resultText = gson.toJson(utterance);
+		        RecognitionResult results = RecognitionResult.constructResultFromJSONString(resultText);
+		        return results;
+	        } else {
+	        	_logger.warn("Unrecognized output format: "+outMode+ "  ,using plain text mode as a default.");
+		    	return null;
+	        }
 	        	
 	    } else {
 	    	return null;
@@ -354,26 +367,57 @@ public class SphinxRecEngine extends AbstractPoolableObject implements RecEngine
         _logger.debug("After load grammar" + System.currentTimeMillis());
  
 	    Result r = doRecognize(as, mimeType, af, outMode, doEndpointing,  cmnBatch);
-	    
-	    RecognitionResultJsapi results = new RecognitionResultJsapi(r, _jsgfGrammar.getRuleGrammar());
-	    _logger.info("Result: " + (results != null ? results.getText() : null));
- 
+		
+		RecognitionResult results = null;
+		if (r != null) {
+			//TODO: change to return Utterance object that can be serialized to json or plant text (see transcribe method)
+			//current approach is a bit of a hack, by constructing with a json flag.
+	        if (outMode == OutputFormat.text) {
+			
+	        	//TODO: Add confidence back when it works in speech engine (does not work no with grammars)
+				//ConfidenceResult cr = cs.score(r);
+				//Path best = cr.getBestHypothesis();
+				//double confidence = best.getLogMath().logToLinear((float) best.getConfidence());
+	    	     results = new RecognitionResultJsapi(r, _jsgfGrammar.getRuleGrammar());
+	    	    _logger.info("Result: " + (results != null ? results.getText() : null));
+
+
+	        } else if (outMode == OutputFormat.json) {
+	        	Utterance utterance = ResultUtils.getAllResults(r, false, false,_jsgfGrammar.getRuleGrammar());
+	            String resultText = gson.toJson(utterance);
+		         results = RecognitionResult.constructResultFromJSONString(resultText);
+
+	        } else {
+	        	_logger.warn("Unrecognized output format: "+outMode+ "  ,using plain text mode as a default.");
+	    	     results = new RecognitionResultJsapi(r, _jsgfGrammar.getRuleGrammar());
+		    	 _logger.info("Result: " + (results != null ? results.getText() : null));
+	        }
+
+	    }
+		
+			
+		// Do Recording 
 		long stop = System.nanoTime();
 		long wall = (stop - start)/1000000;
 		long streamLen = _dataSource.getLengthInMs();
 		double ratio = (double)wall/(double)streamLen;
 		_logger.info(ratio+ "  Wall time "+ wall+ " stream length "+ streamLen);
 		
-		if (recordingEnabled) {	
+		if (recordingEnabled) {
+			_logger.info("logging enabled, stopping recording and writing to database");
 			recorder.stopRecording();
 
 	        RecogRequest rr = new RecogRequest();
 	        
+	        
+	        //TODO: Save processing time and get raw and pro from results (it is already there)
 			String raw = null;
 			String pro = null;
 			if (r != null) {
 				raw = r.getBestFinalResultNoFiller();
 				pro = r.getBestPronunciationResult();
+			    rr.setRawResults(raw);
+			    rr.setPronunciation(pro);
 			}
 	        
 		    Date d = new Date();
@@ -395,9 +439,11 @@ public class SphinxRecEngine extends AbstractPoolableObject implements RecEngine
 		    rr.setLm(false);
 		    rr.setContinuous(false);
 		    
-		    rr.setTags(results.getText());
-		    rr.setRawResults(raw);
-		    rr.setPronunciation(pro);
+		    
+		    //TODO: the tags are now in the utterance/json object, get it from there
+		    if (results != null)
+		       rr.setTags(results.getText());
+
 		    
 		    rr.setWallTime(wall);
 		    rr.setStreamLen(streamLen);
@@ -409,13 +455,23 @@ public class SphinxRecEngine extends AbstractPoolableObject implements RecEngine
 			//ServiceLogger.logRecogRequest(rr,hr);
 		    
 		    hr.setRecog(rr);
-		    ServiceLogger.logHttpRequest(hr);
+		    try {
+	            ServiceLogger.logHttpRequest(hr);
+            } catch (Exception e) {
+            	_logger.warn("exception thrown while recording http request");
+	            e.printStackTrace();
+            }
+		    _logger.info("done recording...");
 
 		}
 	     long tt = System.nanoTime();
 		long x = (tt - stop)/1000000;
 		_logger.debug("  Logging time "+ x);
-	    return results;
+		
+		
+		
+        return results;
+
     }
 
 	private Result doRecognize(InputStream as, String mimeType, AFormat af, OutputFormat outMode, boolean doEndpointing, boolean cmnBatch) {
@@ -582,7 +638,12 @@ public class SphinxRecEngine extends AbstractPoolableObject implements RecEngine
 		    rr.setAudioFileName(recorder.getWavFileName());
 
 		    hr.setRecog(rr);
-		    ServiceLogger.logHttpRequest(hr);
+		    try {
+	            ServiceLogger.logHttpRequest(hr);
+            } catch (Exception e) {
+            	_logger.warn("exception thrown while recording http request");
+	            e.printStackTrace();
+            }
 		}
 
 	    //SAL
