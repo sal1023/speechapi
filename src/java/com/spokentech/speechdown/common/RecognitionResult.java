@@ -36,6 +36,8 @@ import com.spokentech.speechdown.common.rule.RuleMatch;
 public class RecognitionResult {
 
     private static Logger _logger = Logger.getLogger(RecognitionResult.class.getName());
+
+	protected  boolean json;
     
     protected final static String tagRuleDelimiter = ":";
     protected final static String OUTOFGRAMMAR = "<unk>";
@@ -152,6 +154,15 @@ public class RecognitionResult {
     	}
     }
 
+    public static  RecognitionResult constructResultFromJSONString(String inputString)  {
+
+    	
+    	//TODO:  This is a quick test, should integrate this recog result with the json result.  right now, just putting it in the string
+        RecognitionResult result = new RecognitionResult();
+    	result._text = inputString;	
+    	result.json = true;
+    	return result;
+    }
     
     /**
      * TODOC

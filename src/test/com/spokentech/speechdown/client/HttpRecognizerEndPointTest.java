@@ -117,11 +117,13 @@ public class HttpRecognizerEndPointTest extends TestCase {
 	    String audioConfigFile="c:/work/speechcloud/etc/sphinxfrontendonly-audio.xml";
 	    String featureConfigFile="c:/work/speechcloud/etc/sphinxfrontendonly-feature.xml";
 	
-	    
+		private String devId ="HttpRecognizerEndPointingTest";
+		private String userId = null;
+		private String key = null;
 
 	     protected void setUp() {
 	     	    long t1 = System.nanoTime();
-		    	recog = new HttpRecognizerJavaSound();
+		    	recog = new HttpRecognizerJavaSound(devId,key);
 		    	recog.setService(service);
 		    	long t2 = System.nanoTime();
 		    	long t3 = (t2-t1)/1000000;
@@ -152,7 +154,7 @@ public class HttpRecognizerEndPointTest extends TestCase {
 	    	boolean lmflg = false;
 	    	boolean batchFlag = false;
 	        try {	            
-	            r = recog.recognize(grammarUrl,  epStream,  lmflg,  batchFlag,OutputFormat.text, timeout) ;
+	            r = recog.recognize(userId, grammarUrl,  epStream,  lmflg,  batchFlag,OutputFormat.text, timeout) ;
             } catch (InstantiationException e) {
 	            // TODO Auto-generated catch block
 	            e.printStackTrace();
@@ -182,7 +184,7 @@ public class HttpRecognizerEndPointTest extends TestCase {
 	    	boolean batchFlag = false;
 	    	String id;
 	        try {	            
-	            id = recog.recognizeAsynch(grammarUrl,  epStream,  lmflg,  batchFlag,OutputFormat.text, timeout,l) ;
+	            id = recog.recognizeAsynch(devId,key,userId, grammarUrl,  epStream,  lmflg,  batchFlag,OutputFormat.text, timeout,l) ;
             } catch (InstantiationException e) {
 	            // TODO Auto-generated catch block
 	            e.printStackTrace();
@@ -222,7 +224,7 @@ public class HttpRecognizerEndPointTest extends TestCase {
 	    	boolean batchFlag = false;
 	    	String id = null;
 	        try {	            
-	            id = recog.recognizeAsynch(grammarUrl,  epStream,  lmflg,  batchFlag,OutputFormat.text, timeout,l) ;
+	            id = recog.recognizeAsynch(devId,key,userId, grammarUrl,  epStream,  lmflg,  batchFlag,OutputFormat.text, timeout,l) ;
             } catch (InstantiationException e) {
 	            // TODO Auto-generated catch block
 	            e.printStackTrace();
@@ -259,7 +261,7 @@ public class HttpRecognizerEndPointTest extends TestCase {
 	    	boolean lmflg = true;
 	    	boolean batchFlag = true;
 	        try {	            
-	            r = recog.recognize(grammarUrl,  epStream,  lmflg,  batchFlag,OutputFormat.text, timeout) ;
+	            r = recog.recognize(userId, grammarUrl,  epStream,  lmflg,  batchFlag,OutputFormat.text, timeout) ;
             } catch (InstantiationException e) {
 	            // TODO Auto-generated catch block
 	            e.printStackTrace();
@@ -302,7 +304,7 @@ public class HttpRecognizerEndPointTest extends TestCase {
 	    	boolean lmflg = true;
 	    	boolean batchFlag = false;
 	        try {
-	        	r = recog.recognize(grammarUrl,  epStream,  lmflg,  batchFlag,OutputFormat.text, timeout) ;
+	        	r = recog.recognize(userId, grammarUrl,  epStream,  lmflg,  batchFlag,OutputFormat.text, timeout) ;
             } catch (InstantiationException e) {
 	            // TODO Auto-generated catch block
 	            e.printStackTrace();
@@ -358,7 +360,7 @@ public class HttpRecognizerEndPointTest extends TestCase {
 	    	boolean batchFlag = false;
 	    	RecognitionResult r = null;
 	        try {
-	        	r = recog.recognize(grammarUrl,  epStream,  lmflg, batchFlag,OutputFormat.text, timeout) ;
+	        	r = recog.recognize(userId, grammarUrl,  epStream,  lmflg, batchFlag,OutputFormat.text, timeout) ;
             } catch (InstantiationException e) {
 	            // TODO Auto-generated catch block
 	            e.printStackTrace();
@@ -412,7 +414,7 @@ public class HttpRecognizerEndPointTest extends TestCase {
 	    	boolean lmflg = false;
 	    	boolean batchFlag = true;
 	        try {          
-	            r = recog.recognize(grammarUrl,  epStream,  lmflg,  batchFlag,OutputFormat.text, timeout) ;
+	            r = recog.recognize(userId, grammarUrl,  epStream,  lmflg,  batchFlag,OutputFormat.text, timeout) ;
             } catch (InstantiationException e) {
 	            // TODO Auto-generated catch block
 	            e.printStackTrace();
@@ -462,7 +464,7 @@ public class HttpRecognizerEndPointTest extends TestCase {
 	    	boolean batchFlag = true;
 	    	String id;
 	        try {	            
-	            id = recog.recognizeAsynch(grammarUrl,  epStream,  lmflg,  batchFlag,OutputFormat.text, timeout,l) ;
+	            id = recog.recognizeAsynch(devId,key,userId, grammarUrl,  epStream,  lmflg,  batchFlag,OutputFormat.text, timeout,l) ;
             } catch (InstantiationException e) {
 	            // TODO Auto-generated catch block
 	            e.printStackTrace();
@@ -529,7 +531,7 @@ public class HttpRecognizerEndPointTest extends TestCase {
 	    	boolean batchFlag = true;
 	    	RecognitionResult result = null;
 	        try {	            
-	            result = recog.recognize(grammarUrl2,  epStream,  lmflg,  batchFlag,OutputFormat.text, timeout,l) ;
+	            result = recog.recognize(userId, grammarUrl2,  epStream,  lmflg,  batchFlag,OutputFormat.text, timeout,l) ;
             } catch (InstantiationException e) {
 	            // TODO Auto-generated catch block
 	            e.printStackTrace();
@@ -583,7 +585,7 @@ public class HttpRecognizerEndPointTest extends TestCase {
 	    	boolean batchFlag = true;
 	    	String id;
 	        try {	            
-	            id = recog.recognizeAsynch(grammarUrl2,  epStream,  lmflg,  batchFlag,OutputFormat.text, timeout,l) ;
+	            id = recog.recognizeAsynch(devId,key,userId, grammarUrl2,  epStream,  lmflg,  batchFlag,OutputFormat.text, timeout,l) ;
             } catch (InstantiationException e) {
 	            // TODO Auto-generated catch block
 	            e.printStackTrace();
@@ -647,7 +649,7 @@ public class HttpRecognizerEndPointTest extends TestCase {
 	    	boolean batchFlag = false;
 	    	String id;
 	        try {	            
-	            id = recog.recognizeAsynch(grammarUrl,  epStream,  lmflg,  batchFlag,OutputFormat.text, timeout,l) ;
+	            id = recog.recognizeAsynch(devId,key,userId, grammarUrl,  epStream,  lmflg,  batchFlag,OutputFormat.text, timeout,l) ;
             } catch (InstantiationException e) {
 	            // TODO Auto-generated catch block
 	            e.printStackTrace();

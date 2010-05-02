@@ -32,9 +32,14 @@ import com.spokentech.speechdown.common.RecognitionResult;
 import com.spokentech.speechdown.common.Utterance.OutputFormat;
 
 public class HttpRecognizerJavaSound extends HttpRecognizer {
-	   private static Logger _logger = Logger.getLogger(HttpRecognizerJavaSound.class.getName());
+
+	private static Logger _logger = Logger.getLogger(HttpRecognizerJavaSound.class.getName());
 	   	
-	
+     public HttpRecognizerJavaSound(String devId, String key) {
+	    super(devId, key);
+     }
+
+
 	/**
 	 * Recognize. The audio in the file are return th result.  This is a blocking call
 	 * 
@@ -44,7 +49,7 @@ public class HttpRecognizerJavaSound extends HttpRecognizer {
 	 * 
 	 * @return the recognition result
 	 */
-	public RecognitionResult recognize(String  fileName, URL grammarUrl, boolean lmflg, boolean doEndpointing, boolean batchMode, OutputFormat outMode) {
+	public RecognitionResult recognize(String userId, String  fileName, URL grammarUrl, boolean lmflg, boolean doEndpointing, boolean batchMode, OutputFormat outMode) {
 		
 		
     	File soundFile = new File(fileName);	 
@@ -59,7 +64,7 @@ public class HttpRecognizerJavaSound extends HttpRecognizer {
     	} catch (Exception e) {
     		e.printStackTrace();
     	}
-    	return recognize(audioInputStream, type, grammarUrl, lmflg, doEndpointing,batchMode,outMode);
+    	return recognize(userId,audioInputStream, type, grammarUrl, lmflg, doEndpointing,batchMode,outMode);
     	
 	}
 	
@@ -75,7 +80,7 @@ public class HttpRecognizerJavaSound extends HttpRecognizer {
 	 * 
 	 * @return the recognition result
 	 */
-	public RecognitionResult recognize(AudioInputStream audioInputStream, Type type, URL grammarUrl, boolean lmflg, boolean doEndpointing, boolean batchMode, OutputFormat outMode) {
+	public RecognitionResult recognize(String userId, AudioInputStream audioInputStream, Type type, URL grammarUrl, boolean lmflg, boolean doEndpointing, boolean batchMode, OutputFormat outMode) {
         // get the audio format and send as form fields.  Cound not send aduio file with format included because audio files do not
         // support mark/reset.  That is needed for stremaing using http chunk encoding on the servlet side using file upload.
         AudioFormat format = audioInputStream.getFormat();
@@ -91,7 +96,7 @@ public class HttpRecognizerJavaSound extends HttpRecognizer {
 			_logger.info("unhanlded format type "+type.getExtension());
 		}
         
-    	return recognize(audioInputStream, f, mimeType, grammarUrl, lmflg, doEndpointing, batchMode,outMode);
+    	return recognize(userId, audioInputStream, f, mimeType, grammarUrl, lmflg, doEndpointing, batchMode,outMode);
     }
 
 	
@@ -107,7 +112,7 @@ public class HttpRecognizerJavaSound extends HttpRecognizer {
 	 * 
 	 * @return the recognition result
 	 */
-	public  RecognitionResult recognize(TargetDataLine audioLine, URL grammarUrl, boolean lmflg, boolean doEndpointing, boolean batchMode, OutputFormat outMode) {
+	public  RecognitionResult recognize(String userId,TargetDataLine audioLine, URL grammarUrl, boolean lmflg, boolean doEndpointing, boolean batchMode, OutputFormat outMode) {
 
         
         //create the thread and start it

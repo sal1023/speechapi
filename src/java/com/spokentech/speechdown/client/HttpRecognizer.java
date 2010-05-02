@@ -61,10 +61,18 @@ import com.spokentech.speechdown.common.Utterance.OutputFormat;
  * </pre>
  */
 public class HttpRecognizer {
-
+	
 	private static Logger _logger =  Logger.getLogger(HttpRecognizer.class.getName());
 
+	public HttpRecognizer(String devId, String key) {
+		this.devId = devId;
+		this.key = key;
+    }
 	
+	private volatile String devId;
+	private volatile String key;
+	
+
 	//TODO: add in local no input timer capability
 	//protected /*static*/ Timer _timer = new Timer();
 	//protected TimerTask _noInputTimeoutTask;	
@@ -117,7 +125,7 @@ public class HttpRecognizer {
         // if we wanted, but we will turn them all up.
         //Handler[] handlers =  Logger.getLogger( "" ).getHandlers();
         //for ( int index = 0; index < handlers.length; index++ ) {
-        //   handlers[index].setLevel( Level.FINE );
+        //   handlers[index].setLevel( Level.info );
         //}
     }
 
@@ -137,7 +145,7 @@ public class HttpRecognizer {
 	 * 
 	 * @return the recognition result
 	 */
-	public RecognitionResult recognize(InputStream inputStream, AFormat format, String mimeType, URL grammarUrl, boolean lmflg, boolean doEndpointing, boolean batchMode, OutputFormat outMode) {
+	public RecognitionResult recognize(String userId, InputStream inputStream, AFormat format, String mimeType, URL grammarUrl, boolean lmflg, boolean doEndpointing, boolean batchMode, OutputFormat outMode) {
 	    // Plain old http approach    	
     	HttpClient httpclient = new DefaultHttpClient();
         HttpPost httppost = new HttpPost(service);
@@ -157,7 +165,7 @@ public class HttpRecognizer {
 	        }
         }
         
-        _logger.fine("Actual format: " + format);  
+        _logger.info("Actual format: " + format);  
         StringBody outputFormat = null;
     	StringBody sampleRate = null;
     	StringBody bigEndian = null;
@@ -167,6 +175,10 @@ public class HttpRecognizer {
     	StringBody endpointFlag = null;
     	StringBody batchModeFlag = null;
     	StringBody continuousFlag = null;
+    	StringBody dId = null;
+    	StringBody uId = null;
+    	StringBody keyy = null;
+    	
         try {
         	if (format != null) {
 	        	sampleRate = new StringBody(String.valueOf((int)format.getSampleRate()));
@@ -186,6 +198,21 @@ public class HttpRecognizer {
         	endpointFlag = new StringBody(String.valueOf(doEndpointing));
         	batchModeFlag = new StringBody(String.valueOf(batchMode));
            	continuousFlag = new StringBody(String.valueOf(Boolean.FALSE));
+           	
+    		if (devId != null) {
+            	dId = new StringBody(devId);
+    		    mpEntity.addPart(HttpCommandFields.DEVELOPER_ID,dId);
+    		}
+    		if (userId != null) {
+            	uId = new StringBody(userId);
+    		    mpEntity.addPart(HttpCommandFields.USER_ID,uId);
+    		}
+    		if (key != null) {
+            	keyy = new StringBody(key);
+    		    mpEntity.addPart(HttpCommandFields.DEVELOPER_SECRET,keyy);
+    		}
+           	
+           	
         } catch (UnsupportedEncodingException e1) {
 	        // TODO Auto-generated catch block
 	        e1.printStackTrace();
@@ -196,6 +223,7 @@ public class HttpRecognizer {
 		mpEntity.addPart(HttpCommandFields.ENDPOINTING_FLAG, endpointFlag);
 		mpEntity.addPart(HttpCommandFields.CMN_BATCH, batchModeFlag);
 		mpEntity.addPart(HttpCommandFields.CONTINUOUS_FLAG,continuousFlag);
+
 
        	
 		String fname = null;
@@ -217,7 +245,7 @@ public class HttpRecognizer {
         mpEntity.addPart("audio", audioBody);      
         httppost.setEntity(mpEntity);
          
-        _logger.fine("executing request " + httppost.getRequestLine());
+        _logger.info("executing request " + httppost.getRequestLine());
         HttpResponse response = null;
         try {
 	        response = httpclient.execute(httppost);
@@ -230,14 +258,14 @@ public class HttpRecognizer {
         }
         HttpEntity resEntity = response.getEntity();
 
-        _logger.fine(response.getStatusLine().toString());
+        _logger.info(response.getStatusLine().toString());
         if (resEntity != null) {
-        	_logger.fine("Response content length: " + resEntity.getContentLength());
-        	_logger.fine("Chunked?: " + resEntity.isChunked());
+        	_logger.info("Response content length: " + resEntity.getContentLength());
+        	_logger.info("Chunked?: " + resEntity.isChunked());
 
             Header[] headers = response.getAllHeaders();
             for (int i=0; i<headers.length; i++) {
-            	_logger.fine(headers[i].toString());
+            	_logger.info(headers[i].toString());
             }
         }
         
@@ -246,8 +274,12 @@ public class HttpRecognizer {
             try {
                 InputStream s = resEntity.getContent();
                 String result = readInputStreamAsString(s);
-                _logger.fine(result);
-                r = RecognitionResult.constructResultFromString(result);
+                _logger.info(result);
+                if (outMode ==  OutputFormat.json) {
+                    r = RecognitionResult.constructResultFromJSONString(result);                	
+                } else {
+                   r = RecognitionResult.constructResultFromString(result);
+                }
 	            resEntity.consumeContent();
             } catch (IOException e) {
 	            // TODO Auto-generated catch block
@@ -281,7 +313,7 @@ public class HttpRecognizer {
 	 * @throws AsynchNotEnabledException 
 	 * @throws HttpRecognizerException 
 	 */
-	public  String recognizeAsynch(URL grammarUrl, EndPointingInputStream epStream, boolean lmflg, boolean batchMode, OutputFormat outMode, long timeout, SpeechEventListener eventListener ) throws InstantiationException, IOException, StreamInUseException, AsynchNotEnabledException {
+	public  String recognizeAsynch(String dId, String dKey, String userId, URL grammarUrl, EndPointingInputStream epStream, boolean lmflg, boolean batchMode, OutputFormat outMode, long timeout, SpeechEventListener eventListener ) throws InstantiationException, IOException, StreamInUseException, AsynchNotEnabledException {
 
 		if (epStream.checkAndSetIfInUse()) 
 			throw new StreamInUseException();
@@ -291,7 +323,7 @@ public class HttpRecognizer {
 		    grammarIs = grammarUrl.openStream();
 		AsynchCommand command = null;
 		if (workQ != null) {
-		   command = new AsynchCommand(AsynchCommand.CommandType.recognize, service, grammarIs, epStream, lmflg, batchMode, outMode, timeout, eventListener);
+		   command = new AsynchCommand(dId, userId, dKey, AsynchCommand.CommandType.recognize, service, grammarIs, epStream, lmflg, batchMode, outMode, timeout, eventListener);
 		   workQ.execute(command);
 		} else {
 			_logger.info("AsycnMode is not enabled.  Use the enableAsynch(int numthreads) to enable ascynh mode");
@@ -316,7 +348,7 @@ public class HttpRecognizer {
 	 * @throws IOException Signals that an I/O exception has occurred.
 	 * @throws HttpRecognizerException 
 	 */
-	public  String recognizeAsynch(String grammar, EndPointingInputStream epStream, boolean lmflg, boolean batchMode, OutputFormat outMode, long timeout, SpeechEventListener eventListener ) throws InstantiationException, IOException, StreamInUseException, AsynchNotEnabledException {
+	public  String recognizeAsynch(String dId, String dKey,String userId, String grammar, EndPointingInputStream epStream, boolean lmflg, boolean batchMode, OutputFormat outMode, long timeout, SpeechEventListener eventListener ) throws InstantiationException, IOException, StreamInUseException, AsynchNotEnabledException {
 
 		if (epStream.checkAndSetIfInUse()) 
 			throw new StreamInUseException();
@@ -324,7 +356,7 @@ public class HttpRecognizer {
 		InputStream grammarIs = new ByteArrayInputStream(grammar.getBytes());
 		AsynchCommand command = null;
 		if (workQ != null) {
-		   command = new AsynchCommand(AsynchCommand.CommandType.recognize, service, grammarIs, epStream, lmflg, batchMode, outMode, timeout, eventListener);
+		   command = new AsynchCommand(dId, userId, dKey, AsynchCommand.CommandType.recognize, service, grammarIs, epStream, lmflg, batchMode, outMode, timeout, eventListener);
 		   workQ.execute(command);
 		} else {
 			_logger.info("AsycnMode is not enabled.  Use the enableAsynch(int numthreads) to enable ascynh mode");
@@ -347,8 +379,8 @@ public class HttpRecognizer {
 	 * @throws InstantiationException the instantiation exception
 	 * @throws IOException Signals that an I/O exception has occurred.
 	 */
-	public  RecognitionResult recognize(URL grammarUrl, EndPointingInputStream epStream, boolean lmflg, boolean batchMode, OutputFormat outMode, long timeout ) throws InstantiationException, IOException {
-		return recognize( grammarUrl,  epStream,  lmflg,  batchMode,  outMode,timeout, null);
+	public  RecognitionResult recognize(String userId, URL grammarUrl, EndPointingInputStream epStream, boolean lmflg, boolean batchMode, OutputFormat outMode, long timeout ) throws InstantiationException, IOException {
+		return recognize(userId,  grammarUrl,  epStream,  lmflg,  batchMode,  outMode,timeout, null);
 	}
 
 	
@@ -367,10 +399,10 @@ public class HttpRecognizer {
 	 * @throws InstantiationException the instantiation exception
 	 * @throws IOException Signals that an I/O exception has occurred.
 	 */
-	public  RecognitionResult recognize(String grammar, EndPointingInputStream epStream, boolean lmflg, boolean batchMode, OutputFormat outMode, long timeout, SpeechEventListener eventListener) throws InstantiationException, IOException {
+	public  RecognitionResult recognize(String userId, String grammar, EndPointingInputStream epStream, boolean lmflg, boolean batchMode, OutputFormat outMode, long timeout, SpeechEventListener eventListener) throws InstantiationException, IOException {
 		//String charset = Charset.defaultCharset;
 		InputStream is = new ByteArrayInputStream(grammar.getBytes());
-		RecognitionResult r = recognize(is, epStream,lmflg,batchMode, outMode,timeout,eventListener);
+		RecognitionResult r = recognize(userId, is, epStream,lmflg,batchMode, outMode,timeout,eventListener);
 		return r;
 	}
 	
@@ -390,13 +422,13 @@ public class HttpRecognizer {
 	 * @throws InstantiationException the instantiation exception
 	 * @throws IOException Signals that an I/O exception has occurred.
 	 */
-	public  RecognitionResult recognize(URL grammarUrl, EndPointingInputStream epStream, boolean lmflg, boolean batchMode, OutputFormat outMode, long timeout, SpeechEventListener eventListener) throws InstantiationException, IOException {
+	public  RecognitionResult recognize(String userId, URL grammarUrl, EndPointingInputStream epStream, boolean lmflg, boolean batchMode, OutputFormat outMode, long timeout, SpeechEventListener eventListener) throws InstantiationException, IOException {
 
 		InputStream is = null;
 		if (grammarUrl!=null)
 			is = grammarUrl.openStream();
 
-		RecognitionResult r = recognize(is, epStream,lmflg,batchMode,outMode,timeout,eventListener);
+		RecognitionResult r = recognize(userId, is, epStream,lmflg,batchMode,outMode,timeout,eventListener);
 		return r;
 	}
 		
@@ -416,7 +448,7 @@ public class HttpRecognizer {
 	 * @throws InstantiationException the instantiation exception
 	 * @throws IOException Signals that an I/O exception has occurred.
 	 */
-	public  RecognitionResult recognize(InputStream grammar, EndPointingInputStream epStream, boolean lmflg, boolean batchMode, OutputFormat outMode, long timeout, SpeechEventListener eventListener) throws InstantiationException, IOException {
+	public  RecognitionResult recognize(String userId, InputStream grammar, EndPointingInputStream epStream, boolean lmflg, boolean batchMode, OutputFormat outMode, long timeout, SpeechEventListener eventListener) throws InstantiationException, IOException {
 
         //create the listener (listens for end points)  A decorator, so also can  pass events back to client
         speechStarted = false;
@@ -446,6 +478,11 @@ public class HttpRecognizer {
     	StringBody endpointFlag = null;
     	StringBody continuousFlag = null;
     	StringBody batchModeFlag = null;
+    	
+    	StringBody dId = null;
+    	StringBody uId = null;
+    	StringBody keyy = null;
+    	
     	AFormat format = epStream.getFormat();
 
         try {
@@ -467,6 +504,20 @@ public class HttpRecognizer {
            	endpointFlag = new StringBody(String.valueOf(epStream.getEndPointer().requiresServerSideEndPointing()));
            	continuousFlag = new StringBody(String.valueOf(Boolean.FALSE));
         	batchModeFlag = new StringBody(String.valueOf(batchMode));
+        	
+    		if (devId != null) {
+            	dId = new StringBody(devId);
+    		    mpEntity.addPart(HttpCommandFields.DEVELOPER_ID,dId);
+    		}
+    		if (userId != null) {
+            	uId = new StringBody(userId);
+    		    mpEntity.addPart(HttpCommandFields.USER_ID,uId);
+    		}
+    		if (key != null) {
+            	keyy = new StringBody(key);
+    		    mpEntity.addPart(HttpCommandFields.DEVELOPER_SECRET,keyy);
+    		}
+        	
         } catch (UnsupportedEncodingException e1) {
 	        // TODO Auto-generated catch block
 	        e1.printStackTrace();
@@ -479,6 +530,9 @@ public class HttpRecognizer {
 		mpEntity.addPart(HttpCommandFields.ENDPOINTING_FLAG, endpointFlag);
 		mpEntity.addPart(HttpCommandFields.CONTINUOUS_FLAG,continuousFlag);
 		mpEntity.addPart(HttpCommandFields.CMN_BATCH, batchModeFlag);
+		
+	
+
 		
 
 		//add the grammar part
@@ -497,26 +551,26 @@ public class HttpRecognizer {
 				
 		//set the multipart entity for the post command
 	    httppost.setEntity(mpEntity);
-    	_logger.fine("Waiting for Speech start ...");
+    	_logger.info("Waiting for Speech start ...");
      	//now wait for a start speech event
 		while ((!speechStarted)&&(!requestCanceled)) {
             synchronized (this) {        
                 try {
                     this.wait(1000);
                 } catch (InterruptedException e) {
-                	_logger.fine("Interrupt Excepton "+speechStarted);
+                	_logger.info("Interrupt Excepton "+speechStarted);
                 }
             }
         }
 		if (requestCanceled) {
-	    	_logger.fine("Request  canceled!!!");
+	    	_logger.info("Request  canceled!!!");
 			return(null);
 		}
 		
-    	_logger.fine("Speech started!!!");
+    	_logger.info("Speech started!!!");
 
 	    //execute the post command
-        _logger.fine("executing request " + httppost.getRequestLine());
+        _logger.info("executing request " + httppost.getRequestLine());
         HttpResponse response = null;
         try {
 	        response = httpclient.execute(httppost);
@@ -531,19 +585,23 @@ public class HttpRecognizer {
         //get the response from the post
         HttpEntity resEntity = response.getEntity();
 
-        _logger.fine("----------------------------------------");
-        _logger.fine(response.getStatusLine().toString());
+        _logger.info("----------------------------------------");
+        _logger.info(response.getStatusLine().toString());
         if (resEntity != null) {
-        	_logger.fine("Response content length: " + resEntity.getContentLength());
-        	_logger.fine("Chunked?: " + resEntity.isChunked());
+        	_logger.info("Response content length: " + resEntity.getContentLength());
+        	_logger.info("Chunked?: " + resEntity.isChunked());
         }
         RecognitionResult r = null;
         if (resEntity != null) {
             try {
                 InputStream s = resEntity.getContent();
                 String result = readInputStreamAsString(s);
-                _logger.fine(result);
-                r = RecognitionResult.constructResultFromString(result);
+                _logger.info(result);
+                if (outMode ==  OutputFormat.json) {
+                    r = RecognitionResult.constructResultFromJSONString(result);                	
+                } else {
+                   r = RecognitionResult.constructResultFromString(result);
+                }
 	            resEntity.consumeContent();
             } catch (IOException e) {
 	            // TODO Auto-generated catch block
@@ -576,7 +634,7 @@ public class HttpRecognizer {
 	 * @throws IOException Signals that an I/O exception has occurred.
 	 * @throws IllegalStateException the illegal state exception
 	 */
-	public InputStream transcribe(InputStream inputStream, AFormat format, String mimeType, URL grammarUrl, boolean lmflg, OutputFormat outMode) throws IllegalStateException, IOException {
+	public InputStream transcribe(String userId,  InputStream inputStream, AFormat format, String mimeType, URL grammarUrl, boolean lmflg, OutputFormat outMode) throws IllegalStateException, IOException {
 	    // Plain old http approach    	
     	HttpClient httpclient = new DefaultHttpClient();
         HttpPost httppost = new HttpPost(service);
@@ -596,7 +654,7 @@ public class HttpRecognizer {
 	        }
         }
         
-        _logger.fine("Actual format: " + format);  
+        _logger.info("Actual format: " + format);  
         StringBody outputFormat = null;
     	StringBody sampleRate = null;
     	StringBody bigEndian = null;
@@ -606,6 +664,11 @@ public class HttpRecognizer {
     	StringBody endpointFlag = null;
     	StringBody batchModeFlag = null;
     	StringBody continuousFlag = null;
+    	
+    	StringBody dId = null;
+    	StringBody uId = null;
+    	StringBody keyy = null;
+    	
         try {
         	if (format != null) {
 	        	sampleRate = new StringBody(String.valueOf((int)format.getSampleRate()));
@@ -625,6 +688,20 @@ public class HttpRecognizer {
         	endpointFlag = new StringBody(String.valueOf(Boolean.TRUE));
         	batchModeFlag = new StringBody(String.valueOf(Boolean.TRUE));
            	continuousFlag = new StringBody(String.valueOf(Boolean.TRUE));
+           	
+    		if (devId != null) {
+            	dId = new StringBody(devId);
+    		    mpEntity.addPart(HttpCommandFields.DEVELOPER_ID,dId);
+    		}
+    		if (userId != null) {
+            	uId = new StringBody(userId);
+    		    mpEntity.addPart(HttpCommandFields.USER_ID,uId);
+    		}
+    		if (key != null) {
+            	keyy = new StringBody(key);
+    		    mpEntity.addPart(HttpCommandFields.DEVELOPER_SECRET,keyy);
+    		}
+           	
         } catch (UnsupportedEncodingException e1) {
 	        // TODO Auto-generated catch block
 	        e1.printStackTrace();
@@ -642,7 +719,9 @@ public class HttpRecognizer {
 		mpEntity.addPart(HttpCommandFields.CMN_BATCH, batchModeFlag);
 		mpEntity.addPart(HttpCommandFields.CONTINUOUS_FLAG,continuousFlag);
 
-       	
+		
+
+		
 		String fname = null;
 		if (mimeType.equals( "audio/x-wav")) {
 			fname = "audio.wav";
@@ -650,7 +729,7 @@ public class HttpRecognizer {
 			fname = "audio.au";
 		} else {
 			fname = "audio.wav";
-			_logger.fine("unhanlded mime type "+mimeType);
+			_logger.info("unhanlded mime type "+mimeType);
 		}
 
 
@@ -662,7 +741,7 @@ public class HttpRecognizer {
         mpEntity.addPart("audio", audioBody);      
         httppost.setEntity(mpEntity);
          
-        _logger.fine("executing request " + httppost.getRequestLine());
+        _logger.info("executing request " + httppost.getRequestLine());
         HttpResponse response = null;
         try {
 	        response = httpclient.execute(httppost);
@@ -675,14 +754,14 @@ public class HttpRecognizer {
         }
         HttpEntity resEntity = response.getEntity();
 
-        _logger.fine(response.getStatusLine().toString());
+        _logger.info(response.getStatusLine().toString());
         if (resEntity != null) {
-        	_logger.fine("Response content length: " + resEntity.getContentLength());
-        	_logger.fine("Chunked?: " + resEntity.isChunked());
+        	_logger.info("Response content length: " + resEntity.getContentLength());
+        	_logger.info("Chunked?: " + resEntity.isChunked());
 
             Header[] headers = response.getAllHeaders();
             for (int i=0; i<headers.length; i++) {
-            	_logger.fine(headers[i].toString());
+            	_logger.info(headers[i].toString());
             }
         }
         
@@ -718,7 +797,7 @@ public class HttpRecognizer {
 			buf.write(b);
 			result = bis.read();
 		}        
-		_logger.fine(buf.toString());
+		_logger.info(buf.toString());
 		return buf.toString();
 	}
  
@@ -750,7 +829,7 @@ public class HttpRecognizer {
 		 * @see com.spokentech.speechdown.client.SpeechEventListener#speechEnded()
 		 */
 		public void speechEnded() {
-		    _logger.fine("HttpRec: Speech Ended");
+		    _logger.info("HttpRec: Speech Ended");
             super.speechEnded();
 	    }
 
@@ -758,7 +837,7 @@ public class HttpRecognizer {
     	 * @see com.spokentech.speechdown.client.SpeechEventListener#speechStarted()
     	 */
     	public void speechStarted() {
-		    _logger.fine("HttpRec: Speech Started");
+		    _logger.info("HttpRec: Speech Started");
 			//signal for the blocking call to check for unblocking
 			synchronized (HttpRecognizer.this) {
 				speechStarted=true;
@@ -772,7 +851,7 @@ public class HttpRecognizer {
 		 */
 		@Override
         public void noInputTimeout() {
-		    _logger.fine("No input timeout"); 
+		    _logger.info("No input timeout"); 
             super.noInputTimeout();
         }
     }
