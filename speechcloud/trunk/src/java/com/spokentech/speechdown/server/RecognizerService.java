@@ -17,7 +17,7 @@ import org.apache.log4j.Logger;
 import org.jvnet.staxex.StreamingDataHandler;
 
 import com.spokentech.speechdown.common.AFormat;
-import com.spokentech.speechdown.common.RecognitionResult;
+import com.spokentech.speechdown.common.Utterance;
 import com.spokentech.speechdown.common.Utterance.OutputFormat;
 import com.spokentech.speechdown.server.domain.HttpRequest;
 import com.spokentech.speechdown.server.recog.RecEngine;
@@ -85,7 +85,7 @@ public class RecognizerService {
 	}
 	
 	
-	public RecognitionResult Recognize(DataHandler audio, String grammar) throws GrammarException, IOException {
+	public Utterance Recognize(DataHandler audio, String grammar) throws GrammarException, IOException {
 		   
 		
 		_logger.info("audio attachment content type: "+ audio.getContentType());
@@ -110,12 +110,12 @@ public class RecognizerService {
 	        e.printStackTrace();
         }  
 
-        RecognitionResult results = Recognize(as, grammar);
+        Utterance results = Recognize(as, grammar);
         
         return results;		
 	}
 
-	public  RecognitionResult Recognize(AudioInputStream as, String grammar) {
+	public  Utterance Recognize(AudioInputStream as, String grammar) {
 	    RecEngine rengine = null;
         try {
             rengine = (RecEngine) _grammarRecognizerPool.borrowObject();
@@ -124,7 +124,7 @@ public class RecognizerService {
             throw new RuntimeException(e);
         }
         
-        RecognitionResult results = rengine.recognize(as,grammar);
+        Utterance results = rengine.recognize(as,grammar);
         
         try {
         	_grammarRecognizerPool.returnObject(rengine);
@@ -136,7 +136,7 @@ public class RecognizerService {
     }
 
 	//grammar method
-	public RecognitionResult Recognize(InputStream as, String grammar, String mimeType, AFormat af, OutputFormat outMode, boolean doEndpointing, boolean cmnBatch, HttpRequest hr) {
+	public Utterance Recognize(InputStream as, String grammar, String mimeType, AFormat af, OutputFormat outMode, boolean doEndpointing, boolean cmnBatch, HttpRequest hr) {
 
 		_logger.debug("Before borrow" + System.currentTimeMillis());
 		
@@ -156,7 +156,7 @@ public class RecognizerService {
 	
         
       
-        RecognitionResult results ;
+        Utterance results ;
         try {
            results = rengine.recognize(as,mimeType,grammar,af,outMode, doEndpointing, cmnBatch, hr);
         } catch (Exception e) {
@@ -183,7 +183,7 @@ public class RecognizerService {
 
 	
 	//language model method (no grammar)
-	public RecognitionResult Recognize(InputStream as, String mimeType, AFormat af, OutputFormat outMode, boolean doEndpointing, boolean cmnBatch, HttpRequest hr) {
+	public Utterance Recognize(InputStream as, String mimeType, AFormat af, OutputFormat outMode, boolean doEndpointing, boolean cmnBatch, HttpRequest hr) {
 		_logger.debug("Before borrow" + System.currentTimeMillis());
 		
         RecEngine rengine = null;
@@ -198,7 +198,7 @@ public class RecognizerService {
         
         _logger.debug("After borrow" + System.currentTimeMillis());
 	
-        RecognitionResult results ;
+        Utterance results ;
         try {
            results = rengine.recognize(as,mimeType,af, outMode, doEndpointing, cmnBatch,hr);
         } catch (Exception e) {

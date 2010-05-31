@@ -22,8 +22,6 @@ import org.apache.log4j.Logger;
 
 import com.google.gson.Gson;
 import com.spokentech.speechdown.common.AFormat;
-import com.spokentech.speechdown.common.RecognitionResult;
-import com.spokentech.speechdown.common.RecognitionResultJsapi;
 import com.spokentech.speechdown.common.SpeechEventListener;
 import com.spokentech.speechdown.common.Utterance;
 
@@ -42,7 +40,9 @@ import com.spokentech.speechdown.server.util.pool.AbstractPoolableObject;
 
 import edu.cmu.sphinx.decoder.ResultListener;
 
-import edu.cmu.sphinx.decoder.scorer.AbstractScorer;
+import edu.cmu.sphinx.decoder.scorer.AcousticScorer;
+
+
 import edu.cmu.sphinx.frontend.DataBlocker;
 import edu.cmu.sphinx.frontend.DataProcessor;
 import edu.cmu.sphinx.frontend.FrontEnd;
@@ -88,7 +88,7 @@ public class SphinxRecEngine extends AbstractPoolableObject implements RecEngine
 	protected volatile short _state = COMPLETE;
 
 	private Sphinx3Loader _loader;
-    private AbstractScorer  _scorer;
+    private AcousticScorer  _scorer;
 
 	private FrontEnd fe = null;
     private Recognizer _recognizer;
@@ -152,7 +152,7 @@ public class SphinxRecEngine extends AbstractPoolableObject implements RecEngine
     	_loader = (Sphinx3Loader) cm.lookup("loader");
         _cm = cm;
         _id = id;
-		_scorer = (AbstractScorer)_cm.lookup(prefixId+"scorer"+id);
+		_scorer = (AcousticScorer)_cm.lookup(prefixId+"scorer"+id);
 
 
         MyStateListener stateListener =  new MyStateListener();
@@ -199,12 +199,13 @@ public class SphinxRecEngine extends AbstractPoolableObject implements RecEngine
 
 
 	//Recognize using language mode
-    public RecognitionResult recognize(InputStream as, String mimeType, AFormat af, OutputFormat outMode, boolean doEndpointing, boolean cmnBatch, HttpRequest hr) {
+    public Utterance recognize(InputStream as, String mimeType, AFormat af, OutputFormat outMode, boolean doEndpointing, boolean cmnBatch, HttpRequest hr) {
 
     	long  start = System.nanoTime();
     	long startTime= System.currentTimeMillis();
 		_logger.info("Using recognizer # "+_id+ ", time: "+startTime);
-
+		String resultCode = "Success";
+		String resultMessage = null;
 		
 		//setup the recorder
 		//TODO: Test if this is needed!
@@ -295,63 +296,28 @@ public class SphinxRecEngine extends AbstractPoolableObject implements RecEngine
         	_state = COMPLETE;
         }
 	
-  
+        Utterance utterance = null;
 		if (r != null) {
 			//TODO: change to return Utterance object that can be serialized to json or plant text (see transcribe method)
 			//current approach is a bit of a hack, by constructing with a json flag.
-	        if (outMode == OutputFormat.text) {
-			
-				ConfidenceResult cr = cs.score(r);
-				Path best = cr.getBestHypothesis();
-				double confidence = best.getLogMath().logToLinear((float) best.getConfidence());
-			
-	            //TODO: 
-		        RecognitionResultJsapi results = new RecognitionResultJsapi(r.getBestResultNoFiller(),confidence);
-		        System.out.println("returning results: "+results);
-		        return results;
-	        } else if (outMode == OutputFormat.json) {
-	        	Utterance utterance = ResultUtils.getAllResults(r, false, false,cs);
-	            String resultText = gson.toJson(utterance);
-		        RecognitionResult results = RecognitionResult.constructResultFromJSONString(resultText);
-		        return results;
-	        } else {
-	        	_logger.warn("Unrecognized output format: "+outMode+ "  ,using plain text mode as a default.");
-		    	return null;
-	        }
-	        	
+        	utterance = ResultUtils.getAllResults(r, false, false,cs);
+        	utterance.setRCode("Success");
 	    } else {
-	    	return null;
+	    	utterance = new Utterance();
+			utterance.setRCode("NullResult");
+			utterance.setRMessage("Recognizer returned null result");
 	    }
+
+        return utterance;
     }
 	//recognize using a grammar
-	public RecognitionResult recognize(InputStream as, String mimeType, String grammar, AFormat af, OutputFormat outMode,  boolean doEndpointing, boolean cmnBatch, HttpRequest hr) {
+	public Utterance recognize(InputStream as, String mimeType, String grammar, AFormat af, OutputFormat outMode,  boolean doEndpointing, boolean cmnBatch, HttpRequest hr) {
 
 		long  start = System.nanoTime();
     	long startTime= System.currentTimeMillis();
 		_logger.info("Using recognizer # "+_id+ ", time: "+startTime);
-        _logger.debug("After allocate" + System.currentTimeMillis());
-    
-		GrammarLocation grammarLocation = null;
-	    try {
-	        grammarLocation = _grammarManager.saveGrammar(grammar);
-	    } catch (IOException e) {
-	        _logger.debug(e, e);
-	    }
-        
-        _logger.debug("After save grammar" + System.currentTimeMillis());
-    
-	    try {
-	        loadJSGF(_jsgfGrammar, grammarLocation);
-        } catch (GrammarException e) {
-	        // TODO Auto-generated catch block
-	        e.printStackTrace();
-        } catch (IOException e) {
-	        // TODO Auto-generated catch block
-	        e.printStackTrace();
-        }
-        
+     
 		//setup the recorder
-
 		if (recordingEnabled) {
 			//TODO: Test if setting the format in the recorder is needed!
 			recorder.setBigEndian(true);
@@ -364,37 +330,42 @@ public class SphinxRecEngine extends AbstractPoolableObject implements RecEngine
 			recorder.startRecording();
 		}
         
-        _logger.debug("After load grammar" + System.currentTimeMillis());
- 
-	    Result r = doRecognize(as, mimeType, af, outMode, doEndpointing,  cmnBatch);
-		
-		RecognitionResult results = null;
-		if (r != null) {
-			//TODO: change to return Utterance object that can be serialized to json or plant text (see transcribe method)
-			//current approach is a bit of a hack, by constructing with a json flag.
-	        if (outMode == OutputFormat.text) {
+	
+		String resultCode = "Success";
+		String resultMessage = null;
+		GrammarLocation grammarLocation = null;
+		Result r = null; 
+	    Utterance utterance = null;
+	    try {
+	    	
+	    	//save and load the grammar
+	        grammarLocation = _grammarManager.saveGrammar(grammar);
+	        loadJSGF(_jsgfGrammar, grammarLocation);
+	        _logger.debug("After save and load grammar" + System.currentTimeMillis());
+	        
+	        //do the recognition
+		    r = doRecognize(as, mimeType, af, outMode, doEndpointing,  cmnBatch);
 			
-	        	//TODO: Add confidence back when it works in speech engine (does not work no with grammars)
-				//ConfidenceResult cr = cs.score(r);
-				//Path best = cr.getBestHypothesis();
-				//double confidence = best.getLogMath().logToLinear((float) best.getConfidence());
-	    	     results = new RecognitionResultJsapi(r, _jsgfGrammar.getRuleGrammar());
-	    	    _logger.info("Result: " + (results != null ? results.getText() : null));
+		    //process the results (text or json)
+	
 
-
-	        } else if (outMode == OutputFormat.json) {
-	        	Utterance utterance = ResultUtils.getAllResults(r, false, false,_jsgfGrammar.getRuleGrammar());
-	            String resultText = gson.toJson(utterance);
-		         results = RecognitionResult.constructResultFromJSONString(resultText);
-
-	        } else {
-	        	_logger.warn("Unrecognized output format: "+outMode+ "  ,using plain text mode as a default.");
-	    	     results = new RecognitionResultJsapi(r, _jsgfGrammar.getRuleGrammar());
-		    	 _logger.info("Result: " + (results != null ? results.getText() : null));
-	        }
-
-	    }
-		
+			if (r != null) {
+				//TODO: change to return Utterance object that can be serialized to json or plant text (see transcribe method)
+				//current approach is a bit of a hack, by constructing with a json flag.
+	        	utterance = ResultUtils.getAllResults(r, false, false,_jsgfGrammar.getRuleGrammar());
+		    }
+			
+        } catch (GrammarException e) {
+	        // TODO Auto-generated catch block
+	        e.printStackTrace();
+	        resultCode="GrammarException";
+	        resultMessage = e.getMessage();
+        } catch (IOException e) {
+	        // TODO Auto-generated catch block
+	        e.printStackTrace();
+	        resultCode="IOException";
+	        resultMessage = e.getMessage();
+        }	
 			
 		// Do Recording 
 		long stop = System.nanoTime();
@@ -441,8 +412,8 @@ public class SphinxRecEngine extends AbstractPoolableObject implements RecEngine
 		    
 		    
 		    //TODO: the tags are now in the utterance/json object, get it from there
-		    if (results != null)
-		       rr.setTags(results.getText());
+		    //if (results != null)
+		    //   rr.setTags(results.getText());
 
 		    
 		    rr.setWallTime(wall);
@@ -469,8 +440,10 @@ public class SphinxRecEngine extends AbstractPoolableObject implements RecEngine
 		_logger.debug("  Logging time "+ x);
 		
 		
-		
-        return results;
+		//TODO: Pass back the error code.  Need to refactor the result object first (messy now with json and text version).
+		utterance.setRCode(resultCode);
+		utterance.setRMessage(resultMessage);
+        return utterance;
 
     }
 
@@ -759,7 +732,7 @@ public class SphinxRecEngine extends AbstractPoolableObject implements RecEngine
      */
 	//recognize using a grammar (the SOAP method) 
 	//TODO: Re-write
-	public RecognitionResult recognize(AudioInputStream as, String grammar) {
+	public Utterance recognize(AudioInputStream as, String grammar) {
 	    return null;
 	}
     
@@ -772,51 +745,19 @@ public class SphinxRecEngine extends AbstractPoolableObject implements RecEngine
 	  */
  public synchronized void loadJSGF(JSGFGrammar jsgfGrammar, GrammarLocation grammarLocation) throws IOException, GrammarException {
      jsgfGrammar.setBaseURL(grammarLocation.getBaseURL());
-     try {
+    // try {
          jsgfGrammar.loadJSGF(grammarLocation.getGrammarName());
          _logger.debug("loadJSGF(): completed successfully.");
-     } catch (com.sun.speech.engine.recognition.TokenMgrError e) {
-         _logger.debug("loadJSGF(): encountered exception: " + e.getClass().getName(), e); // com.sun.speech.engine.recognition.TokenMgrError!!!
-         String message = e.getMessage();
+     //} catch (com.sun.speech.engine.recognition.TokenMgrError e) {
+     //    _logger.debug("loadJSGF(): encountered exception: " + e.getClass().getName(), e); // com.sun.speech.engine.recognition.TokenMgrError!!!
+     //    String message = e.getMessage();
          /*if (message.indexOf("speech") < 0) {
              throw e;
          }*/
          // else assume caused by GrammarException
          // TODO: edu.cmu.sphinx.jsapi.JSGFGrammar.loadJSGF() should be updated not to swallow GrammarException
-         throw new GrammarException(message);
-     }
- }
- 
- private Result waitForResult(boolean hotword) {
-     Result result = null;
-     
-     _logger.debug("The hotword flag is: "+hotword);
-     //if hotword mode, run recognize until a match occurs
-     if (hotword) {
-    	 RecognitionResultJsapi rr = new RecognitionResultJsapi();
-         boolean inGrammarResult = false;
-         while (!inGrammarResult) {
-              result = _recognizer.recognize();
-
-              if (result == null) {
-                  _logger.debug("result is null");
-              } else {
-                  _logger.debug("result is:"+result.toString());
-              }
-              rr.setNewResult(result, _jsgfGrammar.getRuleGrammar());
-              _logger.debug("Rec result: "+rr.toString());
-              _logger.debug("text:"+rr.getText()+" matches:"+rr.getRuleMatches()+" oog flag:"+rr.isOutOfGrammar());
-              if( (!rr.getRuleMatches().isEmpty()) && (!rr.isOutOfGrammar())) {
-                  inGrammarResult = true;
-              }
-         }
-      
-     //if not hotword, just run recognize once
-     } else {
-          result = _recognizer.recognize();
-     }
-     return result;
-
+      //   throw new GrammarException(message);
+     //}
  }
  
 
@@ -941,7 +882,7 @@ public class SphinxRecEngine extends AbstractPoolableObject implements RecEngine
 	        }
 
 			@Override
-            public void recognitionComplete(RecognitionResult rr) {
+            public void recognitionComplete(Utterance rr) {
 	            // TODO Auto-generated method stub
 	            
             }
@@ -988,7 +929,7 @@ public class SphinxRecEngine extends AbstractPoolableObject implements RecEngine
     	// to save time at recognition requests time.
     	dataBlocker = new DataBlocker(10);
     	speechClassifier = new SpeechClassifier(10,0.003,10.0,0.0);
-    	speechMarker = new SpeechMarker(200,200,100,50,100);
+    	speechMarker = new SpeechMarker(200,200,100,50,100,15);
     	nonSpeechDataFilter = new NonSpeechDataFilter();
     	speechDataMonitor  = new SpeechDataMonitor();
     	listener = new Listener();

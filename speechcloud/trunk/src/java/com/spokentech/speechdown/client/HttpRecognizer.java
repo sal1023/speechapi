@@ -11,6 +11,7 @@ package com.spokentech.speechdown.client;
 
 import java.io.BufferedInputStream;
 
+import com.google.gson.Gson;
 import com.spokentech.speechdown.common.HttpCommandFields;
 
 import java.io.ByteArrayInputStream;
@@ -41,8 +42,8 @@ import com.spokentech.speechdown.client.exceptions.HttpRecognizerException;
 import com.spokentech.speechdown.client.exceptions.StreamInUseException;
 import com.spokentech.speechdown.common.AFormat;
 import com.spokentech.speechdown.common.InvalidRecognitionResultException;
-import com.spokentech.speechdown.common.RecognitionResult;
 import com.spokentech.speechdown.common.SpeechEventListener;
+import com.spokentech.speechdown.common.Utterance;
 import com.spokentech.speechdown.common.Utterance.OutputFormat;
 
 // TODO: Auto-generated Javadoc
@@ -67,6 +68,7 @@ public class HttpRecognizer {
 	public HttpRecognizer(String devId, String key) {
 		this.devId = devId;
 		this.key = key;
+	    gson = new Gson();
     }
 	
 	private volatile String devId;
@@ -92,6 +94,10 @@ public class HttpRecognizer {
 	
     private WorkQueue workQ = null;
     
+    private Gson gson = null;
+    
+  
+
      
     /**
      * Enable asynch mode.
@@ -145,7 +151,7 @@ public class HttpRecognizer {
 	 * 
 	 * @return the recognition result
 	 */
-	public RecognitionResult recognize(String userId, InputStream inputStream, AFormat format, String mimeType, URL grammarUrl, boolean lmflg, boolean doEndpointing, boolean batchMode, OutputFormat outMode) {
+	public String recognize(String userId, InputStream inputStream, AFormat format, String mimeType, URL grammarUrl, boolean lmflg, boolean doEndpointing, boolean batchMode, OutputFormat outMode) {
 	    // Plain old http approach    	
     	HttpClient httpclient = new DefaultHttpClient();
         HttpPost httppost = new HttpPost(service);
@@ -269,28 +275,20 @@ public class HttpRecognizer {
             }
         }
         
-        RecognitionResult r = null;
+        String result = null;
         if (resEntity != null) {
             try {
                 InputStream s = resEntity.getContent();
-                String result = readInputStreamAsString(s);
-                _logger.info(result);
-                if (outMode ==  OutputFormat.json) {
-                    r = RecognitionResult.constructResultFromJSONString(result);                	
-                } else {
-                   r = RecognitionResult.constructResultFromString(result);
-                }
+                result = readInputStreamAsString(s);
+                _logger.info(result);    
 	            resEntity.consumeContent();
             } catch (IOException e) {
-	            // TODO Auto-generated catch block
-	            e.printStackTrace();
-            } catch (InvalidRecognitionResultException e) {
 	            // TODO Auto-generated catch block
 	            e.printStackTrace();
             }
         }
         
-        return r;
+        return result;
     }
 
 
@@ -379,7 +377,7 @@ public class HttpRecognizer {
 	 * @throws InstantiationException the instantiation exception
 	 * @throws IOException Signals that an I/O exception has occurred.
 	 */
-	public  RecognitionResult recognize(String userId, URL grammarUrl, EndPointingInputStream epStream, boolean lmflg, boolean batchMode, OutputFormat outMode, long timeout ) throws InstantiationException, IOException {
+	public  String recognize(String userId, URL grammarUrl, EndPointingInputStream epStream, boolean lmflg, boolean batchMode, OutputFormat outMode, long timeout ) throws InstantiationException, IOException {
 		return recognize(userId,  grammarUrl,  epStream,  lmflg,  batchMode,  outMode,timeout, null);
 	}
 
@@ -399,10 +397,10 @@ public class HttpRecognizer {
 	 * @throws InstantiationException the instantiation exception
 	 * @throws IOException Signals that an I/O exception has occurred.
 	 */
-	public  RecognitionResult recognize(String userId, String grammar, EndPointingInputStream epStream, boolean lmflg, boolean batchMode, OutputFormat outMode, long timeout, SpeechEventListener eventListener) throws InstantiationException, IOException {
+	public  String recognize(String userId, String grammar, EndPointingInputStream epStream, boolean lmflg, boolean batchMode, OutputFormat outMode, long timeout, SpeechEventListener eventListener) throws InstantiationException, IOException {
 		//String charset = Charset.defaultCharset;
 		InputStream is = new ByteArrayInputStream(grammar.getBytes());
-		RecognitionResult r = recognize(userId, is, epStream,lmflg,batchMode, outMode,timeout,eventListener);
+		String r = recognize(userId, is, epStream,lmflg,batchMode, outMode,timeout,eventListener);
 		return r;
 	}
 	
@@ -422,13 +420,13 @@ public class HttpRecognizer {
 	 * @throws InstantiationException the instantiation exception
 	 * @throws IOException Signals that an I/O exception has occurred.
 	 */
-	public  RecognitionResult recognize(String userId, URL grammarUrl, EndPointingInputStream epStream, boolean lmflg, boolean batchMode, OutputFormat outMode, long timeout, SpeechEventListener eventListener) throws InstantiationException, IOException {
+	public  String recognize(String userId, URL grammarUrl, EndPointingInputStream epStream, boolean lmflg, boolean batchMode, OutputFormat outMode, long timeout, SpeechEventListener eventListener) throws InstantiationException, IOException {
 
 		InputStream is = null;
 		if (grammarUrl!=null)
 			is = grammarUrl.openStream();
 
-		RecognitionResult r = recognize(userId, is, epStream,lmflg,batchMode,outMode,timeout,eventListener);
+		String r = recognize(userId, is, epStream,lmflg,batchMode,outMode,timeout,eventListener);
 		return r;
 	}
 		
@@ -448,7 +446,7 @@ public class HttpRecognizer {
 	 * @throws InstantiationException the instantiation exception
 	 * @throws IOException Signals that an I/O exception has occurred.
 	 */
-	public  RecognitionResult recognize(String userId, InputStream grammar, EndPointingInputStream epStream, boolean lmflg, boolean batchMode, OutputFormat outMode, long timeout, SpeechEventListener eventListener) throws InstantiationException, IOException {
+	public  String recognize(String userId, InputStream grammar, EndPointingInputStream epStream, boolean lmflg, boolean batchMode, OutputFormat outMode, long timeout, SpeechEventListener eventListener) throws InstantiationException, IOException {
 
         //create the listener (listens for end points)  A decorator, so also can  pass events back to client
         speechStarted = false;
@@ -591,22 +589,15 @@ public class HttpRecognizer {
         	_logger.info("Response content length: " + resEntity.getContentLength());
         	_logger.info("Chunked?: " + resEntity.isChunked());
         }
-        RecognitionResult r = null;
+
+        String result = null;
         if (resEntity != null) {
             try {
                 InputStream s = resEntity.getContent();
-                String result = readInputStreamAsString(s);
+                result = readInputStreamAsString(s);
                 _logger.info(result);
-                if (outMode ==  OutputFormat.json) {
-                    r = RecognitionResult.constructResultFromJSONString(result);                	
-                } else {
-                   r = RecognitionResult.constructResultFromString(result);
-                }
 	            resEntity.consumeContent();
             } catch (IOException e) {
-	            // TODO Auto-generated catch block
-	            e.printStackTrace();
-            } catch (InvalidRecognitionResultException e) {
 	            // TODO Auto-generated catch block
 	            e.printStackTrace();
             }
@@ -614,8 +605,20 @@ public class HttpRecognizer {
 
         // send back event through the listener (decorator).  If the client did not pass in a eventListener (and it is null), decorator
         // will do nothing, else propagate the event to the client. 
-        listener.recognitionComplete(r);
-		return r;
+        
+        Utterance u = null;
+        if (outMode == OutputFormat.json) {
+        	u = gson.fromJson(result, Utterance.class);   
+        } else  if (outMode == OutputFormat.text) {
+        	u = new Utterance();
+        	u.setText(result);
+        } else {
+        	_logger.info("Response unrecognized output Format, using text "+outMode);
+
+        }
+        
+        listener.recognitionComplete(u);
+		return result;
 	}
 	
 	
@@ -766,7 +769,6 @@ public class HttpRecognizer {
         }
         
         
-        RecognitionResult r = null;
         if (resEntity != null) {
             return resEntity.getContent();
         } else {

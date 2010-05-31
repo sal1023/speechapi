@@ -24,8 +24,8 @@ package com.spokentech.speechdown.client;
 
 import java.util.logging.Logger;
 
-import com.spokentech.speechdown.common.RecognitionResult;
 import com.spokentech.speechdown.common.SpeechEventListener;
+import com.spokentech.speechdown.common.Utterance;
 
 
 /**
@@ -77,7 +77,7 @@ public class SpeechEventListenerDecorator implements SpeechEventListener {
     }
 
 	@Override
-    public void recognitionComplete(RecognitionResult rr) {
+    public void recognitionComplete(Utterance rr) {
         _logger.fine("***recognition complete()");
         if (_speechEventListener != null) {
             _speechEventListener.recognitionComplete(rr);

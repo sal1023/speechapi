@@ -5,6 +5,12 @@ public class RuleMatch {
 
     private String _rule;
     private String _tag;
+    
+    
+    public RuleMatch() {
+    	_rule=null;
+    	_tag=null;
+    }
 
     public RuleMatch(String rule, String tag) {
         _rule = rule;

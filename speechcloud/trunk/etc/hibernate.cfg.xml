@@ -11,7 +11,7 @@
         <property name="connection.driver_class">org.postgresql.Driver</property>
         <property name="connection.url">jdbc:postgresql://localhost/speechweb</property>
         <property name="connection.username">postgres</property>
-        <property name="connection.password">postgres</property>
+        <property name="connection.password">markov</property>
 
         <!-- JDBC connection pool (use the built-in) -->
         <property name="connection.pool_size">5</property>

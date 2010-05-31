@@ -22,6 +22,7 @@ import javax.sound.sampled.AudioFileFormat.Type;
 
 import org.apache.log4j.Logger;
 
+import com.google.gson.Gson;
 import com.spokentech.speechdown.client.endpoint.AudioStreamEndPointer;
 import com.spokentech.speechdown.client.endpoint.EndPointer;
 import com.spokentech.speechdown.client.endpoint.ExternalTriggerEndPointer;
@@ -33,8 +34,8 @@ import com.spokentech.speechdown.client.endpoint.StreamEndPointingInputStream;
 import com.spokentech.speechdown.client.exceptions.HttpRecognizerException;
 import com.spokentech.speechdown.client.util.FormatUtils;
 import com.spokentech.speechdown.common.AFormat;
-import com.spokentech.speechdown.common.RecognitionResult;
 import com.spokentech.speechdown.common.SpeechEventListener;
+import com.spokentech.speechdown.common.Utterance;
 import com.spokentech.speechdown.common.Utterance.OutputFormat;
 
 
@@ -63,11 +64,10 @@ public class HttpRecognizerEndPointTest extends TestCase {
 			}
 
 			@Override
-            public void recognitionComplete(RecognitionResult rr) {
+            public void recognitionComplete(Utterance rr) {
 	            // TODO Auto-generated method stub
 	            _logger.info("recognition complete: "+rr.getText());
-	            if (rr.isCflag())
-	            	System.out.println("confidence is "+rr.getConfidence());
+
             }
 	
 		}
@@ -76,11 +76,11 @@ public class HttpRecognizerEndPointTest extends TestCase {
 		private static Logger _logger = Logger.getLogger(HttpRecognizerEndPointTest.class);
 	    public static final String CRLF = "\r\n";
 	    
-	   
+	    private Gson gson = null;
 	    
 	    //private static String service = "http://ec2-174-129-20-250.compute-1.amazonaws.com/speechcloud/SpeechUploadServlet";    
-	    private static String service = "http://localhost:8090/speechcloud/SpeechUploadServlet";    
-	    //private static String service = "http://spokentech.net:/speechcloud/SpeechUploadServlet";   
+	    //private static String service = "http://localhost:8090/speechcloud/SpeechUploadServlet";    
+	    private static String service = "http://www.speechapi.com:8000/speechcloud/SpeechUploadServlet";   
 	    
 	    private static AudioFormat desiredFormat;
 	    private static int sampleRate = 8000;
@@ -128,7 +128,7 @@ public class HttpRecognizerEndPointTest extends TestCase {
 		    	long t2 = System.nanoTime();
 		    	long t3 = (t2-t1)/1000000;
 		        _logger.info("took "+t3+ "ms. to create recognizer");
-		    	
+			    gson = new Gson();
 		    	try {
 		    		grammarUrl = new URL(grammar);
 				} catch (MalformedURLException e) {  
@@ -149,7 +149,7 @@ public class HttpRecognizerEndPointTest extends TestCase {
 	    	epStream.setMimeType(s4audio);
 	    	epStream.setupStream(soundFile2);
 	 
-	    	RecognitionResult r = null;
+	    	String r = null;
 	    	
 	    	boolean lmflg = false;
 	    	boolean batchFlag = false;
@@ -163,7 +163,7 @@ public class HttpRecognizerEndPointTest extends TestCase {
 	            e.printStackTrace();
             }
 	    	
-            System.out.println("grammar result: "+r.getText());
+            System.out.println("grammar result: "+r);
 	    }
             
 	    public void testRecognizeFileS4EPGrammarAsynch() {
@@ -177,7 +177,7 @@ public class HttpRecognizerEndPointTest extends TestCase {
 	    	epStream.setMimeType(s4audio);
 	    	epStream.setupStream(soundFile2);
 	 
-	    	RecognitionResult r = null;
+	    	String r = null;
 	    	
 	    	Listener l = new Listener();
 	    	boolean lmflg = false;
@@ -217,7 +217,7 @@ public class HttpRecognizerEndPointTest extends TestCase {
 	    	epStream.setMimeType(s4audio);
 	    	epStream.setupStream(soundFile2);
 	 
-	    	RecognitionResult r = null;
+	    	String r = null;
 	    	
 	    	Listener l = new Listener();
 	    	boolean lmflg = false;
@@ -257,7 +257,7 @@ public class HttpRecognizerEndPointTest extends TestCase {
 	    	epStream.setupStream(soundFile2);
 	
             
-	    	RecognitionResult r = null;
+	    	String r = null;
 	    	boolean lmflg = true;
 	    	boolean batchFlag = true;
 	        try {	            
@@ -270,9 +270,8 @@ public class HttpRecognizerEndPointTest extends TestCase {
 	            e.printStackTrace();
             
             }
-            System.out.println("ENDPOINT TEST: lm  result: "+r.getText());
-            if (r.isCflag())
-            	System.out.println("confidence is "+r.getConfidence());
+            System.out.println("ENDPOINT TEST: lm  result: "+r);
+           
 	    }
 
 	    
@@ -300,7 +299,7 @@ public class HttpRecognizerEndPointTest extends TestCase {
 	    	epStream.setupStream(audioInputStream);
 
 
-	    	RecognitionResult r = null;
+	    	String r = null;
 	    	boolean lmflg = true;
 	    	boolean batchFlag = false;
 	        try {
@@ -313,7 +312,7 @@ public class HttpRecognizerEndPointTest extends TestCase {
 	            e.printStackTrace();
             }
 	    	
-           System.out.println("lm result: "+r.getText());
+           System.out.println("lm result: "+r);
 	    }
 	    
 	    public void testRecognizeStreamS4EP() {
@@ -358,7 +357,7 @@ public class HttpRecognizerEndPointTest extends TestCase {
 	    	long timeout = 10000;
 	    	boolean lmflg = false;
 	    	boolean batchFlag = false;
-	    	RecognitionResult r = null;
+	    	String r = null;
 	        try {
 	        	r = recog.recognize(userId, grammarUrl,  epStream,  lmflg, batchFlag,OutputFormat.text, timeout) ;
             } catch (InstantiationException e) {
@@ -369,7 +368,7 @@ public class HttpRecognizerEndPointTest extends TestCase {
 	            e.printStackTrace();
             }
 	    	
-            System.out.println("grammar result: "+r.getText());
+            System.out.println("grammar result: "+r);
         	
 	    	
 
@@ -410,7 +409,7 @@ public class HttpRecognizerEndPointTest extends TestCase {
 	        _logger.info("took "+t3+ "ms. to create basic endpointing stream");
 	    	
 
-	    	RecognitionResult r = null;
+	    	String r = null;
 	    	boolean lmflg = false;
 	    	boolean batchFlag = true;
 	        try {          
@@ -422,7 +421,7 @@ public class HttpRecognizerEndPointTest extends TestCase {
 	            // TODO Auto-generated catch block
 	            e.printStackTrace();
             }    	
-            System.out.println("grammar result: "+r.getText());
+            System.out.println("grammar result: "+r);
     	
 	    }
 	    
@@ -529,7 +528,7 @@ public class HttpRecognizerEndPointTest extends TestCase {
 	    	Listener l = new Listener();
 	    	boolean lmflg = true;
 	    	boolean batchFlag = true;
-	    	RecognitionResult result = null;
+	    	String result = null;
 	        try {	            
 	            result = recog.recognize(userId, grammarUrl2,  epStream,  lmflg,  batchFlag,OutputFormat.text, timeout,l) ;
             } catch (InstantiationException e) {
@@ -539,11 +538,7 @@ public class HttpRecognizerEndPointTest extends TestCase {
 	            // TODO Auto-generated catch block
 	            e.printStackTrace();
             }
-	    	
-
-            _logger.info("recognition complete: "+result.getText());
-            if (result.isCflag())
-            	System.out.println("confidence is "+result.getConfidence());
+            _logger.info("recognition complete: "+result);
     	
 	    }
 	    

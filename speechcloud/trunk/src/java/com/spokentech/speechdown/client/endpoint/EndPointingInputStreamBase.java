@@ -87,6 +87,8 @@ public abstract class EndPointingInputStreamBase implements EndPointingInputStre
 	 */
 	public void startAudioTransfer(long timeout, SpeechEventListener listener) throws InstantiationException, IOException {
 		
+		_logger.info("starting audio transfer");
+		
 		_listener = new Listener(listener);
 		
 		//setup the outputstream pipe

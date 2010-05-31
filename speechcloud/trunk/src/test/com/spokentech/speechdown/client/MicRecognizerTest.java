@@ -17,7 +17,6 @@ import javax.sound.sampled.TargetDataLine;
 
 import org.apache.log4j.Logger;
 
-import com.spokentech.speechdown.common.RecognitionResult;
 import com.spokentech.speechdown.common.Utterance.OutputFormat;
 
 
@@ -118,13 +117,13 @@ public class MicRecognizerTest extends TestCase {
 	    	boolean doEndpointing = true;
 	    	boolean lmflg = false;
 	        boolean batchFlag = false;
-	    	//RecognitionResult r = recog.recognize(audioLine, grammarUrl, lmflg, doEndpointing);
+	    	//String r = recog.recognize(audioLine, grammarUrl, lmflg, doEndpointing);
 	    	//System.out.println("lm result: "+r.getText());	        
 	    	
 	        lmflg = false;
 	        batchFlag = false;
-	        RecognitionResult r = recog.recognize(userId, audioLine, grammarUrl,lmflg,doEndpointing,batchFlag,OutputFormat.text);
-	        System.out.println("grammar result: "+r.getText());
+	        String r = recog.recognize(userId, audioLine, grammarUrl,lmflg,doEndpointing,batchFlag,OutputFormat.text);
+	        System.out.println("grammar result: "+r);
 	    	
 	    }
 	    

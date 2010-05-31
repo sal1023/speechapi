@@ -40,6 +40,8 @@
 	<property name="cairo-rtp.jar" value="${lib.dir}/cairo-rtp-SNAPSHOT.jar" />	
 	<property name="tritonus_share.jar" value="${lib.dir}/tritonus_share-0.3.6.jar" />	
 	<property name="sphinx4.jar" value="${lib.dir}/sphinx4.jar" />
+	<property name="jsapi-1.0-base.jar" value="${lib.dir}/jsapi-1.0-base.jar" />
+	
 	
 	<property name="hibernate.jar" value="${lib.dir}/hibernate3.jar" />
 	<property name="hsqldb.jar" value="${lib.dir}/hsqldb.jar" />
@@ -112,6 +114,8 @@
 		<pathelement	location="${spring.jar}" />
 		<pathelement	location="${freetts.jar}" />
 		<pathelement	location="${sphinx4.jar}" />
+		<pathelement	location="${jsapi-1.0-base.jar}" />
+		
 		<pathelement	location="${cairo-rtp.jar}" />
 		
 		<pathelement	location="${servlet-api.jar}" />
@@ -132,6 +136,7 @@
 		<pathelement	location="${jdom.jar}" />
 
 		<pathelement	location="${xuggle-xuggler.jar}" />
+		<pathelement    location="${java.home}/lib/plugin.jar" />
 		
 		
 		<fileset dir="${jaxws.home}/lib">
@@ -142,6 +147,8 @@
 
 
 	<path id="speechcloud.client.classpath">
+
+	
 		<pathelement location="${java.home}/../lib/tools.jar" />
 		<pathelement	location="${commons-pool.jar}" />
 		<pathelement	location="${commons-lang.jar}" />
@@ -151,6 +158,7 @@
 		<pathelement	location="${mime4j.jar}" />
 		<pathelement	location="${httpclient.jar}" />
 		<pathelement	location="${httpcore.jar}" />
+		<pathelement    location="${java.home}/lib/plugin.jar" />
 	</path>
 
 	

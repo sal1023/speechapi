@@ -16,12 +16,16 @@ public class Utterance {
 	
     
     public enum OutputFormat {
-        text, json, nlsml 
+        text, json, nlsml,xml 
     }
 	
     
     protected final static String OUTOFGRAMMAR = "<unk>";
     
+
+
+	private String rCode = "Success";
+	private String rMessage = null;
 	private boolean oog;
     private String text;
     private double confidence;
@@ -31,6 +35,36 @@ public class Utterance {
     public Utterance() {
     }
 
+	/**
+     * @return the rCode
+     */
+    public String getRCode() {
+    	return rCode;
+    }
+
+
+	/**
+     * @param code the rCode to set
+     */
+    public void setRCode(String code) {
+    	rCode = code;
+    }
+
+
+	/**
+     * @return the rMessage
+     */
+    public String getRMessage() {
+    	return rMessage;
+    }
+
+
+	/**
+     * @param message the rMessage to set
+     */
+    public void setRMessage(String message) {
+    	rMessage = message;
+    }
     
     /**
      * @return the oog
@@ -103,7 +137,42 @@ public class Utterance {
     }
 
 
+    public String toString() {
 
- 
+        StringBuilder builder = new StringBuilder();
+        builder.append(text);
+        builder.append("\n");
+        builder.append(rCode);
+        builder.append("\n");
+        builder.append(rMessage);
+        builder.append("\n");
+        builder.append(confidence);
+        builder.append("\n");
+        builder.append(oog);
+        builder.append("\n");
+        for (RuleMatch rm : ruleMatches) {
+            builder.append("   ");
+            builder.append(rm.getRule());
+            builder.append(" : ");
+            builder.append(rm.getTag());
+            builder.append("\n");
+        }
+        for (WordData wd : words) {
+            builder.append("   ");
+            builder.append(wd.getWord());
+            builder.append(" : ");
+            builder.append(wd.getPronunciation());
+            builder.append(" : ");
+            builder.append(wd.getStartTime());
+            builder.append(" : ");
+            builder.append(wd.getStopTime());
+            builder.append(" : ");
+            builder.append(wd.getConfidence());
+            builder.append("\n");
+        }
+
+        return (builder.toString());
+    	
+    }
    
 }

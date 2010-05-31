@@ -16,7 +16,7 @@ import javax.xml.ws.soap.SOAPBinding;
 
 import org.apache.log4j.Logger;
 
-import com.spokentech.speechdown.common.RecognitionResult;
+import com.spokentech.speechdown.common.Utterance;
 import com.spokentech.speechdown.server.RecognizerService;
 import com.spokentech.speechdown.server.PoolingSynthesizerService;
 
@@ -48,15 +48,15 @@ public class SpeechAttachPortImpl implements SpeechAttachPortType {
 		_logger.info("Got a (attach) recognize request.  grammar: "+request.getGrammar());
 	
 		
-		RecognitionResult result = null;
+		Utterance result = null;
 		try {
-		   result = recognizerService.Recognize(request.getAudio(), request.getGrammar());
+		   Utterance u = recognizerService.Recognize(request.getAudio(), request.getGrammar());
 		}catch (Exception e) {
 			e.printStackTrace();
 		}
 		   
 		RecResponseType response = new RecResponseType();
-		response.setOog(result.isOutOfGrammar());
+		response.setOog(result.isOog());
 		response.setText(result.getText());
 		response.setSerialized(result.toString());
 		

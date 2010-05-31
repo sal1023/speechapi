@@ -50,7 +50,9 @@
 		  <property name="maryDir">
 				<value>/usr/share/MARYTTS</value>
 		  </property>
-
+		  <property name="recordingEnabled">
+				<value>true</value>
+		  </property>
 	</bean>
 
 
@@ -74,7 +76,7 @@
                                 <value>file:///usr/share/tomcat5/webapps/speechcloud/WEB-INF/sphinx-config-5pools.xml</value>
 		  </property>
 		  		  <property name="recordingFilePath">
-		      <value>/mnt/audio</value>
+		      <value>/vol/audio</value>
 		  </property>
 		  <property name="recordingEnabled">
 				<value>true</value>
