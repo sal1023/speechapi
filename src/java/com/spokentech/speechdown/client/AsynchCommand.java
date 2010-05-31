@@ -5,6 +5,9 @@ import java.io.InputStream;
 import java.util.UUID;
 import java.util.logging.Logger;
 
+import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
+
 
 import com.spokentech.speechdown.client.endpoint.EndPointingInputStream;
 import com.spokentech.speechdown.common.SpeechEventListener;
@@ -13,7 +16,7 @@ import com.spokentech.speechdown.common.Utterance.OutputFormat;
 public class AsynchCommand implements Runnable {
 
 
-    private static Logger _logger = Logger.getLogger(AsynchCommand.class.getName());
+	private static Log _logger =  LogFactory.getLog(AsynchCommand.class.getName());
 	
    public enum CommandType {recognize, synthesize}
 
@@ -70,7 +73,7 @@ public class AsynchCommand implements Runnable {
 			if (httpRecognizer != null)
 		        httpRecognizer.cancel();
 			else
-				_logger.info("cant cancel, no recognizer yet");
+				_logger.warn("cant cancel, no recognizer yet");
 	}
 
 
@@ -80,7 +83,7 @@ public class AsynchCommand implements Runnable {
     public void run() {
 		if (type == CommandType.recognize) {
 			try {
-				_logger.info("running command");
+				_logger.debug("running command");
 				//not thread safe so creating a new recognizer.  It is pretty lightweight so not much overhead but still ...
 				//TODO: make it thread safe so the same HttpRecognizer can be reused (pass the recognizer object in the command)
 			    httpRecognizer = new HttpRecognizer(devId, key);
@@ -94,7 +97,7 @@ public class AsynchCommand implements Runnable {
 	            e.printStackTrace();
             }
 		} else {
-			_logger.info("Commad type not implemented "+ type);
+			_logger.warn("Commad type not implemented "+ type);
 		}
 
 	    

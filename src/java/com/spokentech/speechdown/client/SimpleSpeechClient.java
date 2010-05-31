@@ -99,7 +99,7 @@ public class SimpleSpeechClient {
     	}
     	state = RECOGNIZING;
     	
-    	_logger.info("Starting recognition ...");
+    	_logger.debug("Starting recognition ...");
     	
 
         //_window = (JSObject) JSObject.getWindow(this);
@@ -164,7 +164,7 @@ public class SimpleSpeechClient {
 
 	public  void play (String text, String voice) {
 
-		_logger.info("Starting Synthesizer ...");
+		_logger.debug("Starting Synthesizer ...");
 
 		String mime = MP3;
 		//Encoding encoding = new Encoding("MPEG1L3");
@@ -247,7 +247,7 @@ public class SimpleSpeechClient {
 	    AudioFormat desiredFormat = new AudioFormat ((float) sampleRate, sampleSizeInBits, channels, signed, bigEndian);
         DataLine.Info info = new DataLine.Info(TargetDataLine.class, desiredFormat);
         if (!AudioSystem.isLineSupported(info)) {
-            _logger.info(desiredFormat + " not supported");
+            _logger.warn(desiredFormat + " not supported");
             throw new RuntimeException("unsupported audio format");
         } 
         System.out.println("Desired format: " + desiredFormat);
@@ -262,26 +262,26 @@ public class SimpleSpeechClient {
              */
             audioLine.addLineListener(new LineListener() {
                 public void update(LineEvent event) {
-                    _logger.info("line listener " + event);
+                    _logger.debug("line listener " + event);
                 }
             });
         } catch (LineUnavailableException e) {
-            _logger.info("microphone unavailable " + e.getMessage());
+            _logger.warn("microphone unavailable " + e.getMessage());
         }
  
         // open up the line from the mic (javasound)
         if (audioLine != null) {
         	if (!audioLine.isOpen()) {
-        		_logger.info("open");
+        		_logger.debug("open");
         		try {
         			audioLine.open(desiredFormat, audioBufferSize);
         		} catch (LineUnavailableException e) {
-        			_logger.info("Can't open microphone " + e.getMessage());
+        			_logger.warn("Can't open microphone " + e.getMessage());
         			e.printStackTrace();
         		}  
         	} 
         } else {
-        	_logger.info("Can't find microphone");
+        	_logger.warn("Can't find microphone");
         	throw new RuntimeException("Can't find microphone");
         }
     	
@@ -360,7 +360,7 @@ public class SimpleSpeechClient {
          */
         @Override
         public void noInputTimeout() {
-    	    _logger.info("No input timeout");
+    	    _logger.debug("No input timeout");
 
         }
 
@@ -369,7 +369,7 @@ public class SimpleSpeechClient {
          */
         @Override
         public void recognitionComplete(Utterance arg0) {
-    	    _logger.info("Recognition Completed");
+    	    _logger.debug("Recognition Completed");
             results = arg0;
     	    resultsYet=true;
         }
@@ -379,7 +379,7 @@ public class SimpleSpeechClient {
          */
         @Override
         public void speechEnded() {
-    	    _logger.info("Speech ended");
+    	    _logger.debug("Speech ended");
 
         }
 
@@ -388,7 +388,7 @@ public class SimpleSpeechClient {
          */
         @Override
         public void speechStarted() {
-    	    _logger.info("Speech started");
+    	    _logger.debug("Speech started");
 
         }
 

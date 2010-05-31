@@ -64,7 +64,7 @@ public  class S4EndPointer implements EndPointer {
         	
 		FrontEnd frontEnd = createFrontend(false, false, processor, listener);
  
-		_logger.info("Starting audio transfer");
+		_logger.debug("Starting audio transfer");
 		SpeechDataStreamer sds = new SpeechDataStreamer();
 		sds.startStreaming(frontEnd, outputStream);	
         
@@ -88,7 +88,7 @@ public  class S4EndPointer implements EndPointer {
  	
 		dataSource.setInputStream((InputStream)audioStream, "ws-audiostream", format);	
 	
-		_logger.info("Starting audio transfer");
+		_logger.debug("Starting audio transfer");
 		SpeechDataStreamer sds = new SpeechDataStreamer();
 		sds.startStreaming(frontEnd, outputStream);	
         

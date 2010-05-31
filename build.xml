@@ -126,7 +126,8 @@
 		<pathelement	location="${tritonus_share.jar}" />
 		<pathelement	location="${httpclient.jar}" />
 		<pathelement	location="${httpcore.jar}" />
-		
+		<pathelement	location="${commons-logging.jar}" />
+				
 		<pathelement	location="${hibernate.jar}" />
 		<!--pathelement	location="${jstl.jar}" /-->
 	    <!--pathelement	location="${standard.jar}" /-->
@@ -427,7 +428,10 @@
 				debug="on"
                 debuglevel="lines,vars,source" 
 				includes="**/client/**,**/common/**">
-			<classpath refid="jaxws.classpath" />
+				<classpath>
+					<path refid="jaxws.classpath" />
+			       	<path refid="rest.dependency.classpath" />
+			    </classpath>
 		</javac>
 	</target>
 

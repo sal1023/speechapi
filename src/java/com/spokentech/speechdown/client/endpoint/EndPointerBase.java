@@ -42,7 +42,7 @@ public abstract class EndPointerBase implements EndPointer, Runnable{
 
 	
 	public void start(InputStream audioStream,  AFormat format, OutputStream outputStream, SpeechEventListener listener) throws IOException {
-		_logger.info("start");
+		_logger.debug("start");
 		setInputStream(audioStream);
         this.ostream = outputStream;
         this.listener = listener;
@@ -107,9 +107,9 @@ public abstract class EndPointerBase implements EndPointer, Runnable{
     
 	protected void closeOutputDataStream() {
         streamEndReached = true;
-        _logger.info("Closing output stream");
+        _logger.debug("Closing output stream");
         if (ostream != null) {
-            _logger.info("Not null output stream");
+            _logger.debug("Not null output stream");
         	try {
                 ostream.close();
             } catch (IOException e) {

@@ -1,11 +1,12 @@
 package com.spokentech.speechdown.client;
 
 import java.util.LinkedList;
-import java.util.logging.Logger;
+import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
 
 public class WorkQueue {
         
-	    private static Logger _logger = Logger.getLogger(AsynchCommand.class.getName());
+		private static Log _logger =  LogFactory.getLog(AsynchCommand.class.getName());
     
 	    private final int nThreads;
 	    private final PoolWorker[] threads;
@@ -35,9 +36,9 @@ public class WorkQueue {
 	    	boolean match = false;
 	       //search queue for id (waiting jobs)
 	    	  for (AsynchCommand command : queue) {
-	    		  System.out.println(command.getId()+"   "+id);
+	    		  _logger.debug(command.getId()+"   "+id);
 	    	      if (command.getId().equals(id)) {
-	    	    	  _logger.info("Cancel match, removing...");
+	    	    	  _logger.debug("Cancel match, removing...");
 	    	    	  queue.remove(command);
 	    	    	  match =true;
 	    	    	  break;

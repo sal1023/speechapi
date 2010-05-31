@@ -123,7 +123,7 @@ public class SpeechUploadServlet extends HttpServlet {
 	public void doPost(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
 
 		long start = System.currentTimeMillis();
-		_logger.info("New request came in" + start);
+		_logger.debug("New request came in" + start);
 		
 		if (_logger.isDebugEnabled()) {
 			Enumeration hnames = request.getHeaderNames();
@@ -156,12 +156,12 @@ public class SpeechUploadServlet extends HttpServlet {
 		    _logger.debug("Local name "+request.getLocalName());
 		    _logger.debug("Local port "+request.getLocalPort());
 	
-		    _logger.info("loacale: "+request.getLocale()); 
+		    _logger.debug("loacale: "+request.getLocale()); 
 		}
 		
 		// Check that we have a file upload request
 		if (!ServletFileUpload.isMultipartContent(request)) {
-			_logger.info("redirecting to / because not multipart content");
+			_logger.debug("redirecting to / because not multipart content");
 			response.sendRedirect(response.encodeRedirectURL("/")); // TODO: allow redirect location to be configured
 			return;
 		}
@@ -318,7 +318,7 @@ public class SpeechUploadServlet extends HttpServlet {
 				    			hr.setDevDefined(developerDefined);
 			    			    //ServiceLogger.logHttpRequest(hr);
 			    			}
-			    			_logger.info("SESSIONID: "+request.getRequestedSessionId());
+			    			_logger.debug("SESSIONID: "+request.getRequestedSessionId());
 			    			//if format not specified, then set it to null.  that indicates that the front end should  try to extract it from the input streams header
 			    			if (formatSpecified) {
 				    		   _logger.debug("recognizing audio!  Sample rate= "+af.getSampleRate()+", bigEndian= "+ af.isBigEndian()+", bytes per value= "+af.getSampleSizeInBits()+", encoding= "+af.getEncoding());
@@ -342,10 +342,10 @@ public class SpeechUploadServlet extends HttpServlet {
 					    		audio.close();
 					    		request.getInputStream().close();
 					    		long stop2 =  System.currentTimeMillis();
-				    			_logger.info("Done! " + stop2 +" ("+(stop2-start) +")" );
+				    			_logger.debug("Done! " + stop2 +" ("+(stop2-start) +")" );
 				    		} else {
 				    			long stop = System.currentTimeMillis();
-				    			_logger.info("Calling recognizer Service" + stop +" ("+(stop-start) +")" );
+				    			_logger.debug("Calling recognizer Service" + stop +" ("+(stop-start) +")" );
 				    		
 				        	
 					          	if (gMode.equalsIgnoreCase("simple")) {
@@ -373,20 +373,20 @@ public class SpeechUploadServlet extends HttpServlet {
 								
 								if (outMode == OutputFormat.json) {
 									textResult = gson.toJson(result);
-									_logger.info(textResult);
+									_logger.debug(textResult);
 									out.println(textResult);
 								} else if (outMode == OutputFormat.text) {	
 									textResult = result.getText();
-									_logger.info(textResult);
+									_logger.debug(textResult);
 									out.println(textResult);								
 								} else {
 									textResult = result.getText();
 									_logger.warn("Unsupported output format, using text +outMode");
-									_logger.info(textResult);
+									_logger.debug(textResult);
 									out.println(textResult);	
 								}
 					    		long stop2 =  System.currentTimeMillis();
-				    			_logger.info("Done! " + stop2 +" ("+(stop2-start) +")" );
+				    			_logger.debug("Done! " + stop2 +" ("+(stop2-start) +")" );
 					    	    //String filename = Long.toString(System.currentTimeMillis()) + ".wav";
 					    		//writeStreamToFile2(audio,filename);
 				    			

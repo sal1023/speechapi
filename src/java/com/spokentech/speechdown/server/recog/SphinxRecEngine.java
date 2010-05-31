@@ -290,7 +290,7 @@ public class SphinxRecEngine extends AbstractPoolableObject implements RecEngine
 		
 		
 		//Do i need this?  
-        _logger.info("LM stopping audio "+_state);
+        _logger.debug("LM stopping audio "+_state);
         synchronized (SphinxRecEngine.this) {
         	 stopAudioTransfer();
         	_state = COMPLETE;
@@ -375,7 +375,7 @@ public class SphinxRecEngine extends AbstractPoolableObject implements RecEngine
 		_logger.info(ratio+ "  Wall time "+ wall+ " stream length "+ streamLen);
 		
 		if (recordingEnabled) {
-			_logger.info("logging enabled, stopping recording and writing to database");
+			_logger.debug("logging enabled, stopping recording and writing to database");
 			recorder.stopRecording();
 
 	        RecogRequest rr = new RecogRequest();
@@ -432,7 +432,7 @@ public class SphinxRecEngine extends AbstractPoolableObject implements RecEngine
             	_logger.warn("exception thrown while recording http request");
 	            e.printStackTrace();
             }
-		    _logger.info("done recording...");
+		    _logger.debug("done recording...");
 
 		}
 	     long tt = System.nanoTime();
@@ -534,9 +534,9 @@ public class SphinxRecEngine extends AbstractPoolableObject implements RecEngine
 	        	resultText = r.getBestFinalResultNoFiller();  
 	        	_logger.warn("Inrecognized output format: "+outMode+ "  ,using plain text mode as a default.");
 	        }
-			_logger.info(resultText);
+			_logger.debug(resultText);
         } else {
-        	_logger.info("Null results...");
+        	_logger.debug("Null results...");
         }
         
         
@@ -849,7 +849,7 @@ public class SphinxRecEngine extends AbstractPoolableObject implements RecEngine
 
 			@Override
 	        public void speechStarted() {
-	            _logger.info("speechStarted()");
+	            _logger.debug("speechStarted()");
 
 	            synchronized (SphinxRecEngine.this) {
 	                if (_state == WAITING_FOR_SPEECH) {
@@ -863,7 +863,7 @@ public class SphinxRecEngine extends AbstractPoolableObject implements RecEngine
 	        }
 	        
         	public void speechEnded() {
-	            _logger.info("speechEnded()");
+	            _logger.debug("speechEnded()");
 	            synchronized (SphinxRecEngine.this) {
 	            	if (!transcribeMode)
 	            	    stopAudioTransfer();
@@ -873,7 +873,7 @@ public class SphinxRecEngine extends AbstractPoolableObject implements RecEngine
 	        }
 
         	public void noInputTimeout() {
-	            _logger.info("no input timeout()");
+	            _logger.debug("no input timeout()");
 	            synchronized (SphinxRecEngine.this) {
 	            	stopAudioTransfer();
 	            	_state = COMPLETE;

@@ -37,17 +37,12 @@
 
     <property name="speechClassifierThreshold" value="13"/>
     
-    
     <property name="languageModelFile"          value="file:///usr/share/models/language/wsj5kc.Z.DMP"/>
-    wsj5kc.Z.DMP
     <property name="languageModelFile"          value="file:///usr/share/models/language/lm_giga_64k_vp_3gram.arpa.DMP"/>
 
 	<!-- these are only needed to create the pool of recognizers.  Should be able to find a better way to create a recognizer without a grammar -->
-    <property name="grammarLocation"             value="resource:/com.spokentech.speechdown.server.RecognizerService!/../../grammar"/>
-    <!--property name="grammarLocation"             value="file:\\\c:\thirdparty\apache-tomcat-6.0.14\webapps\speechcloud\grammar"/-->
-    
+    <property name="grammarLocation"             value="resource:/../../grammar"/>  
     <property name="grammarName"                 value="example"/>
-
 
     <property name="amPropertiesFile"   value="file:///usr/share/models/accoustic/model2.props" />
     <!--property name="amLocation" value="file:///usr/share/models/accoustic/m8k.cd_cont_8000"/-->
