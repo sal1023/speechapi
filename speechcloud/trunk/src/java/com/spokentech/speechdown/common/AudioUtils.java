@@ -207,7 +207,7 @@ public class AudioUtils {
 				if (bytesRead == -1) break; 
 				out.write(buffer, 0, bytesRead); 
 			} 
-			_logger.info("Closing streams");
+			_logger.debug("Closing streams");
 			in.close(); 
 			out.close(); 
 		} 

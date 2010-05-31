@@ -64,7 +64,7 @@ public class JavaSoundStreamS4EndPointingInputStream extends EndPointingInputStr
 	 * @param stream the new up stream
 	 */
 	public void setupStream(InputStream stream, AudioFormat format) {
-		_logger.info("Setting up the stream");
+		_logger.debug("Setting up the stream");
 		this.stream = stream;
         this.format = FormatUtils.covertToNeutral(format);
         setupPipedStream();
@@ -76,7 +76,7 @@ public class JavaSoundStreamS4EndPointingInputStream extends EndPointingInputStr
 	 * @param stream the new up stream
 	 */
 	public void setupStream(AudioInputStream stream) {
-		_logger.info("Setting up the stream");
+		_logger.debug("Setting up the stream");
 		this.stream = stream;
 		this.format = FormatUtils.covertToNeutral(stream.getFormat());
         setupPipedStream();

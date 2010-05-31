@@ -4,8 +4,9 @@ import java.io.IOException;
 import java.io.ObjectOutputStream;
 import java.io.OutputStream;
 import java.util.Map;
-import java.util.logging.Level;
-import java.util.logging.Logger;
+
+import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
 
 import edu.cmu.sphinx.frontend.BaseDataProcessor;
 import edu.cmu.sphinx.frontend.Data;
@@ -25,7 +26,7 @@ import edu.cmu.sphinx.frontend.endpoint.SpeechStartSignal;
  */
 public class SpeechDataStreamer  extends Thread{
 
-    private static Logger _logger = Logger.getLogger(SpeechDataStreamer.class.getName());
+	private static Log _logger =  LogFactory.getLog(SpeechDataStreamer.class.getName());
     
     private BaseDataProcessor frontEnd;
 	private OutputStream out;
@@ -40,7 +41,6 @@ public class SpeechDataStreamer  extends Thread{
     public SpeechDataStreamer() {
         super();
         // TODO Auto-generated constructor stub
-        _logger.setLevel(Level.INFO);
         
     }
     
@@ -48,15 +48,15 @@ public class SpeechDataStreamer  extends Thread{
     private void showSignals(Data data) {
 
         if (data instanceof SpeechStartSignal) {
-            _logger.fine("streamer <<<<<<<<<<<<<<< SpeechStartSignal encountered!");
+            _logger.debug("streamer <<<<<<<<<<<<<<< SpeechStartSignal encountered!");
         } else if (data instanceof SpeechEndSignal) {
-            _logger.fine("streamer <<<<<<<<<<<<<<< SpeechEndSignal encountered!");
+            _logger.debug("streamer <<<<<<<<<<<<<<< SpeechEndSignal encountered!");
             speechEnded = true;
         } else if (data instanceof DataStartSignal) {
-            _logger.fine("streamer <<<<<<<<<<<<<<< DataStartSignal encountered!");
+            _logger.debug("streamer <<<<<<<<<<<<<<< DataStartSignal encountered!");
             infoDataStartSignal((DataStartSignal) data);
         } else if (data instanceof DataEndSignal) {
-            _logger.fine("streamer >>>>>>>>>>>>>>> DataEndSignal encountered!");
+            _logger.debug("streamer >>>>>>>>>>>>>>> DataEndSignal encountered!");
             dataEnded = true;
         }
 
@@ -66,7 +66,7 @@ public class SpeechDataStreamer  extends Thread{
     private void infoDataStartSignal(DataStartSignal dataStartSignal) {
         Map<String, Object> dataProps = dataStartSignal.getProps();
         if (dataProps.containsKey(DataStartSignal.SPEECH_TAGGED_FEATURE_STREAM))
-           _logger.fine("SPEECH TAG FEATURE STREAM: "+dataProps.get(DataStartSignal.SPEECH_TAGGED_FEATURE_STREAM));
+           _logger.debug("SPEECH TAG FEATURE STREAM: "+dataProps.get(DataStartSignal.SPEECH_TAGGED_FEATURE_STREAM));
     }
     
     
@@ -77,14 +77,14 @@ public class SpeechDataStreamer  extends Thread{
         	DoubleData dd = (DoubleData) data;
         	double[] d = dd.getValues();
 
-        	_logger.fine(dd.toString());
-        	_logger.fine("Sending " + d.length + " values.  "+d[0]+ " "+d[d.length-1]);
+        	_logger.debug(dd.toString());
+        	_logger.debug("Sending " + d.length + " values.  "+d[0]+ " "+d[d.length-1]);
         } else if (data instanceof FloatData) {
         	FloatData fd = (FloatData) data;
-        	_logger.fine("FloatData: " + fd.getSampleRate() + "Hz, first sample #: " +
+        	_logger.debug("FloatData: " + fd.getSampleRate() + "Hz, first sample #: " +
                     fd.getFirstSampleNumber() + ", collect time: " + fd.getCollectTime());
         	float[] d = fd.getValues();
-        	_logger.fine("Sending " + d.length + " values.");
+        	_logger.debug("Sending " + d.length + " values.");
         	//for (float val: d) {
         	//	_logger.info(val);
         	//}
@@ -97,7 +97,7 @@ public class SpeechDataStreamer  extends Thread{
     	this.out = out;
         this.dout = new ObjectOutputStream(out);
 		this.dout.flush();
-    	_logger.fine("startStreaming...");
+    	_logger.debug("startStreaming...");
         start();
     }
 
@@ -107,7 +107,7 @@ public class SpeechDataStreamer  extends Thread{
     	long t1 = 0;
     	long t2 = 0;
     	long t3 = 0;
-    	_logger.fine("start stream pulling");
+    	_logger.debug("start stream pulling");
     	boolean moreData = true;
     	while (moreData) {
    		    t1 = System.nanoTime();
@@ -116,7 +116,7 @@ public class SpeechDataStreamer  extends Thread{
     		showData(data);
     		t3 = t2;
     		t2 = System.nanoTime();
-    		_logger.fine("Data Streamer: time to get from front end: "+(t2-t1) + "  time to write to stream"+ (t1-t3));
+    		_logger.debug("Data Streamer: time to get from front end: "+(t2-t1) + "  time to write to stream"+ (t1-t3));
  
     		if (data != null) {
     			try {
@@ -133,7 +133,7 @@ public class SpeechDataStreamer  extends Thread{
         			closeOutputStream();
     			}
     		} else {
-    			_logger.fine("Null data");
+    			_logger.debug("Null data");
     			moreData=false;
     			closeOutputStream();
     		}

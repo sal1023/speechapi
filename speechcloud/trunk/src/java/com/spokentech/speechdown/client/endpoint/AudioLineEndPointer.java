@@ -83,9 +83,9 @@ class AudioLineEndPointer implements Runnable {
        	int startCount = 0;
 
     	while (!speechEnded) {
-    		_logger.info("trying to read: " + data.length);
+    		_logger.debug("trying to read: " + data.length);
     		int numBytesRead = aline.read(data, 0, data.length);
-    		_logger.info(" ...read: " + numBytesRead);
+    		_logger.debug(" ...read: " + numBytesRead);
     		int sampleSizeInBytes = format.getSampleSizeInBits() / 8;
     		totalSamplesRead += (numBytesRead / sampleSizeInBytes);
 
@@ -103,7 +103,7 @@ class AudioLineEndPointer implements Runnable {
 
     			//loop thru and look for threshold crossings
     			//threshold frames, are a sliding window of data samples.  rms is compared to threshold
-    			_logger.info("Looping thru the double array with "+samples.length + " samples");
+    			_logger.debug("Looping thru the double array with "+samples.length + " samples");
     			for (double d: samples) {
     				count++;
     				tFrame.add(d);
@@ -115,7 +115,7 @@ class AudioLineEndPointer implements Runnable {
     					_logger.debug("Got null for threshold frame.  so using the single current value: "+d);
     					rms = d;
     				}
-    				//_logger.info(count+" "+rms+" "+d);
+    				//_logger.debug(count+" "+rms+" "+d);
     				if (!speechStarted) {								// no speech yet so check for the start
     					if (rms > startThreshold) {
     						startCount = startCount+1;
@@ -147,12 +147,12 @@ class AudioLineEndPointer implements Runnable {
     				}
 
     			}
-    			//_logger.info(speechStarted+" "+speechEnded);
+    			//_logger.debug(speechStarted+" "+speechEnded);
     			
     			if (speechStarted) {
     				//always write the entire buffer (even if we find the end we can send a little extra back to the recognizer or if we found the start inside this
     				// buffer a little silence in the beginning should not hurt)
-    				_logger.info("Writing "+numBytesRead + "bytes");
+    				_logger.debug("Writing "+numBytesRead + "bytes");
     				try {
     					ostream.write(data, 0, numBytesRead);
     				} catch (IOException e) {
@@ -162,7 +162,7 @@ class AudioLineEndPointer implements Runnable {
     		}
     	}
 
-		_logger.info("Done! "+ totalSamplesRead);
+		_logger.debug("Done! "+ totalSamplesRead);
 		/* We close the output stream.
 		 */
 		try {

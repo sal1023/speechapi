@@ -124,7 +124,7 @@ public class RtpS4EndPointingInputStream extends EndPointingInputStreamBase impl
 	public void startAudioTransfer(long timeout, SpeechEventListener listener) throws InstantiationException, IOException {
 
 		long start = System.currentTimeMillis();
-		_logger.info("STARTING AUIDO TRANSFER!!!!!!  "+start);
+		_logger.debug("STARTING AUIDO TRANSFER!!!!!!  "+start);
 		_listener = new Listener(listener);
 
 		RawAudioProcessor primaryInput = new RawAudioProcessor(10);
@@ -137,7 +137,7 @@ public class RtpS4EndPointingInputStream extends EndPointingInputStreamBase impl
 		
 		//get the processor from the rtpStream
 		if ((_processor != null) && (_pbds != null)) {
-			_logger.info("one is not null... "+_processor +" " +_pbds);
+			_logger.debug("one is not null... "+_processor +" " +_pbds);
 			//throw new IllegalStateException("Grabbing already in progress!");
 			// TODO: cancel or queue request instead (depending upon value of 'cancel-if-queue' header)
 		} else {
@@ -157,7 +157,7 @@ public class RtpS4EndPointingInputStream extends EndPointingInputStreamBase impl
 			}
 
 			long t2 = System.currentTimeMillis();
-			_logger.info("xxx... "+ (t2-start));
+			_logger.debug("xxx... "+ (t2-start));
 
 
 
@@ -179,7 +179,7 @@ public class RtpS4EndPointingInputStream extends EndPointingInputStreamBase impl
 			_rawAudioTransferHandler = new RawAudioTransferHandler(primaryInput);
 			_rawAudioTransferHandler.startProcessing(streams[0]);
 			t3 = System.currentTimeMillis();
-			_logger.info("Started the raw audio transfer handler "+ (t3-start));
+			_logger.debug("Started the raw audio transfer handler "+ (t3-start));
 		} catch (UnsupportedEncodingException e) {
 			e.printStackTrace();
 		}
@@ -197,7 +197,7 @@ public class RtpS4EndPointingInputStream extends EndPointingInputStreamBase impl
 
 
 		long t4 = System.currentTimeMillis();
-		_logger.info("RTP stream all set "+(t4-t3));
+		_logger.debug("RTP stream all set "+(t4-t3));
 		
 		_state = WAITING_FOR_SPEECH;
 		

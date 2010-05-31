@@ -77,7 +77,7 @@ public class IdentityStage extends BaseDataProcessor {
         	float[] d = fd.getValues();
         	_logger.fine("Sending " + d.length + " values.  "+d[0]+ " "+d[d.length-1]);
         	//for (float val: d) {
-        	//	_logger.info(val);
+        	//	_logger.debug(val);
         	//}
         }
     }

@@ -15,6 +15,9 @@ import java.util.TimerTask;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
+import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
+
 import com.spokentech.speechdown.client.SpeechEventListenerDecorator;
 import com.spokentech.speechdown.common.AFormat;
 import com.spokentech.speechdown.common.SpeechEventListener;
@@ -27,7 +30,7 @@ public abstract class EndPointingInputStreamBase implements EndPointingInputStre
 	
 
 
-	private static Logger _logger = Logger.getLogger(EndPointingInputStreamBase.class.getName());
+	private static Log _logger =  LogFactory.getLog(EndPointingInputStreamBase.class.getName());
 	
     private static int audioBufferSize = 160000;
     
@@ -52,9 +55,7 @@ public abstract class EndPointingInputStreamBase implements EndPointingInputStre
 	
     public EndPointingInputStreamBase(EndPointer ep) {
 	    super();
-	    this.ep = ep;
-		_logger.setLevel(Level.INFO);
-	       
+	    this.ep = ep;	       
     }
 	
 	/**
@@ -87,7 +88,7 @@ public abstract class EndPointingInputStreamBase implements EndPointingInputStre
 	 */
 	public void startAudioTransfer(long timeout, SpeechEventListener listener) throws InstantiationException, IOException {
 		
-		_logger.info("starting audio transfer");
+		_logger.debug("starting audio transfer");
 		
 		_listener = new Listener(listener);
 		
@@ -119,7 +120,7 @@ public abstract class EndPointingInputStreamBase implements EndPointingInputStre
 	}
 
     public synchronized void stopAudioTransfer() {
-    	_logger.fine("Stopping stream");
+    	_logger.debug("Stopping stream");
     	if (ep != null) {
     		ep.stopRecording();
     	}
@@ -175,7 +176,7 @@ public abstract class EndPointingInputStreamBase implements EndPointingInputStre
 	        @Override
 	        public void speechStarted() {
 
-	            _logger.fine("speechStarted()");
+	            _logger.debug("speechStarted()");
 
 	            synchronized (EndPointingInputStreamBase.this) {
 	                if (_state == WAITING_FOR_SPEECH) {
@@ -193,7 +194,7 @@ public abstract class EndPointingInputStreamBase implements EndPointingInputStre
         	 * @see com.spokentech.speechdown.client.SpeechEventListenerDecorator#speechEnded()
         	 */
         	public void speechEnded() {
-	            _logger.fine("speechEnded()");
+	            _logger.debug("speechEnded()");
 
 	            synchronized (EndPointingInputStreamBase.this) {
 
@@ -207,7 +208,7 @@ public abstract class EndPointingInputStreamBase implements EndPointingInputStre
         	 * @see com.spokentech.speechdown.client.SpeechEventListenerDecorator#noInputTimeout()
         	 */
         	public void noInputTimeout() {
-	            _logger.fine("no input timeout()");
+	            _logger.debug("no input timeout()");
 	            synchronized (EndPointingInputStreamBase.this) {
 	            	stopAudioTransfer();
 	            	_state = COMPLETE;

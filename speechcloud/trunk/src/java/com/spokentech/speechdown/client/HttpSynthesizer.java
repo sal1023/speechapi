@@ -16,6 +16,8 @@ import java.util.logging.Logger;
 
 import javax.sound.sampled.AudioFormat;
 
+import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
 import org.apache.http.HttpEntity;
 import org.apache.http.HttpResponse;
 import org.apache.http.client.ClientProtocolException;
@@ -44,7 +46,7 @@ import com.spokentech.speechdown.common.HttpCommandFields;
  * 
  */
 public class HttpSynthesizer {
-    private static Logger _logger = Logger.getLogger(HttpSynthesizer.class.getName());
+	private static Log _logger =  LogFactory.getLog(HttpSynthesizer.class.getName());
 
     
 	public HttpSynthesizer(String devId, String key) {
@@ -105,7 +107,7 @@ public class HttpSynthesizer {
         // support mark/reset.  That is needed for stremaing using http chunk encoding on the servlet side using file upload.
 
 
-        _logger.info("Format: " + format);    	
+        _logger.debug("Format: " + format);    	
     	StringBody sampleRate = null;
     	StringBody bigEndian = null;
     	StringBody bytesPerValue = null;
@@ -159,7 +161,7 @@ public class HttpSynthesizer {
         httppost.setEntity(mpEntity);
     
         
-        _logger.info("executing request " + httppost.getRequestLine());
+        _logger.debug("executing request " + httppost.getRequestLine());
         HttpResponse response = null;
         try {
 	        response = httpclient.execute(httppost);
@@ -172,11 +174,11 @@ public class HttpSynthesizer {
         }
         HttpEntity resEntity = response.getEntity();
 
-        _logger.info("----------------------------------------");
-        _logger.info(response.getStatusLine().toString());
+        _logger.debug("----------------------------------------");
+        _logger.debug(response.getStatusLine().toString());
         if (resEntity != null) {
-            _logger.info("Response content length: " + resEntity.getContentLength());
-            _logger.info("Chunked?: " + resEntity.isChunked());
+            _logger.debug("Response content length: " + resEntity.getContentLength());
+            _logger.debug("Chunked?: " + resEntity.isChunked());
 
         }
         InputStream s = null;

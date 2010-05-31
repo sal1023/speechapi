@@ -100,7 +100,7 @@ public class MicS4EndPointingInputStream extends EndPointingInputStreamBase  {
 	 */
 	public void shutdownStream() {
 		//TODO:
-		_logger.info("Shutdown stream not implemented!");
+		_logger.debug("Shutdown stream not implemented!");
 	}
 	
 

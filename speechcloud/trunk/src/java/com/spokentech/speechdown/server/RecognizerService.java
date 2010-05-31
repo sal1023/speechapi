@@ -88,17 +88,17 @@ public class RecognizerService {
 	public Utterance Recognize(DataHandler audio, String grammar) throws GrammarException, IOException {
 		   
 		
-		_logger.info("audio attachment content type: "+ audio.getContentType());
-		_logger.info("audio attachment name: "+ audio.getName());
-		_logger.info("audio attachment class name: "+audio.getClass().getCanonicalName());
+		_logger.debug("audio attachment content type: "+ audio.getContentType());
+		_logger.debug("audio attachment name: "+ audio.getName());
+		_logger.debug("audio attachment class name: "+audio.getClass().getCanonicalName());
     	InputStream stream = null;
     	AudioInputStream as = null;
         try {
             if (audio instanceof StreamingDataHandler) {
-            	_logger.info("Data handler is instance of streamdatdaHandler");
+            	_logger.debug("Data handler is instance of streamdatdaHandler");
                 stream = ((StreamingDataHandler) audio).readOnce();
             } else {
-            	_logger.info("Data hancler is not streamdatahandler");
+            	_logger.debug("Data hancler is not streamdatahandler");
                 stream = audio.getInputStream();
             }
 	        as = AudioSystem.getAudioInputStream(stream) ;

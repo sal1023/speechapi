@@ -59,7 +59,7 @@ public class StreamEndPointingInputStream extends EndPointingInputStreamBase {
 	 * @param stream the new up stream
 	 */
 	public void setupStream(InputStream stream, AFormat format) {
-		_logger.info("Setting up the stream");
+		_logger.debug("Setting up the stream");
 		this.stream = stream;
 		this.format = format;
 

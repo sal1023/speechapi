@@ -28,7 +28,7 @@ public class ExternalTriggerEndPointer extends EndPointerBase {
         byte[] samplesBuffer = new byte[bytesToRead];
         
     	while ((!speechEnded) || (!streamEndReached)) {
-    		_logger.info("trying to read: " + samplesBuffer.length);
+    		_logger.debug("trying to read: " + samplesBuffer.length);
     		//int numBytesRead = astream.read(data, 0, data.length);
     		
             int read = 0;
@@ -63,14 +63,14 @@ public class ExternalTriggerEndPointer extends EndPointerBase {
                 //closeInputDataStream();
             }
             
-    		_logger.info(" ...read: " + totalRead +"flags (started/ended/streamEnded: "+speechStarted+speechEnded+streamEndReached);
+    		_logger.debug(" ...read: " + totalRead +"flags (started/ended/streamEnded: "+speechStarted+speechEnded+streamEndReached);
     
     		if (totalRead > 0) {
-    			//_logger.info(speechStarted+" "+speechEnded);   			
+    			//_logger.debug(speechStarted+" "+speechEnded);   			
     			if (speechStarted) {
     				//always write the entire buffer (even if we find the end we can send a little extra back to the recognizer or if we found the start inside this
     				// buffer a little silence in the beginning should not hurt)
-    				_logger.info("Writing "+totalRead + "bytes");
+    				_logger.debug("Writing "+totalRead + "bytes");
     				try {
     					ostream.write(samplesBuffer, 0, totalRead);
     				} catch (IOException e) {
@@ -80,7 +80,7 @@ public class ExternalTriggerEndPointer extends EndPointerBase {
     		}
     	}
 
-		_logger.info("Done! "+ totalSamplesRead);
+		_logger.debug("Done! "+ totalSamplesRead);
 		speechStarted = false;
 		speechEnded = false;
 		streamEndReached = false;
@@ -93,9 +93,9 @@ public class ExternalTriggerEndPointer extends EndPointerBase {
 		// Close the output stream. 
 		try {
 			ostream.flush();
-			_logger.info("flushed ostream!");
+			_logger.debug("flushed ostream!");
 			ostream.close();
-			_logger.info("Closed ostream!");
+			_logger.debug("Closed ostream!");
 			ostream = null;
 		} catch (IOException e) {
 			e.printStackTrace();
