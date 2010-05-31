@@ -85,7 +85,7 @@ public abstract class EndPointerBase implements EndPointer, Runnable{
 
 	public void triggerEnd() {
     	speechEnded=true;
-    	//closeOutputDataStream();
+    	closeOutputDataStream();
     	if( listener!= null)
     	    listener.speechEnded();
     	listener=null;
@@ -107,9 +107,9 @@ public abstract class EndPointerBase implements EndPointer, Runnable{
     
 	protected void closeOutputDataStream() {
         streamEndReached = true;
-        _logger.debug("Closing output stream");
+        _logger.info("Closing output stream");
         if (ostream != null) {
-            _logger.debug("Not null output stream");
+            _logger.info("Not null output stream");
         	try {
                 ostream.close();
             } catch (IOException e) {

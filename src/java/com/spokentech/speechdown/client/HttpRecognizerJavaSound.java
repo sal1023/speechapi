@@ -28,7 +28,6 @@ import com.spokentech.speechdown.client.util.FormatUtils;
 import com.spokentech.speechdown.common.AFormat;
 import com.spokentech.speechdown.common.HttpCommandFields;
 import com.spokentech.speechdown.common.InvalidRecognitionResultException;
-import com.spokentech.speechdown.common.RecognitionResult;
 import com.spokentech.speechdown.common.Utterance.OutputFormat;
 
 public class HttpRecognizerJavaSound extends HttpRecognizer {
@@ -49,7 +48,7 @@ public class HttpRecognizerJavaSound extends HttpRecognizer {
 	 * 
 	 * @return the recognition result
 	 */
-	public RecognitionResult recognize(String userId, String  fileName, URL grammarUrl, boolean lmflg, boolean doEndpointing, boolean batchMode, OutputFormat outMode) {
+	public String recognize(String userId, String  fileName, URL grammarUrl, boolean lmflg, boolean doEndpointing, boolean batchMode, OutputFormat outMode) {
 		
 		
     	File soundFile = new File(fileName);	 
@@ -80,7 +79,7 @@ public class HttpRecognizerJavaSound extends HttpRecognizer {
 	 * 
 	 * @return the recognition result
 	 */
-	public RecognitionResult recognize(String userId, AudioInputStream audioInputStream, Type type, URL grammarUrl, boolean lmflg, boolean doEndpointing, boolean batchMode, OutputFormat outMode) {
+	public String recognize(String userId, AudioInputStream audioInputStream, Type type, URL grammarUrl, boolean lmflg, boolean doEndpointing, boolean batchMode, OutputFormat outMode) {
         // get the audio format and send as form fields.  Cound not send aduio file with format included because audio files do not
         // support mark/reset.  That is needed for stremaing using http chunk encoding on the servlet side using file upload.
         AudioFormat format = audioInputStream.getFormat();
@@ -112,7 +111,7 @@ public class HttpRecognizerJavaSound extends HttpRecognizer {
 	 * 
 	 * @return the recognition result
 	 */
-	public  RecognitionResult recognize(String userId,TargetDataLine audioLine, URL grammarUrl, boolean lmflg, boolean doEndpointing, boolean batchMode, OutputFormat outMode) {
+	public  String recognize(String userId,TargetDataLine audioLine, URL grammarUrl, boolean lmflg, boolean doEndpointing, boolean batchMode, OutputFormat outMode) {
 
         
         //create the thread and start it
@@ -219,23 +218,19 @@ public class HttpRecognizerJavaSound extends HttpRecognizer {
         	_logger.fine("Response content length: " + resEntity.getContentLength());
         	_logger.fine("Chunked?: " + resEntity.isChunked());
         }
-        RecognitionResult r = null;
+        String result = null;
         if (resEntity != null) {
             try {
                 InputStream s = resEntity.getContent();
-                String result = readInputStreamAsString(s);
+                 result = readInputStreamAsString(s);
                 _logger.fine(result);
-                r = RecognitionResult.constructResultFromString(result);
 	            resEntity.consumeContent();
             } catch (IOException e) {
 	            // TODO Auto-generated catch block
 	            e.printStackTrace();
-            } catch (InvalidRecognitionResultException e) {
-	            // TODO Auto-generated catch block
-	            e.printStackTrace();
             }
         }
-		return r;
+		return result;
     }  
 	
 

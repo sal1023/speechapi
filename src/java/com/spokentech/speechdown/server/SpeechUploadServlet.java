@@ -38,8 +38,9 @@ import org.apache.log4j.Logger;
 import org.springframework.context.ApplicationContext;
 import org.springframework.web.context.support.WebApplicationContextUtils;
 
+import com.google.gson.Gson;
 import com.spokentech.speechdown.common.AFormat;
-import com.spokentech.speechdown.common.RecognitionResult;
+import com.spokentech.speechdown.common.Utterance;
 
 import com.spokentech.speechdown.common.HttpCommandFields;
 import com.spokentech.speechdown.common.Utterance.OutputFormat;
@@ -81,7 +82,7 @@ public class SpeechUploadServlet extends HttpServlet {
 
 	private boolean serviceLogEnabled;
 
-
+	private  Gson gson;
 	
 	/* (non-Javadoc)
 	 * @see javax.servlet.GenericServlet#init(javax.servlet.ServletConfig)
@@ -110,7 +111,8 @@ public class SpeechUploadServlet extends HttpServlet {
 		ApplicationContext context = WebApplicationContextUtils.getWebApplicationContext(getServletContext());
 		synthesizerService = (SynthesizerService)context.getBean("synthesizerService");
 		recognizerService = (RecognizerService)context.getBean("recognizerService");
-		
+	    gson = new Gson();
+		  
 	}
 
 	/* (non-Javadoc)
@@ -200,7 +202,7 @@ public class SpeechUploadServlet extends HttpServlet {
 
 		InputStream audio = null;
 		String grammarString = null;
-		RecognitionResult result = null;
+		Utterance result = null;
 		String textResult = null;
     	//TODO: grammar must be the first item processed in the iterator
 		// Parse the request
@@ -363,14 +365,25 @@ public class SpeechUploadServlet extends HttpServlet {
 					    		audio.close();
 					    		request.getInputStream().close();
 								PrintWriter out = response.getWriter();	
-								if (result == null) {
-									textResult = null;
-									_logger.info("recognition result is null");
-									out.println("recognition result is null");
-								}else {
-									textResult = result.toString();
+								if (result == null) {									
+									result = new Utterance();
+									result.setRCode("NullResult");
+									result.setRMessage("recognition result is null");
+								}
+								
+								if (outMode == OutputFormat.json) {
+									textResult = gson.toJson(result);
 									_logger.info(textResult);
 									out.println(textResult);
+								} else if (outMode == OutputFormat.text) {	
+									textResult = result.getText();
+									_logger.info(textResult);
+									out.println(textResult);								
+								} else {
+									textResult = result.getText();
+									_logger.warn("Unsupported output format, using text +outMode");
+									_logger.info(textResult);
+									out.println(textResult);	
 								}
 					    		long stop2 =  System.currentTimeMillis();
 				    			_logger.info("Done! " + stop2 +" ("+(stop2-start) +")" );
@@ -431,7 +444,7 @@ public class SpeechUploadServlet extends HttpServlet {
 	    StringBuffer result = new StringBuffer("#JSGF V1.0;\ngrammar simple;\npublic <main> =(");
 
 	    result.append(grammarString.replace(",", "|"));
-	    result.append(")*;\n");
+	    result.append(");\n");
 
 	    return result.toString();
 

@@ -18,7 +18,6 @@ import com.spokentech.speechdown.common.SpeechEventListener;
 // TODO: Auto-generated Javadoc
 /**
  * The Class StreamS4EndPointingInputStream.  This class will read on a audio stream and stream out only the audio between start and end speech.  
- * It use Sphinx4 frontend to do the endpointing. 
  */
 public class StreamEndPointingInputStream extends EndPointingInputStreamBase {
 	

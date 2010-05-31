@@ -27,8 +27,8 @@ import org.apache.log4j.Logger;
 import com.spokentech.speechdown.client.util.FormatUtils;
 import com.spokentech.speechdown.client.util.WerUtils;
 import com.spokentech.speechdown.common.AFormat;
-import com.spokentech.speechdown.common.RecognitionResult;
 import com.spokentech.speechdown.common.SpeechEventListener;
+import com.spokentech.speechdown.common.Utterance;
 import com.spokentech.speechdown.common.Utterance.OutputFormat;
 
 
@@ -57,7 +57,7 @@ public class HttpTranscriptionTest extends TestCase {
 			}
 
 			@Override
-            public void recognitionComplete(RecognitionResult rr) {
+            public void recognitionComplete(Utterance rr) {
 	            // TODO Auto-generated method stub
 	            _logger.info("recognition complete: "+rr.getText());
             }
@@ -190,14 +190,11 @@ public class HttpTranscriptionTest extends TestCase {
 	    	boolean doEndpointing = true;
 	    	boolean batchMode = true;
 			long start = System.nanoTime();
-	    	RecognitionResult r = recog.recognize(userId, fname, grammarUrl, lmflg, doEndpointing,batchMode,OutputFormat.json);
+	    	String r = recog.recognize(userId, fname, grammarUrl, lmflg, doEndpointing,batchMode,OutputFormat.json);
 			long stop = System.nanoTime();
 			long wall = (stop - start)/1000000;
-	    	System.out.println("FILE TEST: Batch mode, Server Endpointing, LM result: "+r.getText() + " took "+wall+ " ms");    	
+	    	System.out.println("FILE TEST: Batch mode, Server Endpointing, LM result: "+r + " took "+wall+ " ms");    	
 	    }
-
-
-	    
 
 
 	    private void MicInput() {   	
@@ -244,12 +241,12 @@ public class HttpTranscriptionTest extends TestCase {
 	    	boolean doEndpointing = true;
 	    	boolean lmflg = true;
 	    	boolean batchFlag = false;
-	    	RecognitionResult r = recog.recognize(userId, audioLine, grammarUrl, lmflg, batchFlag, doEndpointing,OutputFormat.text);
-	    	System.out.println("lm result: "+r.getText());	        
+	    	String r = recog.recognize(userId, audioLine, grammarUrl, lmflg, batchFlag, doEndpointing,OutputFormat.text);
+	    	System.out.println("lm result: "+r);	        
 	    	
 	        lmflg = false;
 	        r = recog.recognize(userId, audioLine, grammarUrl, lmflg,doEndpointing,batchFlag,OutputFormat.text);
-	        System.out.println("grammar result: "+r.getText());
+	        System.out.println("grammar result: "+r);
 	    	
 	    }
    

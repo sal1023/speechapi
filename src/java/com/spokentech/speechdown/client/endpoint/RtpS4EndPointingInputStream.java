@@ -137,6 +137,7 @@ public class RtpS4EndPointingInputStream extends EndPointingInputStreamBase impl
 		
 		//get the processor from the rtpStream
 		if ((_processor != null) && (_pbds != null)) {
+			_logger.info("one is not null... "+_processor +" " +_pbds);
 			//throw new IllegalStateException("Grabbing already in progress!");
 			// TODO: cancel or queue request instead (depending upon value of 'cancel-if-queue' header)
 		} else {
@@ -147,6 +148,10 @@ public class RtpS4EndPointingInputStream extends EndPointingInputStreamBase impl
 			_pbds = prp.getPbds();
 			PushBufferDataSource dataSource = (PushBufferDataSource) _processor.getDataOutput();
 
+			
+			_processor.addControllerListener(new ProcessorStarter());
+			_processor.start();
+			
 			if (dataSource == null) {
 				throw new IOException("Processor.getDataOutput() returned null!");
 			}
@@ -179,8 +184,7 @@ public class RtpS4EndPointingInputStream extends EndPointingInputStreamBase impl
 			e.printStackTrace();
 		}
 
-		_processor.addControllerListener(new ProcessorStarter());
-		_processor.start();
+
 
 		if (timeout > 0) {
 			startInputTimers(timeout);
@@ -198,6 +202,10 @@ public class RtpS4EndPointingInputStream extends EndPointingInputStreamBase impl
 		_state = WAITING_FOR_SPEECH;
 		
 	}
+	
+	
+	
+	
 
     /* (non-Javadoc)
      * @see com.spokentech.speechdown.client.rtp.EndPointingReceiver#stopAudioTransfer()
@@ -208,12 +216,12 @@ public class RtpS4EndPointingInputStream extends EndPointingInputStreamBase impl
                _rawAudioTransferHandler = null;
            }
     	
-        //if (_processor != null) {
-            //_logger.debug("Closing processor...");
-            //_replicator.removeReplicant(_pbds);
-            //_processor.close();
-            //_processor = null;
-        //}
+         if (_processor != null) {
+            _logger.debug("Closing processor...");
+            _replicator.removeReplicant(_pbds);
+            _processor.close();
+            _processor = null;
+        }
 
      
   

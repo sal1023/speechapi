@@ -22,6 +22,7 @@ import javax.sound.sampled.AudioFileFormat.Type;
 
 import org.apache.log4j.Logger;
 
+import com.google.gson.Gson;
 import com.spokentech.speechdown.client.endpoint.AudioStreamEndPointer;
 import com.spokentech.speechdown.client.endpoint.FileS4EndPointingInputStream2;
 import com.spokentech.speechdown.client.endpoint.S4EndPointer;
@@ -30,8 +31,8 @@ import com.spokentech.speechdown.client.endpoint.JavaSoundStreamS4EndPointingInp
 import com.spokentech.speechdown.client.exceptions.HttpRecognizerException;
 import com.spokentech.speechdown.client.util.FormatUtils;
 import com.spokentech.speechdown.common.AFormat;
-import com.spokentech.speechdown.common.RecognitionResult;
 import com.spokentech.speechdown.common.SpeechEventListener;
+import com.spokentech.speechdown.common.Utterance;
 import com.spokentech.speechdown.common.Utterance.OutputFormat;
 
 
@@ -60,11 +61,9 @@ public class HttpRecognizerTest extends TestCase {
 			}
 
 			@Override
-            public void recognitionComplete(RecognitionResult rr) {
+            public void recognitionComplete(Utterance rr) {
 	            // TODO Auto-generated method stub
 	            _logger.info("recognition complete: "+rr.getText());
-	            if (rr.isCflag())
-	            	_logger.info("confidence is "+rr.getConfidence());
             }
 	
 		}
@@ -73,15 +72,16 @@ public class HttpRecognizerTest extends TestCase {
 		private static Logger _logger = Logger.getLogger(HttpRecognizerTest.class);
 	    public static final String CRLF = "\r\n";
 	    
-	   
+	    private Gson gson = null;
+	    
 	    //private static String service = "http://ec2-204-236-206-143.compute-1.amazonaws.com/speechcloud/SpeechUploadServlet";    
 
 	    //private static String service = "http://ec2-174-129-20-250.compute-1.amazonaws.com/speechcloud/SpeechUploadServlet";    
-	    //private static String service = "http://localhost:8090/speechcloud/SpeechUploadServlet";    
+	    private static String service = "http://localhost:8090/speechcloud/SpeechUploadServlet";    
 	    //private static String service = "http://spokentech.net/speechcloud/SpeechUploadServlet";   
   
 	    //private static String service = "http://spokentech.net:8000/speechcloud/SpeechUploadServlet";   
-	    private static String service = "http://www.speechapi.com:8000/speechcloud/SpeechUploadServlet";   
+	    //private static String service = "http://www.speechapi.com:8000/speechcloud/SpeechUploadServlet";   
 
 	    
 	    private static AudioFormat desiredFormat;
@@ -124,6 +124,7 @@ public class HttpRecognizerTest extends TestCase {
 	    
 
 	     protected void setUp() {
+			    gson = new Gson();
 		    	recog = new HttpRecognizerJavaSound(devId, key);
 		    	recog.setService(service);
 
@@ -228,12 +229,11 @@ public class HttpRecognizerTest extends TestCase {
 	    	boolean doEndpointing = true;
 	    	boolean batchMode = true;
 			long start = System.nanoTime();
-	    	RecognitionResult r = recog.recognize(userId, fname, grammarUrl, lmflg, doEndpointing,batchMode,OutputFormat.json);
+	    	String r = recog.recognize(userId, fname, grammarUrl, lmflg, doEndpointing,batchMode,OutputFormat.json);
 			long stop = System.nanoTime();
 			long wall = (stop - start)/1000000;
-	    	System.out.println("FILE TEST: Batch mode, Server Endpointing, LM result: "+r.getText() + " took "+wall+ " ms");
-	    	if (r.isCflag())
-	    		System.out.println("confidence is "+r.getConfidence());
+	    	System.out.println("FILE TEST: Batch mode, Server Endpointing, LM result: "+r + " took "+wall+ " ms");
+
 	    }
 	    
 	    public void testRecognizeFileGrammarBatch() {
@@ -243,10 +243,15 @@ public class HttpRecognizerTest extends TestCase {
 	    	boolean doEndpointing = true;
 	    	boolean batchMode = true;
 			long start = System.nanoTime();
-	    	RecognitionResult r = recog.recognize(userId, fname, grammarUrl, lmflg, doEndpointing,batchMode,OutputFormat.json);
+	    	String r = recog.recognize(userId, fname, grammarUrl, lmflg, doEndpointing,batchMode,OutputFormat.json);
 			long stop = System.nanoTime();
 			long wall = (stop - start)/1000000;
-	    	System.out.println("FILE TEST: Batch mode, Server Endpointing, Grammar result: "+r.getText() + " took "+wall+ " ms");
+	    	System.out.println("FILE TEST: Batch mode, Server Endpointing, Grammar result: "+r + " took "+wall+ " ms");
+	    	
+	        Utterance u = gson.fromJson(r, Utterance.class);
+	        System.out.println(u.toString());
+	        
+	    	
 	    }
 	    
 	    public void testRecognizeFileLmLive() {
@@ -256,10 +261,10 @@ public class HttpRecognizerTest extends TestCase {
 	    	boolean doEndpointing = true;
 	    	boolean batchMode = false;
 			long start = System.nanoTime();
-	    	RecognitionResult r = recog.recognize(userId, fname, grammarUrl, lmflg, doEndpointing,batchMode,OutputFormat.text);
+	    	String r = recog.recognize(userId, fname, grammarUrl, lmflg, doEndpointing,batchMode,OutputFormat.text);
 			long stop = System.nanoTime();
 			long wall = (stop - start)/1000000;
-	    	System.out.println("FILETEST: Live mode, Server Endpointing, LM result: "+r.getText() + " took "+wall+ " ms");    	
+	    	System.out.println("FILETEST: Live mode, Server Endpointing, LM result: "+r + " took "+wall+ " ms");    	
 	    }
 	    
 	    public void testRecognizeFileGrammarLive() {
@@ -269,10 +274,10 @@ public class HttpRecognizerTest extends TestCase {
 	    	boolean doEndpointing = true;
 	    	boolean batchMode = false;
 			long start = System.nanoTime();
-	    	RecognitionResult r = recog.recognize(userId, fname, grammarUrl, lmflg, doEndpointing,batchMode,OutputFormat.text);
+	    	String r = recog.recognize(userId, fname, grammarUrl, lmflg, doEndpointing,batchMode,OutputFormat.text);
 			long stop = System.nanoTime();
 			long wall = (stop - start)/1000000;
-	    	System.out.println("FILE TEST: Live mode, Server endpointing, Grammar result: "+r.getText() + " took "+wall+ " ms");
+	    	System.out.println("FILE TEST: Live mode, Server endpointing, Grammar result: "+r + " took "+wall+ " ms");
 	    }
 	     
 	    
@@ -298,10 +303,10 @@ public class HttpRecognizerTest extends TestCase {
 	    	boolean batchMode = true;
 			long start = System.nanoTime();
 
-	    	RecognitionResult r = recog.recognize(userId, audioInputStream, type, null, lmflg, doEndpointing,batchMode,OutputFormat.text);
+	    	String r = recog.recognize(userId, audioInputStream, type, null, lmflg, doEndpointing,batchMode,OutputFormat.text);
 			long stop = System.nanoTime();
 			long wall = (stop - start)/1000000;
-	    	System.out.println("STREAM TEST: Batch mode, No endpointing, LM result: "+r.getText() + " took "+wall+ " ms");	    	
+	    	System.out.println("STREAM TEST: Batch mode, No endpointing, LM result: "+r + " took "+wall+ " ms");	    	
 	    	
 	    	// Get a stream for the test
 	    	try {
@@ -346,10 +351,10 @@ public class HttpRecognizerTest extends TestCase {
 	    	boolean lmflg = false;
 	    	boolean batchMode =false;
 	    	long start = System.nanoTime();
-	    	RecognitionResult r = recog.recognize(userId, audioInputStream, format, mimeType, grammarUrl, lmflg, doEndpointing,batchMode,OutputFormat.text);
+	    	String r = recog.recognize(userId, audioInputStream, format, mimeType, grammarUrl, lmflg, doEndpointing,batchMode,OutputFormat.text);
 	    	long stop = System.nanoTime();
 	    	long wall = (stop - start)/1000000;
-	    	System.out.println("STREAM TEST: Live mode, No Endpointing Grammar result: "+r.getText() + " took "+wall+ " ms");   	
+	    	System.out.println("STREAM TEST: Live mode, No Endpointing Grammar result: "+r + " took "+wall+ " ms");   	
 
 	    }
 	  
@@ -389,10 +394,10 @@ public class HttpRecognizerTest extends TestCase {
 	    	
 	    	
 	    	long start = System.nanoTime();
-	    	RecognitionResult r = recog.recognize(userId, audioInputStream, format, mimeType, grammarUrl, lmflg,doEndpointing, batchMode,OutputFormat.text);
+	    	String r = recog.recognize(userId, audioInputStream, format, mimeType, grammarUrl, lmflg,doEndpointing, batchMode,OutputFormat.text);
 	    	long stop = System.nanoTime();
 	    	long wall = (stop - start)/1000000;
-	    	System.out.println("STREAM TEST: Live mode, Endpointing, with parameter Grammar result: "+r.getText() + " took "+wall+ " ms");   	
+	    	System.out.println("STREAM TEST: Live mode, Endpointing, with parameter Grammar result: "+r + " took "+wall+ " ms");   	
     	
 	    	
 	    }
@@ -428,10 +433,10 @@ public class HttpRecognizerTest extends TestCase {
 	    	boolean doEndpointing = true;
 	    	boolean batchMode = false;
 	    	long start = System.nanoTime();
-	    	RecognitionResult r = recog.recognize(userId, audioInputStream, format, mimeType, null, lmflg,doEndpointing, batchMode,OutputFormat.text);
+	    	String r = recog.recognize(userId, audioInputStream, format, mimeType, null, lmflg,doEndpointing, batchMode,OutputFormat.text);
 	    	long stop = System.nanoTime();
 	    	long wall = (stop - start)/1000000;
-	    	System.out.println("STREAM TEST: Live mode, Endpointing, with parameter LM result: "+r.getText() + " took "+wall+ " ms");   	
+	    	System.out.println("STREAM TEST: Live mode, Endpointing, with parameter LM result: "+r + " took "+wall+ " ms");   	
 	    	
 	    }
 	     
@@ -465,7 +470,7 @@ public class HttpRecognizerTest extends TestCase {
 	    	epStream.setMimeType(s4audio);
 	    	epStream.setupStream(soundFile2);
 	 
-	    	RecognitionResult r = null;
+	    	String r = null;
 	    	
 	    	boolean lmflg = false;
 	    	boolean batchFlag = false;
@@ -479,7 +484,7 @@ public class HttpRecognizerTest extends TestCase {
 	            e.printStackTrace();
             }
 	    	
-            System.out.println("grammar result: "+r.getText());
+            System.out.println("grammar result: "+r);
 	    }
             
 	    public void testRecognizeFileS4EPGrammarAsynch() {
@@ -493,7 +498,7 @@ public class HttpRecognizerTest extends TestCase {
 	    	epStream.setMimeType(s4audio);
 	    	epStream.setupStream(soundFile2);
 	 
-	    	RecognitionResult r = null;
+	    	String r = null;
 	    	
 	    	Listener l = new Listener();
 	    	boolean lmflg = false;
@@ -532,7 +537,7 @@ public class HttpRecognizerTest extends TestCase {
 	    	epStream.setMimeType(s4audio);
 	    	epStream.setupStream(soundFile2);
 	 
-	    	RecognitionResult r = null;
+	    	String r = null;
 	    	
 	    	Listener l = new Listener();
 	    	boolean lmflg = true;
@@ -573,7 +578,7 @@ public class HttpRecognizerTest extends TestCase {
 	    	epStream.setMimeType(s4audio);
 	    	epStream.setupStream(soundFile2);
 	 
-	    	RecognitionResult r = null;
+	    	String r = null;
 	    	
 	    	Listener l = new Listener();
 	    	boolean lmflg = false;
@@ -613,7 +618,7 @@ public class HttpRecognizerTest extends TestCase {
 	    	epStream.setupStream(soundFile2);
 	
             
-	    	RecognitionResult r = null;
+	    	String r = null;
 	    	boolean lmflg = true;
 	    	boolean batchFlag = false;
 	        try {	            
@@ -626,7 +631,7 @@ public class HttpRecognizerTest extends TestCase {
 	            e.printStackTrace();
             
             }
-            System.out.println("ENDPOINT TEST: lm  result: "+r.getText());
+            System.out.println("ENDPOINT TEST: lm  result: "+r);
 	    	
 	    }
 
@@ -654,7 +659,7 @@ public class HttpRecognizerTest extends TestCase {
 	    	epStream.setMimeType(s4audio);
 	    	epStream.setupStream(audioInputStream);
 
-	    	RecognitionResult r = null;
+	    	String r = null;
 	    	boolean lmflg = true;
 	    	boolean batchFlag = false;
 	        try {
@@ -667,7 +672,7 @@ public class HttpRecognizerTest extends TestCase {
 	            e.printStackTrace();
             }
 	    	
-           System.out.println("lm result: "+r.getText());
+           System.out.println("lm result: "+r);
 	
            
        	    // get an audio stream for the test from a file
@@ -698,7 +703,7 @@ public class HttpRecognizerTest extends TestCase {
 	            e.printStackTrace();
             }
 	    	
-            System.out.println("grammar result: "+r.getText());
+            System.out.println("grammar result: "+r);
         	
 	    	
 
@@ -756,12 +761,12 @@ public class HttpRecognizerTest extends TestCase {
 	    	boolean doEndpointing = true;
 	    	boolean lmflg = true;
 	    	boolean batchFlag = false;
-	    	RecognitionResult r = recog.recognize(userId, audioLine, grammarUrl, lmflg, batchFlag, doEndpointing,OutputFormat.text);
-	    	System.out.println("lm result: "+r.getText());	        
+	    	String r = recog.recognize(userId, audioLine, grammarUrl, lmflg, batchFlag, doEndpointing,OutputFormat.text);
+	    	System.out.println("lm result: "+r);	        
 	    	
 	        lmflg = false;
 	        r = recog.recognize(userId, audioLine, grammarUrl, lmflg,doEndpointing,batchFlag,OutputFormat.text);
-	        System.out.println("grammar result: "+r.getText());
+	        System.out.println("grammar result: "+r);
 	    	
 	    }
 	    
@@ -782,7 +787,7 @@ public class HttpRecognizerTest extends TestCase {
 	    	epStream.setupStream(stream,format);
 	    	
 
-	    	RecognitionResult r = null;
+	    	String r = null;
 	    	boolean lmflg = true;
 	    	boolean batchFlag = false;
 	        try {          
@@ -794,7 +799,7 @@ public class HttpRecognizerTest extends TestCase {
 	            // TODO Auto-generated catch block
 	            e.printStackTrace();
             }    	
-            System.out.println("lm result: "+r.getText());
+            System.out.println("lm result: "+r);
 
 	    	lmflg = false;
 	    	batchFlag = false;
@@ -807,7 +812,7 @@ public class HttpRecognizerTest extends TestCase {
 	            // TODO Auto-generated catch block
 	            e.printStackTrace();
             }    	
-            System.out.println("grammar result: "+r.getText());
+            System.out.println("grammar result: "+r);
 	    	
 
 	    	

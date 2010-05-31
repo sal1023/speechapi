@@ -77,15 +77,17 @@ public class XugglerAudioStreamDataSource extends BaseDataProcessor implements S
     @Override
     public void newProperties(PropertySheet ps) throws PropertyException {
         super.newProperties(ps);
-        bytesPerRead = ps.getInt(PROP_BYTES_PER_READ);
+        create(ps.getInt(PROP_BYTES_PER_READ), ps.getComponentList(AUDIO_FILE_LISTENERS, AudioFileProcessListener.class));
+    }
 
-        //Logger logger = ps.getLogger();
+    private void create( int bytesPerRead, List<AudioFileProcessListener> listeners ) {
+        this.bytesPerRead = bytesPerRead;
 
-        // attach all pool-listeners
-        List<? extends Configurable> list = ps.getComponentList(AUDIO_FILE_LISTENERS);
-        for (Configurable configurable : list) {
-            assert configurable instanceof AudioFileProcessListener;
-            addNewFileListener((AudioFileProcessListener) configurable);
+        if( listeners != null ) {
+            // attach all pool-listeners
+            for (AudioFileProcessListener configurable : listeners) {
+                addNewFileListener(configurable);
+            }
         }
 
         initialize();

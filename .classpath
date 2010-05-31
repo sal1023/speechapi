@@ -55,5 +55,6 @@
 	<classpathentry kind="lib" path="lib/httpcore-4.0.1.jar"/>
 	<classpathentry kind="lib" path="lib/httpmime-4.0.1.jar"/>
 	<classpathentry kind="var" path="M2_REPO/com/google/code/gson/gson/1.4/gson-1.4.jar"/>
+	<classpathentry kind="lib" path="lib/jsapi-1.0-base.jar"/>
 	<classpathentry kind="output" path="target/eclipse"/>
 </classpath>

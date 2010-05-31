@@ -50,6 +50,9 @@
 		  <property name="maryDir">
 				<value>c:\thirdparty\MARY TTS</value>
 		  </property>
+		  <property name="recordingEnabled">
+				<value>@serviceLoggingFlag@</value>
+		  </property>
 
 	</bean>
 

@@ -42,14 +42,22 @@
     <!--property name="languageModelFile"          value="file:\\\C:\work\models\lm\lm_giga_64k_vp_3gram.arpa.DMP"/-->
     <property name="languageModelFile"          value="file:\\\C:\work\models\lm\wsj5kc.Z.DMP"/>
 	<!-- these are only needed to create the pool of recognizers.  Should be able to find a better way to create a recognizer without a grammar -->
-    <property name="grammarLocation"             value="resource:/com.spokentech.speechdown.server.RecognizerService!/../../grammar"/>
+    <!--property name="grammarLocation"             value="resource:/com.spokentech.speechdown.server.RecognizerService!/../../grammar"/-->
+    <property name="grammarLocation"             value="file:\\\c:\thirdparty\apache-tomcat-6.0.14\webapps\speechcloud\grammar"/>
+    
     <property name="grammarName"                 value="example"/>
 
     <property name="amPropertiesFile"   value="file:///C:/work/models/am/model2.props" />
-    <property name="amDataLocation" value="file:///C:/work/models/am/mcmodel.cd_cont_4000"/>
-    <property name="amModelDefinition" value="file:///C:/work/models/am/mcmodel.cd_cont_4000/mdef"/>
+
+    
+    <property name="amLocation" value="file:///C:/work/models/am/mcmodel.cd_cont_4000"/>
+    <property name="amDataLocation" value="/"/>
+    <property name="amModelDefinition" value="mdef"/>
+    
     <property name="dictionaryPath"  value="file:///work/models/dict/cmudict.0.7a"/>
     <property name="fillerPath" value="file:///work/models/dict/mcmodel.filler"/>
+    
+    
 
     <!-- ******************************************************** -->
     <!-- shared components configuration                           -->
@@ -166,6 +174,7 @@
         <property name="unitManager" value="unitManager"/>
         <property name="propertiesFile"
               value="${amPropertiesFile}" />
+        <property name="location" value="${amLocation}"/>
         <property name="dataLocation" value="${amDataLocation}"/>
         <property name="modelDefinition" value="${amModelDefinition}"/>
     </component>

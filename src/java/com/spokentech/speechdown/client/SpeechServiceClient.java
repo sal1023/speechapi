@@ -26,7 +26,6 @@ import com.spokentech.speechdown.client.SpeechAttachService;
 import com.spokentech.speechdown.client.SpeechLinkPortType;
 import com.spokentech.speechdown.client.SpeechLinkService;
 import com.spokentech.speechdown.common.InvalidRecognitionResultException;
-import com.spokentech.speechdown.common.RecognitionResult;
 import com.spokentech.speechdown.client.RecRequestAttachType;
 import com.spokentech.speechdown.client.RecRequestLinkType;
 import com.spokentech.speechdown.client.RecResponseType;
@@ -113,12 +112,12 @@ public class SpeechServiceClient {
     	//Make the Recognition request (returns the recognition results)
     	RecResponseType recResult = port2.recognize (recRequest);
 
-    	try {
-    	   RecognitionResult r = RecognitionResult.constructResultFromString(recResult.getSerialized());
-    	   _logger.debug("The recognition result is: "+r.getText());
-    	} catch (InvalidRecognitionResultException e) {
-    		e.printStackTrace();
-    	}
+    	//try {
+    	//   RecognitionResult r = RecognitionResult.constructResultFromString(recResult.getSerialized());
+    	//   _logger.debug("The recognition result is: "+r.getText());
+    	//} catch (InvalidRecognitionResultException e) {
+    	//	e.printStackTrace();
+    	//}
     	
     	
     	//Synthesize request (returns a wav file attachment)

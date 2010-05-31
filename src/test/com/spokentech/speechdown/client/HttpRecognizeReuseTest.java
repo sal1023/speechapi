@@ -34,8 +34,8 @@ import com.spokentech.speechdown.client.exceptions.HttpRecognizerException;
 import com.spokentech.speechdown.client.exceptions.StreamInUseException;
 import com.spokentech.speechdown.client.util.FormatUtils;
 import com.spokentech.speechdown.common.AFormat;
-import com.spokentech.speechdown.common.RecognitionResult;
 import com.spokentech.speechdown.common.SpeechEventListener;
+import com.spokentech.speechdown.common.Utterance;
 import com.spokentech.speechdown.common.Utterance.OutputFormat;
 
 
@@ -64,7 +64,7 @@ public class HttpRecognizeReuseTest extends TestCase {
 			}
 
 			@Override
-            public void recognitionComplete(RecognitionResult rr) {
+			public void recognitionComplete(Utterance rr) {
 	            // TODO Auto-generated method stub
 	            _logger.info("recognition complete: "+rr.getText());
             }
@@ -145,7 +145,7 @@ public class HttpRecognizeReuseTest extends TestCase {
 	    	epStream.setMimeType(s4audio);
 	    	epStream.setupStream(soundFile2);
 	 
-	    	RecognitionResult r = null;
+	    	String r = null;
 	    	
 	    	boolean lmflg = false;
 	    	boolean batchFlag = false;
@@ -159,7 +159,7 @@ public class HttpRecognizeReuseTest extends TestCase {
 	            e.printStackTrace();
             }
 	    	
-            System.out.println("grammar result: "+r.getText());
+            System.out.println("grammar result: "+r);
 	    }
             
 
@@ -196,7 +196,7 @@ public class HttpRecognizeReuseTest extends TestCase {
 	        _logger.info("took "+t3+ "ms. to create basic endpointing stream");
 	    	
 
-	    	RecognitionResult r = null;
+	    	String r = null;
 	    	boolean lmflg = false;
 	    	boolean batchFlag = true;
 	        try {          
@@ -208,7 +208,7 @@ public class HttpRecognizeReuseTest extends TestCase {
 	            // TODO Auto-generated catch block
 	            e.printStackTrace();
             }    	
-            System.out.println("grammar result: "+r.getText());
+            System.out.println("grammar result: "+r);
 
             
     	
@@ -429,7 +429,7 @@ public class HttpRecognizeReuseTest extends TestCase {
 	    	epStream.setMimeType(s4audio);
 	    	epStream.setupStream(soundFile2);
 	 
-	    	RecognitionResult r = null;
+	    	String r = null;
 	    	
 	    	Listener l = new Listener();
 	    	boolean lmflg = false;

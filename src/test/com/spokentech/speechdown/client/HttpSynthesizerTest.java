@@ -17,8 +17,9 @@ import javax.sound.sampled.AudioFormat.Encoding;
 
 import org.apache.log4j.Logger;
 
-import com.spokentech.speechdown.common.RecognitionResult;
 import com.spokentech.speechdown.common.SpeechEventListener;
+import com.spokentech.speechdown.common.Utterance;
+
 import junit.framework.TestCase;
 import org.tritonus.share.sampled.Encodings;
 
@@ -44,8 +45,8 @@ public class HttpSynthesizerTest extends TestCase {
 
 	    }
 
-		@Override
-        public void recognitionComplete(RecognitionResult rr) {
+	    @Override
+        public void recognitionComplete(Utterance rr) {
 	        // TODO Auto-generated method stub
 	        
         }
@@ -57,7 +58,7 @@ public class HttpSynthesizerTest extends TestCase {
     public static final String CRLF = "\r\n";
     
    
-    private static String service = "http://spokentech.net/speechcloud/SpeechDownloadServlet";  
+    private static String service = "http://www.speechapi.com:8000/speechcloud/SpeechDownloadServlet";  
     //private static String service = "http://ec2-174-129-20-250.compute-1.amazonaws.com/speechcloud/SpeechDownloadServlet";  
     //private static String service = "http://localhost:8090/speechcloud/SpeechDownloadServlet";    
 
@@ -104,11 +105,11 @@ public class HttpSynthesizerTest extends TestCase {
 		    	format2 = new AudioFormat(
 		                //Encodings.getEncoding("MPEG1L3"),
 		    			new Encoding("MPEG1L3"),
-		                44100,
+		                11025,
 		                32,
 		                1,
-		                4,
-		                44100,
+		                -1,
+		                -1,
 		                true);
 		    	
 		        format3 = new AudioFormat ( 44100, 32, channels, signed, bigEndian);             

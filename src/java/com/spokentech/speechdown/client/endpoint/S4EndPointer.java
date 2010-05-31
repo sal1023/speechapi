@@ -11,6 +11,7 @@ import com.spokentech.speechdown.client.sphinx.SpeechDataStreamer;
 import com.spokentech.speechdown.common.AFormat;
 import com.spokentech.speechdown.common.SpeechEventListener;
 import com.spokentech.speechdown.common.sphinx.AudioStreamDataSource;
+import com.spokentech.speechdown.common.sphinx.SpeechClassifier;
 import com.spokentech.speechdown.common.sphinx.SpeechDataMonitor;
 import com.spokentech.speechdown.server.recog.StreamDataSource;
 
@@ -18,7 +19,6 @@ import edu.cmu.sphinx.frontend.DataBlocker;
 import edu.cmu.sphinx.frontend.DataProcessor;
 import edu.cmu.sphinx.frontend.FrontEnd;
 import edu.cmu.sphinx.frontend.endpoint.NonSpeechDataFilter;
-import edu.cmu.sphinx.frontend.endpoint.SpeechClassifier;
 import edu.cmu.sphinx.frontend.endpoint.SpeechMarker;
 import edu.cmu.sphinx.frontend.feature.BatchCMN;
 import edu.cmu.sphinx.frontend.feature.DeltasFeatureExtractor;
@@ -141,7 +141,7 @@ public  class S4EndPointer implements EndPointer {
 	   components.add (new DataBlocker(10));
 	   components.add (new SpeechClassifier(10,0.002,10.0,10.0));
 	   //components.add (new SpeechMarker(200,500,100,50,100));
-	   components.add (new SpeechMarker(200,250,200,50,200));
+	   components.add (new SpeechMarker(200,250,200,50,200, 15));
 	   components.add (new NonSpeechDataFilter());
 	   SpeechDataMonitor mon = new SpeechDataMonitor();
 	   components.add (mon);
