@@ -2,7 +2,6 @@ package com.spokentech.speechdown.server;
 
 import java.io.IOException;
 import java.io.InputStream;
-import java.io.OutputStream;
 import java.io.PrintWriter;
 
 import javax.activation.DataHandler;
@@ -10,7 +9,6 @@ import javax.servlet.http.HttpServletResponse;
 import javax.sound.sampled.AudioInputStream;
 import javax.sound.sampled.AudioSystem;
 import javax.sound.sampled.UnsupportedAudioFileException;
-import javax.sound.sampled.AudioFormat.Encoding;
 import javax.speech.recognition.GrammarException;
 import org.apache.commons.pool.ObjectPool;
 import org.apache.log4j.Logger;
@@ -19,7 +17,7 @@ import org.jvnet.staxex.StreamingDataHandler;
 import com.spokentech.speechdown.common.AFormat;
 import com.spokentech.speechdown.common.Utterance;
 import com.spokentech.speechdown.common.Utterance.OutputFormat;
-import com.spokentech.speechdown.server.domain.HttpRequest;
+import com.spokentech.speechdown.server.domain.SpeechRequestDTO;
 import com.spokentech.speechdown.server.recog.RecEngine;
 import com.spokentech.speechdown.server.util.pool.AbstractPoolableObjectFactory;
 
@@ -136,7 +134,7 @@ public class RecognizerService {
     }
 
 	//grammar method
-	public Utterance Recognize(InputStream as, String grammar, String mimeType, AFormat af, OutputFormat outMode, boolean doEndpointing, boolean cmnBatch, HttpRequest hr) {
+	public Utterance Recognize(InputStream as, String grammar, String mimeType, AFormat af, OutputFormat outMode, boolean doEndpointing, boolean cmnBatch, SpeechRequestDTO hr) {
 
 		_logger.debug("Before borrow" + System.currentTimeMillis());
 		
@@ -183,7 +181,7 @@ public class RecognizerService {
 
 	
 	//language model method (no grammar)
-	public Utterance Recognize(InputStream as, String mimeType, AFormat af, OutputFormat outMode, boolean doEndpointing, boolean cmnBatch, HttpRequest hr) {
+	public Utterance Recognize(InputStream as, String mimeType, AFormat af, OutputFormat outMode, boolean doEndpointing, boolean cmnBatch, SpeechRequestDTO hr) {
 		_logger.debug("Before borrow" + System.currentTimeMillis());
 		
         RecEngine rengine = null;
@@ -223,7 +221,7 @@ public class RecognizerService {
 	    return results;	
     }
 
-	public String Transcribe(InputStream audio, String mimeType, AFormat af, OutputFormat outMode, PrintWriter out, HttpServletResponse response, HttpRequest hr) {
+	public String Transcribe(InputStream audio, String mimeType, AFormat af, OutputFormat outMode, PrintWriter out, HttpServletResponse response, SpeechRequestDTO hr) {
 		_logger.debug("Before borrow" + System.currentTimeMillis());
 		
     	

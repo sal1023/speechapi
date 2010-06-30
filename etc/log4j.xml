@@ -19,11 +19,12 @@
     <priority value="info"/>
   </category>
     <category name="com.spokentech.speechdown.common">
-    <priority value="debug"/>
+    <priority value="info"/>
   </category>
       <category name="com.spokentech.speechdown.server">
-    <priority value="debug"/>
+    <priority value="info"/>
   </category>
+
   <category name="com.spokentech.speechdown.client">
     <priority value="debug"/>
   </category>

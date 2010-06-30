@@ -44,7 +44,7 @@ import com.spokentech.speechdown.common.Utterance;
 
 import com.spokentech.speechdown.common.HttpCommandFields;
 import com.spokentech.speechdown.common.Utterance.OutputFormat;
-import com.spokentech.speechdown.server.domain.HttpRequest;
+import com.spokentech.speechdown.server.domain.SpeechRequestDTO;
 import com.spokentech.speechdown.server.util.ServiceLogger;
 
 /**
@@ -299,7 +299,7 @@ public class SpeechUploadServlet extends HttpServlet {
 				    	audio = stream;
 				    	try {
 			    			//log the http request parameters to the database
-		    		        HttpRequest hr = new HttpRequest();
+		    		        SpeechRequestDTO hr = new SpeechRequestDTO();
 			    			if (serviceLogEnabled) {
 			    		        hr.setProtocol(request.getProtocol());
 				    		    hr.setScheme(request.getScheme());	

@@ -6,7 +6,7 @@ import java.io.OutputStream;
 import javax.sound.sampled.AudioFormat;
 import javax.sound.sampled.UnsupportedAudioFileException;
 
-import com.spokentech.speechdown.server.domain.HttpRequest;
+import com.spokentech.speechdown.server.domain.SpeechRequestDTO;
 
 public interface SynthesizerService {
 
@@ -15,6 +15,6 @@ public interface SynthesizerService {
 	public File ttsFile(String text, AudioFormat format, String mime);
 
 	public void streamTTS(String text, AudioFormat format, String mime, String voice,
-	        OutputStream out, HttpRequest hr) throws UnsupportedAudioFileException;
+	        OutputStream out, SpeechRequestDTO hr) throws UnsupportedAudioFileException;
 
 }

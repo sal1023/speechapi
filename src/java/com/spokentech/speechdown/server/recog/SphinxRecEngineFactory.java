@@ -38,7 +38,7 @@ import com.spokentech.speechdown.server.util.pool.ObjectPoolUtil;
 import com.spokentech.speechdown.server.util.pool.PoolableObject;
 
 /**
- * Serves to create a pool of {@link org.speechforge.cairo.server.recog.sphinx.SphinxRecEngine} instances.
+ * Serves to create a pool of {@link org.speechforge.cairo.PoolableSphinxRecEngine.recog.sphinx.SphinxRecEngine} instances.
  *
  * @author Niels Godfredsen {@literal <}<a href="mailto:ngodfredsen@users.sourceforge.net">ngodfredsen@users.sourceforge.net</a>{@literal >}
  */
@@ -121,7 +121,7 @@ public class SphinxRecEngineFactory extends AbstractPoolableObjectFactory {
     @Override
     public PoolableObject makeObject() throws Exception {
 
-    	SphinxRecEngine s =  new SphinxRecEngine(_cm, grammarManager,prefixId, id++,recordingFilePath,recordingEnabled);
+    	PoolableSphinxRecEngine s =  new PoolableSphinxRecEngine(_cm, grammarManager,prefixId, id++,recordingFilePath,recordingEnabled);
     	return s;
     }
 

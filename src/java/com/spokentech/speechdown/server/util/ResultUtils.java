@@ -15,7 +15,7 @@ import com.spokentech.speechdown.common.Utterance;
 import com.spokentech.speechdown.common.WordData;
 import com.spokentech.speechdown.common.rule.RuleMatch;
 import com.spokentech.speechdown.common.rule.SimpleNLRuleHandler;
-import com.spokentech.speechdown.server.recog.SphinxRecEngine;
+import com.spokentech.speechdown.server.recog.PoolableSphinxRecEngine;
 
 import edu.cmu.sphinx.decoder.search.Token;
 import edu.cmu.sphinx.frontend.Data;
@@ -35,7 +35,7 @@ import edu.cmu.sphinx.util.LogMath;
 public class ResultUtils {
 	
     private static DecimalFormat format = new DecimalFormat("#.#####");
-    private static Logger _logger = Logger.getLogger(SphinxRecEngine.class);
+    private static Logger _logger = Logger.getLogger(ResultUtils.class);
 
     protected final static String OUTOFGRAMMAR = "<unk>";
     
@@ -78,7 +78,11 @@ public class ResultUtils {
             if (u.getText() != null  && ruleGrammar != null && !u.isOog()) {
                 try {
                     RuleParse ruleParse = ruleGrammar.parse(u.getText(), null);
-                    u.setRuleMatches(SimpleNLRuleHandler.getRuleMatches(ruleParse));
+                    if (ruleParse != null) {
+                    	u.setRuleMatches(SimpleNLRuleHandler.getRuleMatches(ruleParse));
+                    } else {
+                    	_logger.warn("jsgf rules were null, could not parse");
+                    }
                 } catch (GrammarException e) {
                     _logger.info("GrammarException encountered! "+ e.getLocalizedMessage());
                 }
@@ -121,36 +125,48 @@ public class ResultUtils {
 			Collections.reverse(u.getWords());
     		
     		// add the confidence data to the utterance
-    		if (cs!=null) {
-    			ConfidenceResult cr = cs.score(r);
-    			Path best = cr.getBestHypothesis();				
-    			//LogMath lm = best.getLogMath();
+			//TODO: Add back confidence when it is working well, not worth the processing time now
+			//also getting java.lang.Error: Can't find WordResult in ConfidenceResult slot 11 for word family
+			//             at edu.cmu.sphinx.result.MAPConfidenceScorer.score(MAPConfidenceScorer.java:117)	
+			//can that really be so bad as to not be recoverable?
+    		if (false) {  //(cs!=null) {
     			
-    			double confidence = best.getLogMath().logToLinear((float) best.getConfidence());
-    			u.setConfidence(confidence);
-    			
-    			WordResult[]  words = best.getWords();
-    			for (WordResult wr : words) {
-    				printWordConfidence(wr);
-    			}
-
-    			List l = u.getWords();
-    			int c = 0;
-    			_logger.debug(words.length+"/"+u.getWords().size());
-    			
-    			//loop thru the confidence words
-    			for (WordResult wr : words) {
-    				if(!wr.isFiller()) {
-    					WordData x = u.getWords().get(c);
-
-    					x.setConfidence(wr.getLogMath().logToLinear((float) wr.getConfidence())) ;
-    	
-    					_logger.debug(c+": "+x.toString());
-    					_logger.debug(c+" , "+ wr.getPronunciation().getWord().getSpelling()+" / "+u.getWords().get(c).getWord());
-    					c++;
-    				}
-    			}
+    			//defensive try/catch -- seems to be some problems on occasion with getting confidence
+    			try {
+	    			ConfidenceResult cr = cs.score(r);
+	    			Path best = cr.getBestHypothesis();				
+	    			//LogMath lm = best.getLogMath();
+	    			
+	    			double confidence = best.getLogMath().logToLinear((float) best.getConfidence());
+	    			u.setConfidence(confidence);
+	    			
+	    			WordResult[]  words = best.getWords();
+	    			//for (WordResult wr : words) {
+	    			//	printWordConfidence(wr);
+	    			//}
+	
+	    			List l = u.getWords();
+	    			int c = 0;
+	    			_logger.debug(words.length+"/"+u.getWords().size());
+	    			
+	    			//loop thru the confidence words
+	    			for (WordResult wr : words) {
+	    				if(!wr.isFiller()) {
+	    					WordData x = u.getWords().get(c);
+	
+	    					x.setConfidence(wr.getLogMath().logToLinear((float) wr.getConfidence())) ;
+	    	
+	    					_logger.debug(c+": "+x.toString());
+	    					_logger.debug(c+" , "+ wr.getPronunciation().getWord().getSpelling()+" / "+u.getWords().get(c).getWord());
+	    					c++;
+	    				}
+	    			}
+	        	} catch (Exception e) {
+	        		_logger.warn("Problem with getting confidence\n "+e.getMessage()+"\n"+r.getBestFinalResultNoFiller());
+	        		
+	        	}
     		}
+
 
     		return u;
     	}

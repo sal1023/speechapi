@@ -3,7 +3,7 @@
 
 <hibernate-mapping package="com.spokentech.speechdown.server.domain">
 
-    <class name="HttpRequest" table="saas_httprequest">
+    <class name="SpeechRequestDTO" table="saas_httprequest">
         <id name="id" column="id">
             <generator class="native"/>
         </id>

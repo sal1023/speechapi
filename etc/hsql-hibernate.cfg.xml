@@ -32,7 +32,7 @@
         <property name="hbm2ddl.auto">create</property>
 
 
-        <mapping resource="com/spokentech/speechdown/server/domain/HttpRequest.hbm.xml"/>
+        <mapping resource="com/spokentech/speechdown/server/domain/SpeechRequest.hbm.xml"/>
         <mapping resource="com/spokentech/speechdown/server/domain/RecogRequest.hbm.xml"/>
         <mapping resource="com/spokentech/speechdown/server/domain/SynthRequest.hbm.xml"/>
 

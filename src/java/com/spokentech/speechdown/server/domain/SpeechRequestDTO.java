@@ -2,7 +2,7 @@ package com.spokentech.speechdown.server.domain;
 
 import java.util.Date;
 
-public class HttpRequest {
+public class SpeechRequestDTO {
 	
 	private Long id;
     private String protocol;
