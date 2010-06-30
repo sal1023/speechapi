@@ -13,7 +13,7 @@ import javax.sound.sampled.AudioFileFormat.Type;
 import org.apache.commons.pool.ObjectPool;
 import org.apache.log4j.Logger;
 
-import com.spokentech.speechdown.server.domain.HttpRequest;
+import com.spokentech.speechdown.server.domain.SpeechRequestDTO;
 import com.spokentech.speechdown.server.tts.SynthEngine;
 import com.spokentech.speechdown.server.util.pool.AbstractPoolableObjectFactory;
 
@@ -155,7 +155,7 @@ public class PoolingSynthesizerService implements SynthesizerService {
      /* (non-Javadoc)
      * @see com.spokentech.speechdown.server.SynthesizerService#streamTTS(java.lang.String, javax.sound.sampled.AudioFormat, javax.sound.sampled.AudioFileFormat.Type, java.lang.String, java.io.OutputStream)
      */
-    public void streamTTS(String text, AudioFormat format, String mime, String voice, OutputStream out,HttpRequest hr) {
+    public void streamTTS(String text, AudioFormat format, String mime, String voice, OutputStream out,SpeechRequestDTO hr) {
 
     	 File ttsFile = ttsFile(text,format,mime);
 

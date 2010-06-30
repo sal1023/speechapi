@@ -5,14 +5,14 @@ import java.util.List;
 import org.hibernate.Session;
 import org.hibernate.Transaction;
 
-import com.spokentech.speechdown.server.domain.HttpRequest;
+import com.spokentech.speechdown.server.domain.SpeechRequestDTO;
 import com.spokentech.speechdown.server.domain.RecogRequest;
 import com.spokentech.speechdown.server.domain.SynthRequest;
 
 
 public class ServiceLogger {
 
-	public static void logHttpRequest(HttpRequest hr) throws Exception {
+	public static void logHttpRequest(SpeechRequestDTO hr) throws Exception {
 		
 	     Transaction transaction = null;
 	     Session session = null;
@@ -32,7 +32,7 @@ public class ServiceLogger {
 	
 	
   
-	public static void logRecogRequest(RecogRequest rr,HttpRequest hr) throws Exception {
+	public static void logRecogRequest(RecogRequest rr,SpeechRequestDTO hr) throws Exception {
 		
 		
 	     Transaction transaction = null;
@@ -51,7 +51,7 @@ public class ServiceLogger {
 		
     }
 	
-	public static void logSynthRequest(SynthRequest sr,HttpRequest hr) throws Exception {
+	public static void logSynthRequest(SynthRequest sr,SpeechRequestDTO hr) throws Exception {
 		
 	     Transaction transaction = null;
 	     Session session = null;
@@ -80,7 +80,7 @@ public class ServiceLogger {
 
 
 	    for (int i = 0; i < result.size(); i++) {
-	    	HttpRequest item = (HttpRequest) result.get(i);
+	    	SpeechRequestDTO item = (SpeechRequestDTO) result.get(i);
 	        System.out.println(
 	                "HTTP Log: " + item.getMethod() + item.getScheme() + item.getContextPath() +" Time: " + item.getDate()
 	        );

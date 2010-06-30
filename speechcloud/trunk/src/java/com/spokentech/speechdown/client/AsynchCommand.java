@@ -1,9 +1,18 @@
+/*
+ * Copyright (c) 2009-2010 Spokentech Inc.  All rights reserved.
+ *  
+ * This file is part of Spokentech speech server
+ *  
+ * See the file "license.terms" for information on usage and
+ * redistribution of this file, and for a DISCLAIMER OF ALL 
+ * WARRANTIES.
+ *
+ */
 package com.spokentech.speechdown.client;
 
 import java.io.IOException;
 import java.io.InputStream;
 import java.util.UUID;
-import java.util.logging.Logger;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;

@@ -32,16 +32,16 @@ import com.spokentech.speechdown.common.sphinx.IdentityStage;
 import com.spokentech.speechdown.common.sphinx.InsertSpeechSignalStage;
 import com.spokentech.speechdown.common.sphinx.SpeechDataMonitor;
 import com.spokentech.speechdown.common.sphinx.WavWriter;
-import com.spokentech.speechdown.server.domain.HttpRequest;
+import com.spokentech.speechdown.server.domain.SpeechRequestDTO;
 import com.spokentech.speechdown.server.domain.RecogRequest;
 import com.spokentech.speechdown.server.util.ResultUtils;
 import com.spokentech.speechdown.server.util.ServiceLogger;
 import com.spokentech.speechdown.server.util.pool.AbstractPoolableObject;
+import com.spokentech.speechdown.server.util.pool.PoolableObject;
 
 import edu.cmu.sphinx.decoder.ResultListener;
 
 import edu.cmu.sphinx.decoder.scorer.AcousticScorer;
-
 
 import edu.cmu.sphinx.frontend.DataBlocker;
 import edu.cmu.sphinx.frontend.DataProcessor;
@@ -51,7 +51,8 @@ import edu.cmu.sphinx.frontend.endpoint.SpeechClassifier;
 import edu.cmu.sphinx.frontend.endpoint.SpeechMarker;
 import edu.cmu.sphinx.frontend.feature.BatchCMN;
 import edu.cmu.sphinx.frontend.feature.DeltasFeatureExtractor;
-import edu.cmu.sphinx.frontend.feature.LDA;
+import edu.cmu.sphinx.frontend.feature.FeatureTransform;
+
 import edu.cmu.sphinx.frontend.feature.LiveCMN;
 import edu.cmu.sphinx.frontend.filter.Dither;
 import edu.cmu.sphinx.frontend.filter.Preemphasizer;
@@ -60,13 +61,12 @@ import edu.cmu.sphinx.frontend.transform.DiscreteCosineTransform;
 import edu.cmu.sphinx.frontend.transform.DiscreteFourierTransform;
 import edu.cmu.sphinx.frontend.window.RaisedCosineWindower;
 import edu.cmu.sphinx.jsapi.JSGFGrammar;
+import edu.cmu.sphinx.linguist.acoustic.tiedstate.Loader;
 import edu.cmu.sphinx.linguist.acoustic.tiedstate.Sphinx3Loader;
 import edu.cmu.sphinx.recognizer.Recognizer;
 import edu.cmu.sphinx.recognizer.StateListener;
 import edu.cmu.sphinx.recognizer.Recognizer.State;
-import edu.cmu.sphinx.result.ConfidenceResult;
 import edu.cmu.sphinx.result.ConfidenceScorer;
-import edu.cmu.sphinx.result.Path;
 import edu.cmu.sphinx.result.Result;
 import edu.cmu.sphinx.result.WordResult;
 import edu.cmu.sphinx.util.LogMath;
@@ -75,32 +75,23 @@ import edu.cmu.sphinx.util.props.PropertyException;
 import edu.cmu.sphinx.util.props.PropertySheet;
 
 
-public class SphinxRecEngine extends AbstractPoolableObject implements RecEngine {
+public class SphinxRecEngine implements RecEngine {
 
     private static Logger _logger = Logger.getLogger(SphinxRecEngine.class);
     
     private static DecimalFormat format = new DecimalFormat("#.#####");
-
-    
+ 
 	public static final short WAITING_FOR_SPEECH = 0;
 	public static final short SPEECH_IN_PROGRESS = 1;
 	public static final short COMPLETE = 2;
 	protected volatile short _state = COMPLETE;
 
-	private Sphinx3Loader _loader;
-    private AcousticScorer  _scorer;
-
 	private FrontEnd fe = null;
-    private Recognizer _recognizer;
-    private JSGFGrammar _jsgfGrammar;
+
     private boolean hotword = false;       
-	private GrammarManager _grammarManager;
 	private ConfigurationManager _cm;
 	private int _id;
 	
-
-	private String recordingFilePath;
-	private boolean recordingEnabled;
     private FileWriter outTextFile;
 
 	protected /*static*/ Timer _timer = new Timer();
@@ -124,43 +115,51 @@ public class SphinxRecEngine extends AbstractPoolableObject implements RecEngine
 	DiscreteCosineTransform discreteCosineTransform ;
 	BatchCMN batchCmn ;
 	LiveCMN liveCmn;
-	LDA lda;
+	FeatureTransform lda;
 	DeltasFeatureExtractor deltasFeatureExtractor;
 	private WavWriter recorder; 
-	
-	private  ConfidenceScorer cs;
-	private  LogMath logm;
-	
-    private boolean transcribeMode = false;
-    
-    Gson gson = new Gson();
-	  
 
+	private Recognizer recognizer;
+    private JSGFGrammar jsgf;
+	private GrammarManager grammarManager;
+	private Loader loader;
+    private AcousticScorer  scorer;
+	private ConfidenceScorer condfidenceScorer;
+	private LogMath logMath;
+	private String recordingFilePath;
+	private boolean recordingEnabled;
+
+
+
+	private boolean transcribeMode = false;
+
+    Gson gson = new Gson();
+
+    
+    public SphinxRecEngine() {
+	    super();
+    }
     
     public SphinxRecEngine(ConfigurationManager cm, GrammarManager grammarManager,String prefixId, int id, String recordingFilePath, boolean recordingEnabled) throws IOException, PropertyException, InstantiationException {
 
     	_logger.debug("Creating a recognizer "+prefixId +"recognizer"+id);
-    	_recognizer = (Recognizer) cm.lookup(prefixId+"recognizer"+id);
+    	recognizer = (Recognizer) cm.lookup(prefixId+"recognizer"+id);
        
-    	//SAL (comment)
-    	_recognizer.allocate();
+    	recognizer.allocate();
 
+	    jsgf = (JSGFGrammar) cm.lookup("grammar");
+	    this.grammarManager = grammarManager;
 
-	    _jsgfGrammar = (JSGFGrammar) cm.lookup("grammar");
-	    _grammarManager = grammarManager;
-
-    	_loader = (Sphinx3Loader) cm.lookup("loader");
+    	loader = (Sphinx3Loader) cm.lookup("loader");
         _cm = cm;
         _id = id;
-		_scorer = (AcousticScorer)_cm.lookup(prefixId+"scorer"+id);
-
+		scorer = (AcousticScorer)_cm.lookup(prefixId+"scorer"+id);
 
         MyStateListener stateListener =  new MyStateListener();
         MyResultListener resultListener = new MyResultListener();
-		_recognizer.addResultListener(resultListener);
+		recognizer.addResultListener(resultListener);
 
-		_recognizer.addStateListener(stateListener);
-
+		recognizer.addStateListener(stateListener);
 
     	this.recordingEnabled = recordingEnabled;
     	
@@ -185,21 +184,97 @@ public class SphinxRecEngine extends AbstractPoolableObject implements RecEngine
     	//create frontend elements (to be assembled into frontends at run time)
     	createFrontEndElements();
     	
-    	
     	// obtain scorer from configuration manager
-        cs = (ConfidenceScorer) cm.lookup("confidenceScorer");
+        condfidenceScorer = (ConfidenceScorer) cm.lookup("confidenceScorer");
         ResultUtils.setLogm((LogMath) cm.lookup("logMath"));
-        
-
-    	
     }
     
+    //constructor that does not use configuration manager (more convenient for creating pools)
+    public SphinxRecEngine(Recognizer recognizer, JSGFGrammar jsgf, GrammarManager grammarManager,
+    						Loader loader, AcousticScorer scorer,ConfidenceScorer cScorer,LogMath lm,
+    						String recordingFilePath, boolean recordingEnabled) throws IOException, PropertyException, InstantiationException {
+   	
+    	//prototypes
+    	this.recognizer = recognizer;      
+    	this.recognizer.allocate();
+	    this.jsgf = jsgf;
+	    this.grammarManager = grammarManager;
+        condfidenceScorer = cScorer;
+	    
+	    //singletons
+    	this.loader = loader;
+		this.scorer = scorer;
 
 
+        MyStateListener stateListener =  new MyStateListener();
+        MyResultListener resultListener = new MyResultListener();
+		recognizer.addResultListener(resultListener);
 
+		recognizer.addStateListener(stateListener);
+
+    	this.recordingEnabled = recordingEnabled;
+    	
+    	Date dateNow = new Date ();
+        SimpleDateFormat dateformatMMDDYYYY = new SimpleDateFormat("MMddyyyy");
+ 
+        StringBuilder nowMMDDYYYY = new StringBuilder( dateformatMMDDYYYY.format( dateNow ) );
+    	this.recordingFilePath = recordingFilePath;
+    	
+    	// todo:  should be a single filerwriter (but then it must be threadsafe), else each recognizer maybe should have its own file...
+    	// Not really sure of what happens when there is a many Filewriters with the same filename
+    	if (recordingEnabled) {
+		    try {
+		    	outTextFile = new FileWriter(recordingFilePath+"/"+nowMMDDYYYY+".txt",true);
+		    } catch (IOException e) {
+		        // TODO Auto-generated catch block
+		        e.printStackTrace();
+		    }
+    	}
+
+    	//create frontend elements (to be assembled into frontends at run time)
+    	createFrontEndElements();
+
+        ResultUtils.setLogm(lm);
+    }
+    
+    
+    
+    
+    //constructor that does not use configuration manager (more convenient for creating pools) for setter injection
+    public void startup()  {
+
+    	recognizer.allocate();
+
+        MyStateListener stateListener =  new MyStateListener();
+        MyResultListener resultListener = new MyResultListener();
+		recognizer.addResultListener(resultListener);
+		recognizer.addStateListener(stateListener);
+
+    	Date dateNow = new Date ();
+        SimpleDateFormat dateformatMMDDYYYY = new SimpleDateFormat("MMddyyyy");
+ 
+        StringBuilder nowMMDDYYYY = new StringBuilder( dateformatMMDDYYYY.format( dateNow ) );
+    	//this.recordingFilePath = recordingFilePath;
+    	
+    	// todo:  should be a single filerwriter (but then it must be threadsafe), else each recognizer maybe should have its own file...
+    	// Not really sure of what happens when there is a many Filewriters with the same filename
+    	if (recordingEnabled) {
+		    try {
+		    	outTextFile = new FileWriter(recordingFilePath+"/"+nowMMDDYYYY+".txt",true);
+		    } catch (IOException e) {
+		        // TODO Auto-generated catch block
+		        e.printStackTrace();
+		    }
+    	}
+
+    	//create frontend elements (to be assembled into frontends at run time)
+    	createFrontEndElements();
+
+        ResultUtils.setLogm(logMath);
+    }
 
 	//Recognize using language mode
-    public Utterance recognize(InputStream as, String mimeType, AFormat af, OutputFormat outMode, boolean doEndpointing, boolean cmnBatch, HttpRequest hr) {
+    public Utterance recognize(InputStream as, String mimeType, AFormat af, OutputFormat outMode, boolean doEndpointing, boolean cmnBatch, SpeechRequestDTO hr) {
 
     	long  start = System.nanoTime();
     	long startTime= System.currentTimeMillis();
@@ -300,7 +375,7 @@ public class SphinxRecEngine extends AbstractPoolableObject implements RecEngine
 		if (r != null) {
 			//TODO: change to return Utterance object that can be serialized to json or plant text (see transcribe method)
 			//current approach is a bit of a hack, by constructing with a json flag.
-        	utterance = ResultUtils.getAllResults(r, false, false,cs);
+        	utterance = ResultUtils.getAllResults(r, false, false,condfidenceScorer);
         	utterance.setRCode("Success");
 	    } else {
 	    	utterance = new Utterance();
@@ -311,7 +386,7 @@ public class SphinxRecEngine extends AbstractPoolableObject implements RecEngine
         return utterance;
     }
 	//recognize using a grammar
-	public Utterance recognize(InputStream as, String mimeType, String grammar, AFormat af, OutputFormat outMode,  boolean doEndpointing, boolean cmnBatch, HttpRequest hr) {
+	public Utterance recognize(InputStream as, String mimeType, String grammar, AFormat af, OutputFormat outMode,  boolean doEndpointing, boolean cmnBatch, SpeechRequestDTO hr) {
 
 		long  start = System.nanoTime();
     	long startTime= System.currentTimeMillis();
@@ -339,8 +414,8 @@ public class SphinxRecEngine extends AbstractPoolableObject implements RecEngine
 	    try {
 	    	
 	    	//save and load the grammar
-	        grammarLocation = _grammarManager.saveGrammar(grammar);
-	        loadJSGF(_jsgfGrammar, grammarLocation);
+	        grammarLocation = grammarManager.saveGrammar(grammar);
+	        loadJSGF(jsgf, grammarLocation);
 	        _logger.debug("After save and load grammar" + System.currentTimeMillis());
 	        
 	        //do the recognition
@@ -352,7 +427,11 @@ public class SphinxRecEngine extends AbstractPoolableObject implements RecEngine
 			if (r != null) {
 				//TODO: change to return Utterance object that can be serialized to json or plant text (see transcribe method)
 				//current approach is a bit of a hack, by constructing with a json flag.
-	        	utterance = ResultUtils.getAllResults(r, false, false,_jsgfGrammar.getRuleGrammar());
+	        	utterance = ResultUtils.getAllResults(r, false, false,jsgf.getRuleGrammar());
+		    } else {
+		    	resultCode = "NullResult";
+		    	resultMessage ="Null result returned from Reognition Engine";
+		    	utterance = new Utterance();
 		    }
 			
         } catch (GrammarException e) {
@@ -440,7 +519,6 @@ public class SphinxRecEngine extends AbstractPoolableObject implements RecEngine
 		_logger.debug("  Logging time "+ x);
 		
 		
-		//TODO: Pass back the error code.  Need to refactor the result object first (messy now with json and text version).
 		utterance.setRCode(resultCode);
 		utterance.setRMessage(resultMessage);
         return utterance;
@@ -491,43 +569,34 @@ public class SphinxRecEngine extends AbstractPoolableObject implements RecEngine
 			//_noInputTimeoutTask = new TimerTask(30000);
 		 }
 
-		 
-
-
 	     //set the first stage of the front end
 		 fe.setDataSource((DataProcessor) _dataSource);
-
 		 
 		 // set the front end in the scorer in realtime
-		 _scorer.setFrontEnd(fe);
-	     
-		 
+		 scorer.setFrontEnd(fe);
+	     		 
 		 //AFormat af = new AFormat(encoding.toString(), sampleRate, bytesPerValue*8, 1, bigEndian, true, bytesPerValue, sampleRate);
 		 //_dataSource.setInputStream(as, "ws-audiostream", af);
 		 _dataSource.setInputStream(as, "ws-audiostream",af);
 		    
 		_logger.debug("After setting the input stream " + System.currentTimeMillis());
 	    
-
 	    // decode the audio file.
 	    //_logger.debug("Decoding " + audioFileURL);
-		Result r = _recognizer.recognize();
-
-		
+		Result r = recognizer.recognize();
+	
 		//for now record results to a file (eventually need to start using the database recording)
 		//if (recordingEnabled) {
 		//	logResults(r, recorder.getWavFileName());
 		//}
-		
-		
-     
+
         String resultText;
         if (r != null) {
 	        if (outMode == OutputFormat.text) {
 	        	resultText = r.getBestFinalResultNoFiller();  
 	  	
 	        } else if (outMode == OutputFormat.json) {
-	        	Utterance utterance = ResultUtils.getAllResults(r, false, false,cs);
+	        	Utterance utterance = ResultUtils.getAllResults(r, false, false,condfidenceScorer);
 	            resultText = gson.toJson(utterance);
 	        	
 	        } else {
@@ -556,7 +625,7 @@ public class SphinxRecEngine extends AbstractPoolableObject implements RecEngine
 	
 	
 	@Override
-    public String transcribe(InputStream as, String mimeType, AFormat af,  OutputFormat outMode, PrintWriter out,HttpServletResponse response, HttpRequest hr) {
+    public String transcribe(InputStream as, String mimeType, AFormat af,  OutputFormat outMode, PrintWriter out,HttpServletResponse response, SpeechRequestDTO hr) {
 		
 		_logger.debug("Using recognizer # "+_id);
 	    //SAL
@@ -569,7 +638,6 @@ public class SphinxRecEngine extends AbstractPoolableObject implements RecEngine
 			recorder.startRecording();
 		}
         
-        
 		long  start = System.nanoTime();
 
 	    String r = doTranscribe(as, mimeType, af, outMode, out, response);
@@ -579,7 +647,6 @@ public class SphinxRecEngine extends AbstractPoolableObject implements RecEngine
 		long streamLen = _dataSource.getLengthInMs();
 		double ratio = (double)wall/(double)streamLen;
 		
-	    
 		if (recordingEnabled) {	
 			recorder.stopRecording();
 	        RecogRequest rr = new RecogRequest();
@@ -619,10 +686,7 @@ public class SphinxRecEngine extends AbstractPoolableObject implements RecEngine
             }
 		}
 
-	    //SAL
-	    //_recognizer.deallocate();
 	    return r;
-
     }
 	
 	
@@ -631,7 +695,6 @@ public class SphinxRecEngine extends AbstractPoolableObject implements RecEngine
 	
 		transcribeMode = true;
 		
-
 	    List<Utterance> utterances = new ArrayList<Utterance>();
 		
 		FrontEnd fe = null;
@@ -670,7 +733,7 @@ public class SphinxRecEngine extends AbstractPoolableObject implements RecEngine
 		 fe.setDataSource((DataProcessor) _dataSource);
 		 
 		 // set the front end in the scorer in realtime
-		 _scorer.setFrontEnd(fe);
+		 scorer.setFrontEnd(fe);
 		 
 		// AFormat af = new AFormat(encoding.toString(), sampleRate, bytesPerValue*8, 1, bigEndian, true, bytesPerValue, sampleRate);
 		 //_dataSource.setInputStream(as, "ws-audiostream", af);
@@ -685,7 +748,7 @@ public class SphinxRecEngine extends AbstractPoolableObject implements RecEngine
 
 		//List<Utterance> utterences = new ArrayList<Utterance>();
 		Result result;
-        while ((result = _recognizer.recognize())!= null) {
+        while ((result = recognizer.recognize())!= null) {
 
             String resultText = null;      
 	        
@@ -693,15 +756,18 @@ public class SphinxRecEngine extends AbstractPoolableObject implements RecEngine
 	        	resultText = result.getBestFinalResultNoFiller();  
       	
 	        } else if (outMode == OutputFormat.json) {
-	        	Utterance utterance = ResultUtils.getAllResults(result, false, false,cs);
+	        	Utterance utterance = ResultUtils.getAllResults(result, false, false,condfidenceScorer);
 	            resultText = gson.toJson(utterance);
 	        	
 	        } else {
 	        	resultText = result.getBestFinalResultNoFiller();  
 	        	_logger.warn("Inrecognized output format: "+outMode+ "  ,using plain text mode as a default.");
 	        }
-            _logger.debug(resultText);
-            out.println(resultText); 	        	
+            _logger.info(resultText);
+            
+            //if the PrintWriter is not null, then send the text utterence by utterence
+            if (out != null)
+            	out.println(resultText); 	        	
 	        
 
             totalResult = totalResult+resultText;
@@ -718,14 +784,11 @@ public class SphinxRecEngine extends AbstractPoolableObject implements RecEngine
     
         }
         fe = null;
+        this.stopAudioTransfer();
         transcribeMode = false;
 	    return totalResult;
     }
 	
-
-
-
-
 
 	/* (non-Javadoc)
      * @see com.spokentech.speechdown.server.recog.RecEngine#recognize(javax.sound.sampled.AudioInputStream, java.lang.String)
@@ -735,50 +798,23 @@ public class SphinxRecEngine extends AbstractPoolableObject implements RecEngine
 	public Utterance recognize(AudioInputStream as, String grammar) {
 	    return null;
 	}
-    
-	
+    	
 	   /**
 	  * TODOC
 	  * @param grammarLocation
 	  * @throws IOException
 	  * @throws GrammarException
 	  */
- public synchronized void loadJSGF(JSGFGrammar jsgfGrammar, GrammarLocation grammarLocation) throws IOException, GrammarException {
-     jsgfGrammar.setBaseURL(grammarLocation.getBaseURL());
-    // try {
-         jsgfGrammar.loadJSGF(grammarLocation.getGrammarName());
-         _logger.debug("loadJSGF(): completed successfully.");
-     //} catch (com.sun.speech.engine.recognition.TokenMgrError e) {
-     //    _logger.debug("loadJSGF(): encountered exception: " + e.getClass().getName(), e); // com.sun.speech.engine.recognition.TokenMgrError!!!
-     //    String message = e.getMessage();
-         /*if (message.indexOf("speech") < 0) {
-             throw e;
-         }*/
-         // else assume caused by GrammarException
-         // TODO: edu.cmu.sphinx.jsapi.JSGFGrammar.loadJSGF() should be updated not to swallow GrammarException
-      //   throw new GrammarException(message);
-     //}
- }
+	public synchronized void loadJSGF(JSGFGrammar jsgfGrammar, GrammarLocation grammarLocation) throws IOException, GrammarException {
+		jsgfGrammar.setBaseURL(grammarLocation.getBaseURL());
+
+		jsgfGrammar.loadJSGF(grammarLocation.getGrammarName());
+		_logger.debug("loadJSGF(): completed successfully.");
+	}
  
 
 
-    /* (non-Javadoc)
-     * @see org.speechforge.cairo.util.pool.PoolableObject#activate()
-     */
-    @Override
-    public synchronized void activate() {
-        _logger.debug("SphinxRecEngine activating...");
-    }
 
-    /* (non-Javadoc)
-     * @see org.speechforge.cairo.util.pool.PoolableObject#passivate()
-     */
-    @Override
-    public synchronized void passivate() {
-        _logger.debug("SphinxRecEngine passivating...");
-        //stopProcessing();
-        //_recogListener = null;
-    }
 
 
     /**
@@ -790,7 +826,7 @@ public class SphinxRecEngine extends AbstractPoolableObject implements RecEngine
      */
     public synchronized RuleParse parse(String text, String ruleName) throws GrammarException {
         
-        RuleGrammar ruleGrammar = _jsgfGrammar.getRuleGrammar();
+        RuleGrammar ruleGrammar = jsgf.getRuleGrammar();
         return ruleGrammar.parse(text, ruleName);
     }
 
@@ -820,10 +856,9 @@ public class SphinxRecEngine extends AbstractPoolableObject implements RecEngine
 		public void newProperties(PropertySheet arg0) throws PropertyException {
 	        _logger.debug("StateListener New properties called");
 	        
-        }
-
-    	
+        }	
     }
+    
     private class MyResultListener implements ResultListener {
 
 		public void newResult(Result arg0) {
@@ -843,9 +878,6 @@ public class SphinxRecEngine extends AbstractPoolableObject implements RecEngine
    	 * The Class Listener.
    	 */
    	protected class Listener implements SpeechEventListener {
-
-
-
 
 			@Override
 	        public void speechStarted() {
@@ -944,7 +976,7 @@ public class SphinxRecEngine extends AbstractPoolableObject implements RecEngine
     	batchCmn = new BatchCMN();
     	liveCmn = new LiveCMN(12,500,800);
     	deltasFeatureExtractor = new DeltasFeatureExtractor(3);
-    	lda = new LDA(_loader);
+    	lda = new FeatureTransform(loader);
     	
 		boolean isCompletePath = false;
 		int bitsPerSample = 16;
@@ -1045,6 +1077,133 @@ public class SphinxRecEngine extends AbstractPoolableObject implements RecEngine
                 (" (confidence: " +
                         format.format
                                 (wr.getLogMath().logToLinear((float) wr.getConfidence())) + ')');
+    }
+
+
+    /**
+     * @return the recognizer
+     */
+    public Recognizer getRecognizer() {
+    	return recognizer;
+    }
+
+	/**
+     * @param recognizer the recognizer to set
+     */
+    public void setRecognizer(Recognizer recognizer) {
+    	this.recognizer = recognizer;
+    }
+
+	/**
+     * @return the jsgf
+     */
+    public JSGFGrammar getJsgf() {
+    	return jsgf;
+    }
+
+	/**
+     * @param jsgf the jsgf to set
+     */
+    public void setJsgf(JSGFGrammar jsgf) {
+    	this.jsgf = jsgf;
+    }
+
+	/**
+     * @return the grammarManager
+     */
+    public GrammarManager getGrammarManager() {
+    	return grammarManager;
+    }
+
+	/**
+     * @param grammarManager the grammarManager to set
+     */
+    public void setGrammarManager(GrammarManager grammarManager) {
+    	this.grammarManager = grammarManager;
+    }
+
+	/**
+     * @return the loader
+     */
+    public Loader getLoader() {
+    	return loader;
+    }
+
+	/**
+     * @param loader the loader to set
+     */
+    public void setLoader(Loader loader) {
+    	this.loader = loader;
+    }
+
+	/**
+     * @return the scorer
+     */
+    public AcousticScorer getScorer() {
+    	return scorer;
+    }
+
+	/**
+     * @param scorer the scorer to set
+     */
+    public void setScorer(AcousticScorer scorer) {
+    	this.scorer = scorer;
+    }
+
+	/**
+     * @return the condfidenceScorer
+     */
+    public ConfidenceScorer getCondfidenceScorer() {
+    	return condfidenceScorer;
+    }
+
+	/**
+     * @param condfidenceScorer the condfidenceScorer to set
+     */
+    public void setCondfidenceScorer(ConfidenceScorer condfidenceScorer) {
+    	this.condfidenceScorer = condfidenceScorer;
+    }
+
+	/**
+     * @return the logMath
+     */
+    public LogMath getLogMath() {
+    	return logMath;
+    }
+
+	/**
+     * @param logMath the logMath to set
+     */
+    public void setLogMath(LogMath logMath) {
+    	this.logMath = logMath;
+    }
+
+	/**
+     * @return the recordingFilePath
+     */
+    public String getRecordingFilePath() {
+    	return recordingFilePath;
+    }
+
+	/**
+     * @param recordingFilePath the recordingFilePath to set
+     */
+    public void setRecordingFilePath(String recordingFilePath) {
+    	this.recordingFilePath = recordingFilePath;
+    }
+
+	/**
+     * @return the recordingEnabled
+     */
+    public boolean isRecordingEnabled() {
+    	return recordingEnabled;
+    }
+
+	/**
+     * @param recordingEnabled the recordingEnabled to set
+     */
+    public void setRecordingEnabled(boolean recordingEnabled) {
+    	this.recordingEnabled = recordingEnabled;
     }
 
 }

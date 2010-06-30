@@ -42,6 +42,8 @@
 	<property name="sphinx4.jar" value="${lib.dir}/sphinx4.jar" />
 	<property name="jsapi-1.0-base.jar" value="${lib.dir}/jsapi-1.0-base.jar" />
 	
+	<property name="aws-java-sdk.jar" value="${lib.dir}/aws-java-sdk-1.0.005.jar" />
+	
 	
 	<property name="hibernate.jar" value="${lib.dir}/hibernate3.jar" />
 	<property name="hsqldb.jar" value="${lib.dir}/hsqldb.jar" />
@@ -105,7 +107,7 @@
 		 <pathelement location="${build.classes.home}" />
 	</path>
 	
-	<path id="jaxws.classpath">
+	<path id="speech.classpath">
 		<pathelement location="${java.home}/../lib/tools.jar" />
 		<pathelement	location="${commons-pool.jar}" />
 		<pathelement	location="${commons-lang.jar}" />
@@ -139,6 +141,7 @@
 		<pathelement	location="${xuggle-xuggler.jar}" />
 		<pathelement    location="${java.home}/lib/plugin.jar" />
 		
+		<pathelement	location="${aws-java-sdk.jar}" />
 		
 		<fileset dir="${jaxws.home}/lib">
 			<include name="*.jar" />
@@ -212,11 +215,11 @@
 	
 
 	<taskdef name="apt" classname="com.sun.tools.ws.ant.Apt">
-		<classpath refid="jaxws.classpath" />
+		<classpath refid="speech.classpath" />
 	</taskdef>
 	
 	<taskdef name="wsimport" classname="com.sun.tools.ws.ant.WsImport">
-		<classpath refid="jaxws.classpath" />
+		<classpath refid="speech.classpath" />
 	</taskdef>
 
 	<target name="setup">
@@ -228,50 +231,51 @@
 	    <mkdir dir="${build.war.home}/lib" />
 	</target>
 	
-	
-
-	<target name="build-server-java" depends="setup">
-		<apt
-			fork="true"
-			debug="true"
-			verbose="${verbose}"
-			destdir="${build.classes.home}"
-			sourcedestdir="${build.classes.home}"
-			sourcepath="${basedir}/src/java">
-			<classpath>
-				<path refid="jaxws.classpath" />
-				<pathelement location="${basedir}/src/java" />
-				<pathelement location="${build.classes.home}" />
-			</classpath>
-			<option key="r" value="${build.home}" />
-			<source dir="${basedir}/src/java">
-			<include name="**/server/ws/SpeechServiceImpl.java" />
-			<!--include name="**/common/**/*.java" /-->
-			</source>
-		</apt>
-	</target>
 
 	<target name="clean">
 		<delete dir="${build.home}" includeEmptyDirs="true" />
 	</target>
 	
 	
-	    
-    <!-- ********************************************************** -->
-    <!-- *                                                        * -->
-    <!-- * Create the acoustic model  jar.                        * -->
-    <!-- *                                                        * -->
-    <!-- ********************************************************** -->
-    
-    <target name="jar-model"
-            description="Jar the accoustic model.">
-        <jar destfile="${build.war.home}/lib/${accoustic.model.name}.jar"
-             basedir="${accoustic.model.dir}"
-             filesonly="true"
-             compress="true"/>
+	<!-- ********************************************************** -->
+	<!-- *				HTTP Speech Server						  * -->
+ 	<!-- ********************************************************** -->
+ 	
+	<target name="server" depends="clean, deploy" />
+
+    <target name="import-wsdl-server" depends="setup"> 
+      <antcall target="do-wsdl2java">
+        <param name="pkg" value="${pkg.server}"/>
+        <param name="wsdl.location" value="${server.wsdl.location}"/>
+        <param name="wsdl.file" value="${server.wsdl.location}/SpeechAttach.wsdl"/>
+        <param name="customization.binding.files" value="${server.binding.files}"/>
+      </antcall>
+      <antcall target="do-wsdl2java">
+        <param name="pkg" value="${pkg.server}"/>
+        <param name="wsdl.location" value="${server.wsdl.location}"/>
+        <param name="wsdl.file" value="${server.wsdl.location}/SpeechLink.wsdl"/>
+        <param name="customization.binding.files" value="${server.binding.files}"/>
+      </antcall>
     </target>
-	
-	
+    
+    <target name="compile-server" depends="import-wsdl-server">
+      <echo message="compile-server" />
+
+      <javac srcdir="${basedir}/src/java"
+        destdir="${build.classes.home}"
+        includes="**/server/**, **/common/**"
+        debug="on"
+        failonerror="true">
+        <classpath>
+        		<path refid="speech.classpath" />
+        		<path refid="rest.dependency.classpath" />
+				<pathelement location="${build.classes.home}" />
+		</classpath>
+	   </javac>
+    </target>
+    
+	<!-- for creating a war that can be used with google app server -->
+	<!-- TODO: Get it to work (not working yet)                      -->	
 	<target name="create-gae-war" depends="compile-server,jar-model">
 		
 		<filter token="serviceLoggingFlag" value="true" />
@@ -290,9 +294,6 @@
                classname="org.apache.maven.artifact.ant.VersionMapper"
                from="${dependency.versions}" to="flatten" />
         </copy>
-
-		
-	
 
 		<war warfile="${build.war.home}/gae-${war.filename}" webxml="${build.war.home}/WEB-INF/web.xml">
 
@@ -317,8 +318,8 @@
 	         
 
 
-	<target name="create-war" depends="compile-server">
-		
+	<!-- create a war for http speech server -->
+	<target name="create-war" depends="compile-server">		
 		<filter token="serviceLoggingFlag" value="true" />
 		<filter token="application.context" value="/WEB-INF/dev-applicationContext.xml" />
 		<filter token="applicationContext.recognizerService.baseGrammarDir" value="c:/temp" />
@@ -336,8 +337,6 @@
                from="${dependency.versions}" to="flatten" />
         </copy>
 
-		
-	
 
 		<war warfile="${build.war.home}/${war.filename}" webxml="${build.war.home}/WEB-INF/web.xml">
 
@@ -358,8 +357,9 @@
 	</target>
 	
 	
-	<target name="create-ami-war" depends="compile-server">
-		
+	<!-- create a war for http speech server                                                -->
+	<!-- TODO: combine the two war targets (maybe use properties to control the type of war -->
+	<target name="create-ami-war" depends="compile-server">		
 		<filter token="serviceLoggingFlag" value="true" />
 		<filter token="applicationContext.recognizerService.baseGrammarDir" value="c:/temp" />
 		<filter token="application.context" value="/WEB-INF/ami-applicationContext2.xml" />
@@ -394,7 +394,71 @@
 
 		</war>
 	</target>
+	
+	<!-- deploy the http server -->
+	<target name="deploy">
+		<copy file="${build.war.home}/${war.filename}" todir="${catalina.home}/webapps" />
+	</target>
 
+
+	<!-- TODO: Is this used -->
+	<target name="build-server-java" depends="setup">
+		<apt
+			fork="true"
+			debug="true"
+			verbose="${verbose}"
+			destdir="${build.classes.home}"
+			sourcedestdir="${build.classes.home}"
+			sourcepath="${basedir}/src/java">
+			<classpath>
+				<path refid="speech.classpath" />
+				<pathelement location="${basedir}/src/java" />
+				<pathelement location="${build.classes.home}" />
+			</classpath>
+			<option key="r" value="${build.home}" />
+			<source dir="${basedir}/src/java">
+			<include name="**/server/ws/SpeechServiceImpl.java" />
+			<!--include name="**/common/**/*.java" /-->
+			</source>
+		</apt>
+	</target>
+	
+	
+		
+	<!-- ********************************************************** -->
+	<!-- *				Standalone Speech Server				  * -->
+ 	<!-- ********************************************************** -->
+ 	
+	<!-- TODO: Compile the standalone server code  (with out wsdl dependency)-->
+	<!-- now the jar-server target,  jars the classes from the complete server compile -->
+	<target name="compile-standalone-server" depends="setup">
+      <echo message="compile-server" />
+      <javac srcdir="${basedir}/src/java"
+        destdir="${build.classes.home}"
+        includes="**/server/**, **/common/**"
+        debug="on"
+        failonerror="true">
+        <classpath>
+        		<path refid="speech.classpath" />
+				<pathelement location="${build.classes.home}" />
+		</classpath>
+	   </javac>
+    </target>
+
+
+   <!-- Jar the standalone server  -->	
+   <target name="jar-server" depends="compile-server">
+        <jar destfile="${basedir}/lib//speechcloud-server.jar"
+             basedir="${build.classes.home}"
+             filesonly="true"
+             compress="true"/>
+    </target>
+	
+	<!-- ********************************************************** -->
+	<!-- *				HTTP Speech Client						  * -->
+ 	<!-- ********************************************************** -->
+ 		
+    <!-- generate the http client code for SOAP web services -->
 	<target name="generate-client" depends="setup">
 		<wsimport
 				debug="true"
@@ -419,7 +483,8 @@
 	</target>
 	<!--wsdl="http://${catalina.host}:${catalina.port}/${ant.project.name}/speechattach?wsdl"-->
 	<!--wsdl="http://${catalina.host}:${catalina.port}/${ant.project.name}/speechlink?wsdl"-->
-				
+	
+	<!-- Compile the http client code -->
 	<target name="client" depends="generate-client">
 		<javac
 				fork="true"
@@ -429,34 +494,14 @@
                 debuglevel="lines,vars,source" 
 				includes="**/client/**,**/common/**">
 				<classpath>
-					<path refid="jaxws.classpath" />
+					<path refid="speech.classpath" />
 			       	<path refid="rest.dependency.classpath" />
 			    </classpath>
 		</javac>
 	</target>
 
-    <target name="compile-client">
-      <echo message="compile-client" />
-      <javac srcdir="src/java"
-        destdir="${build.classes.home}"
-        classpathref="speechcloud.client.classpath"
-        includes="client/**, common/**"
-        debug="on"
-        debuglevel="lines,vars,source" 
-        failonerror="true"/>
-    </target>
 
-
-	<target name="run">
-		<java fork="true" classname="com.spokentech.speechdown.client.SpeechServiceClient">
-			<classpath>
-				<path refid="jaxws.classpath" />
-				<pathelement location="${build.client.classes.home}" />
-				<pathelement location="${basedir}/etc" />
-			</classpath>
-		</java>
-	</target>
-	
+   <!-- Jar the http client  -->	
    <target name="jar-client" depends="client">
         <jar destfile="${basedir}/lib//speechcloud-client.jar"
              basedir="${build.client.classes.home}"
@@ -464,46 +509,7 @@
              compress="true"/>
     </target>
 
-	<target name="deploy">
-		<copy file="${build.war.home}/${war.filename}" todir="${catalina.home}/webapps" />
-	</target>
 
-	<target name="server" depends="clean, deploy" />
-
-
-    <target name="import-wsdl-server" depends="setup"> 
-      <antcall target="do-wsdl2java">
-        <param name="pkg" value="${pkg.server}"/>
-        <param name="wsdl.location" value="${server.wsdl.location}"/>
-        <param name="wsdl.file" value="${server.wsdl.location}/SpeechAttach.wsdl"/>
-        <param name="customization.binding.files" value="${server.binding.files}"/>
-      </antcall>
-      <antcall target="do-wsdl2java">
-        <param name="pkg" value="${pkg.server}"/>
-        <param name="wsdl.location" value="${server.wsdl.location}"/>
-        <param name="wsdl.file" value="${server.wsdl.location}/SpeechLink.wsdl"/>
-        <param name="customization.binding.files" value="${server.binding.files}"/>
-      </antcall>
-    </target>
-    
-    <target name="compile-server" depends="import-wsdl-server">
-      <echo message="compile-server" />
-
-
-      <javac srcdir="${basedir}/src/java"
-        destdir="${build.classes.home}"
-        includes="**/server/**, **/common/**"
-        debug="on"
-        failonerror="true">
-        <classpath>
-        		<path refid="jaxws.classpath" />
-        		<path refid="rest.dependency.classpath" />
-				<pathelement location="${build.classes.home}" />
-		</classpath>
-	   </javac>
-    </target>
-    
-    
     <target name="import-wsdl-client">
       <antcall target="do-wsdl2java">
         <param name="pkg" value="${pkg.client}"/>
@@ -515,6 +521,35 @@
     </target>
     
     
+    
+     <!-- TODO:  Not sure if this is used  -->
+    <target name="compile-client">
+      <echo message="compile-client" />
+      <javac srcdir="src/java"
+        destdir="${build.classes.home}"
+        classpathref="speechcloud.client.classpath"
+        includes="client/**, common/**"
+        debug="on"
+        debuglevel="lines,vars,source" 
+        failonerror="true"/>
+    </target>
+
+    <!-- TODO:  Not sure if this is used or works  -->
+	<target name="run">
+		<java fork="true" classname="com.spokentech.speechdown.client.SpeechServiceClient">
+			<classpath>
+				<path refid="speech.classpath" />
+				<pathelement location="${build.client.classes.home}" />
+				<pathelement location="${basedir}/etc" />
+			</classpath>
+		</java>
+	</target>   
+
+
+	<!-- ********************************************************** -->
+	<!-- *				SOAP/WSDL								  * -->
+ 	<!-- ********************************************************** -->
+ 		
 
     <!-- generates portable artifacts WSDL-to-Java (wsimport) -->
     <!-- uses binding customizations to specify where artifacts go -->
@@ -535,13 +570,10 @@
     </target> 
     
 
-    
 
-    
-
-	<!-- ============================================================== -->
-	<!-- Tomcat tasks - remove these if you don't have Tomcat installed -->
-	<!-- ============================================================== -->
+	<!-- ================================================================== -->
+	<!-- Tomcat tasks - can remove these if you don't have Tomcat installed -->
+	<!-- ================================================================== -->
 	<path id="catalina-ant-classpath">
 		<!-- We need the Catalina jars for Tomcat -->
 		<!-- * for other app servers - check the docs -->
@@ -580,7 +612,13 @@
 		<list url="${tomcat.manager.url}" username="${tomcat.manager.username}" password="${tomcat.manager.password}" />
 	</target>
 	<!-- End Tomcat tasks -->
-
+	
+	
+	
+	<!-- ********************************************************** -->
+	<!-- *				Hibernate Tasks							  * -->
+ 	<!-- ********************************************************** -->
+ 		
 	<target name="schemaexport">
 	    <taskdef name="schemaexport"
 	        classname="org.hibernate.tool.hbm2ddl.SchemaExportTask"
@@ -625,7 +663,20 @@
 		</hibernatetool>
 	</target>
 	
-	
+		    
+    <!-- ********************************************************** -->
+    <!-- *                                                        * -->
+    <!-- * Create the acoustic model  jar.                        * -->
+    <!-- *                                                        * -->
+    <!-- ********************************************************** -->
+    
+    <target name="jar-model"
+            description="Jar the accoustic model.">
+        <jar destfile="${build.war.home}/lib/${accoustic.model.name}.jar"
+             basedir="${accoustic.model.dir}"
+             filesonly="true"
+             compress="true"/>
+    </target>
 	
 	<target name="help">
 		<echo message="server:				Builds and deploys the service endpoint WAR" />

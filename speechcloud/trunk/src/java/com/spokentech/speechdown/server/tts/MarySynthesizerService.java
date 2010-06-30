@@ -28,7 +28,7 @@ import javax.sound.sampled.AudioFileFormat.Type;
 import org.apache.log4j.Logger;
 
 import com.spokentech.speechdown.server.SynthesizerService;
-import com.spokentech.speechdown.server.domain.HttpRequest;
+import com.spokentech.speechdown.server.domain.SpeechRequestDTO;
 import com.spokentech.speechdown.server.domain.SynthRequest;
 import com.spokentech.speechdown.server.util.ServiceLogger;
 
@@ -152,7 +152,7 @@ public class MarySynthesizerService implements SynthesizerService {
 
 
 
-	public void streamTTS(String text, AudioFormat format,String mime, String voiceName, OutputStream out,HttpRequest hr) throws UnsupportedAudioFileException {
+	public void streamTTS(String text, AudioFormat format,String mime, String voiceName, OutputStream out,SpeechRequestDTO hr) throws UnsupportedAudioFileException {
     	
 
         String  inputTypeName = "TEXT_EN";

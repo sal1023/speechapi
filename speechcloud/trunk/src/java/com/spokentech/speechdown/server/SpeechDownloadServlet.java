@@ -38,7 +38,7 @@ import org.springframework.web.context.support.WebApplicationContextUtils;
 import org.tritonus.share.sampled.Encodings;
 
 import com.spokentech.speechdown.common.HttpCommandFields;
-import com.spokentech.speechdown.server.domain.HttpRequest;
+import com.spokentech.speechdown.server.domain.SpeechRequestDTO;
 import com.spokentech.speechdown.server.domain.SynthRequest;
 import com.spokentech.speechdown.server.util.ServiceLogger;
 
@@ -191,7 +191,7 @@ public class SpeechDownloadServlet extends HttpServlet {
 		response.setHeader("Content-Disposition", "attachment; filename=synthesized.mp3");			
 		response.setHeader("Transfer-coding","chunked");
 		
-        HttpRequest hr = new HttpRequest();
+        SpeechRequestDTO hr = new SpeechRequestDTO();
 		if (serviceLogEnabled) {
 			Date d = new Date();
 		    hr.setProtocol(request.getProtocol());
@@ -466,7 +466,7 @@ public class SpeechDownloadServlet extends HttpServlet {
 			response.setHeader("Transfer-coding","chunked");
 			
 			
-	        HttpRequest hr = new HttpRequest();
+	        SpeechRequestDTO hr = new SpeechRequestDTO();
 			if (serviceLogEnabled) {
 				Date d = new Date();
 			    hr.setProtocol(request.getProtocol());
