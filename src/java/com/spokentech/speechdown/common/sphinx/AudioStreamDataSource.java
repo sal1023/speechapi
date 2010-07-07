@@ -1,13 +1,8 @@
 /*
- * Copyright 1999-2002 Carnegie Mellon University.
- * Portions Copyright 2002 Sun Microsystems, Inc.
- * Portions Copyright 2002 Mitsubishi Electric Research Laboratories.
- * All Rights Reserved.  Use is subject to license terms.
- *
- * See the file "license.terms" for information on usage and
- * redistribution of this file, and for a DISCLAIMER OF ALL
- * WARRANTIES.
- *
+ * Copyright (c) 2009-2010 Spokentech Inc.  All rights reserved.
+ *  
+ * This file is part of Spokentech speech server
+ *  
  */
 package com.spokentech.speechdown.common.sphinx;
 

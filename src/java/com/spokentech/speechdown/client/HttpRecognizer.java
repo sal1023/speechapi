@@ -1,10 +1,8 @@
-/**
- * The HttpReconizer class allows you to issue a recognize command with am audio input stream.
- * The requests is sent to a http recognizer server using http protocol.  The audio is sent as an attachment in
- * a multi-part post.  The multi-part post us chunk encoded so that there recognition starts as the audio is streamed
- * 
- *
- * @author Spencer Lord {@literal <}<a href="mailto:spencer@spokentech.com">spencer@spokentech.com</a>{@literal >}
+/*
+ * Copyright (c) 2009-2010 Spokentech Inc.  All rights reserved.
+ *  
+ * This file is part of Spokentech speech server
+ *  
  */
 package com.spokentech.speechdown.client;
 

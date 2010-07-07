@@ -1,11 +1,8 @@
-/**
- * 
- * The HttpSynthesizer class allows you to issue a synthesize command to a remote speech server.
- * The requests is sent to a http synthesizer server using http protocol.  The audio is returned in the http response.
- * Audio chunk encoded so that audio can be returned for use by the client as quickly as possible.
- * 
- *
- * @author Spencer Lord {@literal <}<a href="mailto:spencer@spokentech.com">spencer@spokentech.com</a>{@literal >}
+/*
+ * Copyright (c) 2009-2010 Spokentech Inc.  All rights reserved.
+ *  
+ * This file is part of Spokentech speech server
+ *  
  */
 package com.spokentech.speechdown.client;
 
