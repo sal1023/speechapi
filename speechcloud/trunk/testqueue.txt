@@ -1,0 +1,6 @@
+1,1,spencer,file:///C:/work/speechcloud/etc/prompts/fire_and_ice_frost_add_64kb.mp3
+2,1,spencer,file:///C:/tmp/moviespeechthankyouforsmoking1.mp3
+3,1,spencer,file:///C:/tmp/moviespeechwallstreet1144.mp3
+4,1,spencer,file:///C:/tmp/barackobama911pentagonmemorialspeech.mp3
+5,1,spencer,file:///C:/tmp/Political_videos-GeorgeWBush20061227_795.mov
+6,1,spencer,file:///C:/work/speechcloud/etc/prompts/cubanson.wav

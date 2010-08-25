@@ -105,7 +105,9 @@ public class HttpTranscriptionTest extends TestCase {
      	File soundFile5 = new File("c:/work/speechcloud/etc/prompts/gtd.wav");
 
      	File textFile5 = new File("c:/work/speechcloud/etc/prompts/gtd.txt");    	
-    	
+
+     	File soundFile6 = new File("c:/work/speechcloud/etc/prompts/fire_and_ice_frost_add_64kb.mp3");
+
 		
 	    String wav = "audio/x-wav";
 	    String s4feature = "audio/x-s4feature";
@@ -185,6 +187,44 @@ public class HttpTranscriptionTest extends TestCase {
 	    	System.out.println("FILE TEST: Batch mode, Server Endpointing, LM result: " + " took "+wall+ " ms");   
 	    	
 	    	
+	    }
+	    
+	    
+	    public void testTranscribe2() {
+	    	System.out.println("Starting Transcribe Test ...");
+	        
+	    	AudioInputStream audioInputStream = null;
+	    	Type type = null;
+	    	try {
+	    		audioInputStream = AudioSystem.getAudioInputStream(soundFile6);
+	    	} catch (Exception e) {
+	    		e.printStackTrace();
+	    	}
+	    	String mimeType = "audio/mp3";
+		
+	    	
+	        AFormat format = null;  	    	
+
+	        StringBuilder contents = new StringBuilder();
+			long start = System.nanoTime();
+            try {
+		    	boolean lmflg = true;
+		    	InputStream s = recog.transcribe(userId, audioInputStream, format,mimeType, grammarUrl, lmflg,OutputFormat.text);
+
+                int c;
+                while ((c = s.read()) != -1) {
+                    System.out.write(c);
+  	                contents.append((char)c);
+                }
+
+            } catch (IOException e) {
+	            // TODO Auto-generated catch block
+	            e.printStackTrace();
+            }
+            
+			long stop = System.nanoTime();
+			long wall = (stop - start)/1000000;
+	
 	    }
 		    
 	     

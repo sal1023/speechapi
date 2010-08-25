@@ -24,9 +24,12 @@ public class SpeechThread implements Runnable {
 	private RecEngine recEngine = null;
 	private SpeechWorker worker;
 
-	public SpeechThread(RecEngine recEngine, SpeechWorker worker) {
+	private String outputFormat;
+
+	public SpeechThread(RecEngine recEngine, SpeechWorker worker, String outputFormat) {
 		this.recEngine = recEngine;
 		this.worker = worker;
+		this.outputFormat = outputFormat;
 	}
 
 
@@ -48,13 +51,21 @@ public class SpeechThread implements Runnable {
 			
 			String mimeType = null;
 			AFormat af = null;
-			OutputFormat outMode = OutputFormat.json;
+			OutputFormat outMode =  OutputFormat.valueOf(outputFormat); //OutputFormat.json;
 			PrintWriter out = null;
 			HttpServletResponse response = null;
 			SpeechRequestDTO hr = null;
 			try {
-		       transcription = recEngine.transcribe( as,  mimeType,  af,   outMode,  out, response,  hr);
-			   worker.completeSuccessfulJob(job,transcription);
+				long start = System.nanoTime();
+
+		        transcription = recEngine.transcribe( as,  mimeType,  af,   outMode,  out, response,  hr);
+				long stop = System.nanoTime();
+				long wall = (stop - start)/1000000;
+				
+				logger.info("Job "+job.getId()+ " id, Wall time was: "+wall);
+				logger.info(transcription);
+			    worker.completeSuccessfulJob(job,transcription);
+			   
 			}catch (Exception e) {
 				e.printStackTrace();
 				logger.warn("Error processing transcription request");

@@ -769,7 +769,7 @@ public class SphinxRecEngine implements RecEngine {
 	        	resultText = result.getBestFinalResultNoFiller();  
 	        	_logger.warn("Inrecognized output format: "+outMode+ "  ,using plain text mode as a default.");
 	        }
-            _logger.info(resultText);
+            _logger.debug(resultText);
             
             //if the PrintWriter is not null, then send the text utterence by utterence
             if (out != null)
