@@ -26,6 +26,15 @@
 		  <property name="poolSize">
 			<value>3</value>
 		  </property>
+		  <property name="outputFormat">
+			<value>text</value>
+		  </property>
+		<property name="sphinxRecEngineFactory"> <ref bean="sphinxRecEngineFactory"/></property>
+	</bean>
+
+	<bean id="sphinxRecEngineFactory" 
+		class="com.spokentech.speechdown.server.standalone.SphinxRecEngineFactory"
+    		scope="singleton">
 		  
 		  <property name="showTokenCount">
 			<value>${speech.search.showTokenCount}</value>
@@ -60,7 +69,7 @@
 		  </property>
 		  <property name="featureBlockSize">
 			<value>${speech.decoder.featureBlockSize}</value>
-		  </property>	  
+		</property>	  
 	</bean>
 
 	
