@@ -1,0 +1,90 @@
+<html lang="en">
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+
+    <STYLE TYPE="text/css" MEDIA=screen>
+       .preferences  { font-size: medium; background: white; color: black }
+    </STYLE>   
+
+
+<title></title> 
+
+<script type="text/javascript" src="http://localhost:8080/speechcloud/lib/speechapi-1.1.js"></script>
+<script type="text/javascript" src="http://localhost:8080/speechcloud/lib/swfobject.js"></script>
+<script type="text/javascript" src="http://ajax.googleapis.com/ajax/libs/jquery/1.4.2/jquery.min.js"></script>
+
+<script language="JavaScript" type="text/javascript" >
+        var linkables = ["a"];
+        var speakables = [];
+        var focusables =[];
+        var browserControl = false;
+        var formsEnabled = false;
+
+        function onTtsComplete() {}
+        function onResult(result) {}
+        function onLoaded() {}
+
+	var flashvars = {speechServer : "http://localhost:8080/speechcloud"};
+        var params = {allowscriptaccess : "always"};
+        var attributes = {};
+        attributes.id = "flashContent";
+	swfobject.embedSWF("http://localhost:8080/speechcloud/lib/speechapi-1.2.swf", "myAlternativeContent", "215", "138", "9.0.28", false,flashvars, params, attributes);
+
+        speechapi.setupPage("sal","password",onResult,onTtsComplete, onLoaded, "flashContent",linkables,speakables,focusables,browserControl,formsEnabled);
+
+</script>
+
+</head>
+
+
+<body>
+<div id="myAlternativeContent"> </div>
+<div id="flashContent"> </div>
+<br>
+
+<h3>Use speech to navigate </h3>
+<p>You can say the link.   You can say the name of one of the demos below.</p>
+
+<ul>
+<li><a name='say demo' href=/live-demos/say.html >Say Demo</a> - shows how to use the javascript api to do speech synthesis in your web page.</li>
+<li><a name='what demo'  href=/live-demos/what.html>What Demo</a> - shows how to use the javascript api to speech recognition in your web page.</li>
+<li><a name='parrot demo' href=/live-demos/parrot.html>Parrot Demo</a> - shows how to use the javascript api to speech sythesis and speech recognition in your web page.</li>
+<li><a name='form [demo]' href=/live-demos/form.html>Form Demo</a> - Since we use simple http protocols, you can use simple html forms to do both synthesis and recongition requests.</li>
+</ul>
+
+<p>And here are a bunch of links that can be found in craigs lists left side toolbar.  You can say these links too.</p>
+
+<ul>
+<li><a name='haiti earthquake relief' href="http://www.craigslist.org/about/help/haiti_earthquake_resources"><em>haiti earthquake relief</em></a></li>
+<li><a name='[avoid] scams [and fraud]' href="http://www.craigslist.org/about/scams">avoid scams and fraud</a> </li>
+<li><a name='[personal] safety [tips]'  href="http://www.craigslist.org/about/safety">personal safety tips</a> </li>
+<li><a name ='craigs list b log' href="http://blog.craigslist.org/">craigslist blog</a> </li>
+<li><a name='craigs list fact sheet' href="http://www.craigslist.org/about/factsheet.html">craigslist factsheet</a> </li>
+<li><a name='best of craigs list'  href="http://www.craigslist.org/about/best/all/">best of craigslist</a> </li>
+<li><a name='[craigs list] t v|television' href="http://youtube.com/craigslist">craigslist {tv}</a>
+<li><a name='weather'  href="http://www.crh.noaa.gov/forecasts/CAZ006.php">weather</a>&nbsp; </li>
+<li><a name='quake' href="http://quake.wr.usgs.gov/recenteqs/">quake</a>&nbsp; </li>
+<li><a name='tide' href="http://tidesonline.nos.noaa.gov/plotcomp.shtml?station_info=9414290+San+Francisco,+CA">tide</a></li>
+<li><a name='progressive directory' href="http://www.bapd.org">progressive directory</a> </li>
+<li><a name='craigs list is hiring' href="http://www.craigslist.org/about/craigslist_is_hiring">craigslist is hiring</a></li>
+<li><a name='craigs list movie and d v d' href="http://24hoursoncraigslist.com/subs/nowplaying.html">craigslist movie &amp; dvd</a>
+<li><a name='craigs list foundation' href="http://craigslistfoundation.org/">craigslist foundation</a>
+<li><a name='boot camp [2010]' href="http://www.craigslistfoundation.org/bootcamp/">boot camp 2010</a>
+</ul>
+
+
+<script type="text/javascript">
+var gaJsHost = (("https:" == document.location.protocol) ? "https://ssl." : "http://www.");
+document.write(unescape("%3Cscript src='" + gaJsHost + "google-analytics.com/ga.js' type='text/javascript'%3E%3C/script%3E"));
+</script>
+<script type="text/javascript">
+try {
+var pageTracker = _gat._getTracker("UA-12456436-1");
+pageTracker._trackPageview();
+} catch(err) {}</script>
+
+</div>
+
+
+</body>
+</html>

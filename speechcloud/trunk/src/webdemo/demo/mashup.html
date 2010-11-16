@@ -1,0 +1,109 @@
+<html lang="en">
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+
+    <STYLE TYPE="text/css" MEDIA=screen>
+       .preferences  { font-size: medium; background: white; color: black }
+    </STYLE>   
+
+
+<title></title> 
+
+<script type="text/javascript" src="http://localhost:8080/speechcloud/lib/speechapi-1.1.js"></script>
+<script type="text/javascript" src="http://localhost:8080/speechcloud/lib/swfobject.js"></script>
+<script type="text/javascript" src="http://ajax.googleapis.com/ajax/libs/jquery/1.4.2/jquery.min.js"></script>
+
+<script language="JavaScript" type="text/javascript" >
+	var linkables = ["a"];
+	var speakables = ["p","h1"];
+	var focusables =["text","textarea"];	
+	var browserControl = true;
+	var formsEnabled = true;
+
+	function onTtsComplete() {}
+	function onResult(result) {}
+	function onLoaded() {}
+
+	var flashvars = {speechServer : "http://localhost:8080/speechcloud"};
+        var params = {allowscriptaccess : "always"};
+	var attributes = {};
+	attributes.id = "flashContent";
+	swfobject.embedSWF("http://localhost:8080/speechcloud/lib/speechapi-1.2.swf", "myAlternativeContent", "215", "138", "9.0.28", false,flashvars, params, attributes);
+	speechapi.setupPage("sal","password",onResult,onTtsComplete, onLoaded, "flashContent",linkables,speakables,focusables,browserControl,formsEnabled);
+
+
+
+</script>
+
+
+</head>
+
+
+<body>
+
+<div id="myAlternativeContent"></div>
+<div id="flashContent"></div>
+
+<h3>Use speech to navigate </h3>
+<p id=instruct name='read instructions'>You can say the name of the link.   You can say the name of one of the demos below.  You can also same the name of the paragraphs (paragraph one or paragraph two) or this paragraph is named 'read instructions'.  You can alos click on the paragraph to have it read to you.  Change focus by saying the name of the text fields in the form below (percentage or color).  Once the field gains focus (either by speaking it or by clicking on it), you can fill in the field by speaking.  The gramar of pecentage is a integer between 1 and 10.  The grammar for color is "red, white, blue, etc). You cn also scroll and resize the window by saying scroll up or scroll down, smaller or bigger.</p>
+
+
+<ul>
+<li><a name='say demo' href=/live-demos/say.html >Say Demo</a> - shows how to use the javascript api to do speech synthesis in your web page.</li>
+<li><a name='what demo'  href=/live-demos/what.html>What Demo</a> - shows how to use the javascript api to speech recognition in your web page.</li>
+<li><a name='parrot demo' href=/live-demos/parrot.html>Parrot Demo</a> - shows how to use the javascript api to speech sythesis and speech recognition in your web page.</li>
+<li><a name='form [demo]' href=/live-demos/form.html>Form Demo</a> - Since we use simple http protocols, you can use simple html forms to do both synthesis and recongition requests.</li>
+</ul>
+
+
+<h1>Hello</h1>
+<h2>hey</h2>
+
+<p id=one name='paragraph one|first paragraph'>
+YOU don't know about me without you have read a book by the
+name of The Adventures of Tom Sawyer; but that ain't no matter.
+ That book was made by Mr. Mark Twain, and he told the truth,
+mainly.  There was things which he stretched, but mainly he told
+the truth.  That is nothing.  I never seen anybody but lied one
+time or another, without it was Aunt Polly, or the widow, or
+maybe Mary.  Aunt Polly&mdash;Tom's Aunt Polly, she is&mdash;and
+Mary, and the Widow Douglas is all told about in that book, which
+is mostly a true book, with some stretchers, as I said
+before.</p>
+
+
+<p id=two name='paragraph two|last paragraph'>
+Now the way that the book winds up is this:  Tom and me found
+the money that the robbers hid in the cave, and it made us rich.
+ We got six thousand dollars apiece&mdash;all gold.  It was an
+awful sight of money when it was piled up.  Well, Judge Thatcher
+he took it and put it out at interest, and it fetched us a dollar
+a day apiece all the year round&mdash;more than a body could
+tell what to do with.  The Widow Douglas she took me for her son,
+and allowed she would sivilize me; but it was rough living in the
+house all the time, considering how dismal regular and decent the
+widow was in all her ways; and so when I couldn't stand it no
+longer I lit out.  I got into my old rags and my sugar-hogshead
+again, and was free and satisfied.  But Tom Sawyer he hunted me
+up and said he was going to start a band of robbers, and I might
+join if I would go back to the widow and be respectable.  So I
+went back.</p>
+
+
+
+
+<table border="1" width=>
+<tr>
+  <td>Percentage</td>
+  <td><input type="text" id='percentage' name=percentage gram='one|two|three|four|five|six|seven|eight|nine|ten' value="10" size="4"/></td>
+</tr>
+<tr>
+  <td>Color</td>
+  <td><input type="text" id="color" value="red" name=color gram='red|white|blue|green|black|yellow|orange|brown|gold|white' size="10"/></td>
+</table>
+<input type="button" id="submit" name="submit" value="submit" OnClick="submitform();"/>
+
+
+
+</body>
+</html>

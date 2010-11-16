@@ -1,0 +1,79 @@
+<html lang="en">
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+
+    <STYLE TYPE="text/css" MEDIA=screen>
+       .preferences  { font-size: medium; background: white; color: black }
+    </STYLE>   
+
+
+<title></title> 
+
+<script type="text/javascript" src="http://localhost:8080/speechcloud/lib/speechapi-1.1.js"></script>
+<script type="text/javascript" src="http://localhost:8080/speechcloud/lib/swfobject.js"></script>
+<script type="text/javascript" src="http://ajax.googleapis.com/ajax/libs/jquery/1.4.2/jquery.min.js"></script>
+
+<script language="JavaScript" type="text/javascript" >
+        var linkables = [];
+        var speakables = [];
+        var focusables =[];
+        var browserControl = true;
+        var formsEnabled = false;
+
+        function onTtsComplete() {}
+        function onResult(result) {}
+        function onLoaded() {}
+
+	var flashvars = {speechServer : "http://localhost:8080/speechcloud"};
+        var params = {allowscriptaccess : "always"};
+        var attributes = {};
+        attributes.id = "flashContent";
+	swfobject.embedSWF("http://localhost:8080/speechcloud/lib/speechapi-1.2.swf", "myAlternativeContent", "215", "138", "9.0.28", false,flashvars, params, attributes);
+        speechapi.setupPage("sal","password",onResult,onTtsComplete, onLoaded, "flashContent",linkables,speakables,focusables,browserControl,formsEnabled);
+
+</script>
+
+
+</head>
+
+
+<body class=preferences>
+
+<div id="myAlternativeContent"></div>
+<div id="flashContent"> </div>
+
+
+<h3>Use speech to interact directly with the browser</h3>
+<UL>
+<LI>Make the window smaller or larger (say smaller, larger or to fit)
+<LI>Scroll up, scroll down, scroll to top or bottom (say scroll up, scroll down, top or bottom)
+</UL>
+	
+<br>
+<br>
+<br>
+<br>
+<br>
+<br>
+<br>
+<br>
+<br>
+<UL>
+<LI>Make the window smaller or larger (say smaller, larger or to fit)
+<LI>Scroll up, scroll down, scroll to top or bottom (say scroll up, scroll down, top or bottom)
+</UL>
+	
+<script type="text/javascript">
+var gaJsHost = (("https:" == document.location.protocol) ? "https://ssl." : "http://www.");
+document.write(unescape("%3Cscript src='" + gaJsHost + "google-analytics.com/ga.js' type='text/javascript'%3E%3C/script%3E"));
+</script>
+<script type="text/javascript">
+try {
+var pageTracker = _gat._getTracker("UA-12456436-1");
+pageTracker._trackPageview();
+} catch(err) {}</script>
+
+</div>
+
+</body>
+</html>
