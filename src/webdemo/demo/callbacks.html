@@ -1,0 +1,91 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+	<title>Link Grammars Example</title>
+<script type="text/javascript" src="http://ajax.googleapis.com/ajax/libs/jquery/1.4.2/jquery.min.js"></script>
+<script type="text/javascript" src="http://localhost:8080/speechcloud/lib/speechapi-1.1.js"></script>
+<script type="text/javascript" src="http://localhost:8080/speechcloud/lib/swfobject.js"></script>
+
+</head>
+<body>
+
+<!-- javascript api for registering grammar callbacks -->
+<script type="text/javascript">
+
+	function onLoaded() {
+		$(document).ready(function() {
+			speechapi.setupRecognition("JSGF",speechapi.constructGrammar());
+		});
+	}
+
+	var flashvars = {speechServer : "http://localhost:8080/speechcloud"};
+	var params = {allowscriptaccess : "always"};
+	var attributes = {};
+	attributes.id = "flashContent";
+	swfobject.embedSWF("http://localhost:8080/speechcloud/lib/speechapi-1.2.swf", "myAlternativeContent", 
+			"215", "138", "9.0.28", false,flashvars, params, attributes);
+
+	speechapi.setup("sal","password",onResult,onFinishTTS, onLoaded, "flashContent");
+
+
+	function onFinishTTS() {
+	}
+
+
+	function onResult(result) {
+		speechapi.speak("you said, " + result.text, "male");
+		for (var k in result.ruleMatches) {
+			speechapi.processRule(result.ruleMatches[k]._rule,result.ruleMatches[k]._tag);
+		}
+	}
+
+</script>
+
+<div id="myAlternativeContent"></div>
+<div id="flashContent"></div>
+
+<!-- page specific javascript -->
+<script type="text/javascript">
+
+	$(function () {
+
+		// define an onclick handler to display links in embedded iframe 
+		// (this gets called whether the link is clicked via mouse or speech input)
+		$('.displayInPage').click(function (event) {
+			$('#displayPane').attr('src', $(this).attr('href'));
+			event.preventDefault();
+		});
+
+		// define generic grammar callback
+		var grammarCallback = function(text, tag) {
+			if (tag) {
+				$('a:contains("' + tag + '")').click();
+			}
+		}
+
+		// define grammar for each link
+		speechapi.addJsgfGrammar('(dog | dogs | doggy | doggys | doggies | puppy | puppys | puppies | puppydog | puppydogs) {dogs}', grammarCallback);
+		speechapi.addJsgfGrammar('(cat | cats | kitty | kittys | kittycat | kittycats) {cats}', grammarCallback);
+		speechapi.addJsgfGrammar('(tree | trees | forest | shrubbery) {trees}', grammarCallback);
+		speechapi.addJsgfGrammar('(horse | horses | stallion | stallions) {horses}', grammarCallback);
+		speechapi.addJsgfGrammar('(unicorn | unicorns) {unicorns}', grammarCallback);
+		speechapi.addJsgfGrammar('(rainbow | rainbows) {rainbows}', grammarCallback);
+		speechapi.addJsgfGrammar('(waterfall | waterfalls) {waterfalls}', grammarCallback);
+
+	});
+
+</script>
+
+<ul>
+	<li><a class="displayInPage" href="http://www.google.com/images?q=dogs">dogs</a></li>
+	<li><a class="displayInPage" href="http://www.google.com/images?q=cats">cats</a></li>
+	<li><a class="displayInPage" href="http://www.google.com/images?q=trees">trees</a></li>
+	<li><a class="displayInPage" href="http://www.google.com/images?q=horses">horses</a></li>
+	<li><a class="displayInPage" href="http://www.google.com/images?q=unicorns">unicorns</a></li>
+	<li><a class="displayInPage" href="http://www.google.com/images?q=rainbows">rainbows</a></li>
+	<li><a class="displayInPage" href="http://www.google.com/images?q=waterfalls">waterfalls</a></li>
+</ul>
+
+<iframe id="displayPane" width="100%" height="600px" />
+
+</body>

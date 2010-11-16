@@ -1,0 +1,71 @@
+<html lang="en">
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+
+    <STYLE TYPE="text/css" MEDIA=screen>
+       .preferences  { font-size: medium; background: white; color: black }
+    </STYLE>   
+
+
+<title></title> 
+
+
+
+<script type="text/javascript" src="http://localhost:8080/speechcloud/lib/speechapi-1.1.js"></script>
+<script type="text/javascript" src="http://localhost:8080/speechcloud/lib/swfobject.js"></script>
+<script type="text/javascript" src="http://ajax.googleapis.com/ajax/libs/jquery/1.4.2/jquery.min.js"></script>
+
+<script language="JavaScript" type="text/javascript" >
+	var linkables = [];
+	var speakables = [];
+	var focusables =["text","textarea"];	
+	var browserControl = false;
+	var formsEnabled = true;
+
+	function onTtsComplete() {}
+	function onResult(result) {}
+	function onLoaded() {}
+
+	var flashvars = {speechServer : "http://localhost:8080/speechcloud"};
+        var params = {allowscriptaccess : "always"};
+	var attributes = {};
+	attributes.id = "flashContent";
+	swfobject.embedSWF("http://localhost:8080/speechcloud/lib/speechapi-1.2.swf", "myAlternativeContent", "215", "138", "9.0.28", false,flashvars, params, attributes);
+
+	speechapi.setupPage("sal","password",onResult,onTtsComplete, onLoaded, "flashContent",linkables,speakables,focusables,browserControl,formsEnabled);
+
+</script>
+
+
+</head>
+
+
+<body class=preferences>
+
+
+<div id="myAlternativeContent"></div>
+<div id="flashContent"></div>
+
+
+
+<h3>Why don't you just say the name of the field you want to fill</h3>
+<p>You can change focus by saying the name of the text box.  In this demo, you can say either "percentage" or "color".  You can also change focus the old fashioned way, with your mouse.  Speech focus is indicated by the yellow highlight.   Once focus is set, you can then say the content of the field (either a number or a color).  If you dont know what is valid input, say "options".</p>
+<p>Say submit to submit the form.</p>
+<!--p>  You can also bypass the form and say it all at once.  Say something like "increase prices 4%".</p-->
+<br>
+
+
+<table border="1" width=>
+<tr>
+  <td>Percentage</td>
+  <td><input type="text" id='percentage' name=percentage gram='one{1}|two{2}|three{3}|four{4}|five{5}|six{6}|seven{7}|eight{8}|nine{9}|ten{10}' value="10" size="4"/></td>
+</tr>
+<tr>
+  <td>Color</td>
+  <td><input type="text" id="color" value="red" name=color gram='red|white|blue|green|black|yellow|orange|brown|gold|white' size="10"/></td>
+</table>
+<input type="button" id="submit" name="submit" value="submit" OnClick="submitform();"/>
+
+
+</body>
+</html>

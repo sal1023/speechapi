@@ -1,0 +1,38 @@
+
+<h4>HTTP Forms</h4>
+
+<h5>Synthesizer Form</h4>
+
+	<form action="http://localhost:8080/speechcloud/SpeechDownloadServlet" method="post" enctype="multipart/form-data">
+								Enter Text Below: <input  name="text" size=80 type="text" />
+							<br>
+							<br>
+							Voice: <select id="voice" name="voice" type="text" />
+                                                                   <option value="hmm-jmk">hmm-jmk</option>
+                                                                   <option value="hmm-bdl">hmm-bdl</option>
+								   <option value="hmm-slt">hmm-slt</option>
+							   </select>
+
+								   
+							 	<input type="submit" class="submit" value="Synthesize" />
+				        <input type="hidden" id="mimeType" name="mimeType" value="audio/x-wav"> 
+					<!--option value="audio/mpeg"-->
+					<input type="hidden" id="bigEndian" name="bigEndian" value="true">
+					<input type="hidden" id="encoding" name="encoding" value="PCM_SIGNED">
+					<!--option value="MPEG1L3"-->
+					<input type="hidden" id="sampleRate" name="sampleRate" value="16000">
+					<input type="hidden" id="bytesPerValue" name="bytesPerValue" value="2">
+		</form>
+
+<h5>Recognizer Form</h4>
+
+				<form action="http://localhost:8080/speechcloud/SpeechUploadServlet" method="post" enctype="multipart/form-data">
+					    <input id="lmFlag" name="lmFlag" type="hidden" value="true">
+					    <input type="hidden" id="continuousFlag" name="continuousFlag" value="true">
+					    <input type="hidden" id="doEndpointing" name="doEndpointing" value="true" />
+					    <input type="hidden" id="CmnBatchFlag" name="CmnBatchFlag" value="true" />
+					    Audio: <input type="file" name="audio"><br>
+					    <input type="submit" class="submit" value="Recognize" />
+
+</form>
+
