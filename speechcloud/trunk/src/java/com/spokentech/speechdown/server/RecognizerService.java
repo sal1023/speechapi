@@ -9,6 +9,9 @@ package com.spokentech.speechdown.server;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.PrintWriter;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.NoSuchElementException;
 
 import javax.activation.DataHandler;
 import javax.servlet.http.HttpServletResponse;
@@ -16,7 +19,10 @@ import javax.sound.sampled.AudioInputStream;
 import javax.sound.sampled.AudioSystem;
 import javax.sound.sampled.UnsupportedAudioFileException;
 import javax.speech.recognition.GrammarException;
+
 import org.apache.commons.pool.ObjectPool;
+import org.apache.commons.pool.impl.GenericObjectPool;
+import org.apache.commons.pool.impl.StackObjectPool;
 import org.apache.log4j.Logger;
 import org.jvnet.staxex.StreamingDataHandler;
 
@@ -25,7 +31,8 @@ import com.spokentech.speechdown.common.Utterance;
 import com.spokentech.speechdown.common.Utterance.OutputFormat;
 import com.spokentech.speechdown.server.domain.SpeechRequestDTO;
 import com.spokentech.speechdown.server.recog.RecEngine;
-import com.spokentech.speechdown.server.util.pool.AbstractPoolableObjectFactory;
+
+import com.spokentech.speechdown.server.util.pool.SphinxRecEngineFactory;
 
 public class RecognizerService {
 
@@ -35,53 +42,121 @@ public class RecognizerService {
     static private final String LM_PREFIX = "lm-";
     static private final String GRAMMAR_PREFIX = "grammar-";
     
-	private AbstractPoolableObjectFactory recEngineFactory;
+	private SphinxRecEngineFactory recEngineFactory;
 	
 	private ObjectPool _lmRecognizerPool;
 	private ObjectPool _grammarRecognizerPool;
     //private ObjectPool _recognizerPool;
 	
-	private int poolSize;
+	private int lmPoolSize;
+	private int grammarPoolSize;
  
+	public int getGrammarPoolSize() {
+		return grammarPoolSize;
+	}
+
+	public void setGrammarPoolSize(int grammarPoolSize) {
+		this.grammarPoolSize = grammarPoolSize;
+	}
+
 	/**
      * @return the poolSize
      */
-    public int getPoolSize() {
-    	return poolSize;
+    public int getLmPoolSize() {
+    	return lmPoolSize;
     }
 
 	/**
      * @param poolSize the poolSize to set
      */
-    public void setPoolSize(int poolSize) {
-    	this.poolSize = poolSize;
+    public void setLmPoolSize(int poolSize) {
+    	this.lmPoolSize = poolSize;
     }
 
 	/**
      * @return the recEngineFactory
      */
-    public AbstractPoolableObjectFactory getRecEngineFactory() {
+    public SphinxRecEngineFactory getRecEngineFactory() {
     	return recEngineFactory;
     }
 
 	/**
      * @param recEngineFactory the recEngineFactory to set
      */
-    public void setRecEngineFactory(AbstractPoolableObjectFactory recEngineFactory) {
+    public void setRecEngineFactory(SphinxRecEngineFactory recEngineFactory) {
     	this.recEngineFactory = recEngineFactory;
     }
 
 
 	public void startup() {
-	   try {
-	    	//_recognizerPool =  recEngineFactory.createObjectPool(poolSize,NO_PREFIX);
-	    	_lmRecognizerPool =  recEngineFactory.createObjectPool(poolSize,LM_PREFIX);
-	    	_grammarRecognizerPool =  recEngineFactory.createObjectPool(poolSize,GRAMMAR_PREFIX);
-
-        } catch (InstantiationException e) {
-	        // TODO Auto-generated catch block
-	        e.printStackTrace();
-        }   
+		
+		GenericObjectPool.Config config = new GenericObjectPool.Config();
+		config.maxActive                        = lmPoolSize;
+	    config.maxIdle                          = -1;
+        config.maxWait                          = 200;
+        config.minEvictableIdleTimeMillis       = -1;
+        config.minIdle                          = config.maxActive;
+        config.numTestsPerEvictionRun           = -1;
+        //config.softMinEvictableIdleTimeMillis   = -1;
+        config.testOnBorrow                     = false;
+        config.testOnReturn                     = false;
+        config.testWhileIdle                    = false;
+        config.timeBetweenEvictionRunsMillis    = -1;
+        config.whenExhaustedAction              = GenericObjectPool.WHEN_EXHAUSTED_FAIL;
+		
+    	_lmRecognizerPool =  new GenericObjectPool(recEngineFactory.createLmPoolFactory() ,config);
+    	
+		config.maxActive                        = grammarPoolSize;
+    	_grammarRecognizerPool = new GenericObjectPool(recEngineFactory.createGrammarPoolFactory(),config);
+ 
+    	
+    	 /**
+         * Initializes an {@link org.apache.commons.pool.ObjectPool} by borrowing each object from the
+         * pool (thereby triggering activation) and then returning all the objects back to the pool. 
+         * @param pool the object pool to be initialized.
+         * @throws InstantiationException if borrowing (or returning) an object from the pool triggers an exception.
+         */
+        try {
+            List<Object> objects = new ArrayList<Object>();
+            while (true) try {
+                objects.add(_lmRecognizerPool.borrowObject());
+            } catch (NoSuchElementException e){
+                // ignore, max active reached
+                break;
+            }
+            for (Object obj : objects) {
+            	_lmRecognizerPool.returnObject(obj);
+            }
+        } catch (Exception e) {
+            try {
+            	_lmRecognizerPool.close();
+            } catch (Exception e1) {
+                _logger.warn("Encounter expception while attempting to close object pool!", e1);
+            }
+            e.printStackTrace();
+            //throw (InstantiationException) new InstantiationException(e.getMessage()).initCause(e);
+        }
+        try {
+            List<Object> objects = new ArrayList<Object>();
+            while (true) try {
+                objects.add(_grammarRecognizerPool.borrowObject());
+            } catch (NoSuchElementException e){
+                // ignore, max active reached
+                break;
+            }
+            for (Object obj : objects) {
+            	_grammarRecognizerPool.returnObject(obj);
+            }
+        } catch (Exception e) {
+            try {
+            	_grammarRecognizerPool.close();
+            } catch (Exception e1) {
+                _logger.warn("Encounter expception while attempting to close object pool!", e1);
+            }
+            e.printStackTrace();
+            //throw (InstantiationException) new InstantiationException(e.getMessage()).initCause(e);
+        }
+    	
     }
 	
 	public void shutdown() {

@@ -63,6 +63,11 @@ public class GrammarManager {
      */
     public void startup() {
     	
+    	if (baseGrammarDir == null) {
+    		String baseGrammarDir = System.getProperty("java.io.tmpdir");
+    		if ( !(baseGrammarDir.endsWith("/") || baseGrammarDir.endsWith("\\")) )
+    			baseGrammarDir = baseGrammarDir + System.getProperty("file.separator");
+    	}
         _grammarDir = new File(baseGrammarDir, grammarDir);
         
         // create directory if it does not exist

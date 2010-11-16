@@ -10,7 +10,7 @@
 
     <context-param>
        <param-name>contextConfigLocation</param-name>
-       <param-value>@application.context@</param-value>
+       <param-value>/WEB-INF/dev-applicationContext.xml</param-value>
     </context-param>
 
 
@@ -20,37 +20,6 @@
 
 
 
-   <!-- the jaxws servelet for webservice based communication -->
-
-    <servlet>
-        <servlet-name>jaxws-servlet</servlet-name>
-        <servlet-class>com.sun.xml.ws.transport.http.servlet.WSSpringServlet</servlet-class>
-        <load-on-startup>1</load-on-startup>
-    </servlet>
-    <servlet-mapping>
-        <servlet-name>jaxws-servlet</servlet-name>
-        <url-pattern>/speechlink</url-pattern>
-     </servlet-mapping>
-    
-     <servlet-mapping>
-        <servlet-name>jaxws-servlet</servlet-name>
-        <url-pattern>/speechattach</url-pattern>
-    </servlet-mapping>
- 
-     <servlet>
-           <servlet-name>JerseyTest</servlet-name>
-            <servlet-class>
-                com.sun.jersey.spi.container.servlet.ServletContainer
-            
-                <!--com.sun.jersey.spi.spring.container.servlet.SpringServlet-->
-            </servlet-class>
-        <load-on-startup>1</load-on-startup>
-    </servlet>
-    <servlet-mapping>
-           <servlet-name>JerseyTest</servlet-name>
-        <url-pattern>/rest/*</url-pattern>
-    </servlet-mapping>   
- 
  
     <!--The upload servlet for using straightforward http protocol -->    
 
@@ -59,15 +28,15 @@
 		<servlet-class>com.spokentech.speechdown.server.SpeechUploadServlet</servlet-class>
 		<init-param>
 			<param-name>tempDir</param-name>
-			<param-value>/TEMP/speechup/tempdir</param-value>
+			<param-value>${speechapi}/temp</param-value>
 		</init-param>
 		<init-param>
 			<param-name>destinationDir</param-name>
-			<param-value>/TEMP/speechup/destdir</param-value>
+			<param-value>${speechapi}/temp</param-value>
 		</init-param>
 		<init-param>
 			<param-name>serviceLogging</param-name>
-			<param-value>@serviceLoggingFlag@</param-value>
+			<param-value>true</param-value>
 		</init-param>
 		
 		
@@ -86,15 +55,15 @@
 		<servlet-class>com.spokentech.speechdown.server.SpeechDownloadServlet</servlet-class>
 		<init-param>
 			<param-name>tempDir</param-name>
-			<param-value>/TEMP/speechup/tempdir</param-value>
+			<param-value>${speechapi}/temp</param-value>
 		</init-param>
 		<init-param>
 			<param-name>destinationDir</param-name>
-			<param-value>/TEMP/speechup/destdir</param-value>
+			<param-value>${speechapi}/temp</param-value>
 		</init-param>
 		<init-param>
 			<param-name>serviceLogging</param-name>
-			<param-value>@serviceLoggingFlag@</param-value>
+			<param-value>true</param-value>
 		</init-param>
 	</servlet>
 	<servlet-mapping>

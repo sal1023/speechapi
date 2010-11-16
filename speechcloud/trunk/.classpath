@@ -40,7 +40,6 @@
 	<classpathentry kind="lib" path="lib/freetts-SNAPSHOT.jar"/>
 	<classpathentry kind="lib" path="etc"/>
 	<classpathentry kind="lib" path="lib/sphinx4.jar" sourcepath="/Sphinx-4-SNAPSHOT"/>
-	<classpathentry kind="var" path="OPENMARY_HOME/java/mary-common.jar"/>
 	<classpathentry kind="lib" path="lib/tritonus_mp3-0.3.6.jar"/>
 	<classpathentry kind="lib" path="lib/tritonus_share-0.3.6.jar"/>
 	<classpathentry kind="lib" path="lib/jlibrtp.jar"/>
@@ -57,5 +56,13 @@
 	<classpathentry kind="lib" path="lib/jsapi-1.0-base.jar"/>
 	<classpathentry kind="lib" path="lib/aws-java-sdk-1.0.005.jar"/>
 	<classpathentry kind="var" path="M2_REPO/com/google/code/gson/gson/1.4/gson-1.4.jar"/>
+	<classpathentry kind="var" path="JAXWS_HOME"/>
+	<classpathentry kind="lib" path="lib/jsapi.jar"/>
+	<classpathentry kind="lib" path="lib/jmf.jar"/>
+	<classpathentry kind="lib" path="lib/mary-common.jar"/>
+	<classpathentry kind="lib" path="C:/work/speechcloud/etc"/>
+	<classpathentry kind="lib" path="lib/slf4j-api-1.5.10.jar"/>
+	<classpathentry kind="lib" path="lib/slf4j-jcl-1.5.10.jar"/>
+	<classpathentry kind="lib" path="lib/signalproc.jar"/>
 	<classpathentry kind="output" path="target/eclipse"/>
 </classpath>

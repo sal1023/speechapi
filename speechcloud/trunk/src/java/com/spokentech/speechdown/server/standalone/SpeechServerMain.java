@@ -16,6 +16,7 @@ import org.springframework.beans.factory.BeanFactoryAware;
 import org.springframework.context.support.ClassPathXmlApplicationContext;
 
 import com.spokentech.speechdown.server.recog.RecEngine;
+import com.spokentech.speechdown.server.util.pool.SphinxRecEngineFactory;
 
 
 // TODO: Auto-generated Javadoc
@@ -48,7 +49,7 @@ public class SpeechServerMain implements BeanFactoryAware {
         for (int i=1; i<=poolSize; i++) { 
         	
         	
-            RecEngine recEngine = sphinxRecEngineFactory.createSphinxRecEngine();
+            RecEngine recEngine = sphinxRecEngineFactory.createSphinxRecEngine(false);
 
   		   	SpeechWorker speechWorker =(SpeechWorker) this.beanFactory.getBean("speechWorker");
 

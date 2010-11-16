@@ -1,27 +1,44 @@
-* To run in servlet container
-    * set JAXWS_HOME to the JAX-WS installation directory
-    * ant clean server - runs apt to generate server side artifacts and
-      does the deployment
-    * ant clean client run - runs wsimport on the published wsdl by the deplyed
-      endpoint, compiles the generated artifacts and the client application
-      then executes it.
+SpeechServer Installation 
+-------------------------
 
-download jaxws ri
-https://jax-ws.dev.java.net/
+1.  install jdk  (This release  was tested with the jdk1.6.0.22 )
+2.  install xuggler  (This release  was tested with version 3.4.1012)
+3.  install tomcat (This release was tested with version 6.0.29)
+4.  Unzip the speechapi.zip (or tar.gz) 
+5.  You will need the following environment var 
 
-Tomcat
-Add this to CATALINA_HOME/conf/catalina.properties
-shared.loader=c:/tools/jaxws-ri/lib/*.jar
+Example for unix install (note your paths may be different depending on where
+you placed the various components on the file system.)
 
-Add this tomcat.conf (for linux)
+    #  tomcat will require JAVA_HOME set to home dir for jdk (not jre)
+       export JAVA_HOME=/usr/share/jdk1.6.0_22
+       export PATH=$JAVA_HOME/bin:$PATH
 
-   export MARY_BASE="/usr/share/MARYTTS"
-   export SHPROT_BASE="$MARY_BASE/lib/modules/shprot"
-   export LD_LIBRARY_PATH="$MARY_BASE/lib/native:$LD_LIBRARY_PATH"
+    #  xuggler installer may already set this for you.
+       export XUGGLE_HOME=/usr/local/xuggler
+       export LD_LIBRARY_PATH=$XUGGLE_HOME/lib:$LD_LIBRARY_PATH
+       export PATH=$XUGGLE_HOME/bin:$PATH
 
-For windows you can move the mary (mp3) dll's to windows/system32
-from $maryhome/lib/windows
-(lametritonus.dll and lame_enc.dll )
+    #  *** NOTE that speechapi system property must point to location that you unziped speechapi.zip/tar
+       export CATALINA_OPTS="-Xms512m -Xmx1024m -Dspeechapi=/usr/share/speechapi"
 
-Open Mary
-set server=false in $MARY_HOME/conf/marybase.conf
+    #  For mp3 support on linux
+       export MARY_BASE="$SPEECHAPI_HOME/MARY TTS"
+       export LD_LIBRARY_PATH="$MARY_BASE/lib/linux:$LD_LIBRARY_PATH"
+
+    #  for mp3 support on windows, you can move the mary (mp3) dll's to windows/system32 from $maryhome/lib/windows
+    #     lametritonus.dll and lame_enc.dll
+
+6.  Copy the speechcloud.war file to the tomcat webapps directory
+
+7.  Now you can run tomcat the normal way.  
+     $TOMCAT_HOME/bin/startup.sh (or .bat)
+     $TOMCAT_HOME/bin/shutdown.sh (or .bat)
+
+    Optionally you can use the init.d script to audtomatically startup tomcat.
+
+
+LIMITATIONS
+-----------
+- 64bit windows not supported
+

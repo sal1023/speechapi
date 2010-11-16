@@ -7,8 +7,10 @@
 package com.spokentech.speechdown.server.standalone;
 
 import java.io.BufferedReader;
+import java.io.BufferedWriter;
 import java.io.FileNotFoundException;
 import java.io.FileReader;
+import java.io.FileWriter;
 import java.io.IOException;
 import java.net.URL;
 
@@ -43,14 +45,15 @@ public class FileSpeechWorker implements SpeechWorker {
 
 	            String delims = "[,]";
 	            String[] tokens = l.split(delims);
-	            if (tokens.length == 4) {
+	            if (tokens.length == 5) {
 	            	job = new SpeechJob();
 	            	job.setId(tokens[0]);
 	            	job.setPriority(Integer.parseInt(tokens[1]));
 	            	job.setRequestor(tokens[2]);
 	            	String urlName = tokens[3];
 	            	URL url = new URL(urlName);
-	            	job.setUrl(url);            	
+	            	job.setUrl(url); 	            	
+	              	job.setOutputName(tokens[4]);
 	            }
 
 	            
@@ -92,9 +95,16 @@ public class FileSpeechWorker implements SpeechWorker {
 	@Override
 	public void completeSuccessfulJob(SpeechJob job, String transcription) {
 		logger.info("************* JOB COMPLETE*******************\n"+job.getUrl().toString()+"\n*************************************************");
-
+		try{
+			// Create file 
+			FileWriter fstream = new FileWriter(job.getOutputName());
+			BufferedWriter out = new BufferedWriter(fstream);
+			out.write(transcription);
+			//Close the output stream
+			out.close();
+		}catch (Exception e){//Catch exception if any
+			System.err.println("Error: " + e.getMessage());
+		}
 	}
-
-
 
 }
