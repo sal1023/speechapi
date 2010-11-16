@@ -12,28 +12,17 @@
     http://jax-ws.dev.java.net/spring/servlet
     http://jax-ws.dev.java.net/spring/servlet.xsd">
 
-
-    <wss:binding url="/speechlink" service="#SpeechLinkService"></wss:binding>  
-    <ws:service id="SpeechLinkService" bean="#speechServiceImpl"></ws:service>  
-    <bean id="speechServiceImpl" class="com.spokentech.speechdown.server.ws.SpeechLinkPortImpl">
-    		<property name="recognizerService"><ref bean="recognizerService"/></property>
-    		<property name="synthesizerService"><ref bean="synthesizerService"/></property>
-    </bean>  
-
-    <wss:binding url="/speechattach" service="#SpeechAttachService"></wss:binding>  
-    <ws:service id="SpeechAttachService" bean="#speechAttachImpl"></ws:service>  
-    <bean id="speechAttachImpl" class="com.spokentech.speechdown.server.ws.SpeechAttachPortImpl">
-    		<property name="recognizerService"><ref bean="recognizerService"/></property>
-    		<property name="synthesizerService"><ref bean="synthesizerService"/></property>
-    </bean>  
-
+    <import resource="speechserver.xml"/>
 
 	<bean id="recognizerService" 
 	      class="com.spokentech.speechdown.server.RecognizerService"
 		  init-method="startup" destroy-method="shutdown">
-		  <property name="recEngineFactory"><ref bean="recEngineFactory"/></property>
-		  <property name="poolSize">
+		  <property name="recEngineFactory"><ref bean="sphinxRecEngineFactory"/></property>
+		  <property name="lmPoolSize">
 				<value>2</value>
+		  </property>
+		  		  <property name="grammarPoolSize">
+				<value>3</value>
 		  </property>
 	</bean>
 	
@@ -42,13 +31,13 @@
 	      class="com.spokentech.speechdown.server.tts.MarySynthesizerService"
 		  init-method="startup" destroy-method="shutdown">
 		  <property name="promptDir">
-				<value>@applicationContext.synthesizerService.promptDir@</value>
+				<value>C:/tools/apache-tomcat-6.0.29/webapps/speechcloud/prompts</value>
 		  </property>
 		  <property name="prefix">
-				<value>@applicationContext.synthesizerService.prefix@</value>
+				<value>http://localhost:8080/speechcloud/prompts/</value>
 		  </property>
 		  <property name="maryDir">
-				<value>c:\thirdparty\MARY TTS</value>
+			  <value>${speechapi}/mary</value>
 		  </property>
 
 	</bean>
@@ -60,26 +49,8 @@
 		  <property name="grammarDir">
 				<value>grammars</value>
 		  </property>
-		  <property name="baseGrammarDir">
-				<value>@applicationContext.recognizerService.baseGrammarDir@</value>
-		  </property>
 	</bean>
 
-	
-    <bean id="recEngineFactory" 
-	      class="com.spokentech.speechdown.server.recog.SphinxRecEngineFactory"
-		  init-method="startup" destroy-method="shutdown">
-		  <property name="grammarManager"><ref bean="grammarManager"/></property>
-		  <property name="sphinxConfigFile">
-				<value>@applicationContext.recognizerService.sphinxConfigFile@</value>
-		  </property>
-		  <property name="recordingFilePath">
-		      <value>C:\work\website\htdocs\audio</value>
-		  </property>
-		  <property name="recordingEnabled">
-				<value>true</value>
-		  </property>
-	</bean>
 	
 	<bean id="synthEngineFactory" 
 	      class="com.spokentech.speechdown.server.tts.FreettsSynthEngineFactory"

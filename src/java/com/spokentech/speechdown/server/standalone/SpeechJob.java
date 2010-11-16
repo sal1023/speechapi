@@ -18,7 +18,14 @@ public class SpeechJob {
 	private int priority;	
 	private InputStream inputStream;
 	private URL url;
+	private String outputName;
 	
+	public String getOutputName() {
+		return outputName;
+	}
+	public void setOutputName(String outputName) {
+		this.outputName = outputName;
+	}
 	/**
      * @return the url
      */

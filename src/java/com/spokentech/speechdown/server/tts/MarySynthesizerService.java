@@ -31,6 +31,9 @@ import javax.sound.sampled.AudioSystem;
 import javax.sound.sampled.UnsupportedAudioFileException;
 import javax.sound.sampled.AudioFileFormat.Type;
 
+
+
+import org.apache.log4j.BasicConfigurator;
 import org.apache.log4j.Logger;
 
 import com.spokentech.speechdown.server.SynthesizerService;
@@ -44,6 +47,8 @@ import de.dfki.lt.mary.MaryProperties;
 import de.dfki.lt.mary.Request;
 import de.dfki.lt.mary.modules.synthesis.Voice;
 import de.dfki.lt.mary.util.MaryAudioUtils;
+
+
 
 public class MarySynthesizerService implements SynthesizerService {
 	
@@ -142,6 +147,7 @@ public class MarySynthesizerService implements SynthesizerService {
 	public void startup() {
 
 		try {
+	        BasicConfigurator.configure();
 			addJarsToClasspath();
 	        MaryProperties.readProperties();
 			//mary = new Mary();
@@ -173,8 +179,8 @@ public class MarySynthesizerService implements SynthesizerService {
 
         if (voiceName != null)
             voice = Voice.getVoice(voiceName);
-        else if (inputType.getLocale() != null)
-            voice = Voice.getDefaultVoice(inputType.getLocale());
+        else 
+            voice = Voice.getDefaultVoice(Locale.US);
         
         String audioTypeName = "WAVE";
 		if (mime.equals("audio/x-wav")) {
@@ -194,18 +200,18 @@ public class MarySynthesizerService implements SynthesizerService {
             AudioFileFormat.Type audioType = MaryAudioUtils.getAudioFileFormatType(audioTypeName);
             
             //AudioFormat audioFormat = null;
-            if (audioType.toString().equals("MP3")) {
-                if (!MaryAudioUtils.canCreateMP3())
-                    throw new UnsupportedAudioFileException("Conversion to MP3 not supported.");
+            //if (audioType.toString().equals("MP3")) {
+                //if (!MaryAudioUtils.canCreateMP3())
+                //    throw new UnsupportedAudioFileException("Conversion to MP3 not supported.");
                 //audioFormat = MaryAudioUtils.getMP3AudioFormat();
             //} else {
                 //Voice ref = (voice != null) ? voice : Voice.getDefaultVoice(Locale.ENGLISH);
                 //audioFormat = ref.dbAudioFormat();
-            }
+            //}
             _logger.debug("***: "+format.toString());
             audioFileFormat = new AudioFileFormat(audioType, format, AudioSystem.NOT_SPECIFIED);
         }
-        Request request = new Request(inputType, outputType, voice, "", "", 1, audioFileFormat);
+        Request request = new Request(inputType, outputType,voice, "", "", 1, audioFileFormat);
  
         try {
         	ByteArrayInputStream bs = new ByteArrayInputStream(text.getBytes());

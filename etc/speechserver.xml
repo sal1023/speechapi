@@ -20,20 +20,8 @@
 	</bean>
 
 
-	<bean id="speechServer" 
-	      class="com.spokentech.speechdown.server.standalone.SpeechServerMain"
-		  init-method="startup" destroy-method="shutdown">
-		  <property name="poolSize">
-			<value>3</value>
-		  </property>
-		  <property name="outputFormat">
-			<value>text</value>
-		  </property>
-		<property name="sphinxRecEngineFactory"> <ref bean="sphinxRecEngineFactory"/></property>
-	</bean>
-
 	<bean id="sphinxRecEngineFactory" 
-		class="com.spokentech.speechdown.server.standalone.SphinxRecEngineFactory"
+		class="com.spokentech.speechdown.server.util.pool.SphinxRecEngineFactory"
     		scope="singleton">
 		  
 		  <property name="showTokenCount">
@@ -84,7 +72,21 @@
 		  </property>
 	</bean>
 	
-    <bean name="s4RecEngine" 
+    <bean name="s4RecEngineLm" 
+                class="com.spokentech.speechdown.server.recog.SphinxRecEngine" scope="prototype"
+                		  init-method="startup" destroy-method="shutdown">             
+        <property name="recognizer"><ref bean="recognizer"/></property>
+        <property name="jsgf"> <ref bean="jsgf"/></property>
+        <property name="grammarManager"> <ref bean="grammarManager"/></property>
+        <property name="loader"> <ref bean="loader"/></property>
+        <property name="scorer"> <ref bean="scorer"/></property>   
+        <property name="confidenceScorer"> <ref bean="confidenceScorer"/></property>
+        <property name="logMath"> <ref bean="logMath"/></property>
+        <property name="recordingDir"> <value>${speech.recordingDir}</value></property>
+        <property name="recordingEnabled"> <value>${speech.recordingEnabled}</value></property>   
+     </bean>
+     
+     <bean name="s4RecEngineGrammar" 
                 class="com.spokentech.speechdown.server.recog.SphinxRecEngine" scope="prototype"
                 		  init-method="startup" destroy-method="shutdown">             
         <property name="recognizer"><ref bean="recognizer"/></property>
@@ -98,9 +100,6 @@
         <property name="recordingEnabled"> <value>${speech.recordingEnabled}</value></property>   
      </bean>
 
-    <bean name="speechWorker"  class="com.spokentech.speechdown.server.standalone.FileSpeechWorker" scope="prototype">
-        <constructor-arg type="java.lang.String" value="c:\work\speechcloud\testqueue.txt" />
-    </bean>
 
     <!-- ******************************************************** -->
     <!-- Sphinx4 components			                              -->
@@ -136,8 +135,8 @@
     <bean name="trigramModel"
            class="edu.cmu.sphinx.linguist.language.ngram.large.LargeTrigramModel" scope="prototype">
         <constructor-arg index="0"  type="java.lang.String" value="${speech.lm.format}" />
-        <constructor-arg index="1"  ref="modelUrl"/>
-        <!--  constructor-arg index="1"   type="java.lang.String" value="${speech.lm.languageModelFile}"/-->
+        <!--constructor-arg index="1"  ref="modelUrl"/-->
+        <constructor-arg index="1"   type="java.lang.String" value="${speech.lm.languageModelFile}"/>
         <constructor-arg index="2" type="java.lang.String" ><null/></constructor-arg>
         <!--constructor-arg index="2"   type="java.lang.String" value="${speech.lm.queryLogFile}"/-->
         <constructor-arg index="3"   type="int" value="${speech.lm.maxTrigramCacheSize}"/>
@@ -153,9 +152,9 @@
         <constructor-arg index="13"  type="boolean" value="${speech.lm.fullSmear}" />
     </bean>
     
-    <bean name="modelUrl" class="java.net.URL" scope="singleton">
+    <!--bean name="modelUrl" class="java.net.URL" scope="singleton">
                 <constructor-arg index="0"  type="java.lang.String" value="${speech.lm.languageModelFile}" />
-    </bean>
+    </bean-->
     
 
     <!-- ******************************************************** -->
@@ -262,8 +261,17 @@
     <!-- The Decoder 					                          -->
     <!-- ******************************************************** -->
 
-    <bean name="recognizer" class="edu.cmu.sphinx.recognizer.Recognizer" scope="prototype">
-        <constructor-arg index="0" ref="decoder"/>
+    <bean name="recognizerLm" class="edu.cmu.sphinx.recognizer.Recognizer" scope="prototype">
+        <constructor-arg index="0" ref="decoderLm"/>
+       <constructor-arg index="1">         
+	    	<list>
+	    		<null/>
+	    	</list>
+    	</constructor-arg>
+    </bean>
+    
+    <bean name="recognizerGramar" class="edu.cmu.sphinx.recognizer.Recognizer" scope="prototype">
+        <constructor-arg index="0" ref="decoderGrammar"/>
        <constructor-arg index="1">         
 	    	<list>
 	    		<null/>
@@ -272,8 +280,8 @@
     </bean>
 
 
-    <bean name="decoder" class="edu.cmu.sphinx.decoder.Decoder" scope="prototype">
-        <constructor-arg index="0"  ref="searchManager"/>
+    <bean name="decoderLm" class="edu.cmu.sphinx.decoder.Decoder" scope="prototype">
+        <constructor-arg index="0"  ref="searchManagerLm"/>
         <constructor-arg index="1"  value="${speech.decoder.fireNonFinalResults}"/>
         <constructor-arg index="2"  value="${speech.decoder.autoAllocate}"/>
         <constructor-arg index="3">         
@@ -284,6 +292,20 @@
 
         <constructor-arg index="4"  value="${speech.decoder.featureBlockSize}"/>
     </bean>
+    
+    <bean name="decoderGrammar" class="edu.cmu.sphinx.decoder.Decoder" scope="prototype">
+        <constructor-arg index="0"  ref="searchManagerLm"/>
+        <constructor-arg index="1"  value="${speech.decoder.fireNonFinalResults}"/>
+        <constructor-arg index="2"  value="${speech.decoder.autoAllocate}"/>
+        <constructor-arg index="3">         
+	    	<list>
+	    		<null/>
+	    	</list>
+    	</constructor-arg>
+
+        <constructor-arg index="4"  value="${speech.decoder.featureBlockSize}"/>
+    </bean>
+    
 
     <bean name="pruner"
                class="edu.cmu.sphinx.decoder.pruner.SimplePruner" scope="singleton"/>
@@ -298,10 +320,28 @@
         <constructor-arg index="5" type="int"  value="${speech.scorer.threadPriority}" />
     </bean>
 
-   <bean name="searchManager" 
+   <bean name="searchManagerLm" 
               class="edu.cmu.sphinx.decoder.search.WordPruningBreadthFirstSearchManager" scope="prototype">
 		<constructor-arg index="0" ref="logMath"/>
         <constructor-arg index="1" ref="lexTreeLinguist"/>
+       	<constructor-arg index="2" ref="pruner"/>
+        <constructor-arg index="3" ref="scorer" />
+       	<constructor-arg index="4" ref="activeListManager"/>
+       	<constructor-arg index="5" type="boolean" value ="${speech.search.showTokenCount}" />
+        <constructor-arg index="6" type="double" value="${speech.relativeBeamWidth2}"/>
+        <constructor-arg index="7" type="int" value ="${speech.search.growSkipInterval}" />
+        <constructor-arg index="8" type="boolean" value="${speech.search.checkStateOrder}" />
+        <constructor-arg index="9" type="boolean" value="${speech.search.buildWordLattice}" />
+        <constructor-arg index="10" type="int" value ="${speech.search.maxLatticeEdges}" />
+        <constructor-arg index="11" type="float" value="${speech.search.acousticLookahead}"/>
+        <constructor-arg index="12" type="boolean" value="${speech.search.keepAllTokens}"/>
+    </bean>
+
+
+   <bean name="searchManagerGrammar" 
+              class="edu.cmu.sphinx.decoder.search.WordPruningBreadthFirstSearchManager" scope="prototype">
+		<constructor-arg index="0" ref="logMath"/>
+        <constructor-arg index="1" ref="grammar-linguist"/>
        	<constructor-arg index="2" ref="pruner"/>
         <constructor-arg index="3" ref="scorer" />
        	<constructor-arg index="4" ref="activeListManager"/>

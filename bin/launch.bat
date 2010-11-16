@@ -41,19 +41,6 @@ echo.
 goto error
 
 :valSpeechCloudHome
-set SPEECHCLOUD_JAR=%SPEECHCLOUD_HOME%\lib\speechcloud-cli.jar
-if exist "%SPEECHCLOUD_JAR%" goto chkJavaHome
-
-echo.
-echo ERROR: SPEECHCLOUD_HOME is set to an invalid directory.
-echo SPEECHCLOUD_HOME = %SPEECHCLOUD_HOME%
-echo %SPEECHCLOUD_JAR% not found!
-echo Please set the SPEECHCLOUD_HOME variable in your environment to match the
-echo location of the SpeechCloud installation
-echo.
-goto error
-
-:chkJavaHome
 
 if not "%JAVA_HOME%" == "" goto valJavaHome
 

@@ -9,6 +9,7 @@
     <property file="${basedir}/build.properties" />
 
 	<property name="build.home" value="${basedir}/target/build" />
+	<property name="dist.home" value="${basedir}/dist" />
 	<property name="build.classes.home" value="${build.home}/classes" />
 	<property name="build.client.classes.home" value="${build.home}/client/classes" />
 	<property name="build.cli.classes.home" value="${build.home}/cli/classes" />
@@ -40,6 +41,9 @@
 	<property name="cairo-rtp.jar" value="${lib.dir}/cairo-rtp-SNAPSHOT.jar" />	
 	<property name="tritonus_share.jar" value="${lib.dir}/tritonus_share-0.3.6.jar" />	
 	<property name="sphinx4.jar" value="${lib.dir}/sphinx4.jar" />
+	<property name="jsapi.jar" value="${lib.dir}/jsapi.jar" />
+	<property name="jmf.jar" value="${lib.dir}/jmf.jar" />
+
 	<property name="jsapi-1.0-base.jar" value="${lib.dir}/jsapi-1.0-base.jar" />
 	
 	<property name="aws-java-sdk.jar" value="${lib.dir}/aws-java-sdk-1.0.005.jar" />
@@ -72,8 +76,7 @@
 	
 	<property name="verbose" value="true" />
 
-	<property name="appserver.home" value="C:/thirdparty/apache-tomcat-6.0.14" />
-	<property name="appserver.lib" value="${appserver.home}/lib" />
+	<property name="appserver.lib" value="${catalina.home}/lib" />
 	<property name="deploy.path" value="${appserver.home}/webapps" />
 	<property name="tomcat.manager.url" value="http://localhost:8090/manager" />
 	<property name="tomcat.manager.username" value="tomcat" />
@@ -117,7 +120,9 @@
 		<pathelement	location="${freetts.jar}" />
 		<pathelement	location="${sphinx4.jar}" />
 		<pathelement	location="${jsapi-1.0-base.jar}" />
-		
+		<pathelement	location="${jsapi.jar}" />
+		<pathelement	location="${jmf.jar}" />
+				
 		<pathelement	location="${cairo-rtp.jar}" />
 		
 		<pathelement	location="${servlet-api.jar}" />
@@ -224,6 +229,7 @@
 
 	<target name="setup">
 		<mkdir dir="${build.home}" />
+		<mkdir dir="${dist.home}" />
 		<mkdir dir="${build.classes.home}" />
 		<mkdir dir="${build.client.classes.home}" />
 		<mkdir dir="${build.generated.home}" />
@@ -346,9 +352,13 @@
 			<!--zipfileset dir="etc/lm" prefix="lm" /-->
 			<zipfileset dir="${basedir}/etc" prefix="WEB-INF/wsdl" includes="*.wsdl, *.xsd" />			
 			<zipfileset dir="${basedir}/src/java" prefix="WEB-INF/classes" includes="**/*.hbm.xml" />
-			<zipfileset dir="${basedir}/etc" prefix="WEB-INF/classes" includes="log4j.xml, hibernate.cfg.xml" />
+			<zipfileset dir="${basedir}/etc" prefix="WEB-INF/classes" includes="log4j.xml, hibernate.cfg.xml,speech.properties" />
+		    <zipfileset dir="${basedir}/src/webdemo"  includes="lib/**,demo/**" />
+			
 			<classes dir="${build.classes.home}" />
-			<lib dir="${basedir}/lib" />
+			<lib dir="${basedir}/lib" includes="*.jar,*.txt" />
+			<!--lib dir="${basedir}/lib/mary" /-->
+			<!--lib dir="${basedir}/lib/sphinx4" /-->
 			<lib file="${jstl.jar}" />
 			<lib file="${standard.jar}" />
 			<lib dir="${build.war.home}/WEB-INF/lib" />
@@ -361,7 +371,7 @@
 	<!-- TODO: combine the two war targets (maybe use properties to control the type of war -->
 	<target name="create-ami-war" depends="compile-server">		
 		<filter token="serviceLoggingFlag" value="true" />
-		<filter token="applicationContext.recognizerService.baseGrammarDir" value="c:/temp" />
+		<filter token="applicationContext.recognizerService.baseGrammarDir" value="/tmp" />
 		<filter token="application.context" value="/WEB-INF/ami-applicationContext2.xml" />
 		<filter token="applicationContext.recognizerService.sphinxConfigFile" value="file:///${catalina.home}/webapps/${ant.project.name}/WEB-INF/sphinx-config-5pools.xml" />
 		<filter token="applicationContext.synthesizerService.prefix" value="http://${catalina.host}:${catalina.port}/${ant.project.name}/prompts/" />
@@ -394,6 +404,47 @@
 
 		</war>
 	</target>
+
+
+
+	<!-- create a war for http speech server for BETA                                          -->
+	<!-- TODO: combine the THREE  war targets (maybe use properties to control the type of war -->
+	<target name="create-beta-war" depends="compile-server">		
+		<filter token="serviceLoggingFlag" value="true" />
+		<filter token="applicationContext.recognizerService.baseGrammarDir" value="/tmp" />
+		<filter token="application.context" value="/WEB-INF/beta-applicationContext.xml" />
+		<filter token="applicationContext.recognizerService.sphinxConfigFile" value="file:///${catalina.home}/webapps/${ant.project.name}/WEB-INF/sphinx-config-beta.xml" />
+		<filter token="applicationContext.synthesizerService.prefix" value="http://${catalina.host}:${catalina.port}/${ant.project.name}/prompts/" />
+		<filter token="applicationContext.synthesizerService.promptDir" value="${catalina.home}/webapps/${ant.project.name}/prompts" />
+		<copy todir="${build.war.home}/WEB-INF" overwrite="true" filtering="true">
+			<fileset dir="${basedir}/etc" includes="*.xml" />
+		</copy>
+		
+		<copy todir="${build.war.home}/WEB-INF/lib">
+           <fileset refid="rest.dependency.fileset" />
+           <mapper classpathref="maven-ant-tasks.classpath"
+               classname="org.apache.maven.artifact.ant.VersionMapper"
+               from="${dependency.versions}" to="flatten" />
+        </copy>
+
+		<war warfile="${build.war.home}/${war.filename}" webxml="${build.war.home}/WEB-INF/web.xml">
+
+			<webinf dir="${build.war.home}/WEB-INF" includes="*.xml" />
+			<zipfileset dir="etc/prompts" prefix="prompts" />
+			<zipfileset dir="etc/grammar" prefix="grammar" />
+			<!--zipfileset dir="etc/lm" prefix="lm" /-->
+			<zipfileset dir="${basedir}/etc" prefix="WEB-INF/wsdl" includes="*.wsdl, *.xsd" />			
+			<zipfileset dir="${basedir}/src/java" prefix="WEB-INF/classes" includes="**/*.hbm.xml" />
+			<zipfileset dir="${basedir}/etc" prefix="WEB-INF/classes" includes="log4j.xml, hibernate.cfg.xml" />
+			<classes dir="${build.classes.home}" />
+			<lib dir="${basedir}/lib" />
+			<lib file="${jstl.jar}" />
+			<lib file="${standard.jar}" />
+			<lib dir="${build.war.home}/WEB-INF/lib" />
+
+		</war>
+	</target>
+	
 	
 	<!-- deploy the http server -->
 	<target name="deploy">
@@ -678,10 +729,46 @@
              compress="true"/>
     </target>
 	
+	   <target name="jar-language-model"
+	            description="Jar the accoustic model.">
+	        <jar destfile="${build.war.home}/lib/${language.model.name}.jar"
+	             basedir="${language.model.dir}"
+	             filesonly="true"
+	             compress="true"/>
+	    </target>
+	
+	
 	<target name="help">
 		<echo message="server:				Builds and deploys the service endpoint WAR" />
 		<echo message="client:				Builds the client" />
 		<echo message="run:					Runs the client" />
+	</target>
+	
+	
+    
+<!-- ********************************************************** -->
+<!-- *                                                        * -->
+<!-- * Create the assemmbly                        * -->
+<!-- *                                                        * -->
+<!-- ********************************************************** -->	
+	
+    <target name="dist"   description="Create the downloadable distribution."  depends="create-war">
+	    <zip destfile="${dist.home}/${dist.name}-${dist.version}.zip">
+	    <zipfileset dir="${openmary.dir}" prefix="${dist.name}-${dist.version}/mary" includes="conf/**,lib/**,java/**" />
+	    <zipfileset dir="${sphinx.home}/models/language/wsj" prefix="${dist.name}-${dist.version}/models/language/wsj"/>
+	    <zipfileset dir="${build.war.home}" includes="${war.filename}" prefix="${dist.name}-${dist.version}"/>
+	    <zipfileset dir="${basedir}/etc/grammar" includes="*.gram" prefix="${dist.name}-${dist.version}/temp/grammar"/>
+		<zipfileset dir="${basedir}" prefix="${dist.name}-${dist.version}" includes="README.txt"/>
+	    <zipfileset dir="${basedir}/src/examples" prefix="${dist.name}-${dist.version}/examples" includes="**" />
+	    <zipfileset dir="${speechcloud.cli.home}" prefix="${dist.name}-${dist.version}/examples/speechcloud-cli" includes="**" />
+		
+	  </zip>
+    	
+      <tar destfile="${dist.home}/${dist.name}-${dist.version}.tar.gz" compression="gzip">
+    	  <zipfileset src="${dist.home}/${dist.name}-${dist.version}.zip"/>
+      </tar>
+
+    	
 	</target>
 
 </project>

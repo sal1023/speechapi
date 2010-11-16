@@ -630,6 +630,105 @@ public class SphinxRecEngine implements RecEngine {
 	}
 	
 	
+	private String doTranscribe(InputStream as, String mimeType, AFormat af, OutputFormat outMode, PrintWriter out,HttpServletResponse response) {
+	    //TODO: Timers for recog timeout
+	
+		transcribeMode = true;
+		
+	    List<Utterance> utterances = new ArrayList<Utterance>();
+		
+		FrontEnd fe = null;
+	    // configure the audio input for the recognizer
+	
+		
+	 	 // if the format is null, that indicates that no format was passed in
+		 // use xuggler front end and let xuggler get the format from the header
+		 if (af == null) {
+			 _dataSource = new XugglerAudioStreamDataSource();
+			 fe = createAudioFrontend(true,true,(DataProcessor) _dataSource);
+			 
+		 // if the format is not (it wa specified) use a front end based on mimetype.
+	     // used for realtime mode
+	     // TODO: maybve could remove the wav case below which uses audiostreamdatasource  and use xuggler (So more encodings work) 
+		 // with real time mode (but that is if the format is in the header of the attachment created by the realtime clients)
+		 } else {
+			 String parts[] = mimeType.split("/");
+			 if (parts[1].equals("x-s4audio")) {
+				 _dataSource = new S4DataStreamDataSource();
+				 fe = createAudioFrontend(true,true,(DataProcessor) _dataSource);
+			 } else if (parts[1].equals("x-s4feature")) {
+				 _logger.warn("Feature mode Endpointing not for continuous recognition mode");
+				 _dataSource = new S4DataStreamDataSource();
+			 } else if (parts[1].equals("x-wav")) {
+				 _dataSource = new AudioStreamDataSource();
+				 fe = createAudioFrontend(true,true,(DataProcessor) _dataSource);
+			 } else {
+				 //TODO: Check if xuggler is installed on this machine
+				 _dataSource = new XugglerAudioStreamDataSource();
+				 fe = createAudioFrontend(true,true,(DataProcessor) _dataSource);
+			 }
+		     _logger.debug("-----> "+mimeType+ " "+parts[1]);
+		 }
+	     //set the first stage of the front end
+		 fe.setDataSource((DataProcessor) _dataSource);
+		 
+		 // set the front end in the scorer in realtime
+		 scorer.setFrontEnd(fe);
+		 
+		// AFormat af = new AFormat(encoding.toString(), sampleRate, bytesPerValue*8, 1, bigEndian, true, bytesPerValue, sampleRate);
+		 //_dataSource.setInputStream(as, "ws-audiostream", af);
+		 _dataSource.setInputStream(as, "ws-audiostream",af);
+	
+		_logger.debug("After setting the input stream" + System.currentTimeMillis());
+	    
+	    // decode the audio file.
+	    //_logger.debug("Decoding " + audioFileURL);
+	    //List<Result> resultList = new ArrayList<Result>();
+		String totalResult ="";
+	
+		//List<Utterance> utterences = new ArrayList<Utterance>();
+		Result result;
+	    while ((result = recognizer.recognize())!= null) {
+	
+	        String resultText = null;      
+	        
+	        if (outMode == OutputFormat.text) {
+	        	resultText = result.getBestFinalResultNoFiller();  
+	  	
+	        } else if (outMode == OutputFormat.json) {
+	        	Utterance utterance = ResultUtils.getAllResults(result, false, false,condfidenceScorer);
+	            resultText = gson.toJson(utterance);
+	        	
+	        } else {
+	        	resultText = result.getBestFinalResultNoFiller();  
+	        	_logger.warn("Inrecognized output format: "+outMode+ "  ,using plain text mode as a default.");
+	        }
+	        _logger.debug(resultText);
+	        
+	        //if the PrintWriter is not null, then send the text utterence by utterence
+	        if (out != null)
+	        	out.println(resultText); 	        	
+	        
+	
+	        totalResult = totalResult+"\n"+resultText;
+	
+	        //chunked encoded, so flush for realtime streaming
+	        if (response != null)
+	            try {
+	                response.flushBuffer();
+	            } catch (IOException e) {
+	                // TODO Auto-generated catch block
+	                e.printStackTrace();
+	            }
+	        //resultList.add(result);
+	
+	    }
+	    fe = null;
+	    this.stopAudioTransfer();
+	    transcribeMode = false;
+	    return totalResult;
+	}
+
 	@Override
     public String transcribe(InputStream as, String mimeType, AFormat af,  OutputFormat outMode, PrintWriter out,HttpServletResponse response, SpeechRequestDTO hr) {
 		
@@ -696,106 +795,6 @@ public class SphinxRecEngine implements RecEngine {
     }
 	
 	
-	private String doTranscribe(InputStream as, String mimeType, AFormat af, OutputFormat outMode, PrintWriter out,HttpServletResponse response) {
-	    //TODO: Timers for recog timeout
-	
-		transcribeMode = true;
-		
-	    List<Utterance> utterances = new ArrayList<Utterance>();
-		
-		FrontEnd fe = null;
-	    // configure the audio input for the recognizer
-
-		
-	 	 // if the format is null, that indicates that no format was passed in
-		 // use xuggler front end and let xuggler get the format from the header
-		 if (af == null) {
-			 _dataSource = new XugglerAudioStreamDataSource();
-			 fe = createAudioFrontend(true,true,(DataProcessor) _dataSource);
-			 
-		 // if the format is not (it wa specified) use a front end based on mimetype.
-	     // used for realtime mode
-	     // TODO: maybve could remove the wav case below which uses audiostreamdatasource  and use xuggler (So more encodings work) 
-		 // with real time mode (but that is if the format is in the header of the attachment created by the realtime clients)
-		 } else {
-			 String parts[] = mimeType.split("/");
-			 if (parts[1].equals("x-s4audio")) {
-				 _dataSource = new S4DataStreamDataSource();
-				 fe = createAudioFrontend(true,true,(DataProcessor) _dataSource);
-			 } else if (parts[1].equals("x-s4feature")) {
-				 _logger.warn("Feature mode Endpointing not for continuous recognition mode");
-				 _dataSource = new S4DataStreamDataSource();
-			 } else if (parts[1].equals("x-wav")) {
-				 _dataSource = new AudioStreamDataSource();
-				 fe = createAudioFrontend(true,true,(DataProcessor) _dataSource);
-			 } else {
-				 //TODO: Check if xuggler is installed on this machine
-				 _dataSource = new XugglerAudioStreamDataSource();
-				 fe = createAudioFrontend(true,true,(DataProcessor) _dataSource);
-			 }
-		     _logger.debug("-----> "+mimeType+ " "+parts[1]);
-		 }
-	     //set the first stage of the front end
-		 fe.setDataSource((DataProcessor) _dataSource);
-		 
-		 // set the front end in the scorer in realtime
-		 scorer.setFrontEnd(fe);
-		 
-		// AFormat af = new AFormat(encoding.toString(), sampleRate, bytesPerValue*8, 1, bigEndian, true, bytesPerValue, sampleRate);
-		 //_dataSource.setInputStream(as, "ws-audiostream", af);
-		 _dataSource.setInputStream(as, "ws-audiostream",af);
-
-		_logger.debug("After setting the input stream" + System.currentTimeMillis());
-	    
-	    // decode the audio file.
-	    //_logger.debug("Decoding " + audioFileURL);
-	    //List<Result> resultList = new ArrayList<Result>();
-		String totalResult ="";
-
-		//List<Utterance> utterences = new ArrayList<Utterance>();
-		Result result;
-        while ((result = recognizer.recognize())!= null) {
-
-            String resultText = null;      
-	        
-	        if (outMode == OutputFormat.text) {
-	        	resultText = result.getBestFinalResultNoFiller();  
-      	
-	        } else if (outMode == OutputFormat.json) {
-	        	Utterance utterance = ResultUtils.getAllResults(result, false, false,condfidenceScorer);
-	            resultText = gson.toJson(utterance);
-	        	
-	        } else {
-	        	resultText = result.getBestFinalResultNoFiller();  
-	        	_logger.warn("Inrecognized output format: "+outMode+ "  ,using plain text mode as a default.");
-	        }
-            _logger.debug(resultText);
-            
-            //if the PrintWriter is not null, then send the text utterence by utterence
-            if (out != null)
-            	out.println(resultText); 	        	
-	        
-
-            totalResult = totalResult+resultText;
-
-            //chunked encoded, so flush for realtime streaming
-            if (response != null)
-	            try {
-	                response.flushBuffer();
-                } catch (IOException e) {
-	                // TODO Auto-generated catch block
-	                e.printStackTrace();
-                }
-            //resultList.add(result);
-    
-        }
-        fe = null;
-        this.stopAudioTransfer();
-        transcribeMode = false;
-	    return totalResult;
-    }
-	
-
 	/* (non-Javadoc)
      * @see com.spokentech.speechdown.server.recog.RecEngine#recognize(javax.sound.sampled.AudioInputStream, java.lang.String)
      */
@@ -982,7 +981,7 @@ public class SphinxRecEngine implements RecEngine {
     	batchCmn = new BatchCMN();
     	liveCmn = new LiveCMN(12,500,800);
     	deltasFeatureExtractor = new DeltasFeatureExtractor(3);
-    	lda = new FeatureTransform(loader);
+    	//lda = new FeatureTransform(loader);
     	
 		boolean isCompletePath = false;
 		int bitsPerSample = 16;
@@ -1033,7 +1032,7 @@ public class SphinxRecEngine implements RecEngine {
 	   }
 	   
 	   components.add (deltasFeatureExtractor);
-	   components.add (lda);
+	   //components.add (lda);
 	   	   
        //for (DataProcessor dp : components) {
        //   _logger.debug(dp);
