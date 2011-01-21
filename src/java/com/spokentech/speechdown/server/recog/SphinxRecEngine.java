@@ -20,6 +20,8 @@ import java.util.TimerTask;
 
 import javax.servlet.http.HttpServletResponse;
 import javax.sound.sampled.AudioInputStream;
+import javax.speech.EngineException;
+import javax.speech.EngineStateError;
 import javax.speech.recognition.GrammarException;
 import javax.speech.recognition.RuleGrammar;
 import javax.speech.recognition.RuleParse;
@@ -44,6 +46,8 @@ import com.spokentech.speechdown.server.util.ResultUtils;
 import com.spokentech.speechdown.server.util.ServiceLogger;
 import com.spokentech.speechdown.server.util.pool.AbstractPoolableObject;
 import com.spokentech.speechdown.server.util.pool.PoolableObject;
+import com.sun.speech.engine.recognition.BaseRecognizer;
+import com.sun.speech.engine.recognition.BaseRuleGrammar;
 
 import edu.cmu.sphinx.decoder.ResultListener;
 
@@ -66,7 +70,9 @@ import edu.cmu.sphinx.frontend.frequencywarp.MelFrequencyFilterBank;
 import edu.cmu.sphinx.frontend.transform.DiscreteCosineTransform;
 import edu.cmu.sphinx.frontend.transform.DiscreteFourierTransform;
 import edu.cmu.sphinx.frontend.window.RaisedCosineWindower;
-import edu.cmu.sphinx.jsapi.JSGFGrammar;
+import edu.cmu.sphinx.jsgf.JSGFGrammar;
+import edu.cmu.sphinx.jsgf.JSGFGrammarException;
+import edu.cmu.sphinx.jsgf.JSGFGrammarParseException;
 import edu.cmu.sphinx.linguist.acoustic.tiedstate.Loader;
 import edu.cmu.sphinx.linguist.acoustic.tiedstate.Sphinx3Loader;
 import edu.cmu.sphinx.recognizer.Recognizer;
@@ -134,7 +140,7 @@ public class SphinxRecEngine implements RecEngine {
 	private LogMath logMath;
 	private String recordingFilePath;
 	private boolean recordingEnabled;
-
+    private BaseRecognizer jsapiRecognizer;
 
 
 	private boolean transcribeMode = false;
@@ -199,12 +205,27 @@ public class SphinxRecEngine implements RecEngine {
     public SphinxRecEngine(Recognizer recognizer, JSGFGrammar jsgf, GrammarManager grammarManager,
     						Loader loader, AcousticScorer scorer,ConfidenceScorer cScorer,LogMath lm,
     						String recordingFilePath, boolean recordingEnabled) throws IOException, PropertyException, InstantiationException {
+    	
+    	_logger.info("Creating a rec engine: "+recordingEnabled+" "+recordingFilePath);
+    	
    	
     	//prototypes
     	this.recognizer = recognizer;      
     	this.recognizer.allocate();
 	    this.jsgf = jsgf;
 	    this.grammarManager = grammarManager;
+	    
+        this.jsapiRecognizer = new BaseRecognizer(jsgf.getGrammarManager());
+        try {
+			this.jsapiRecognizer.allocate();
+		} catch (EngineException e1) {
+			// TODO Auto-generated catch block
+			e1.printStackTrace();
+		} catch (EngineStateError e1) {
+			// TODO Auto-generated catch block
+			e1.printStackTrace();
+		}
+	    
         condfidenceScorer = cScorer;
 	    
 	    //singletons
@@ -397,7 +418,7 @@ public class SphinxRecEngine implements RecEngine {
 		long  start = System.nanoTime();
     	long startTime= System.currentTimeMillis();
 		_logger.info("Using recognizer # "+_id+ ", time: "+startTime);
-     
+    	_logger.info("Using  a rec engine: "+recordingEnabled+" "+recordingFilePath);
 		//setup the recorder
 		if (recordingEnabled) {
 			//TODO: Test if setting the format in the recorder is needed!
@@ -418,7 +439,7 @@ public class SphinxRecEngine implements RecEngine {
 		Result r = null; 
 	    Utterance utterance = null;
 	    try {
-	    	
+	    	_logger.info(grammar);
 	    	//save and load the grammar
 	        grammarLocation = grammarManager.saveGrammar(grammar);
 	        loadJSGF(jsgf, grammarLocation);
@@ -427,13 +448,20 @@ public class SphinxRecEngine implements RecEngine {
 	        //do the recognition
 		    r = doRecognize(as, mimeType, af, outMode, doEndpointing,  cmnBatch);
 			
+		    _logger.info("HEY! "+r.getBestFinalResultNoFiller());
+		    _logger.info("HEYA! "+r.toString());
 		    //process the results (text or json)
 	
 
 			if (r != null) {
 				//TODO: change to return Utterance object that can be serialized to json or plant text (see transcribe method)
 				//current approach is a bit of a hack, by constructing with a json flag.
-	        	utterance = ResultUtils.getAllResults(r, false, false,jsgf.getRuleGrammar());
+				RuleGrammar ruleGrammar = new BaseRuleGrammar (jsapiRecognizer, jsgf.getRuleGrammar());
+			    _logger.info("created rulegrammar ");
+
+	        	utterance = ResultUtils.getAllResults(r, false, false,ruleGrammar);
+			    _logger.info("processed utt ");
+
 		    } else {
 		    	resultCode = "NullResult";
 		    	resultMessage ="Null result returned from Reognition Engine";
@@ -452,6 +480,8 @@ public class SphinxRecEngine implements RecEngine {
 	        resultMessage = e.getMessage();
         }	
 			
+	    _logger.info("HEY HEY! "+resultCode);
+
 		// Do Recording 
 		long stop = System.nanoTime();
 		long wall = (stop - start)/1000000;
@@ -524,7 +554,7 @@ public class SphinxRecEngine implements RecEngine {
 		long x = (tt - stop)/1000000;
 		_logger.debug("  Logging time "+ x);
 		
-		
+    	//recognizer.deallocate();
 		utterance.setRCode(resultCode);
 		utterance.setRMessage(resultMessage);
         return utterance;
@@ -812,8 +842,18 @@ public class SphinxRecEngine implements RecEngine {
 	  */
 	public synchronized void loadJSGF(JSGFGrammar jsgfGrammar, GrammarLocation grammarLocation) throws IOException, GrammarException {
 		jsgfGrammar.setBaseURL(grammarLocation.getBaseURL());
+		System.out.println("SAL:::"+grammarLocation.getBaseURL()+"  "+grammarLocation.getGrammarName());
+		try {
+			jsgfGrammar.loadJSGF(grammarLocation.getGrammarName());
 
-		jsgfGrammar.loadJSGF(grammarLocation.getGrammarName());
+			this.jsapiRecognizer.commitChanges();
+		} catch (JSGFGrammarParseException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		} catch (JSGFGrammarException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
 		_logger.debug("loadJSGF(): completed successfully.");
 	}
  
@@ -831,8 +871,10 @@ public class SphinxRecEngine implements RecEngine {
      */
     public synchronized RuleParse parse(String text, String ruleName) throws GrammarException {
         
-        RuleGrammar ruleGrammar = jsgf.getRuleGrammar();
-        return ruleGrammar.parse(text, ruleName);
+    
+    	RuleGrammar ruleGrammar = new BaseRuleGrammar (jsapiRecognizer, jsgf.getRuleGrammar());
+        return ruleGrammar.parse(text, null);
+        
     }
 
 
@@ -976,7 +1018,7 @@ public class SphinxRecEngine implements RecEngine {
     	dither = new Dither();
     	raisedCosineWindower = new RaisedCosineWindower(0.46,(float)25.625,(float)10.0);
     	discreteFourierTransform = new DiscreteFourierTransform(-1,false);
-    	melFrequencyFilterBank = new MelFrequencyFilterBank((double)133.0,(double)3500.0,31);
+    	melFrequencyFilterBank = new MelFrequencyFilterBank((double)130.0,(double)6800.0,40);
     	discreteCosineTransform = new DiscreteCosineTransform(40,13);
     	batchCmn = new BatchCMN();
     	liveCmn = new LiveCMN(12,500,800);

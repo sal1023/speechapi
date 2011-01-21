@@ -30,7 +30,7 @@ import edu.cmu.sphinx.decoder.search.ActiveListManager;
 import edu.cmu.sphinx.decoder.search.SearchManager;
 import edu.cmu.sphinx.decoder.search.WordPruningBreadthFirstSearchManager;
 import edu.cmu.sphinx.instrumentation.Monitor;
-import edu.cmu.sphinx.jsapi.JSGFGrammar;
+import edu.cmu.sphinx.jsgf.JSGFGrammar;
 import edu.cmu.sphinx.linguist.Linguist;
 import edu.cmu.sphinx.linguist.acoustic.tiedstate.Loader;
 
@@ -52,7 +52,7 @@ public class SphinxRecEngineFactory  implements BeanFactoryAware {
 	private BeanFactory beanFactory;
 	
 	//s4 rec engine properties (constructor args)
-    private String recordingFilePath = "c:/tmp";
+    private String recordingFilePath = "";
     private boolean recordingEnabled =false;  
 	
     //searchmanager properties (constructor args)
