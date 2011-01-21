@@ -64,5 +64,7 @@
 	<classpathentry kind="lib" path="lib/slf4j-api-1.5.10.jar"/>
 	<classpathentry kind="lib" path="lib/slf4j-jcl-1.5.10.jar"/>
 	<classpathentry kind="lib" path="lib/signalproc.jar"/>
+	<classpathentry kind="lib" path="lib/WSJ_8gau_13dCep_16k_40mel_130Hz_6800Hz.jar"/>
+	<classpathentry kind="lib" path="lib/WSJ_8gau_13dCep_8kHz_31mel_200Hz_3500Hz.jar"/>
 	<classpathentry kind="output" path="target/eclipse"/>
 </classpath>
