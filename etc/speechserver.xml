@@ -58,6 +58,16 @@
 		  <property name="featureBlockSize">
 			<value>${speech.decoder.featureBlockSize}</value>
 		</property>	  
+		<property name="recordingFilePath">
+			<value>${speech.recordingDir}</value>
+		</property>	  
+		<property name="recordingEnabled">
+			<value>${speech.recordingEnabled}</value>
+		</property>	  
+
+		
+		
+		
 	</bean>
 
 	
@@ -68,7 +78,7 @@
 				<value>grammars</value>
 		  </property>
 		  <property name="baseGrammarDir">
-				<value>c:\tmp</value>
+				<value>${speech.baseGrammarDir}</value>
 		  </property>
 	</bean>
 	
@@ -195,13 +205,13 @@
    	    <constructor-arg index="2" value="${speech.am.loader.DataLocation}"/>
    	    <constructor-arg index="3" ref="logMath"/>
    	    <constructor-arg index="4" ref="unitManager" />
-   	    <constructor-arg index="5" value="${speech.am.loader.isBinary}" />
-   	    <constructor-arg index="6" value="${speech.am.loader.sparseForm}" />
-   	    <constructor-arg index="7" value="${speech.am.loader.vectorLength}" />
-   	    <constructor-arg index="8" value="${speech.am.loader.distFloor}" />
-   	    <constructor-arg index="9" value="${speech.am.loader.mixtureWeightFloor}" />
-   	    <constructor-arg index="10" value="${speech.am.loader.varianceFloor}" />
-   	    <constructor-arg index="11" value="${speech.am.loader.useCDUnits}" />
+   	    <!--constructor-arg index="5" value="${speech.am.loader.isBinary}" /-->
+   	    <!--constructor-arg index="6" value="${speech.am.loader.sparseForm}" /-->
+   	    <!--constructor-arg index="7" value="${speech.am.loader.vectorLength}" /-->
+   	    <constructor-arg index="5" value="${speech.am.loader.distFloor}" />
+   	    <constructor-arg index="6" value="${speech.am.loader.mixtureWeightFloor}" />
+   	    <constructor-arg index="7" value="${speech.am.loader.varianceFloor}" />
+   	    <constructor-arg index="8" value="${speech.am.loader.useCDUnits}" />
     </bean>
 
 
@@ -392,7 +402,8 @@
         <constructor-arg index="12" type="boolean" value="${speech.grammar.addOutOfGrammarBranch}"/>
         <constructor-arg index="13" type="double"  value="${speech.grammar.outOfGrammarProbability}" />
         <constructor-arg index="14" type="double" value="${speech.grammar.phoneInsertionProbability}" />
-        <constructor-arg index="15" type="edu.cmu.sphinx.linguist.acoustic.AcousticModel" ><null/></constructor-arg>
+	<constructor-arg index="15" ref="acousticModel"/>
+        <!--constructor-arg index="15" type="edu.cmu.sphinx.linguist.acoustic.AcousticModel" ><null/></constructor-arg-->
     </bean>
 
 
@@ -400,7 +411,7 @@
     <!-- The Grammar  configuration                               -->
     <!-- ******************************************************** -->
 
-    <bean name="jsgf" class="edu.cmu.sphinx.jsapi.JSGFGrammar" scope="singleton">
+    <bean name="jsgf" class="edu.cmu.sphinx.jsgf.JSGFGrammar" scope="singleton">
         <constructor-arg  index="0" type="java.lang.String" value="${speech.grammarLocation}"/>
         <constructor-arg  index="1" ref="logMath" />      
         <constructor-arg  index="2" type="java.lang.String" value="${speech.grammarName}"/>

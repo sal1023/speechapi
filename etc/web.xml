@@ -36,7 +36,7 @@
 		</init-param>
 		<init-param>
 			<param-name>serviceLogging</param-name>
-			<param-value>true</param-value>
+			<param-value>${speech.recordingEnabled}</param-value>
 		</init-param>
 		
 		
@@ -63,14 +63,14 @@
 		</init-param>
 		<init-param>
 			<param-name>serviceLogging</param-name>
-			<param-value>true</param-value>
+			<param-value>${speech.recordingEnabled}</param-value>
 		</init-param>
 	</servlet>
 	<servlet-mapping>
 		<servlet-name>SpeechDownloadServlet</servlet-name>
 		<url-pattern>/SpeechDownloadServlet</url-pattern>
 	</servlet-mapping>
-	
+	  
 	
 	<session-config>
         <session-timeout>60</session-timeout>
