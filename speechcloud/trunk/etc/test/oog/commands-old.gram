@@ -1,0 +1,22 @@
+#JSGF V1.0;
+
+/**
+ * JSGF Digits Grammar for Hello World example
+   
+  public <numbers> = (oh | zero | one | two | four | five | six | seven | eight | nine) * ;
+    public <greet> = oh | zero | one | two | four | five | six | seven | eight | nine | one two three four five | one nine eight four ;
+  
+  
+  
+  
+   public <greet> = Command to  <greet2> | Command to Dispatch;
+    <greet2> = Dispatch | Engine One | Engine Two | Engine Three | Engine Four | Engine Five | Engine Six | Engine Seven | Engine Eight | Engine Nine | Ladder One | Ladder Two | Ladder Three | Ladder Four | Ladder Five | Ladder Six | Ladder Seven | Ladder Eight | Ladder Nine | Coast Guard One | Rescue One | Rescue Two | Rescue Three | Truck One | Truck Two | Truck Three | Truck Four | Truck Five | Truck Six | Truck Seven | Truck Eight | Truck Nine;
+    public <numbers> = Command to Dispatch ;
+  
+ */
+
+grammar digits;
+
+    public <greet> = Command to  <greet2> ;
+    <greet2> = Dispatch | Engine One | Engine Two | Engine Three | Engine Four | Engine Five | Engine Six | Engine Seven | Engine Eight | Engine Nine | Ladder One | Ladder Two | Ladder Three | Ladder Four | Ladder Five | Ladder Six | Ladder Seven | Ladder Eight | Ladder Nine | Coast Guard One | Rescue One | Rescue Two | Rescue Three | Truck One | Truck Two | Truck Three | Truck Four | Truck Five | Truck Six | Truck Seven | Truck Eight | Truck Nine;
+  

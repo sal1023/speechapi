@@ -37,6 +37,9 @@ you placed the various components on the file system.)
 
     Optionally you can use the init.d script to audtomatically startup tomcat.
 
+    On Windows, if you are running Tomcat as a Windows Service, to set the options for the JVM (like setting CATALINA_OPTS or JAVA_OPTS) 
+    use the Tomcat Service Manager. This is either a tray application, or you can run the manager directly via $CATALINA_HOME\bin\tomcat6w.exe, 
+    set the options under the "Java" tab and hit "Apply" to apply them. Each options goes on it's own line. 
 
 LIMITATIONS
 -----------
