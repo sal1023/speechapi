@@ -304,7 +304,7 @@
     </bean>
     
     <bean name="decoderGrammar" class="edu.cmu.sphinx.decoder.Decoder" scope="prototype">
-        <constructor-arg index="0"  ref="searchManagerLm"/>
+        <constructor-arg index="0"  ref="searchManagerGrammar"/>
         <constructor-arg index="1"  value="${speech.decoder.fireNonFinalResults}"/>
         <constructor-arg index="2"  value="${speech.decoder.autoAllocate}"/>
         <constructor-arg index="3">         
@@ -363,6 +363,13 @@
         <constructor-arg index="10" type="int" value ="${speech.search.maxLatticeEdges}" />
         <constructor-arg index="11" type="float" value="${speech.search.acousticLookahead}"/>
         <constructor-arg index="12" type="boolean" value="${speech.search.keepAllTokens}"/>
+    </bean>
+
+	<bean name="activeListFactory" 
+             class="edu.cmu.sphinx.decoder.search.SortingActiveListFactory" scope="prototype">  
+        <constructor-arg index="0" type="int" value="${speech.absoluteBeamWidth}"/>
+        <constructor-arg index="1" type="double" value="${speech.relativeBeamWidth}"/>
+	<constructor-arg index="2" ref="logMath"/>
     </bean>
 
     <bean name="activeListManager" 
