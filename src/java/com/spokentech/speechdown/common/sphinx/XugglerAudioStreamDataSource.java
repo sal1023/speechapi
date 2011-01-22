@@ -73,7 +73,7 @@ public class XugglerAudioStreamDataSource extends BaseDataProcessor implements S
 
     private File curAudioFile;
     
-    int TargetRate = 8000;
+    int TargetRate = 16000;
     
     //private BufferedWriter out;
     
