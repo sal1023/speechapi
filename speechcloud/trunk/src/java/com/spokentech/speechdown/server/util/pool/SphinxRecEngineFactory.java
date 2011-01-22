@@ -26,8 +26,10 @@ import edu.cmu.sphinx.decoder.Decoder;
 import edu.cmu.sphinx.decoder.ResultListener;
 import edu.cmu.sphinx.decoder.pruner.Pruner;
 import edu.cmu.sphinx.decoder.scorer.AcousticScorer;
+import edu.cmu.sphinx.decoder.search.ActiveListFactory;
 import edu.cmu.sphinx.decoder.search.ActiveListManager;
 import edu.cmu.sphinx.decoder.search.SearchManager;
+import edu.cmu.sphinx.decoder.search.SimpleBreadthFirstSearchManager;
 import edu.cmu.sphinx.decoder.search.WordPruningBreadthFirstSearchManager;
 import edu.cmu.sphinx.instrumentation.Monitor;
 import edu.cmu.sphinx.jsgf.JSGFGrammar;
@@ -93,23 +95,36 @@ public class SphinxRecEngineFactory  implements BeanFactoryAware {
 	    Pruner pruner =(Pruner) this.beanFactory.getBean("pruner");
 	    AcousticScorer scorer =(AcousticScorer) this.beanFactory.getBean("scorer");
 	    ActiveListManager activeListManager =(ActiveListManager) this.beanFactory.getBean("activeListManager");
+	    ActiveListFactory activeListFactory =(ActiveListFactory) this.beanFactory.getBean("activeListFactory");
 
 	    //need a reference to the same scorer (a Spring prototype) object that was constructed for the searchmanager in the 
 	    //recEngine.  RecEngine needs it for dynamically setting the front end.  Could have changed sphinx code to make 
 	    //it available via a getter (in searchmanager, and then in decoder and recognizer too) but instead I getting a scorer here
 	    // then using same one in searchmanager and recEngine (and so also had to manually construct decoder and recognizer)
 
-	    //SearchManager searchManager =(SearchManager) this.beanFactory.getBean("searchManager");
-	    SearchManager s = new WordPruningBreadthFirstSearchManager(logMath,  linguist, pruner,
+	    //String sName = null;
+	    //if (grammar) {
+	    //	sName = "searchManagerGrammar";
+	    //} else {
+	    //	sName = "searchManagerLm";
+	    //}
+    	//SearchManager s =(SearchManager) this.beanFactory.getBean(sName);
+	    
+
+	    
+ 	    SearchManager ss =  new SimpleBreadthFirstSearchManager(logMath,  linguist, pruner,
+            scorer,  activeListFactory, false, 0.0, 0, false);
+
+	    /*SearchManager s = new WordPruningBreadthFirstSearchManager(logMath,  linguist, pruner,
 	             scorer,  activeListManager,
 	             showTokenCount,  relativeWordBeamWidth,
 	             growSkipInterval,
 	             checkStateOrder,  buildWordLattice,
 	             maxLatticeEdges,  acousticLookaheadFrames,
 	             keepAllTokens);
-	    
+	    */
 	    List<ResultListener> resultListeners = new ArrayList<ResultListener>();
-	    Decoder d = new Decoder(s,fireNonFinalResults, autoAllocate,resultListeners, featureBlockSize);
+	    Decoder d = new Decoder(ss,fireNonFinalResults, autoAllocate,resultListeners, featureBlockSize);
   
    
 	    List<Monitor> monitors = new ArrayList<Monitor>();

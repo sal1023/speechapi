@@ -388,7 +388,13 @@
         <constructor-arg index="11" type="float" value="${speech.search.acousticLookahead}"/>
         <constructor-arg index="12" type="boolean" value="${speech.search.keepAllTokens}"/>
    </bean>
-
+   
+   <bean name="activeListFactory" 
+             class="edu.cmu.sphinx.decoder.search.SortingActiveListFactory" scope="prototype">  
+        <constructor-arg index="0" type="int" value="${speech.absoluteBeamWidth}"/>
+        <constructor-arg index="1" type="double" value="${speech.relativeBeamWidth}"/>
+	<constructor-arg index="2" ref="logMath"/>
+    </bean>
 
     <bean name="activeListManager" 
              class="edu.cmu.sphinx.decoder.search.SimpleActiveListManager" scope="prototype">  
