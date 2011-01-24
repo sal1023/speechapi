@@ -38,22 +38,30 @@ public class GrammarManager {
     	this.grammarDir = grammarDir;
     }
 
+    public GrammarManager() {
+    }
+	public GrammarManager(String baseGrammarDir, String grammarDir) {
+		this.grammarDir = grammarDir;
+		this.baseDir = baseGrammarDir;
+		startup();
+	}
+
 	/**
      * @return the baseGrammarDir
      */
-    public String getBaseGrammarDir() {
-    	return baseGrammarDir;
+    public String getBaseDir() {
+    	return baseDir;
     }
 
 	/**
      * @param baseGrammarDir the baseGrammarDir to set
      */
-    public void setBaseGrammarDir(String baseGrammarDir) {
-    	this.baseGrammarDir = baseGrammarDir;
+    public void setBaseDir(String baseGrammarDir) {
+    	this.baseDir = baseGrammarDir;
     }
 
 	private String grammarDir;
-    private String baseGrammarDir;
+    private String baseDir;
 
 
     /**
@@ -63,12 +71,12 @@ public class GrammarManager {
      */
     public void startup() {
     	
-    	if (baseGrammarDir == null) {
+    	if (baseDir == null) {
     		String baseGrammarDir = System.getProperty("java.io.tmpdir");
     		if ( !(baseGrammarDir.endsWith("/") || baseGrammarDir.endsWith("\\")) )
     			baseGrammarDir = baseGrammarDir + System.getProperty("file.separator");
     	}
-        _grammarDir = new File(baseGrammarDir, grammarDir);
+        _grammarDir = new File(baseDir, grammarDir);
         
         // create directory if it does not exist
         if (!_grammarDir.exists()) {
@@ -87,7 +95,7 @@ public class GrammarManager {
    
 
         try {
-            _grammarDirUrl = _grammarDir.toURL();
+            _grammarDirUrl = new URL("file:///"+_grammarDir.getAbsolutePath());
         } catch (MalformedURLException e) {
             throw new IllegalArgumentException("Specified directory not valid: " + _grammarDir.getAbsolutePath(), e);
         }

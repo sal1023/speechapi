@@ -156,25 +156,29 @@ public class Utterance {
         builder.append("\n");
         builder.append(oog);
         builder.append("\n");
-        for (RuleMatch rm : ruleMatches) {
-            builder.append("   ");
-            builder.append(rm.getRule());
-            builder.append(" : ");
-            builder.append(rm.getTag());
-            builder.append("\n");
+        if (ruleMatches != null) {
+	        for (RuleMatch rm : ruleMatches) {
+	            builder.append("   ");
+	            builder.append(rm.getRule());
+	            builder.append(" : ");
+	            builder.append(rm.getTag());
+	            builder.append("\n");
+	        }
         }
-        for (WordData wd : words) {
-            builder.append("   ");
-            builder.append(wd.getWord());
-            builder.append(" : ");
-            builder.append(wd.getPronunciation());
-            builder.append(" : ");
-            builder.append(wd.getStartTime());
-            builder.append(" : ");
-            builder.append(wd.getStopTime());
-            builder.append(" : ");
-            builder.append(wd.getConfidence());
-            builder.append("\n");
+        if (words != null) {
+	        for (WordData wd : words) {
+	            builder.append("   ");
+	            builder.append(wd.getWord());
+	            builder.append(" : ");
+	            builder.append(wd.getPronunciation());
+	            builder.append(" : ");
+	            builder.append(wd.getStartTime());
+	            builder.append(" : ");
+	            builder.append(wd.getStopTime());
+	            builder.append(" : ");
+	            builder.append(wd.getConfidence());
+	            builder.append("\n");
+	        }
         }
 
         return (builder.toString());
