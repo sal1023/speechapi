@@ -75,6 +75,7 @@ import edu.cmu.sphinx.jsgf.JSGFGrammarException;
 import edu.cmu.sphinx.jsgf.JSGFGrammarParseException;
 import edu.cmu.sphinx.linguist.acoustic.tiedstate.Loader;
 import edu.cmu.sphinx.linguist.acoustic.tiedstate.Sphinx3Loader;
+import edu.cmu.sphinx.linguist.flat.FlatLinguist;
 import edu.cmu.sphinx.recognizer.Recognizer;
 import edu.cmu.sphinx.recognizer.StateListener;
 import edu.cmu.sphinx.recognizer.Recognizer.State;
@@ -134,9 +135,9 @@ public class SphinxRecEngine implements RecEngine {
 	private Recognizer recognizer;
     private JSGFGrammar jsgf;
 	private GrammarManager grammarManager;
-	private Loader loader;
-    private AcousticScorer  scorer;
-	private ConfidenceScorer condfidenceScorer;
+	//private Loader loader;
+    //private AcousticScorer  scorer;
+	private ConfidenceScorer confidenceScorer;
 	private LogMath logMath;
 	private String recordingFilePath;
 	private boolean recordingEnabled;
@@ -162,10 +163,8 @@ public class SphinxRecEngine implements RecEngine {
 	    jsgf = (JSGFGrammar) cm.lookup("grammar");
 	    this.grammarManager = grammarManager;
 
-    	loader = (Sphinx3Loader) cm.lookup("loader");
         _cm = cm;
         _id = id;
-		scorer = (AcousticScorer)_cm.lookup(prefixId+"scorer"+id);
 
         MyStateListener stateListener =  new MyStateListener();
         MyResultListener resultListener = new MyResultListener();
@@ -197,71 +196,24 @@ public class SphinxRecEngine implements RecEngine {
     	createFrontEndElements();
     	
     	// obtain scorer from configuration manager
-        condfidenceScorer = (ConfidenceScorer) cm.lookup("confidenceScorer");
+        confidenceScorer = (ConfidenceScorer) cm.lookup("confidenceScorer");
         ResultUtils.setLogm((LogMath) cm.lookup("logMath"));
     }
     
     //constructor that does not use configuration manager (more convenient for creating pools)
-    public SphinxRecEngine(Recognizer recognizer, JSGFGrammar jsgf, GrammarManager grammarManager,
-    						Loader loader, AcousticScorer scorer,ConfidenceScorer cScorer,LogMath lm,
+    public SphinxRecEngine(Recognizer recognizer, GrammarManager grammarManager,
+    						ConfidenceScorer cScorer, LogMath lm,
     						String recordingFilePath, boolean recordingEnabled) throws IOException, PropertyException, InstantiationException {
     	
     	_logger.info("Creating a rec engine: "+recordingEnabled+" "+recordingFilePath);
     	
-   	
-    	//prototypes
     	this.recognizer = recognizer;      
-    	this.recognizer.allocate();
-	    this.jsgf = jsgf;
 	    this.grammarManager = grammarManager;
-	    
-        this.jsapiRecognizer = new BaseRecognizer(jsgf.getGrammarManager());
-        try {
-			this.jsapiRecognizer.allocate();
-		} catch (EngineException e1) {
-			// TODO Auto-generated catch block
-			e1.printStackTrace();
-		} catch (EngineStateError e1) {
-			// TODO Auto-generated catch block
-			e1.printStackTrace();
-		}
-	    
-        condfidenceScorer = cScorer;
-	    
-	    //singletons
-    	this.loader = loader;
-		this.scorer = scorer;
-
-
-        MyStateListener stateListener =  new MyStateListener();
-        MyResultListener resultListener = new MyResultListener();
-		recognizer.addResultListener(resultListener);
-
-		recognizer.addStateListener(stateListener);
-
+        this.confidenceScorer = cScorer;
     	this.recordingEnabled = recordingEnabled;
-    	
-    	Date dateNow = new Date ();
-        SimpleDateFormat dateformatMMDDYYYY = new SimpleDateFormat("MMddyyyy");
- 
-        StringBuilder nowMMDDYYYY = new StringBuilder( dateformatMMDDYYYY.format( dateNow ) );
     	this.recordingFilePath = recordingFilePath;
-    	
-    	// todo:  should be a single filerwriter (but then it must be threadsafe), else each recognizer maybe should have its own file...
-    	// Not really sure of what happens when there is a many Filewriters with the same filename
-    	if (recordingEnabled) {
-		    try {
-		    	outTextFile = new FileWriter(recordingFilePath+"/"+nowMMDDYYYY+".txt",true);
-		    } catch (IOException e) {
-		        // TODO Auto-generated catch block
-		        e.printStackTrace();
-		    }
-    	}
 
-    	//create frontend elements (to be assembled into frontends at run time)
-    	createFrontEndElements();
-
-        ResultUtils.setLogm(lm);
+    	startup();
     }
     
     
@@ -270,18 +222,52 @@ public class SphinxRecEngine implements RecEngine {
     //constructor that does not use configuration manager (more convenient for creating pools) for setter injection
     public void startup()  {
 
-    	recognizer.allocate();
+    	//this is a not a very good solution ... the problem is need a single jsgf object per jsgf recognizer and prototype creaste one for both injections
+    	// and singleton is one for all recognizers, so provided this way to get a handle to the Linguist, but not all linguists have a grammar
+    	// and furtehrmore not all have a jsgfGrammar.  arghh!
+    	//TODO: should have a a GrammarSphinxRevEngine and a LMSphinixRecEngine.  Will be simpler to have separte classes.
+	    if (recognizer.getDecoder().getSearchManager().getLinguist() instanceof FlatLinguist) {
+	    	this.jsgf = (JSGFGrammar) ((FlatLinguist) recognizer.getDecoder().getSearchManager().getLinguist()).getGrammar();
+
+	    	this.jsapiRecognizer = new BaseRecognizer(jsgf.getGrammarManager());
+	    	try {
+	    		this.jsapiRecognizer.allocate();
+	    	} catch (EngineException e1) {
+	    		// TODO Auto-generated catch block
+	    		e1.printStackTrace();
+	    	} catch (EngineStateError e1) {
+	    		// TODO Auto-generated catch block
+	    		e1.printStackTrace();
+	    	}
+	    }
+	    //else this is not a jsgf recognizer...
+		
+		/*String dummyGrammar = "#JSGF V1.0;\n";
+		dummyGrammar = dummyGrammar+ "grammar example;";
+		dummyGrammar = dummyGrammar+ "public <dummy> = yes | no;"; 
+		GrammarLocation grammarLocation = null;
+		try {
+			grammarLocation = grammarManager.saveGrammar(dummyGrammar);
+		    loadJSGF(jsgf, grammarLocation);
+		} catch (IOException e1) {
+			// TODO Auto-generated catch block
+			e1.printStackTrace();
+		} catch (GrammarException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}*/
+   
+	    this.recognizer.allocate(); 	
 
         MyStateListener stateListener =  new MyStateListener();
         MyResultListener resultListener = new MyResultListener();
 		recognizer.addResultListener(resultListener);
 		recognizer.addStateListener(stateListener);
-
+    	
     	Date dateNow = new Date ();
         SimpleDateFormat dateformatMMDDYYYY = new SimpleDateFormat("MMddyyyy");
  
         StringBuilder nowMMDDYYYY = new StringBuilder( dateformatMMDDYYYY.format( dateNow ) );
-    	//this.recordingFilePath = recordingFilePath;
     	
     	// todo:  should be a single filerwriter (but then it must be threadsafe), else each recognizer maybe should have its own file...
     	// Not really sure of what happens when there is a many Filewriters with the same filename
@@ -296,8 +282,9 @@ public class SphinxRecEngine implements RecEngine {
 
     	//create frontend elements (to be assembled into frontends at run time)
     	createFrontEndElements();
-
         ResultUtils.setLogm(logMath);
+        
+
     }
 
 	//Recognize using language mode
@@ -402,7 +389,7 @@ public class SphinxRecEngine implements RecEngine {
 		if (r != null) {
 			//TODO: change to return Utterance object that can be serialized to json or plant text (see transcribe method)
 			//current approach is a bit of a hack, by constructing with a json flag.
-        	utterance = ResultUtils.getAllResults(r, false, false,condfidenceScorer);
+        	utterance = ResultUtils.getAllResults(r, false, false,confidenceScorer);
         	utterance.setRCode("Success");
 	    } else {
 	    	utterance = new Utterance();
@@ -417,7 +404,7 @@ public class SphinxRecEngine implements RecEngine {
 
 		long  start = System.nanoTime();
     	long startTime= System.currentTimeMillis();
-		_logger.info("Using recognizer # "+_id+ ", time: "+startTime);
+		_logger.info("Using g recognizer # "+_id+ ", time: "+startTime);
     	_logger.info("Using  a rec engine: "+recordingEnabled+" "+recordingFilePath);
 		//setup the recorder
 		if (recordingEnabled) {
@@ -448,11 +435,7 @@ public class SphinxRecEngine implements RecEngine {
 	        //do the recognition
 		    r = doRecognize(as, mimeType, af, outMode, doEndpointing,  cmnBatch);
 			
-		    _logger.info("HEY! "+r.getBestFinalResultNoFiller());
-		    _logger.info("HEYA! "+r.toString());
 		    //process the results (text or json)
-	
-
 			if (r != null) {
 				//TODO: change to return Utterance object that can be serialized to json or plant text (see transcribe method)
 				//current approach is a bit of a hack, by constructing with a json flag.
@@ -460,7 +443,6 @@ public class SphinxRecEngine implements RecEngine {
 			    _logger.info("created rulegrammar ");
 
 	        	utterance = ResultUtils.getAllResults(r, false, false,ruleGrammar);
-			    _logger.info("processed utt ");
 
 		    } else {
 		    	resultCode = "NullResult";
@@ -480,8 +462,6 @@ public class SphinxRecEngine implements RecEngine {
 	        resultMessage = e.getMessage();
         }	
 			
-	    _logger.info("HEY HEY! "+resultCode);
-
 		// Do Recording 
 		long stop = System.nanoTime();
 		long wall = (stop - start)/1000000;
@@ -609,7 +589,7 @@ public class SphinxRecEngine implements RecEngine {
 		 fe.setDataSource((DataProcessor) _dataSource);
 		 
 		 // set the front end in the scorer in realtime
-		 scorer.setFrontEnd(fe);
+		 recognizer.getDecoder().getSearchManager().getScorer().setFrontEnd(fe);
 	     		 
 		 //AFormat af = new AFormat(encoding.toString(), sampleRate, bytesPerValue*8, 1, bigEndian, true, bytesPerValue, sampleRate);
 		 //_dataSource.setInputStream(as, "ws-audiostream", af);
@@ -620,30 +600,6 @@ public class SphinxRecEngine implements RecEngine {
 	    // decode the audio file.
 	    //_logger.debug("Decoding " + audioFileURL);
 		Result r = recognizer.recognize();
-	
-		//for now record results to a file (eventually need to start using the database recording)
-		//if (recordingEnabled) {
-		//	logResults(r, recorder.getWavFileName());
-		//}
-
-        String resultText;
-        if (r != null) {
-	        if (outMode == OutputFormat.text) {
-	        	resultText = r.getBestFinalResultNoFiller();  
-	  	
-	        } else if (outMode == OutputFormat.json) {
-	        	Utterance utterance = ResultUtils.getAllResults(r, false, false,condfidenceScorer);
-	            resultText = gson.toJson(utterance);
-	        	
-	        } else {
-	        	resultText = r.getBestFinalResultNoFiller();  
-	        	_logger.warn("Inrecognized output format: "+outMode+ "  ,using plain text mode as a default.");
-	        }
-			_logger.debug(resultText);
-        } else {
-        	_logger.debug("Null results...");
-        }
-        
         
 		fe=null;
 	    return r;
@@ -703,7 +659,7 @@ public class SphinxRecEngine implements RecEngine {
 		 fe.setDataSource((DataProcessor) _dataSource);
 		 
 		 // set the front end in the scorer in realtime
-		 scorer.setFrontEnd(fe);
+		 recognizer.getDecoder().getSearchManager().getScorer().setFrontEnd(fe);
 		 
 		// AFormat af = new AFormat(encoding.toString(), sampleRate, bytesPerValue*8, 1, bigEndian, true, bytesPerValue, sampleRate);
 		 //_dataSource.setInputStream(as, "ws-audiostream", af);
@@ -726,7 +682,7 @@ public class SphinxRecEngine implements RecEngine {
 	        	resultText = result.getBestFinalResultNoFiller();  
 	  	
 	        } else if (outMode == OutputFormat.json) {
-	        	Utterance utterance = ResultUtils.getAllResults(result, false, false,condfidenceScorer);
+	        	Utterance utterance = ResultUtils.getAllResults(result, false, false,confidenceScorer);
 	            resultText = gson.toJson(utterance);
 	        	
 	        } else {
@@ -842,10 +798,11 @@ public class SphinxRecEngine implements RecEngine {
 	  */
 	public synchronized void loadJSGF(JSGFGrammar jsgfGrammar, GrammarLocation grammarLocation) throws IOException, GrammarException {
 		jsgfGrammar.setBaseURL(grammarLocation.getBaseURL());
-		System.out.println("SAL:::"+grammarLocation.getBaseURL()+"  "+grammarLocation.getGrammarName());
+		//System.out.println("SAL:::"+grammarLocation.getBaseURL()+"  "+grammarLocation.getGrammarName());
 		try {
+			//jsgfGrammar.deallocate();
 			jsgfGrammar.loadJSGF(grammarLocation.getGrammarName());
-
+			jsgfGrammar.commitChanges();
 			this.jsapiRecognizer.commitChanges();
 		} catch (JSGFGrammarParseException e) {
 			// TODO Auto-generated catch block
@@ -1003,6 +960,31 @@ public class SphinxRecEngine implements RecEngine {
 	
 	
     private void createFrontEndElements() {
+    	
+    	
+    	/*There are the spring bean prototype names
+    	 * Could get the beanfactory and get them that way, 
+    	 * not sure what is best yet...
+    	speechClassifier
+        speechMarker
+        speechDataMonitor
+        nonSpeechDataFilter
+        identityStage
+        dataBlocker
+        insertSpeechSignal
+        recorder
+        preemphasizer
+        dither
+        windower
+        fft
+        melFilterBank16k
+        melFilterBank8k
+        dct
+        batchCMN
+        liveCMN
+        featureExtraction*/
+    	
+    	
 
     	// create all the components that may be needed for the front end ahead of time. 
     	// to save time at recognition requests time.
@@ -1169,46 +1151,19 @@ public class SphinxRecEngine implements RecEngine {
     	this.grammarManager = grammarManager;
     }
 
-	/**
-     * @return the loader
-     */
-    public Loader getLoader() {
-    	return loader;
-    }
-
-	/**
-     * @param loader the loader to set
-     */
-    public void setLoader(Loader loader) {
-    	this.loader = loader;
-    }
-
-	/**
-     * @return the scorer
-     */
-    public AcousticScorer getScorer() {
-    	return scorer;
-    }
-
-	/**
-     * @param scorer the scorer to set
-     */
-    public void setScorer(AcousticScorer scorer) {
-    	this.scorer = scorer;
-    }
-
+	
 	/**
      * @return the condfidenceScorer
      */
-    public ConfidenceScorer getCondfidenceScorer() {
-    	return condfidenceScorer;
+    public ConfidenceScorer getConfidenceScorer() {
+    	return confidenceScorer;
     }
 
 	/**
-     * @param condfidenceScorer the condfidenceScorer to set
+     * @param confidenceScorer the condfidenceScorer to set
      */
-    public void setCondfidenceScorer(ConfidenceScorer condfidenceScorer) {
-    	this.condfidenceScorer = condfidenceScorer;
+    public void setConfidenceScorer(ConfidenceScorer confidenceScorer) {
+    	this.confidenceScorer = confidenceScorer;
     }
 
 	/**
