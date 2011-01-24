@@ -43,15 +43,6 @@
 	</bean>
 
 
-	<bean id="grammarManager" 
-	      class="com.spokentech.speechdown.server.recog.GrammarManager"
-		  init-method="startup" destroy-method="shutdown">
-		  <property name="grammarDir">
-				<value>grammars</value>
-		  </property>
-	</bean>
-
-	
 	<bean id="synthEngineFactory" 
 	      class="com.spokentech.speechdown.server.tts.FreettsSynthEngineFactory"
 		  init-method="startup" destroy-method="shutdown">
