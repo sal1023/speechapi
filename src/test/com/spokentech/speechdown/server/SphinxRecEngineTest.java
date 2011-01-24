@@ -166,7 +166,7 @@ public class SphinxRecEngineTest extends TestCase implements BeanFactoryAware {
 				SpeechRequestDTO hr = null;
 				try {
 					long start = System.nanoTime();
-					boolean doEndpointing = false;
+					boolean doEndpointing = true;
 					boolean cmnBatch = true;
 					//System.out.println("LKJHHHH "+grammarString);
 					Utterance u = recEngine.recognize(audioInputStream, mimeType, grammarString, af, outMode, doEndpointing, cmnBatch , hr);
