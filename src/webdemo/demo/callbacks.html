@@ -22,7 +22,7 @@
 	var params = {allowscriptaccess : "always"};
 	var attributes = {};
 	attributes.id = "flashContent";
-	swfobject.embedSWF("http://localhost:8080/speechcloud/lib/speechapi-1.2.swf", "myAlternativeContent", 
+	swfobject.embedSWF("http://localhost:8080/speechcloud/lib/speechapi-1.4.swf", "myAlternativeContent", 
 			"215", "138", "9.0.28", false,flashvars, params, attributes);
 
 	speechapi.setup("sal","password",onResult,onFinishTTS, onLoaded, "flashContent");
@@ -32,10 +32,14 @@
 	}
 
 
-	function onResult(result) {
-		speechapi.speak("you said, " + result.text, "male");
-		for (var k in result.ruleMatches) {
-			speechapi.processRule(result.ruleMatches[k]._rule,result.ruleMatches[k]._tag);
+function onResult(result) {
+		if (result.oog == true ) {
+			speechapi.speak("Sorry,  your utterance was out of grammar", "male");
+		} else {
+			speechapi.speak("you said, " + result.text, "male");
+			for (var k in result.ruleMatches) {
+				speechapi.processRule(result.ruleMatches[k]._rule,result.ruleMatches[k]._tag);
+			}
 		}
 	}
 

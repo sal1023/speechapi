@@ -5,26 +5,30 @@
 <head>
   <meta http-equiv="Content-Type" content="text/html; charset=utf-8"></meta>
   <title>Speech Parrot Page</title>
-  <script type="text/javascript" src="http://localhost:8080/speechcloud/lib/speechapi-1.1.js"></script>
+  <script type="text/javascript" src="http://localhost:8080/speechcloud/lib/speechapi-1.4.js"></script>
   <script type="text/javascript" src="http://localhost:8080/speechcloud/lib/swfobject.js"></script>
   <script language="JavaScript" type="text/javascript" >
 
 
         function onLoaded() {
-  		speechapi.setupRecognition("SIMPLE", document.getElementById('words').value,false);
+  		speechapi.setupRecognition("SIMPLE", document.getElementById('words').value,false,"es",false);
 	}
 
 	var flashvars = {speechServer : "http://localhost:8080/speechcloud"};
         var params = {allowscriptaccess : "always"};
 	var attributes = {};
 	attributes.id = "flashContent";
-	swfobject.embedSWF("http://localhost:8080/speechcloud/lib/speechapi-1.2.swf", "myAlternativeContent", "215", "138", "9.0.28", false,flashvars, params, attributes);
+	swfobject.embedSWF("http://localhost:8080/speechcloud/lib/speechapi-1.7.swf", "myAlternativeContent", "215", "138", "9.0.28", false,flashvars, params, attributes);
 	speechapi.setup("eli","password",onResult, 
 			onFinishTTS, onLoaded, "flashContent");
 
 
 	function onResult(result) {
-		document.getElementById('answer').innerHTML = result.text;
+		if (result.oog == true) {
+			document.getElementById('answer').innerHTML = "Out of grammar, try again"; 
+		}else{
+			document.getElementById('answer').innerHTML = result.text;
+		}
 		speechapi.speak(result.text,"hmm-slt");
 	}
 
@@ -32,7 +36,7 @@
 		//alert("finishTTS");
 	}
 	function ResetGrammar() {
-		speechapi.setupRecognition("SIMPLE", document.getElementById('words').value,false);
+		speechapi.setupRecognition("SIMPLE", document.getElementById('words').value,false,"es",false);
 	}	
 </script>
 
