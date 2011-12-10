@@ -1,0 +1,324 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml" lang="en" xml:lang="en">
+
+
+<head>
+  <meta http-equiv="Content-Type" content="text/html; charset=utf-8"></meta>
+  <title>Speech ATC Demo</title>`
+  <script type="text/javascript" src="http://localhost:8080/speechcloud/lib/speechapi-1.3.js"></script>
+  <script type="text/javascript" src="http://localhost:8080/speechcloud/lib/swfobject.js"></script>`
+  <script language="JavaScript" type="text/javascript" >
+
+
+
+	function onLoaded() {
+		oogBranchProb = document.getElementById('oogProb').value;
+		phoneProb = document.getElementById('phoneProb').value;
+		oogFlag = true;
+		if(document.getElementById('oogFlag').value == "False") {
+			oogFlag = false;
+		}
+		startOver();
+	}
+
+	var stage = 0;
+	var oogBranchProb = "1e-25"; 
+	var phoneProb = "1e-20";
+	var oogFlag = false;
+
+	var callSign = "Cessna five alpha bravo";
+	var fullCallSign ="Cessna three four five alpha bravo"; 
+	var tower ="A T C Tower"; 
+
+	var fullCall = tower + " "+fullCallSign; 
+	var call = tower + "("+fullCallSign+ "|"+callSign+")"; 
+
+	var grammar = new Array (6);
+
+	grammar[0] = "#JSGF V1.0;\n";
+	grammar[0] = grammar[0] + "grammar atc;\n";
+	grammar[0] = grammar[0] + "public <s1> = <fullCallSign> <action> [<intent>] | <s1Bad> ;\n";
+	grammar[0] = grammar[0] + "<fullCallSign> = "+fullCall+" ;\n";
+	grammar[0] = grammar[0] + "<action> = ready {ready} | holding short {holdingShort}  ;\n";
+	grammar[0] = grammar[0] + "<intent> = (We |I) will remain in the pattern {remain};\n";
+	grammar[0] = grammar[0] + "<s1Bad> = "+ fullCallSign+ "(ready for takeoff | holding short for takeoff) {true};\n";
+	
+
+	grammar[1] = "#JSGF V1.0;\n";
+	grammar[1] = grammar[1] + "grammar atc;\n";
+	grammar[1] = grammar[1] + "public <intent> = "+callSign + " (We |I) will remain in the pattern {remain};\n";
+	
+	grammar[2] = "#JSGF V1.0;\n";
+	grammar[2] = grammar[2] + "grammar atc;\n";
+	grammar[2] = grammar[2]+ "public <s2> = "+ callSign+ " {cleared} [cleared for takeoff] ;\n";
+
+	grammar[3] = "#JSGF V1.0;\n";
+	grammar[3] = grammar[3] + "grammar atc;\n";
+	grammar[3] = grammar[3]+ "public <s3> = (("+ callSign + ") | ( "+callSign+ " (we|I) will report a left downwind)){reporting};\n";
+
+	grammar[4] = "#JSGF V1.0;\n";
+	grammar[4] = grammar[4] + "grammar atc;\n";
+	grammar[4] = grammar[4] +"public <s4> = <callSign> <position> [<intention>]  ;\n"; 
+	grammar[4] = grammar[4] +"<callSign> = "+callSign +" {true} ;\n"; 
+	grammar[4] = grammar[4] +"<position> = (mid field left downwind  {true}) ;\n"; 
+	grammar[4] = grammar[4] + "<intention> =  touch and go {touch} | full stop {stop}| request the option {option};\n";
+
+
+	grammar[5] = "#JSGF V1.0;\n";
+	grammar[5] = grammar[5] + "grammar atc;\n";
+	grammar[5] = grammar[5] +"public <s5> = "+call +" [<position>] [<intent>] ;\n";
+	grammar[5] = grammar[5] +"<position> = left base {leftBase} ;\n"; 
+	grammar[5] = grammar[5] +"<intent> =  (touch and go {touch} | full stop {stop}| request the option {option});\n";
+
+
+
+
+	var flashvars = {speechServer : "http://localhost:8080/speechcloud"};
+        var params = {allowscriptaccess : "always"};
+	var attributes = {};
+	attributes.id = "flashContent";
+
+	swfobject.embedSWF("http://localhost:8080/speechcloud/lib/speechapi-1.5.swf", "myAlternativeContent", "215", "138", "9.0.28", false,flashvars, params, attributes);
+
+	speechapi.setup("spencer","password",onResult, onFinishTTS, onLoaded, "flashContent");
+		
+
+
+	function onResult(result) {
+		if (result.oog == true) {
+			document.getElementById('oog').innerHTML = "Out of grammar, try again"; 
+		}else{
+			document.getElementById('oog').innerHTML = ""; 
+			//copy all tags to a associative array (should do this in the api!)
+			
+			document.getElementById('tags').innerHTML = "";
+			var tags = new Array();
+  			for (var k in result.ruleMatches) {
+				tags[result.ruleMatches[k]._rule] = result.ruleMatches[k]._tag; 
+				//alert (result.ruleMatches[k]._tag+ " "+  result.ruleMatches[k]._rule);
+				document.getElementById('tags').innerHTML = document.getElementById('tags').innerHTML +" "+k+" of "+
+					result.ruleMatches.length+ " : "+ result.ruleMatches[k]._rule+ "->"+  result.ruleMatches[k]._tag+ "<br>"; 
+   			}
+
+			//if (("intent" in tags) && (tags["intent"] == "remain)) {
+			//if ((tags["action"] == "ready") || (tags["action"] == "holdingShort")) {
+			if (stage == 0) {
+				var s1PromptTakeoff = fullCallSign +" review lesson on the word take off"; 
+				var s1Prompt1 = fullCallSign +" A T C Tower, Runway Two Five, line up and wait.";
+				var s1Prompt2 = fullCallSign +" A T C Tower, say your intentions.";
+
+				//is it a bad grammar?
+				if (("s1Bad" in tags) && (tags["s1Bad"] == "true")) {
+					speechapi.speak(s1PromptTakeoff,"hmm-slt");
+				} else {
+					//action and intent
+					if (("action" in tags) && ("intent" in tags))  {
+						speechapi.speak(s1Prompt1,"hmm-slt");
+						setTimeout ( "recognizeStage(2)", 10000 );
+					//action without intent
+					} else if (("action" in tags) && !("intent" in tags))  {
+						speechapi.speak(s1Prompt2,"hmm-slt");
+	   					recognizeStage(1);
+					//intent without action
+					} else if (!("action" in tags) && ("intent" in tags))  {
+						speechapi.speak("Error, intent without action","hmm-slt");
+
+					//without intent or action
+					} else {
+						speechapi.speak("Error, no intent and no action","hmm-slt");
+					}
+				}
+
+
+			}else if (stage == 1) {
+				var s1Prompt1 = fullCallSign +" A T C Tower, Runway Two Five, line up and wait.";
+				if ("intent" in tags) {
+					speechapi.speak(s1Prompt1,"hmm-slt");
+					setTimeout ( "recognizeStage(2)", 10000 );
+				} else {
+					speechapi.speak("Error, no intent in stage 1","hmm-slt");
+				}
+			}else if (stage == 2) {
+				if ("s2" in tags) {
+					speechapi.speak("taking off ","hmm-slt");
+					setTimeout ( "recognizeStage(3)", 5000 );
+				} else {
+					speechapi.speak("Error, did not copy","hmm-slt");
+				}
+			}else if (stage == 3) {
+				if ("s3" in tags) {
+	   				recognizeStage(4);
+				} else {
+					speechapi.speak("Error, no intent in stage 1","hmm-slt");
+				}
+			}else if (stage == 4) {
+				var s4Prompt1 = "Cessna five Alpha Bravo, say your position.";  //if nothing said
+				var s4Prompt2 = "Cessna five Alpha Bravo, say intentions.";     // if only first part
+				var s4Prompt3a = "Cessna five Alpha Bravo, copy touch and go. Report a left base for Runway Two Five.";
+				var s4Prompt3b = "Cessna five Alpha Bravo, copy full stop. Report a left base for Runway Two Five.";
+				var s4Prompt3c = "Cessna five Alpha Bravo, copy your request for the option. Report a left base for Runway Two Five";
+				//if ("position" in tags) {
+					if ("intention" in tags) {
+						if (tags["intent"] == "touch") {
+							speechapi.speak(s4Prompt3a,"hmm-slt");
+						} else if (tags["intent"] == "stop") {
+							speechapi.speak(s4Prompt3b,"hmm-slt");
+						}else if (tags["intent"] == "option") {
+							speechapi.speak(s4Prompt3c,"hmm-slt");
+						}
+	   					recognizeStage(5);
+					} else {
+						speechapi.speak(s4Prompt2,"hmm-slt");
+	   					recognizeStage(4);
+					}
+				//} else {
+				//	speechapi.speak("Error, no position in stage 4","hmm-slt");
+				//}
+			}else if (stage == 5) {
+				var noPositionPrompt = "Cessna five Alpha Bravo, say your position in the pattern.";   // did not say left base
+				var noIntentPrompt = "Cessna five Alpha Bravo, say your intentions.";		//did not say intention (end part)
+				var touchPrompt = "Cessna five Alpha Bravo, Runway Two Five, cleared touch and go.";
+				var landPrompt = "Cessna five Alpha Bravo, Runway Two Five, cleared to land.";
+				var optionPrompt = "Cessna five Alpha Bravo, Runway Two Five, cleared for the option.";
+				//position and intent
+				if (("position" in tags) && ("intent" in tags))  {
+					if (tags["intent"] == "touch") {
+						speechapi.speak(touchPrompt,"hmm-slt");
+					} else if (tags["intent"] == "land") {
+						speechapi.speak(landPrompt,"hmm-slt");
+					}else if (tags["intent"] == "option") {
+						speechapi.speak(optionPrompt,"hmm-slt");
+					}
+					setTimeout ( "recognizeStage(0)", 10000 );
+				//poition without intent
+				} else if (("position" in tags) && !("intent" in tags))  {
+					speechapi.speak(noIntentPrompt,"hmm-slt");
+	   				//recognizeStage(5);
+				//intent without position
+				} else if (!("position" in tags) && ("intent" in tags))  {
+					speechapi.speak(noPositionPrompt,"hmm-slt");
+	   				//recognizeStage(5);
+				//without intent or position
+				} else {
+					speechapi.speak("Error, no intent and no position","hmm-slt");
+				}
+			}
+
+			document.getElementById('spokenWords').innerHTML = result.text;
+			//document.getElementById('spokenWords').innerHTML = document.getElementById('spokenWords').innerHTML + result.text+" ";
+		}
+		//speechapi.speak(result.text,"hmm-slt");
+	}
+
+
+
+	function onFinishTTS() {
+		//alert("finishTTS");
+	}
+
+	function ResetOog() {
+		oogBranchProb = document.getElementById('oogProb').value;
+		phoneProb = document.getElementById('phoneProb').value;
+		oogFlag = document.getElementById('oogFlag').value;
+		speechapi.setOogParams(oogBranchProb, phoneProb );
+		//speechapi.setupRecognition("SIMPLE", document.getElementById('words').value,false,oogFlag);
+	}	
+
+
+	function startOver() {
+	   //alert("start over");
+	   document.getElementById('spokenWords').innerHTML ="";
+	   stage = 0;
+	   recognizeStage(stage);
+	    
+        }
+
+	function recognizeStage(s) {
+		var s2Prompt = fullCallSign+" make left traffic, Runway Two Five, cleared for takeoff.";
+		var s3Prompt = "Cessna five Alpha Bravo, report a midfield left downwind";
+		stage = s;
+
+		document.getElementById('stage').innerHTML = stage;
+		document.getElementById('grammar').innerHTML = grammar[s];
+		if (s ==2) {
+			speechapi.speak(s2Prompt,"hmm-slt");
+		} else if (s ==3) {
+			speechapi.speak(s3Prompt,"hmm-slt");
+		}
+
+	   var auto= false;
+	   var gMode = "JSGF";
+	   speechapi.setupRecognition(gMode, grammar[s], auto,oogFlag);
+	   //Logger.info("start!");
+	   //alert(grammar);
+
+	}
+
+
+
+</script>
+
+</head>
+<body>
+<h4>ATC  Demo</h4>
+<p>First you will need to allow access to your microphone in the "Adobe Flash Player Settings" popup. Then hold the "press to speak" button and say a number 
+between one and ten.  Release the button when you are done speaking.</p>
+<ul>
+	<li>Stage 0. Before Takeoff </li>
+	<li>Stage 1. Before Takeoff </li>
+	<li>Stage 2. Takeoff Clearance </li>
+	<li>Stage 3. After Takeoff </li>
+	<li>Stage 4. Left Downwind </li>
+	<li>Stage 5. Landing Clearance </li>
+</ul>
+
+
+
+<br>
+<table border="1" >
+
+<tr>
+	<td width="100"><input type="button" value="Start Over" onclick="startOver()"></td>
+	<td><b id="oog" width=600 ></td>
+</tr>
+<tr>
+	<td><b id="stage"/></td>
+	<td><b id="spokenWords"/></td>
+</tr>
+
+<tr>
+	<td colspan="2"><b id='tags' </td>
+</tr>
+<tr>
+	<td colspan="2"><textarea id='grammar' rows='8' cols='120'></textarea>
+</tr>
+</td>
+</tr>
+</table>
+
+<br>
+
+<table>
+<tr>
+  OOG Prob: <input type="textarea" id="oogProb" value="1e-25" size="10"/>
+          Phone Insert Prob: <input type="text" id="phoneProb" value="1e-20" size="10"/>
+
+          Oog: <select id="oogFlag">
+                  <option value="False">Off</option>
+                  <option value="True">On</option>
+
+               </select>
+	  
+      <input type="button" value="Reset Oog" onclick="ResetOog()">
+</tr>
+</table>
+<br>
+
+
+<div id="myAlternativeContent"></div>
+<div id="flashContent"></div>
+
+
+
+</body>
+</html>

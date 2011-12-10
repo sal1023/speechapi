@@ -1,0 +1,186 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml" lang="en" xml:lang="en">
+
+
+<head>
+  <meta http-equiv="Content-Type" content="text/html; charset=utf-8"></meta>
+  <title>Speech Passage Page</title>
+  <script type="text/javascript" src="http://localhost:8080/speechcloud/lib/speechapi-1.3.js"></script>
+  <script type="text/javascript" src="http://localhost:8080/speechcloud/lib/swfobject.js"></script>
+  <script language="JavaScript" type="text/javascript" >
+
+
+
+	function onLoaded() {
+		oogBranchProb = document.getElementById('oogProb').value;
+		phoneProb = document.getElementById('phoneProb').value;
+		oogFlag = true;
+		if(document.getElementById('oogFlag').value == "False") {
+			oogFlag = false;
+		}
+		startOver();
+	}
+
+	var oogBranchProb = "1e-25"; 
+	var phoneProb = "1e-20";
+	var oogFlag = false;
+
+        var utteranceStart = 0;
+	var passageText;
+        var MAXUTT = 20;
+        var passageArray ;
+
+	var flashvars = {speechServer : "http://localhost:8080/speechcloud"};
+        var params = {allowscriptaccess : "always"};
+	var attributes = {};
+	attributes.id = "flashContent";
+	swfobject.embedSWF("http://localhost:8080/speechcloud/lib/speechapi-1.5.swf", "myAlternativeContent", "215", "138", "9.0.28", false,flashvars, params, attributes);
+	speechapi.setup("eli","password",onResult, 
+			onFinishTTS, onLoaded, "flashContent");
+
+
+	function onResult(result) {
+		if (result.oog == true) {
+			document.getElementById('oog').innerHTML = "Out of grammar, try again"; 
+		}else{
+			document.getElementById('oog').innerHTML = ""; 
+			var passageIndex = result.ruleMatches[0]._tag;
+			utteranceStart = Number(passageIndex)+1;
+			document.getElementById('spokenWords').innerHTML = document.getElementById('spokenWords').innerHTML + result.text+" ";
+		}
+	   	recognizeNextPhrase(utteranceStart);
+		speechapi.speak(result.text,"hmm-slt");
+	}
+
+	function onFinishTTS() {
+		//alert("finishTTS");
+	}
+
+	function ResetOog() {
+		oogBranchProb = document.getElementById('oogProb').value;
+		phoneProb = document.getElementById('phoneProb').value;
+		oogFlag = document.getElementById('oogFlag').value;
+		speechapi.setOogParams(oogBranchProb, phoneProb );
+		//speechapi.setupRecognition("SIMPLE", document.getElementById('words').value,false,oogFlag);
+	}	
+
+
+	function startOver() {
+	   //alert("start over");
+
+	   passageArray = new Array();
+           var reg = '/\s/';
+	   passageArray = document.getElementById('passage').value.split(/\s+/);
+	   //alert(passageArray);
+	   //alert(passageArray.length);
+	   utteranceStart= 0;
+	   document.getElementById('spokenWords').innerHTML ="";
+	   recognizeNextPhrase(utteranceStart);
+	    
+        }
+
+	function recognizeNextPhrase(position) {
+	   var auto= false;
+
+	   //alert("rec position "+position);
+
+	   // set up the grammar for the next phrase
+	   var grammar = "grammar passage;\n";
+           grammar = grammar +"public <phrase> = ";
+	   var phrase = "";
+	   var first = true;
+	   var i;
+	   //alert(grammar);
+	   var limit = Number(position)+MAXUTT;
+	   //alert("rec limit "+limit);
+	   if (limit > passageArray.length) {
+	   	limit =passageArray.length-1;
+	   }
+	   //alert("rec next phrase "+limit+ " "+position+ " " + passageArray.length);
+	   for (i= position; i<limit;i++) {
+	      if(first) {
+		   phrase = passageArray[i];
+	  	   grammar = grammar+ phrase+"{"+  i + "}\n";
+		   first = false;
+	       } else {
+		   phrase= phrase + " "+ passageArray[i] 
+		   grammar = grammar+" | "+ phrase+"{"+  i + "}\n";
+	       }
+	       //alert(i+" : "+phrase);
+	   }
+	   grammar = grammar+";";
+
+
+	   var gMode = "JSGF";
+	   speechapi.setupRecognition(gMode, grammar, auto,oogFlag);
+	   //Logger.info("start!");
+	   //alert(grammar);
+
+	}
+
+
+</script>
+
+</head>
+<body>
+<h4>Passage Demo</h4>
+<p>First you will need to allow access to your microphone in the "Adobe Flash Player Settings" popup. Then hold the "press to speak" button and say a number 
+between one and ten.  Release the button when you are done speaking.  If you are in a quiet environment or have a headset, try to enable automatic speech
+detection mode.  When automatic mode is enabled, you do not need to press to speak; the system will detect speech for you.  You can also change the grammars
+by modifying the comma separated list in the text entry field.</p>
+
+
+
+<br>
+<table border="1" width=>
+<tr>
+	<td colspan="2"><textarea id="passage" rows="10" cols="80">
+In the beginning God created the heaven and the earth 
+And the earth was without form and void and darkness was upon the face of the deep And the Spirit of God moved upon the face of the waters 
+And God said Let there be light and there was light 
+And God saw the light that it was good and God divided the light from the darkness 
+And God called the light Day and the darkness he called Night And the evening and the morning were the first day 
+And God said Let there be a firmament in the midst of the waters and let it divide the waters from the waters 
+And God made the firmament and divided the waters which were under the firmament from the waters which were above the firmament and it was so 
+And God called the firmament Heaven And the evening and the morning were the second day 
+And God said Let the waters under the heaven be gathered together unto one place, and let the dry land appear and it was so 
+And God called the dry land Earth and the gathering together of the waters called he Seas and God saw that it was good 
+</textarea></td>
+</tr>
+
+<tr>
+	<td><input type="button" value="Start Over" onclick="startOver()"></td>
+	<td><b id="oog" size=40/></td>
+</tr>
+
+<tr>
+	<td colspan="2"><b id='spokenWords'></b> 
+</td>
+</tr>
+</table>
+
+<br>
+
+<table>
+<tr>
+  OOG Prob: <input type="textarea" id="oogProb" value="1e-25" size="10"/>
+          Phone Insert Prob: <input type="text" id="phoneProb" value="1e-20" size="10"/>
+
+          Oog: <select id="oogFlag">
+                  <option value="True">On</option>
+                  <option value="False">Off</option>
+               </select>
+	  
+      <input type="button" value="Reset Oog" onclick="ResetOog()">
+</tr>
+</table>
+<br>
+
+
+<div id="myAlternativeContent"></div>
+<div id="flashContent"></div>
+
+
+
+</body>
+</html>
