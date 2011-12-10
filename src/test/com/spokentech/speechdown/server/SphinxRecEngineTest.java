@@ -56,7 +56,7 @@ import com.spokentech.speechdown.common.Utterance.OutputFormat;
 import com.spokentech.speechdown.server.domain.SpeechRequestDTO;
 import com.spokentech.speechdown.server.recog.RecEngine;
 import com.spokentech.speechdown.server.standalone.SpeechWorker;
-import com.spokentech.speechdown.server.util.pool.SphinxRecEngineFactory;
+import com.spokentech.speechdown.server.util.pool.SpringSphinxRecEngineFactory;
 import com.sun.speech.engine.recognition.BaseRecognizer;
 import com.sun.speech.engine.recognition.BaseRuleGrammar;
 import java.io.IOException;
@@ -127,7 +127,7 @@ public class SphinxRecEngineTest extends TestCase implements BeanFactoryAware {
 					// TODO Auto-generated catch block
 					e.printStackTrace();
 				}
-	         SphinxRecEngineFactory sphinxRecEngineFactory =(SphinxRecEngineFactory) this.beanFactory.getBean("sphinxRecEngineFactory");
+	         SpringSphinxRecEngineFactory sphinxRecEngineFactory =(SpringSphinxRecEngineFactory) this.beanFactory.getBean("sphinxRecEngineFactory");
 	         RecEngine recEngine = sphinxRecEngineFactory.createSphinxRecEngine(true);
 	         
 	         	String testFileName = "c:/work/speechcloud/etc/test/oog/tal.wav";
@@ -169,7 +169,14 @@ public class SphinxRecEngineTest extends TestCase implements BeanFactoryAware {
 					boolean doEndpointing = true;
 					boolean cmnBatch = true;
 					//System.out.println("LKJHHHH "+grammarString);
-					Utterance u = recEngine.recognize(audioInputStream, mimeType, grammarString, af, outMode, doEndpointing, cmnBatch , hr);
+					String amId =  null;
+					String lmId=null;
+					String dictionaryID = null;
+					boolean oog= false;
+					double oogBranchProb=1e-10; 
+					double phoneInsertionProb =1e-10;
+					Utterance u = recEngine.recognize(audioInputStream, mimeType, grammarString, af, outMode, doEndpointing, cmnBatch ,
+							 oog, oogBranchProb, phoneInsertionProb, amId,  lmId,  dictionaryID,hr);
 			        //transcription = recEngine.transcribe( as,  mimeType,  af,   outMode,  out, response,  hr);
 					long stop = System.nanoTime();
 					long wall = (stop - start)/1000000;

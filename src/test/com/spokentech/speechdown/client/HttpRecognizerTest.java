@@ -83,11 +83,11 @@ public class HttpRecognizerTest extends TestCase {
 	    //private static String service = "http://ec2-204-236-206-143.compute-1.amazonaws.com/speechcloud/SpeechUploadServlet";    
 
 	    //private static String service = "http://ec2-174-129-20-250.compute-1.amazonaws.com/speechcloud/SpeechUploadServlet";    
-	    private static String service = "http://localhost:8080/speechcloud/SpeechUploadServlet";    
+	    //private static String service = "http://localhost:8080/speechcloud/SpeechUploadServlet";    
 	    //private static String service = "http://spokentech.net/speechcloud/SpeechUploadServlet";   
   
 	    //private static String service = "http://spokentech.net:8000/speechcloud/SpeechUploadServlet";   
-	    //private static String service = "http://www.speechapi.com:8000/speechcloud/SpeechUploadServlet";   
+	    private static String service = "http://www.speechapi.com:8000/speechcloud/SpeechUploadServlet";   
 	    //private static String service = "http://192.168.199.146:8080/speechcloud/SpeechUploadServlet";   
 
 	    

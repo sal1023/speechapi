@@ -57,7 +57,7 @@ import com.spokentech.speechdown.common.Utterance.OutputFormat;
 import com.spokentech.speechdown.server.domain.SpeechRequestDTO;
 import com.spokentech.speechdown.server.recog.RecEngine;
 import com.spokentech.speechdown.server.standalone.SpeechWorker;
-import com.spokentech.speechdown.server.util.pool.SphinxRecEngineFactory;
+import com.spokentech.speechdown.server.util.pool.SpringSphinxRecEngineFactory;
 import com.sun.speech.engine.recognition.BaseRecognizer;
 import com.sun.speech.engine.recognition.BaseRuleGrammar;
 import java.io.IOException;
