@@ -1,0 +1,73 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml" lang="en" xml:lang="en">
+
+
+<head>
+  <meta http-equiv="Content-Type" content="text/html; charset=utf-8"></meta>
+  <title>Speech LM Test Page</title>
+  <script type="text/javascript" src="http://localhost:8080/speechcloud/lib/speechapi-1.4.js"></script>
+  <script type="text/javascript" src="http://localhost:8080/speechcloud/lib/swfobject.js"></script>
+  <script language="JavaScript" type="text/javascript" >
+
+
+        function onLoaded() {
+		oogFlag = false;
+		language = "en";
+		speechapi.setupRecognition("LM", "",false,language,oogFlag);
+	}
+
+	var language ="en";
+	var flashvars = {speechServer : "http://localhost:8080/speechcloud"};
+        var params = {allowscriptaccess : "always"};
+	var attributes = {};
+	attributes.id = "flashContent";
+	swfobject.embedSWF("http://localhost:8080/speechcloud/lib/speechapi-1.7.swf", "myAlternativeContent", "215", "138", "9.0.28", false,flashvars, params, attributes);
+	speechapi.setup("eli","password",onResult, 
+			onFinishTTS, onLoaded, "flashContent");
+
+
+	function onResult(result) {
+		if (result.oog == true) {
+			document.getElementById('answer').innerHTML = "Out of grammar, try again"; 
+		}else{
+			document.getElementById('answer').innerHTML = result.text;
+		}
+		speechapi.speak(result.text,"hmm-slt");
+	}
+
+	function onFinishTTS() {
+		//alert("finishTTS");
+	}
+
+	function ResetLang() {
+		language = document.getElementById('language').value;
+		speechapi.setupRecognition("LM", "",false,language,oogFlag);
+	}	
+</script>
+
+</head>
+<body>
+<h4>LM Test Demo</h4>
+<p>First you will need to allow access to your microphone in the "Adobe Flash Player Settings" popup. Then hold the "press to speak" button and say a number 
+between one and ten.  Release the button when you are done speaking.  If you are in a quiet environment or have a headset, try to enable automatic speech
+detection mode.  When automatic mode is enabled, you do not need to press to speak; the system will detect speech for you.  
+</p>
+
+<br>
+<table border="1" width=>
+
+<tr>
+  <td>RESULT</td>
+  <td><b id='answer'></b></td>
+</tr>
+</table>
+<br>
+
+
+<div id="myAlternativeContent"></div>
+<div id="flashContent"></div>
+
+
+
+</body>
+</html>
