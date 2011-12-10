@@ -1,0 +1,647 @@
+<?xml version="1.0"?>
+
+<beans xmlns="http://www.springframework.org/schema/beans"
+  xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+  xmlns:ws="http://jax-ws.dev.java.net/spring/core"
+  xmlns:wss="http://jax-ws.dev.java.net/spring/servlet"
+  xsi:schemaLocation="
+    http://www.springframework.org/schema/beans
+    http://www.springframework.org/schema/beans/spring-beans-2.0.xsd
+    http://jax-ws.dev.java.net/spring/core
+    http://jax-ws.dev.java.net/spring/core.xsd
+    http://jax-ws.dev.java.net/spring/servlet
+    http://jax-ws.dev.java.net/spring/servlet.xsd">
+
+
+	<bean class="org.springframework.beans.factory.config.PropertyPlaceholderConfigurer">
+    	<property name="locations">
+       		<value>classpath:speech.properties</value>
+    	</property>
+	</bean>
+
+    <!-- ******************************************************** -->
+    <!-- Sphinx4 components			                              -->
+    <!--   Using constructor injection,  they have constructor    -->
+    <!-- ******************************************************** -->  
+  
+    <!-- ******************************************************** -->
+    <!-- The language model linguist  configuration               -->
+    <!-- ******************************************************** -->
+    
+
+    <bean name="lexTreeLinguist" 
+                class="edu.cmu.sphinx.linguist.lextree.LexTreeLinguist" scope ="prototype"> 
+        <constructor-arg index="0"  ref="acousticModelSpokenTech"/>
+        <constructor-arg index="1"  ref="logMath"/>
+        <constructor-arg index="2"  ref="unitManager"/>     
+        <constructor-arg index="3"  ref="trigramModel"/>        
+        <constructor-arg index="4"  ref="dictionary"/>
+		<constructor-arg index="5"  type="boolean" value="${speech.linguist.fullWordHistories}"/>
+        <constructor-arg index="6"  type="boolean" value="${speech.linguist.wantUnigramSmear}"/>
+        <constructor-arg index="7"  type="double"  value="${speech.linguist.lmwordInsertionProbability}"/>
+        <constructor-arg index="8"  type="double"  value="${speech.linguist.lmsilenceInsertionProbability}"/>
+        <constructor-arg index="9"  type="double" value="${speech.linguist.lmfillerInsertionProbability}"/>
+		<constructor-arg index="10" type="double" value="${speech.linguist.lmunitInsertionProbability}"/>
+        <constructor-arg index="11" type="float" value="${speech.linguist.lmlanguageWeight}"/>        
+        <constructor-arg index="12" type="boolean"  value="${speech.linguist.addFillerWords}"/>
+        <constructor-arg index="13" type="boolean" value="${speech.linguist.generateUnitStates}" />
+        <constructor-arg index="14" type="float" value="${speech.linguist.smear}"/>
+        <constructor-arg index="15" type="int" value="${speech.linguist.cachesize}"/>
+    </bean>    
+
+           
+    <bean id="grammarManager" 
+		class="com.spokentech.speechdown.server.recog.GrammarManager">
+        <constructor-arg index="0"  type="java.lang.String" value="${speech.baseGrammarDir}" />
+        <constructor-arg index="1"  type="java.lang.String" value="grammar" />
+    </bean>
+
+    <bean name="trigramModel"
+           class="edu.cmu.sphinx.linguist.language.ngram.large.LargeTrigramModel" scope="prototype">
+        <constructor-arg index="0"  type="java.lang.String" value="${speech.lm.format}" />
+        <!--constructor-arg index="1"  ref="modelUrl"/-->
+        <constructor-arg index="1"   type="java.lang.String" value="${speech.lm.languageModelFile}"/>
+        <constructor-arg index="2" type="java.lang.String" ><null/></constructor-arg>
+        <!--constructor-arg index="2"   type="java.lang.String" value="${speech.lm.queryLogFile}"/-->
+        <constructor-arg index="3"   type="int" value="${speech.lm.maxTrigramCacheSize}"/>
+        <constructor-arg index="4"  type="int" value="${speech.lm.maxBigramCacheSize}"/>
+        <constructor-arg index="5"  type="boolean" value="${speech.lm.clearCachesAfterUtterance}"/>
+        <constructor-arg index="6"  type="int" value="${speech.lm.maxDepth}"/>
+        <constructor-arg index="7"  ref="logMath" />
+        <constructor-arg index="8"  ref="dictionary" />
+        <constructor-arg index="9"  type="boolean" value="${speech.lm.applyLanguageWeightAndWip}"/>
+        <constructor-arg index="10"  type="float" value="${speech.lm.languageWeight}"/>
+        <constructor-arg index="11"  type="double" value="${speech.lm.wordInsertionProbability}"/>
+        <constructor-arg index="12"  type="float" value="${speech.lm.unigramWeight}"/>
+        <constructor-arg index="13"  type="boolean" value="${speech.lm.fullSmear}" />
+    </bean>
+    
+    <!--bean name="modelUrl" class="java.net.URL" scope="singleton">
+                <constructor-arg index="0"  type="java.lang.String" value="${speech.lm.languageModelFile}" />
+    </bean-->
+    
+
+    <!-- ******************************************************** -->
+    <!-- The Dictionary configuration                            -->
+    <!-- ******************************************************** -->
+
+    <bean name="dictionary" class="edu.cmu.sphinx.linguist.dictionary.FastDictionary" scope="singleton">
+        <constructor-arg type="java.lang.String" index="0" value="${speech.dictionary.dictionaryPath}"/>
+        <constructor-arg type="java.lang.String" index="1" value="${speech.dictionary.fillerPath}"/>       
+        <constructor-arg index="2">         
+	    	<list>
+	    	</list>
+    	</constructor-arg>
+        <constructor-arg type="boolean" index="3" value="${speech.dictionary.addSilEndingPronunciation}"/>
+        <constructor-arg type="java.lang.String" index="4" value="${speech.dictionary.wordReplacement}"/>
+        <constructor-arg type="boolean" index="5" value="${speech.dictionary.allowMissingWords}"/>
+        <constructor-arg type="boolean" index="6" value="${speech.dictionary.createMissingWords}" />
+        <constructor-arg  index="7" ref="unitManager"/>
+    </bean>
+    
+    <!--bean name="dictionary06d" class="edu.cmu.sphinx.linguist.dictionary.FastDictionary" scope="singleton">
+        <constructor-arg type="java.lang.String" index="0" value="${speech.dictionary.06d.dictionaryPath}"/>
+        <constructor-arg type="java.lang.String" index="1" value="${speech.dictionary.06d.fillerPath}"/>       
+        <constructor-arg index="2">         
+	    	<list>
+	    	</list>
+    	</constructor-arg>
+        <constructor-arg type="boolean" index="3" value="${speech.dictionary.addSilEndingPronunciation}"/>
+        <constructor-arg type="java.lang.String" index="4" value="${speech.dictionary.wordReplacement}"/>
+        <constructor-arg type="boolean" index="5" value="${speech.dictionary.allowMissingWords}"/>
+        <constructor-arg type="boolean" index="6" value="${speech.dictionary.createMissingWords}" />
+        <constructor-arg  index="7" ref="unitManager"/>
+    </bean-->
+    
+
+    <!-- ******************************************************** -->
+    <!-- The acoustic model configuration                         -->
+    <!-- ******************************************************** -->
+
+    <bean id="modelWsj" class="com.spokentech.speechdown.server.util.pool.PooledAcousticModel" scope="singleton">
+	<property name="model"> <ref bean="acousticModelWsj"/></property>
+        <property name="id"> <value>${speech.am.wsj.en.id}</value></property>
+        <property name="sampleRate"> <value>${speech.am.wsj.en.sampleRate}</value></property>
+        <property name="language"> <value>${speech.am.wsj.en.langugae}</value></property>
+    </bean>
+
+    <bean name="acousticModelWsj"  class="edu.cmu.sphinx.linguist.acoustic.tiedstate.TiedStateAcousticModel" scope="singleton">
+        <constructor-arg ref="loaderWsj" />
+        <constructor-arg ref="unitManager" />
+        <constructor-arg type="boolean" value="${speech.am.useComposites}" />
+    </bean>
+    <bean name="loaderWsj"
+           class="edu.cmu.sphinx.linguist.acoustic.tiedstate.Sphinx3Loader" scope="singleton">
+        <constructor-arg index="0" value="${speech.am.voxforge.en.loader.Location}"/>
+        <constructor-arg index="1" value="${speech.am.voxforge.en.loader.ModelDefinition}"/>
+   	    <constructor-arg index="2" value="${speech.am.voxforge.en.loader.DataLocation}"/>
+   	    <constructor-arg index="3" ref="logMath"/>
+   	    <constructor-arg index="4" ref="unitManager" />
+   	    <constructor-arg index="5" value="${speech.am.loader.distFloor}" />
+   	    <constructor-arg index="6" value="${speech.am.loader.mixtureWeightFloor}" />
+   	    <constructor-arg index="7" value="${speech.am.loader.varianceFloor}" />
+   	    <constructor-arg index="8" value="${speech.am.loader.useCDUnits}" />
+    </bean>
+
+    <bean id="modelSpokenTech" class="com.spokentech.speechdown.server.util.pool.PooledAcousticModel" scope="singleton">
+	<property name="model"> <ref bean="acousticModelSpokenTech"/></property>
+        <property name="id"> <value>${speech.am.spokentech.en.id}</value></property>
+        <property name="sampleRate"> <value>${speech.am.spokentech.en.sampleRate}</value></property>
+        <property name="language"> <value>${speech.am.spokentech.en.langugae}</value></property>
+    </bean>
+
+    <bean name="acousticModelSpokenTech"  class="edu.cmu.sphinx.linguist.acoustic.tiedstate.TiedStateAcousticModel" scope="singleton">
+        <constructor-arg ref="loaderSpokenTech" />
+        <constructor-arg ref="unitManager" />
+        <constructor-arg type="boolean" value="${speech.am.useComposites}" />
+    </bean>
+    
+    <bean name="loaderSpokenTech"
+           class="edu.cmu.sphinx.linguist.acoustic.tiedstate.Sphinx3Loader" scope="singleton">
+        <constructor-arg index="0" value="${speech.am.spokentech.en.loader.Location}"/>
+        <constructor-arg index="1" value="${speech.am.spokentech.en.loader.ModelDefinition}"/>
+   	    <constructor-arg index="2" value="${speech.am.spokentech.en.loader.DataLocation}"/>
+   	    <constructor-arg index="3" ref="logMath"/>
+   	    <constructor-arg index="4" ref="unitManager" />
+   	    <constructor-arg index="5" value="${speech.am.loader.distFloor}" />
+   	    <constructor-arg index="6" value="${speech.am.loader.mixtureWeightFloor}" />
+   	    <constructor-arg index="7" value="${speech.am.loader.varianceFloor}" />
+   	    <constructor-arg index="8" value="${speech.am.loader.useCDUnits}" />
+    </bean>
+
+    <bean id="modelVoxforge" class="com.spokentech.speechdown.server.util.pool.PooledAcousticModel" scope="singleton">
+	<property name="model"> <ref bean="acousticModelVoxforge"/></property>
+        <property name="id"> <value>${speech.am.voxforge.en.id}</value></property>
+        <property name="sampleRate"> <value>${speech.am.voxforge.en.sampleRate}</value></property>
+        <property name="language"> <value>${speech.am.voxforge.en.langugae}</value></property>
+    </bean>
+
+    <bean name="acousticModelVoxforge"  class="edu.cmu.sphinx.linguist.acoustic.tiedstate.TiedStateAcousticModel" scope="prototype">
+        <constructor-arg ref="loaderVoxforge" />
+        <constructor-arg ref="unitManager" />
+        <constructor-arg type="boolean" value="${speech.am.useComposites}" />
+    </bean>
+
+    <bean name="loaderVoxforge"
+           class="edu.cmu.sphinx.linguist.acoustic.tiedstate.Sphinx3Loader" scope="prototype">
+        <constructor-arg index="0" value="${speech.am.voxforge.en.loader.Location}"/>
+        <constructor-arg index="1" value="${speech.am.voxforge.en.loader.ModelDefinition}"/>
+   	    <constructor-arg index="2" value="${speech.am.voxforge.en.loader.DataLocation}"/>
+   	    <constructor-arg index="3" ref="logMath"/>
+   	    <constructor-arg index="4" ref="unitManager" />
+   	    <constructor-arg index="5" value="${speech.am.loader.distFloor}" />
+   	    <constructor-arg index="6" value="${speech.am.loader.mixtureWeightFloor}" />
+   	    <constructor-arg index="7" value="${speech.am.loader.varianceFloor}" />
+   	    <constructor-arg index="8" value="${speech.am.loader.useCDUnits}" />
+    </bean>
+
+
+    <!-- ******************************************************** -->
+    <!-- Model Pools						  -->
+    <!-- ******************************************************** -->
+
+     <!--bean id="modelPool" class="com.spokentech.speechdown.server.util.pool.ModelPools">
+        <property name="acoustic">
+	   <map>
+		<entry key="english16">
+                    <ref local="modelVoxforge"/>
+                </entry>
+                <entry key="wsj">
+                    <ref local="modelWsj"/>
+                </entry>
+                <entry key="english8">
+                    <ref local="modelSpokenTech"/>
+	        </entry>
+            </map>
+        </property>
+        <property name="language">
+            <map>
+                <entry key="hub4">
+                    <ref local="trigramModel"/>
+                </entry>
+                <entry key="wsj">
+                    <ref local="trigramModel"/>
+                </entry>
+                <entry key="giga">
+                    <ref local="trigramModel"/>
+                </entry>
+            </map>
+        </property>
+        <property name="dictionary">
+            <map>
+                <entry key="english">
+                    <ref local="dictionary"/>
+                </entry>
+            </map>
+        </property>
+    </bean-->
+
+
+    <!-- ******************************************************* -->
+    <!--  Miscellaneous components                               -->
+    <!-- ******************************************************* -->
+        
+    <bean id="standardActiveListFactory" 
+             class="edu.cmu.sphinx.decoder.search.PartitionActiveListFactory" scope="prototype">
+        <constructor-arg ref="logMath" />
+        <constructor-arg type="int" value="${speech.absoluteBeamWidth2}"/>
+        <constructor-arg type="double" value="${speech.relativeBeamWidth2}"/>
+    </bean>
+    
+   <bean name="activeListFactory" 
+             class="edu.cmu.sphinx.decoder.search.PartitionActiveListFactory" scope="prototype">   
+	     <!--class="edu.cmu.sphinx.decoder.search.SortingActiveListFactory" scope="prototype"-->  
+        <constructor-arg index="0" type="int" value="${speech.absoluteBeamWidth}"/>
+        <constructor-arg index="1" type="double" value="${speech.relativeBeamWidth}"/>
+	<constructor-arg index="2" ref="logMath"/>
+    </bean>
+
+    <bean name="activeListManager" 
+             class="edu.cmu.sphinx.decoder.search.SimpleActiveListManager" scope="prototype">  
+        <constructor-arg index="0">         
+	    	<list>
+	    		<ref bean="standardActiveListFactory"/>
+		    	<ref bean="wordActiveListFactory"/>
+		    	<ref bean="wordActiveListFactory"/>
+		    	<ref bean="standardActiveListFactory"/>
+		    	<ref bean="standardActiveListFactory"/>
+		    	<ref bean="standardActiveListFactory"/>
+	    	</list>
+    	</constructor-arg>
+    	<constructor-arg index="1" value ="${speech.search.checkPriorListsEmpty}"/>
+    </bean>
+
+
+   <bean name="wordActiveListFactory" 
+             class="edu.cmu.sphinx.decoder.search.WordActiveListFactory" scope="prototype">
+        <constructor-arg ref="logMath" />
+        <constructor-arg type="int" value="${speech.absoluteWordBeamWidth2}"/>
+        <constructor-arg type="double" value="${speech.relativeWordBeamWidth2}"/>
+        <constructor-arg type="int" value="0"/>
+        <constructor-arg type="int" value="1"/>
+    </bean>
+
+
+    <bean name="unitManager"
+               class="edu.cmu.sphinx.linguist.acoustic.UnitManager" scope="singleton" />
+
+    <bean name="logMath"
+               class="edu.cmu.sphinx.util.LogMath" scope="singleton">
+        <constructor-arg type="float" value="1.0001"/>
+        <constructor-arg type="boolean"  value="true"/>
+    </bean>
+    
+    <bean name="confidenceScorer"
+               class="edu.cmu.sphinx.result.MAPConfidenceScorer" scope="prototype">
+        <constructor-arg index="0" type="float" value="${speech.linguist.lmlanguageWeight}"/>
+        <constructor-arg index ="1" type="boolean" value="${speech.confidence.dumpLattice}"/>
+        <constructor-arg index ="2" type="boolean" value="${speech.confidence.dumpSausage}"/>
+    </bean>
+
+
+
+
+    <bean name="emptyList" class="java.util.ArrayList" >
+    </bean>
+
+
+    <!-- ******************************************************** -->
+    <!-- The Decoder 					                          -->
+    <!-- ******************************************************** -->
+
+    <bean name="recognizerLm" class="edu.cmu.sphinx.recognizer.Recognizer" scope="prototype">
+        <constructor-arg index="0" ref="decoderLm"/>
+       <constructor-arg index="1">         
+	    	<list>
+	    	</list>
+    	</constructor-arg>
+    </bean>
+    
+    <bean name="recognizerGrammar" class="edu.cmu.sphinx.recognizer.Recognizer" scope="prototype">
+        <constructor-arg index="0" ref="decoderGrammar"/>
+       <constructor-arg index="1">         
+	    	<list>
+	    	</list>
+    	</constructor-arg>
+    </bean>
+
+
+
+    <bean name="decoderLm" class="edu.cmu.sphinx.decoder.Decoder" scope="prototype">
+        <constructor-arg index="0"  ref="searchManagerLm"/>
+        <constructor-arg index="1"  value="${speech.decoder.fireNonFinalResults}"/>
+        <constructor-arg index="2"  value="${speech.decoder.autoAllocate}"/>
+        <constructor-arg index="3">         
+	    	<list>
+	    	</list>
+    	</constructor-arg>
+
+        <constructor-arg index="4"  value="${speech.decoder.featureBlockSize}"/>
+    </bean>
+    
+    <bean name="decoderGrammar" class="edu.cmu.sphinx.decoder.Decoder" scope="prototype">
+        <constructor-arg index="0"  ref="simpleSearchManagerGrammar"/>
+        <constructor-arg index="1"  value="${speech.decoder.fireNonFinalResults}"/>
+        <constructor-arg index="2"  value="${speech.decoder.autoAllocate}"/>
+        <constructor-arg index="3">         
+	    	<list>
+	    	</list>
+    	</constructor-arg>
+
+        <constructor-arg index="4"  value="${speech.decoder.featureBlockSize}"/>
+    </bean>
+
+
+    <bean name="pruner"
+               class="edu.cmu.sphinx.decoder.pruner.SimplePruner" scope="prototype"/>
+
+    <bean name="scorer"
+               class="edu.cmu.sphinx.decoder.scorer.ThreadedAcousticScorer" scope="prototype">
+        <constructor-arg index="0"  ref="file-frontend"/>
+        <constructor-arg index="1" type="edu.cmu.sphinx.decoder.scorer.ScoreNormalizer" ><null/></constructor-arg>
+        <constructor-arg index="2"  type="int" value="${speech.scorer.minScoreablesPerThread}" />
+        <constructor-arg index="3"  type="boolean" value="${speech.scorer.cpuRelative}" />
+        <constructor-arg index="4" type="int"  value="${speech.scorer.numThreads}" />
+        <constructor-arg index="5" type="int"  value="${speech.scorer.threadPriority}" />
+    </bean>
+
+   <bean name="searchManagerLm" 
+              class="edu.cmu.sphinx.decoder.search.WordPruningBreadthFirstSearchManager" scope="prototype">
+		<constructor-arg index="0" ref="logMath"/>
+        <constructor-arg index="1" ref="lexTreeLinguist"/>
+       	<constructor-arg index="2" ref="pruner"/>
+        <constructor-arg index="3" ref="scorer" />
+       	<constructor-arg index="4" ref="activeListManager"/>
+       	<constructor-arg index="5" type="boolean" value ="${speech.search.showTokenCount}" />
+        <constructor-arg index="6" type="double" value="${speech.relativeBeamWidth2}"/>
+        <constructor-arg index="7" type="int" value ="${speech.search.growSkipInterval}" />
+        <constructor-arg index="8" type="boolean" value="${speech.search.checkStateOrder}" />
+        <constructor-arg index="9" type="boolean" value="${speech.search.buildWordLattice}" />
+        <constructor-arg index="10" type="int" value ="${speech.search.maxLatticeEdges}" />
+        <constructor-arg index="11" type="float" value="${speech.search.acousticLookahead}"/>
+        <constructor-arg index="12" type="boolean" value="${speech.search.keepAllTokens}"/>
+    </bean>
+
+
+
+ <bean name="simpleSearchManagerGrammar" 
+              class="edu.cmu.sphinx.decoder.search.SimpleBreadthFirstSearchManager" scope="prototype">
+	<constructor-arg index="0" ref="logMath"/>
+        <constructor-arg index="1" ref="grammar-linguist"/>
+       	<constructor-arg index="2" ref="pruner"/>
+        <constructor-arg index="3" ref="scorer" />
+       	<constructor-arg index="4" ref="activeListFactory"/>
+       	<constructor-arg index="5" type="boolean" value ="${speech.search.showTokenCount}" />
+        <constructor-arg index="6" type="double" value="0.0"/>
+        <constructor-arg index="7" type="int" value ="${speech.search.growSkipInterval}" />
+        <!--constructor-arg index="8" type="boolean" value="${speech.search.wantEntryPruning}"/-->
+        <constructor-arg index="8" type="boolean" value="false"/>
+   </bean>
+
+
+   <bean name="searchManagerGrammar" 
+              class="edu.cmu.sphinx.decoder.search.WordPruningBreadthFirstSearchManager" scope="prototype">
+		<constructor-arg index="0" ref="logMath"/>
+        <constructor-arg index="1" ref="grammar-linguist"/>
+       	<constructor-arg index="2" ref="pruner"/>
+        <constructor-arg index="3" ref="scorer" />
+       	<constructor-arg index="4" ref="activeListManager"/>
+       	<constructor-arg index="5" type="boolean" value ="${speech.search.showTokenCount}" />
+        <constructor-arg index="6" type="double" value="${speech.relativeBeamWidth2}"/>
+        <constructor-arg index="7" type="int" value ="${speech.search.growSkipInterval}" />
+        <constructor-arg index="8" type="boolean" value="${speech.search.checkStateOrder}" />
+        <constructor-arg index="9" type="boolean" value="${speech.search.buildWordLattice}" />
+        <constructor-arg index="10" type="int" value ="${speech.search.maxLatticeEdges}" />
+        <constructor-arg index="11" type="float" value="${speech.search.acousticLookahead}"/>
+        <constructor-arg index="12" type="boolean" value="${speech.search.keepAllTokens}"/>
+   </bean>
+   
+    
+    <!-- ******************************************************** -->
+    <!-- The grammar linguist  configuration                      -->
+    <!-- ******************************************************** -->
+
+    <bean name="grammar-linguist"
+               class="edu.cmu.sphinx.linguist.flat.FlatLinguist" scope="prototype">       
+        <constructor-arg index="0" ref="acousticModelSpokenTech"/>
+        <constructor-arg index="1" ref="logMath" />
+        <constructor-arg index="2" ref="jsgf"/>
+        <constructor-arg index="3" ref="unitManager" />
+        <constructor-arg index="4" type="double" value="${speech.grammar.wordInsertionProbability}"/>
+        <constructor-arg index="5" type="double" value="${speech.grammar.silenceInsertionProbability}"/>
+        <constructor-arg index="6" type="double" value="${speech.grammar.fillerInsertionProbability}"/>
+        <constructor-arg index="7"  type="double"  value="${speech.grammar.unitInsertionProbability}"/>
+        <constructor-arg index="8" type="float" value="${speech.grammar.languageWeight}"/>
+        <constructor-arg index="9"  type="boolean"  value="${speech.grammar.dumpGStates}"/>
+        <constructor-arg index="10"  type="boolean"  value="${speech.grammar.showCompilationProgress}"/>
+        <constructor-arg index="11" type="boolean" value="${speech.grammar.spreadWordProbabilitiesAcrossPronunciations}"/>
+        <constructor-arg index="12" type="boolean" value="${speech.grammar.addOutOfGrammarBranch}"/>
+        <constructor-arg index="13" type="double"  value="${speech.grammar.outOfGrammarProbability}" />
+        <constructor-arg index="14" type="double" value="${speech.grammar.phoneInsertionProbability}" />
+	<constructor-arg index="15" ref="acousticModelSpokenTech"/>
+        <!--constructor-arg index="15" type="edu.cmu.sphinx.linguist.acoustic.AcousticModel" ><null/></constructor-arg-->
+    </bean>
+
+
+    <!-- ******************************************************** -->
+    <!-- The Grammar  configuration                               -->
+    <!-- ******************************************************** -->
+
+    <bean name="jsgf" class="edu.cmu.sphinx.jsgf.JSGFGrammar" scope="prototype">
+        <constructor-arg  index="0" type="java.lang.String" value="${speech.grammarLocation}"/>
+        <constructor-arg  index="1" ref="logMath" />      
+        <constructor-arg  index="2" type="java.lang.String" value="${speech.grammarName}"/>
+        <constructor-arg  index="3" type="boolean" value="${speech.grammar.showGrammar}"/>
+        <constructor-arg  index="4" type="boolean" value="${speech.grammar.optimizeGrammar}"/>
+        <constructor-arg  index="5" type="boolean" value="${speech.grammar.addSilenceWords}"/>
+        <constructor-arg  index="6" type="boolean" value="${speech.grammar.addFillerWords}"/>
+        <constructor-arg  index="7" ref="dictionary" />
+    </bean>
+
+
+    <!-- ******************************************************* -->
+    <!-- frontend components					 -->
+    <!-- ******************************************************* -->
+    <!--  audioFileDataSource					-->
+    <!--  speechClassifier" 					-->
+    <!--  speechMarker"						-->
+    <!--  speechDataMonitor"					-->
+    <!--  nonSpeechDataFilter"					-->
+    <!--  identityStage"					-->
+    <!--  dataBlocker"						-->
+    <!--  insertSpeechSignal"					-->
+    <!--  recorder"						-->
+    <!--  preemphasizer"					-->
+    <!--  dither"						-->
+    <!--  windower"						-->
+    <!--  fft"							-->
+    <!--  melFilterBank16k"					-->
+    <!--  melFilterBank8k"					-->
+    <!--  dct"							-->
+    <!--  batchCMN"						-->
+    <!--  liveCMN"						-->
+    <!--  featureExtraction"					-->
+    <!-- ******************************************************* -->
+
+
+    <bean name="file-frontend" class="edu.cmu.sphinx.frontend.FrontEnd">
+        <constructor-arg index="0">         
+	    	<list>
+    		        <ref bean="audioFileDataSource"/>
+    		        <ref bean ="dataBlocker" />
+			<ref bean ="speechClassifier" />
+			<ref bean ="speechMarker" />
+			<ref bean ="nonSpeechDataFilter" />
+   			<ref bean="preemphasizer"/>
+   			<!--ref bean="dither"/-->
+   			<ref bean="windower"/>
+   			<ref bean="fft"/>
+   			<ref bean="melFilterBank16k"/>
+   			<ref bean="dct"/>
+   			<ref bean="batchCMN"/>
+   			<ref bean="featureExtraction"/>
+   			<!--ref bean="featureTransform"/-->
+   			
+	    	</list>
+	    </constructor-arg>
+    </bean>
+
+
+    <bean name="speechClassifier"
+               class="edu.cmu.sphinx.frontend.endpoint.SpeechClassifier" scope="prototype">
+        <constructor-arg  index="0" type="int" value="${speech.frontend.frameLengthMs}"/>
+        <constructor-arg  index="1" type="double" value="${speech.fronend.classifierAdjustment}"/>
+	<constructor-arg  index="2" type="double" value="${speech.frontend.classifierThreshold}"/>
+        <constructor-arg  index="3" type="double" value="${speech.frontend.classifierMinSignal}"/>
+    </bean>
+
+
+    <bean name="speechMarker"
+               class="edu.cmu.sphinx.frontend.endpoint.SpeechMarker" scope="prototype">
+        <constructor-arg  index="0" type="int" value="${speech.frontend.markerStartSpeechTime}"/>
+        <constructor-arg  index="1" type="int" value="${speech.frontend.markerEndSilenceTime}"/>
+	<constructor-arg  index="2" type="int" value="${speech.frontend.markerSpeechLeader}"/>
+        <constructor-arg  index="3" type="int" value="${speech.frontend.markerSpeechLeaderFrames}"/>
+        <constructor-arg  index="4" type="int" value="${speech.frontend.markerSpeechTrailer}"/>
+        <constructor-arg  index="5" type="double" value="${speech.frontend.markerEndSilenceDecay}"/>
+    </bean>
+    
+    <bean name="speechDataMonitor"
+               class="com.spokentech.speechdown.common.sphinx.SpeechDataMonitor" scope="prototype"/>
+
+    <bean name="nonSpeechDataFilter"
+               class="edu.cmu.sphinx.frontend.endpoint.NonSpeechDataFilter" scope="prototype">
+    </bean>
+
+   <bean name="identityStage"
+               class="com.spokentech.speechdown.common.sphinx.IdentityStage" scope="prototype"/>
+
+   <bean name="dataBlocker"
+	    class="edu.cmu.sphinx.frontend.DataBlocker" scope="prototype">
+        <constructor-arg  index="0" type="double" value="${speech.frontend.blockSizeInMs}"/>
+   </bean>
+
+   <bean name="insertSpeechSignal"
+	    class="com.spokentech.speechdown.common.sphinx.InsertSpeechSignalStage" scope="prototype">
+   </bean>
+
+    <bean name="recorder"
+	    class="com.spokentech.speechdown.common.sphinx.WavWriter" scope="prototype">
+        <constructor-arg  index="0" type="java.lang.String" value="${speech.recorder.filePath}"/>
+        <constructor-arg  index="1" type="boolean" value="${speech.recorder.IsComplete}"/>
+	<constructor-arg  index="2" type="int" value="${speech.recorder.bitsPerSample}"/>
+        <constructor-arg  index="3" type="boolean" value="${speech.recorder.isBigEndian}"/>
+        <constructor-arg  index="4" type="boolean" value="${speech.recorder.isSigned}"/>
+        <constructor-arg  index="5" type="boolean" value="${speech.recorder.captureUtts}"/>
+    </bean>
+
+    <!--bytesPerRead -->
+    <bean name="audioFileDataSource" class="edu.cmu.sphinx.frontend.util.AudioFileDataSource" scope="prototype">
+        <constructor-arg index="0" type="int" value ="3200" />
+	<constructor-arg index="1">         
+	    	<list>
+	    		<null/>
+	    	</list>
+    	</constructor-arg>
+    </bean>
+
+    <!--preemphasisFactor -->
+    <bean name="preemphasizer"
+	    class="edu.cmu.sphinx.frontend.filter.Preemphasizer" scope="prototype">
+        <constructor-arg index="0" type="double" value ="0.97" />
+    </bean>
+
+    <!--dither = new Dither(); -->
+    <bean name="dither"
+	    class="edu.cmu.sphinx.frontend.filter.Dither" scope="prototype">
+        <constructor-arg index="0" type="double" value ="2.0" />
+        <constructor-arg index="1" type="boolean" value ="false" />
+        <constructor-arg index="2" type="double" value ="0.0" />
+        <constructor-arg index="3" type="double" value ="0.0" />
+	<!--double ditherMax, boolean useRandSeed, double maxValue, double minValue -->
+	<!-- modified dither to use max double and min double if 0 is passed in here -->
+    </bean>
+
+    <bean name="windower"
+	    class="edu.cmu.sphinx.frontend.window.RaisedCosineWindower" scope="prototype">
+        <constructor-arg index="0" type="double" value ="0.46" />
+        <constructor-arg index="1" type="float" value ="25.625" />
+        <constructor-arg index="2" type="float" value ="10.0" />
+	    <!--double alpha, float windowSizeInMs, float windowShiftInMs -->
+    </bean>
+
+    <bean name="fft"
+	    class="edu.cmu.sphinx.frontend.transform.DiscreteFourierTransform" scope="prototype">
+	        <constructor-arg index="0" type="int" value ="-1" />
+        	<constructor-arg index="1" type="boolean" value ="false" />
+	    <!-- int numberFftPoints, boolean invert-->
+    </bean>
+
+    <bean name="melFilterBank16k"
+	    class="edu.cmu.sphinx.frontend.frequencywarp.MelFrequencyFilterBank" scope="prototype">
+	    	<constructor-arg index="0" type="double" value ="130.0" />
+        	<constructor-arg index="1" type="double" value ="6800.0" />
+        	<constructor-arg index="2" type="int" value ="40" />
+	    <!--double minFreq, double maxFreq, int numberFilters-->
+    </bean>
+
+    <bean name="melFilterBank8k"
+	    class="edu.cmu.sphinx.frontend.frequencywarp.MelFrequencyFilterBank" scope="prototype">
+	    	<constructor-arg index="0" type="double" value ="200.0" />
+        	<constructor-arg index="1" type="double" value ="3500.0" />
+        	<constructor-arg index="2" type="int" value ="31" />
+	    <!--double minFreq, double maxFreq, int numberFilters-->
+    </bean>
+
+
+    <bean name="dct"
+	    class="edu.cmu.sphinx.frontend.transform.DiscreteCosineTransform" scope="prototype">
+	    	<constructor-arg index="0" type="int" value ="40" />
+        	<constructor-arg index="1" type="int" value ="13" />
+	    <!--int numberMelFilters, int cepstrumSize -->
+    </bean>
+
+    <bean name="batchCMN"
+               class="edu.cmu.sphinx.frontend.feature.BatchCMN" scope="prototype">
+    </bean>
+
+    <bean name="liveCMN"
+               class="edu.cmu.sphinx.frontend.feature.LiveCMN" scope="prototype">
+               <constructor-arg  index="0" type="double" value="${speech.frontend.liveCmnInitialMean"/>
+               <constructor-arg  index="1" type="int" value="${speech.frontend.liveCmnWindow}"/>
+               <constructor-arg  index="2" type="int" value="${speech.frontend.liveCmnShiftWindow}"/>
+    </bean>
+
+    <bean name="featureExtraction"
+	    class="edu.cmu.sphinx.frontend.feature.DeltasFeatureExtractor" scope="prototype">
+	    	<constructor-arg index="0" type="int" value ="3" />
+	    <!--int window-->
+    </bean>
+
+    <bean name="featureTransform"
+	    class="edu.cmu.sphinx.frontend.feature.FeatureTransform" scope="prototype">
+                <constructor-arg ref="loaderSpokenTech" />
+    </bean>
+
+	
+</beans>
