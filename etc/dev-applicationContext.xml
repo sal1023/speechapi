@@ -39,6 +39,9 @@
 		  <property name="maryDir">
 			  <value>${speechapi}/mary</value>
 		  </property>
+		  <property name="recordingEnabled">
+			  <value>false</value>
+		  </property>
 
 	</bean>
 

@@ -19,10 +19,14 @@
     <priority value="info"/>
   </category>
     <category name="com.spokentech.speechdown.common">
-    <priority value="info"/>
+    <priority value="debug"/>
   </category>
       <category name="com.spokentech.speechdown.server">
-    <priority value="info"/>
+    <priority value="debug"/>
+  </category>
+
+  <category name="edu.cmu.sphinx.frontend">
+    <priority value="debug"/>
   </category>
 
   <category name="com.spokentech.speechdown.client">

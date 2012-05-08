@@ -20,14 +20,18 @@ import com.spokentech.speechdown.server.domain.SpeechRequestDTO;
 public interface RecEngine {
 
 
-    
+	
 	public Utterance recognize(AudioInputStream as, String grammar);
 	
-	public Utterance recognize(InputStream as, String mimeType, String grammar, AFormat af, OutputFormat outMode, boolean doEndpointing, boolean cmnBatch, SpeechRequestDTO hr);
+	public Utterance recognize(InputStream as, String mimeType, String grammar, AFormat af, OutputFormat outMode, boolean doEndpointing, 
+			                   boolean cmnBatch, boolean oog, double oogBranchProb, double phoneInsertionProb, 
+			                   String amId, String lmId, String dictionaryID, SpeechRequestDTO hr);
 
-	public Utterance recognize(InputStream as, String mimeType, AFormat af, OutputFormat outMode, boolean doEndpointing, boolean cmnBatch, SpeechRequestDTO hr);
+	public Utterance recognize(InputStream as, String mimeType, AFormat af, OutputFormat outMode, boolean doEndpointing, boolean cmnBatch, 
+			String amId, String lmId, String dictionaryID, SpeechRequestDTO hr);
 
-	public String transcribe(InputStream as, String mimeType, AFormat af, OutputFormat outMode, PrintWriter out, HttpServletResponse response, SpeechRequestDTO hr);
+	public String transcribe(InputStream as, String mimeType, AFormat af, OutputFormat outMode, PrintWriter out, HttpServletResponse response, 
+			String amId, String lmId, String dictionaryID, SpeechRequestDTO hr);
 
 	
 }

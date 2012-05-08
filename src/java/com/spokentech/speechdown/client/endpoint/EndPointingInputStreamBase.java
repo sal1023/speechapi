@@ -177,7 +177,7 @@ public abstract class EndPointingInputStreamBase implements EndPointingInputStre
 	        @Override
 	        public void speechStarted() {
 
-	            _logger.debug("speechStarted()");
+	            _logger.info("speechStarted()");
 
 	            synchronized (EndPointingInputStreamBase.this) {
 	                if (_state == WAITING_FOR_SPEECH) {
@@ -195,7 +195,7 @@ public abstract class EndPointingInputStreamBase implements EndPointingInputStre
         	 * @see com.spokentech.speechdown.client.SpeechEventListenerDecorator#speechEnded()
         	 */
         	public void speechEnded() {
-	            _logger.debug("speechEnded()");
+	            _logger.info("speechEnded()");
 
 	            synchronized (EndPointingInputStreamBase.this) {
 

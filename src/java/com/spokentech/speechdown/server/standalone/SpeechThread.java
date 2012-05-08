@@ -48,7 +48,6 @@ public class SpeechThread implements Runnable {
 	            // TODO Auto-generated catch block
 	            e1.printStackTrace();
             }
-			
 			String mimeType = null;
 			AFormat af = null;
 			OutputFormat outMode =  OutputFormat.valueOf(outputFormat); //OutputFormat.json;
@@ -58,7 +57,10 @@ public class SpeechThread implements Runnable {
 			try {
 				long start = System.nanoTime();
 
-		        transcription = recEngine.transcribe( as,  mimeType,  af,   outMode,  out, response,  hr);
+		        String amId = "default";
+				String lmId = "default";
+				String dictId = "defualt";
+				transcription = recEngine.transcribe( as,  mimeType,  af,   outMode,  out, response,  amId, lmId, dictId, hr);
 				long stop = System.nanoTime();
 				long wall = (stop - start)/1000000;
 				

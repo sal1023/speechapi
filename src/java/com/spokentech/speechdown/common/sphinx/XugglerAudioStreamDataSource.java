@@ -73,7 +73,9 @@ public class XugglerAudioStreamDataSource extends BaseDataProcessor implements S
 
     private File curAudioFile;
     
-    int TargetRate = 16000;
+ 
+
+	private int targetRate = 8000;
     
     //private BufferedWriter out;
     
@@ -98,6 +100,14 @@ public class XugglerAudioStreamDataSource extends BaseDataProcessor implements S
 
         initialize();
     }
+
+    public int getTargetRate() {
+		return targetRate;
+	}
+
+	public void setTargetRate(int targetRate) {
+		this.targetRate = targetRate;
+	}
 
 
     @Override
@@ -179,16 +189,16 @@ public class XugglerAudioStreamDataSource extends BaseDataProcessor implements S
         if (audioCoder.open() < 0)
           throw new RuntimeException("could not open audio decoder for container ");
         
-        if (audioCoder.getSampleRate() != TargetRate) {
+        if (audioCoder.getSampleRate() != targetRate) {
           mASampler = IAudioResampler.make(
               1, audioCoder.getChannels(),
-              TargetRate, audioCoder.getSampleRate());
+              targetRate, audioCoder.getSampleRate());
           sampleRate = mASampler.getOutputRate();
           if (mASampler == null) {
             throw new RuntimeException("could not open audio resampler for stream");
           }
         } else {
-          sampleRate = TargetRate;
+          sampleRate = targetRate;
           mASampler = null;
         }
 
@@ -270,17 +280,17 @@ public class XugglerAudioStreamDataSource extends BaseDataProcessor implements S
         if (audioCoder.open() < 0)
           throw new RuntimeException("could not open audio decoder for container ");
         
-        if (audioCoder.getSampleRate() != TargetRate) {
+        if (audioCoder.getSampleRate() != targetRate) {
           mASampler = IAudioResampler.make(
               1, audioCoder.getChannels(),
-              TargetRate, audioCoder.getSampleRate());
+              targetRate, audioCoder.getSampleRate());
           sampleRate = mASampler.getOutputRate();
           if (mASampler == null) {
             throw new RuntimeException("could not open audio resampler for stream");
           }
         } else {
           mASampler = null;
-          sampleRate = TargetRate;
+          sampleRate = targetRate;
         }
 
 

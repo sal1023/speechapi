@@ -320,6 +320,8 @@ public class AudioStreamDataSource extends BaseDataProcessor implements StreamDa
                 if (dataStream != null) {
                 	try {
                        output = readNextFrame();
+                       //Thread.sleep(50);
+                       
                 	} catch (Exception e) {
                   		//e.printStackTrace();
                 		_logger.fine("Exception reading audio! "+ e.getMessage());
@@ -380,7 +382,7 @@ public class AudioStreamDataSource extends BaseDataProcessor implements StreamDa
                 }
             } while (read != -1 && totalRead < bytesToRead);
             if (totalRead <= 0) {
-            	_logger.fine("total read "+totalRead+"  returning null");
+            	_logger.info("total read "+totalRead+"  returning null");
                 closeDataStream();
                 return null;
             }
@@ -395,7 +397,7 @@ public class AudioStreamDataSource extends BaseDataProcessor implements StreamDa
                         .arraycopy(samplesBuffer, 0, shrinkedBuffer, 0,
                                 totalRead);
                 samplesBuffer = shrinkedBuffer;
-                //_logger.fine("total read "+totalRead+"  tried to read "+bytesToRead);
+                _logger.info("total read "+totalRead+"  tried to read "+bytesToRead);
                 closeDataStream();
             }
         } catch (IOException ioe) {
@@ -428,7 +430,7 @@ public class AudioStreamDataSource extends BaseDataProcessor implements StreamDa
 
 
     public void closeDataStream() throws IOException {
-    	 _logger.fine("Closing data stream");
+    	 _logger.info("Closing data stream");
         streamEndReached = true;
         //if (dataStream != null) {
         //    dataStream.close();

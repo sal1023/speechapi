@@ -32,17 +32,13 @@ import com.spokentech.speechdown.common.Utterance.OutputFormat;
 import com.spokentech.speechdown.server.domain.SpeechRequestDTO;
 import com.spokentech.speechdown.server.recog.RecEngine;
 
-import com.spokentech.speechdown.server.util.pool.SphinxRecEngineFactory;
+import com.spokentech.speechdown.server.util.pool.SpringSphinxRecEngineFactory;
 
 public class RecognizerService {
 
     static Logger _logger = Logger.getLogger(RecognizerService.class);
-
-    static private final String NO_PREFIX = "";
-    static private final String LM_PREFIX = "lm-";
-    static private final String GRAMMAR_PREFIX = "grammar-";
     
-	private SphinxRecEngineFactory recEngineFactory;
+	private SpringSphinxRecEngineFactory recEngineFactory;
 	
 	private ObjectPool _lmRecognizerPool;
 	private ObjectPool _grammarRecognizerPool;
@@ -56,7 +52,9 @@ public class RecognizerService {
 	}
 
 	public void setGrammarPoolSize(int grammarPoolSize) {
+		//TODO:  Remove the line that hardcodes number of pools to 2 (only for beta)
 		this.grammarPoolSize = grammarPoolSize;
+		//this.grammarPoolSize = 2;
 	}
 
 	/**
@@ -70,20 +68,22 @@ public class RecognizerService {
      * @param poolSize the poolSize to set
      */
     public void setLmPoolSize(int poolSize) {
+		//TODO:  Remove the line that hardcodes number of pools to 1 (only for beta)
     	this.lmPoolSize = poolSize;
+    	//this.lmPoolSize = 1;
     }
 
 	/**
      * @return the recEngineFactory
      */
-    public SphinxRecEngineFactory getRecEngineFactory() {
+    public SpringSphinxRecEngineFactory getRecEngineFactory() {
     	return recEngineFactory;
     }
 
 	/**
      * @param recEngineFactory the recEngineFactory to set
      */
-    public void setRecEngineFactory(SphinxRecEngineFactory recEngineFactory) {
+    public void setRecEngineFactory(SpringSphinxRecEngineFactory recEngineFactory) {
     	this.recEngineFactory = recEngineFactory;
     }
 
@@ -164,9 +164,7 @@ public class RecognizerService {
 	}
 	
 	
-	public Utterance Recognize(DataHandler audio, String grammar) throws GrammarException, IOException {
-		   
-		
+	public Utterance Recognize(DataHandler audio, String grammar) throws GrammarException, IOException {	
 		_logger.debug("audio attachment content type: "+ audio.getContentType());
 		_logger.debug("audio attachment name: "+ audio.getName());
 		_logger.debug("audio attachment class name: "+audio.getClass().getCanonicalName());
@@ -215,130 +213,84 @@ public class RecognizerService {
     }
 
 	//grammar method
-	public Utterance Recognize(InputStream as, String grammar, String mimeType, AFormat af, OutputFormat outMode, boolean doEndpointing, boolean cmnBatch, SpeechRequestDTO hr) {
+	public Utterance Recognize(InputStream as, String grammar, String mimeType, AFormat af, OutputFormat outMode, boolean doEndpointing, 
+			                   boolean cmnBatch, boolean oog, double oogBranchProb, double phoneInsertionProb, 
+			                   String amId, String lmId, String dictionaryId, SpeechRequestDTO hr) throws Exception {
 
 		_logger.debug("Before borrow" + System.currentTimeMillis());
 		
-
     	
         RecEngine rengine = null;
-        try {
+        rengine = (RecEngine) _grammarRecognizerPool.borrowObject();    
 
-            rengine = (RecEngine) _grammarRecognizerPool.borrowObject();
-            
-        } catch (Exception e) {
-            // TODO Auto-generated catch block
-            throw new RuntimeException(e);
-        }
-        
         _logger.debug("After borrow" + System.currentTimeMillis());
 	
-        
-      
+
         Utterance results ;
-        try {
-           results = rengine.recognize(as,mimeType,grammar,af,outMode, doEndpointing, cmnBatch, hr);
-        } catch (Exception e) {
-	        _logger.warn("Excption occurred while processing recognition requets "+e.getLocalizedMessage());
-	        
-	        try {
-	        	_grammarRecognizerPool.returnObject(rengine);
-	        } catch (Exception ee) {
-		        // TODO Auto-generated catch block
-	            throw new RuntimeException(ee);
-	        }
-            throw new RuntimeException(e);
-        }
-        
+        results = rengine.recognize(as,mimeType,grammar,af,outMode, doEndpointing, cmnBatch, oog, oogBranchProb, phoneInsertionProb,amId, lmId, dictionaryId, hr);
         
         try {
         	_grammarRecognizerPool.returnObject(rengine);
-        } catch (Exception e) {
-	        // TODO Auto-generated catch block
-            throw new RuntimeException(e);
+        } catch (Exception ee) {
+            _logger.warn("Could not return recognizer to pool");
+            throw new RuntimeException(ee);
         }
+    
+      
 	    return results;		
 	}
 
 	
 	//language model method (no grammar)
-	public Utterance Recognize(InputStream as, String mimeType, AFormat af, OutputFormat outMode, boolean doEndpointing, boolean cmnBatch, SpeechRequestDTO hr) {
+	public Utterance Recognize(InputStream as, String mimeType, AFormat af, OutputFormat outMode, boolean doEndpointing, boolean cmnBatch, 
+			 				   String amId, String lmId, String dictionaryId, SpeechRequestDTO hr) throws Exception {
 		_logger.debug("Before borrow" + System.currentTimeMillis());
 		
+		//TODO:  Should the borrow object block or just return a "server busy, try again" result?
+	
         RecEngine rengine = null;
-        try {
+     
+        _logger.warn("Could not retrive recognizer from pool");
+        rengine = (RecEngine) _lmRecognizerPool.borrowObject();
 
-            rengine = (RecEngine) _lmRecognizerPool.borrowObject();
-            
-        } catch (Exception e) {
-            // TODO Auto-generated catch block
-            throw new RuntimeException(e);
-        }
-        
         _logger.debug("After borrow" + System.currentTimeMillis());
 	
         Utterance results ;
-        try {
-           results = rengine.recognize(as,mimeType,af, outMode, doEndpointing, cmnBatch,hr);
-        } catch (Exception e) {
-	        _logger.warn("Excption occurred while processing LM recognition requets "+e.getLocalizedMessage());
 
-	        //return engine to pool
-	        try {
-	        	_lmRecognizerPool.returnObject(rengine);
-	        } catch (Exception ee) {
-		        // TODO Auto-generated catch block
-	            throw new RuntimeException(ee);
-	        }
-            throw new RuntimeException(e);
-        }
-        
-        try {
-        	_lmRecognizerPool.returnObject(rengine);
-        } catch (Exception e) {
-	        // TODO Auto-generated catch block
-            throw new RuntimeException(e);
-        }
+        results = rengine.recognize(as,mimeType,af, outMode, doEndpointing, cmnBatch,amId, lmId, dictionaryId, hr);
+
+    	try {
+    		_lmRecognizerPool.returnObject(rengine);
+    	} catch (Exception e) {
+            _logger.warn("Could not return recognizer to pool");
+            e.printStackTrace();
+    		throw new RuntimeException(e);
+    	}
+
 	    return results;	
     }
 
-	public String Transcribe(InputStream audio, String mimeType, AFormat af, OutputFormat outMode, PrintWriter out, HttpServletResponse response, SpeechRequestDTO hr) {
+	public String Transcribe(InputStream audio, String mimeType, AFormat af, OutputFormat outMode, PrintWriter out, HttpServletResponse response, 
+			 				 String amId, String lmId, String dictionaryId, SpeechRequestDTO hr) throws Exception {
 		_logger.debug("Before borrow" + System.currentTimeMillis());
 		
     	
         RecEngine rengine = null;
-        try {
 
-            rengine = (RecEngine) _lmRecognizerPool.borrowObject();
-            
-        } catch (Exception e) {
-            // TODO Auto-generated catch block
-            throw new RuntimeException(e);
-        }
-        
+        rengine = (RecEngine) _lmRecognizerPool.borrowObject();
+
         _logger.debug("After borrow" + System.currentTimeMillis());
 	
         String results ;
-        try {
-             results = rengine.transcribe(audio,mimeType, af,outMode, out,response,  hr);
-        } catch (Exception e) {
-	        _logger.warn("Excption occurred while processing transcribe requests "+e.getLocalizedMessage());
-	        e.printStackTrace();
-	        //return the engine to pool
-	        try {
-	        	_lmRecognizerPool.returnObject(rengine);
-	        } catch (Exception ee) {
-		        // TODO Auto-generated catch block
-	            throw new RuntimeException(ee);
-	        }
-            throw new RuntimeException(e);
-        }
+
+        results = rengine.transcribe(audio,mimeType, af,outMode, out,response,amId,lmId,dictionaryId,  hr);
 
         try {
         	_lmRecognizerPool.returnObject(rengine);
         } catch (Exception e) {
-	        // TODO Auto-generated catch block
-            throw new RuntimeException(e);
+            _logger.warn("Could not return recognizer to pool");
+            e.printStackTrace();
+    		throw new RuntimeException(e);
         }
 	    return results;	
     }
