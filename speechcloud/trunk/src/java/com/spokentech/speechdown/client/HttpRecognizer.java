@@ -12,17 +12,24 @@ import java.io.BufferedInputStream;
 import com.google.gson.Gson;
 import com.spokentech.speechdown.common.HttpCommandFields;
 
+import java.io.BufferedWriter;
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
+import java.io.File;
+import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
+import java.io.OutputStreamWriter;
+import java.io.StringWriter;
 import java.io.UnsupportedEncodingException;
+import java.io.Writer;
 import java.net.URL;
 import java.util.TimerTask;
 
 import org.apache.http.Header;
 import org.apache.http.HttpEntity;
 import org.apache.http.HttpResponse;
+import org.apache.http.ParseException;
 import org.apache.http.client.ClientProtocolException;
 import org.apache.http.client.HttpClient;
 import org.apache.http.client.methods.HttpPost;
@@ -30,6 +37,8 @@ import org.apache.http.entity.mime.MultipartEntity;
 import org.apache.http.entity.mime.content.InputStreamBody;
 import org.apache.http.entity.mime.content.StringBody;
 import org.apache.http.impl.client.DefaultHttpClient;
+import org.apache.http.util.EntityUtils;
+
 import com.spokentech.speechdown.client.endpoint.EndPointingInputStream;
 import com.spokentech.speechdown.client.exceptions.AsynchNotEnabledException;
 import com.spokentech.speechdown.client.exceptions.HttpRecognizerException;
@@ -38,6 +47,8 @@ import com.spokentech.speechdown.common.AFormat;
 import com.spokentech.speechdown.common.SpeechEventListener;
 import com.spokentech.speechdown.common.Utterance;
 import com.spokentech.speechdown.common.Utterance.OutputFormat;
+
+import org.apache.commons.io.IOUtils;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory; 
 
@@ -167,7 +178,7 @@ public class HttpRecognizer {
 	        }
         }
         
-        _logger.debug("Actual format: " + format);  
+        _logger.info("Actual format: " + format);  
         StringBody outputFormat = null;
     	StringBody sampleRate = null;
     	StringBody bigEndian = null;
@@ -235,7 +246,7 @@ public class HttpRecognizer {
 			fname = "audio.au";
 		} else {
 			fname = "audio.wav";
-			_logger.debug("unhanlded mime type "+ mimeType);
+			_logger.info("unhanlded mime type "+ mimeType);
 		}
 
 
@@ -247,7 +258,7 @@ public class HttpRecognizer {
         mpEntity.addPart("audio", audioBody);      
         httppost.setEntity(mpEntity);
          
-        _logger.debug("executing request " + httppost.getRequestLine());
+        _logger.info("executing request " + httppost.getRequestLine());
         HttpResponse response = null;
         try {
 	        response = httpclient.execute(httppost);
@@ -259,15 +270,22 @@ public class HttpRecognizer {
 	        e.printStackTrace();
         }
         HttpEntity resEntity = response.getEntity();
+        //System.out.println("encoding: "+resEntity.getContentEncoding());
+        
+        //System.out.println(resEntity.getContentType());
+        //System.out.println(resEntity.getContentLength());
+        //System.out.println(EntityUtils.getContentCharSet(resEntity));
 
-        _logger.debug(response.getStatusLine().toString());
+
+
+        _logger.info(response.getStatusLine().toString());
         if (resEntity != null) {
-        	_logger.debug("Response content length: " + resEntity.getContentLength());
-        	_logger.debug("Chunked?: " + resEntity.isChunked());
+        	_logger.info("Response content length: " + resEntity.getContentLength());
+        	_logger.info("Chunked?: " + resEntity.isChunked());
 
             Header[] headers = response.getAllHeaders();
             for (int i=0; i<headers.length; i++) {
-            	_logger.debug(headers[i].toString());
+            	_logger.info(headers[i].toString());
             }
         }
         
@@ -283,6 +301,9 @@ public class HttpRecognizer {
 	            e.printStackTrace();
             }
         }
+        
+  
+    	
         
         return result;
     }
@@ -545,7 +566,7 @@ public class HttpRecognizer {
 				
 		//set the multipart entity for the post command
 	    httppost.setEntity(mpEntity);
-    	_logger.debug("Waiting for Speech start ...");
+    	_logger.info("Waiting for Speech start ...");
      	//now wait for a start speech event
 		while ((!speechStarted)&&(!requestCanceled)) {
             synchronized (this) {        
@@ -557,14 +578,14 @@ public class HttpRecognizer {
             }
         }
 		if (requestCanceled) {
-	    	_logger.debug("Request  canceled!!!");
+	    	_logger.info("Request  canceled!!!");
 			return(null);
 		}
 		
-    	_logger.debug("Speech started!!!");
+    	_logger.info("Speech started!!!");
 
 	    //execute the post command
-        _logger.debug("executing request " + httppost.getRequestLine());
+        _logger.info("executing request " + httppost.getRequestLine());
         HttpResponse response = null;
         try {
 	        response = httpclient.execute(httppost);
@@ -579,11 +600,11 @@ public class HttpRecognizer {
         //get the response from the post
         HttpEntity resEntity = response.getEntity();
 
-        _logger.debug("----------------------------------------");
-        _logger.debug(response.getStatusLine().toString());
+        _logger.info("----------------------------------------");
+        _logger.info(response.getStatusLine().toString());
         if (resEntity != null) {
-        	_logger.debug("Response content length: " + resEntity.getContentLength());
-        	_logger.debug("Chunked?: " + resEntity.isChunked());
+        	_logger.info("Response content length: " + resEntity.getContentLength());
+        	_logger.info("Chunked?: " + resEntity.isChunked());
         }
 
         String result = null;
@@ -591,7 +612,7 @@ public class HttpRecognizer {
             try {
                 InputStream s = resEntity.getContent();
                 result = readInputStreamAsString(s);
-                _logger.debug(result);
+                _logger.info(result);
 	            resEntity.consumeContent();
             } catch (IOException e) {
 	            // TODO Auto-generated catch block
@@ -609,7 +630,7 @@ public class HttpRecognizer {
         	u = new Utterance();
         	u.setText(result);
         } else {
-        	_logger.debug("Response unrecognized output Format, using text "+outMode);
+        	_logger.info("Response unrecognized output Format, using text "+outMode);
 
         }
         
@@ -653,7 +674,7 @@ public class HttpRecognizer {
 	        }
         }
         
-        _logger.debug("Actual format: " + format);  
+        _logger.info("Actual format: " + format);  
         StringBody outputFormat = null;
     	StringBody sampleRate = null;
     	StringBody bigEndian = null;
@@ -728,7 +749,7 @@ public class HttpRecognizer {
 			fname = "audio.au";
 		} else {
 			fname = "audio.wav";
-			_logger.debug("unhanlded mime type "+mimeType);
+			_logger.info("unhanlded mime type "+mimeType);
 		}
 
 
@@ -740,7 +761,7 @@ public class HttpRecognizer {
         mpEntity.addPart("audio", audioBody);      
         httppost.setEntity(mpEntity);
          
-        _logger.debug("executing request " + httppost.getRequestLine());
+        _logger.info("executing request " + httppost.getRequestLine());
         HttpResponse response = null;
         try {
 	        response = httpclient.execute(httppost);
@@ -753,14 +774,14 @@ public class HttpRecognizer {
         }
         HttpEntity resEntity = response.getEntity();
 
-        _logger.debug(response.getStatusLine().toString());
+        _logger.info(response.getStatusLine().toString());
         if (resEntity != null) {
-        	_logger.debug("Response content length: " + resEntity.getContentLength());
-        	_logger.debug("Chunked?: " + resEntity.isChunked());
+        	_logger.info("Response content length: " + resEntity.getContentLength());
+        	_logger.info("Chunked?: " + resEntity.isChunked());
 
             Header[] headers = response.getAllHeaders();
             for (int i=0; i<headers.length; i++) {
-            	_logger.debug(headers[i].toString());
+            	_logger.info(headers[i].toString());
             }
         }
         
@@ -786,8 +807,13 @@ public class HttpRecognizer {
 	 * @throws IOException Signals that an I/O exception has occurred.
 	 */
 	protected  String readInputStreamAsString(InputStream in) throws IOException {
+		
+		StringWriter writer = new StringWriter();
+		IOUtils.copy(in, writer, "UTF-8");
+		String theString = writer.toString();
+		return theString;
 
-		BufferedInputStream bis = new BufferedInputStream(in);
+		/*BufferedInputStream bis = new BufferedInputStream(in);
 		ByteArrayOutputStream buf = new ByteArrayOutputStream();
 		int result = bis.read();
 		while(result != -1) {
@@ -795,8 +821,9 @@ public class HttpRecognizer {
 			buf.write(b);
 			result = bis.read();
 		}        
-		_logger.debug(buf.toString());
+		_logger.info(buf.toString());
 		return buf.toString();
+		*/
 	}
  
 	
@@ -827,7 +854,7 @@ public class HttpRecognizer {
 		 * @see com.spokentech.speechdown.client.SpeechEventListener#speechEnded()
 		 */
 		public void speechEnded() {
-		    _logger.debug("HttpRec: Speech Ended");
+		    _logger.info("HttpRec: Speech Ended");
             super.speechEnded();
 	    }
 
@@ -835,7 +862,7 @@ public class HttpRecognizer {
     	 * @see com.spokentech.speechdown.client.SpeechEventListener#speechStarted()
     	 */
     	public void speechStarted() {
-		    _logger.debug("HttpRec: Speech Started");
+		    _logger.info("HttpRec: Speech Started");
 			//signal for the blocking call to check for unblocking
 			synchronized (HttpRecognizer.this) {
 				speechStarted=true;
@@ -849,7 +876,7 @@ public class HttpRecognizer {
 		 */
 		@Override
         public void noInputTimeout() {
-		    _logger.debug("No input timeout"); 
+		    _logger.info("No input timeout"); 
             super.noInputTimeout();
         }
     }

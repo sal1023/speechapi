@@ -8,6 +8,7 @@ package com.spokentech.speechdown.server;
 
 import java.io.BufferedInputStream;
 import java.io.BufferedOutputStream;
+import java.io.BufferedReader;
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.DataOutputStream;
@@ -15,10 +16,15 @@ import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
+import java.io.InputStreamReader;
+import java.io.OutputStreamWriter;
 import java.io.PrintWriter;
+import java.io.Reader;
+import java.io.Writer;
 import java.util.Date;
 import java.util.Enumeration;
 import java.util.Iterator;
+import java.util.NoSuchElementException;
 
 import javax.servlet.ServletConfig;
 import javax.servlet.ServletException;
@@ -82,6 +88,10 @@ public class SpeechUploadServlet extends HttpServlet {
 
 	
  	private static final int	EXTERNAL_BUFFER_SIZE = 3200;
+
+	private static final String DEFAULT_LANGMODEL = "en";
+	private static final String DEFAULT_AMODEL = "en";
+	private static final String DEFAULT_DICT = "en";
 
 	byte[]	abData = new byte[EXTERNAL_BUFFER_SIZE];
 
@@ -181,8 +191,9 @@ public class SpeechUploadServlet extends HttpServlet {
 		
 	    boolean lmFlag = false;
 		String gMode = "lm";
-		String lmId = "default";
-		String amId = "default";
+		String lmId = DEFAULT_LANGMODEL;
+		String amId = DEFAULT_AMODEL;
+		String dictId = DEFAULT_DICT;
 	    boolean continuous = false;
 	    boolean doEndpointing = false;
 	    boolean cmnBatch = false;
@@ -194,7 +205,10 @@ public class SpeechUploadServlet extends HttpServlet {
      	String userId = null;
      	String developerDefined = null;
     	
-    
+    	boolean doOog = false;
+    	double oogBranchProb = 1e-25; 
+    	double phoneInsertionProb = 1e-20;
+
 	    
 	    
 		//set the audio format parameters to default values
@@ -220,20 +234,25 @@ public class SpeechUploadServlet extends HttpServlet {
 			    InputStream stream = item.openStream();
 			    String contentType = item.getContentType();
 			    if (item.isFormField()) {
-			    	String value = Streams.asString(stream);
+			    	String value = Streams.asString(stream,"UTF-8");
 			        _logger.debug("Form field " + name + " with value " + value + " detected.");
 			        try { 
 			        	//form fields used to specify format, if not specified using format data in attachment header
-				        if (name.equals(HttpCommandFields.SAMPLE_RATE_FIELD_NAME)) {
+				        if (name.equalsIgnoreCase(HttpCommandFields.SAMPLE_RATE_FIELD_NAME)) {
 				        	af.setSampleRate((double)Integer.parseInt(value));
 		        		    formatSpecified = true;
-				        } else if (name.equals(HttpCommandFields.BIG_ENDIAN_FIELD_NAME)) {
+				        }else if (name.equalsIgnoreCase(HttpCommandFields.LANGUAGE_FIELD_NAME)) {
+				        	//TODO: just pass in language rather than these 3 ID's all set to the same
+				        	amId = value;
+				        	dictId = value;
+				        	lmId = value;
+				        } else if (name.equalsIgnoreCase(HttpCommandFields.BIG_ENDIAN_FIELD_NAME)) {
 				        	af.setBigEndian( Boolean.parseBoolean(value));
 		        		    formatSpecified = true;
-			        	} else if (name.equals(HttpCommandFields.BYTES_PER_VALUE_FIELD_NAME)) {
+			        	} else if (name.equalsIgnoreCase(HttpCommandFields.BYTES_PER_VALUE_FIELD_NAME)) {
 				        	af.setSampleSizeInBits( Integer.parseInt(value)*8);
 		        		    formatSpecified = true;
-		        		} else if (name.equals(HttpCommandFields.ENCODING_FIELD_NAME)) {
+		        		} else if (name.equalsIgnoreCase(HttpCommandFields.ENCODING_FIELD_NAME)) {
 		        		    formatSpecified = true;
 		        			/*if (value.equals(AudioFormat.Encoding.ALAW.toString())) {
 		        				encoding = AudioFormat.Encoding.ALAW;
@@ -247,35 +266,47 @@ public class SpeechUploadServlet extends HttpServlet {
 		        				_logger.warn("Unsupported encoding: "+value);
 		        			}*/
 		        			af.setEncoding(value);
-		        	    //Other form feilds
-			        	} else if (name.equals(HttpCommandFields.CONTINUOUS_FLAG)) {
+		        	    //Other form fields
+			        	} else if (name.equalsIgnoreCase(HttpCommandFields.CONTINUOUS_FLAG)) {
 				        	continuous  = Boolean.parseBoolean(value);
-			        	} else if (name.equals(HttpCommandFields.CMN_BATCH)) {
+			        	} else if (name.equalsIgnoreCase(HttpCommandFields.CMN_BATCH)) {
 				        	cmnBatch  = Boolean.parseBoolean(value);
-			        	} else if (name.equals(HttpCommandFields.ENDPOINTING_FLAG)) {
+			        	} else if (name.equalsIgnoreCase(HttpCommandFields.ENDPOINTING_FLAG)) {
 				        	doEndpointing  = Boolean.parseBoolean(value);
-				        } else if (name.equals(HttpCommandFields.LANGUAGE_MODEL_FLAG)) {
+			        	} else if (name.equalsIgnoreCase(HttpCommandFields.OOG_FLAG)) {
+				        	 doOog = Boolean.parseBoolean(value);
+				        	
+			        	}else if (name.equalsIgnoreCase(HttpCommandFields.OUT_OF_GRAMMAR_BRANCH_PROB)) {
+					         oogBranchProb = (double)Double.parseDouble(value);
+			        	}else if (name.equalsIgnoreCase(HttpCommandFields.PHONE_INSERTION_PROB)) {
+				        	 phoneInsertionProb = (double)Double.parseDouble(value);
+				        	
+
+	
+				        } else if (name.equalsIgnoreCase(HttpCommandFields.LANGUAGE_MODEL_FLAG)) {
 				        	// for backwards compatability with lmflag
 			        		lmFlag = Boolean.parseBoolean(value);
 			        		gMode="jsgf";
 			        		if (lmFlag)
 			        			gMode="lm";
-				        } else if (name.equals(HttpCommandFields.GRAMMAR_MODE)) {
+				        } else if (name.equalsIgnoreCase(HttpCommandFields.GRAMMAR_MODE)) {
 				        	gMode = value;
-				        } else if (name.equals(HttpCommandFields.ACOUSTIC_MODEL_ID)) {
+				        } else if (name.equalsIgnoreCase(HttpCommandFields.ACOUSTIC_MODEL_ID)) {
 				        	amId = value;
-				        } else if (name.equals(HttpCommandFields.LANGUAGE_MODEL_ID)) {
+				        } else if (name.equalsIgnoreCase(HttpCommandFields.LANGUAGE_MODEL_ID)) {
 				        	lmId = value;
-				        } else if (name.equals(HttpCommandFields.OUTPUT_MODE)) {
+				        } else if (name.equalsIgnoreCase(HttpCommandFields.DICTIONARY_ID)) {
+				        	dictId = value;
+				        } else if (name.equalsIgnoreCase(HttpCommandFields.OUTPUT_MODE)) {
 				        	outMode = OutputFormat.valueOf(value);
 				        	
-				        } else if (name.equals(HttpCommandFields.DEVELOPER_ID)) {
+				        } else if (name.equalsIgnoreCase(HttpCommandFields.DEVELOPER_ID)) {
 				        	developerId = value;
-				        } else if (name.equals(HttpCommandFields.DEVELOPER_SECRET)) {
+				        } else if (name.equalsIgnoreCase(HttpCommandFields.DEVELOPER_SECRET)) {
 				        	developerSecret = value;
-				        } else if (name.equals(HttpCommandFields.USER_ID)) {
+				        } else if (name.equalsIgnoreCase(HttpCommandFields.USER_ID)) {
 				        	userId = value;
-				        } else if (name.equals(HttpCommandFields.DEVELOPER_DEFINED)) {
+				        } else if (name.equalsIgnoreCase(HttpCommandFields.DEVELOPER_DEFINED)) {
 				        	developerDefined = value;
 				        } else {
 				        	_logger.warn("Unrecognized field "+name+ " = "+value);
@@ -303,7 +334,7 @@ public class SpeechUploadServlet extends HttpServlet {
 			        // Process the input stream
 				    if (name.equals("audio") ) {
 				    	audio = stream;
-				    	try {
+				    	//try {
 			    			//log the http request parameters to the database
 		    		        SpeechRequestDTO hr = new SpeechRequestDTO();
 			    			if (serviceLogEnabled) {
@@ -334,13 +365,14 @@ public class SpeechUploadServlet extends HttpServlet {
 				    		_logger.debug("continuous: "+continuous+" lmflag: "+lmFlag+ " endpointing: "+doEndpointing);
 				    		if (continuous) {
 						        
+				    			response.setCharacterEncoding("UTF-8");
 								PrintWriter out = response.getWriter();	
 				    			//OutputStream out = response.getOutputStream();
 				    			response.setContentType("text/plain");
 				    			//response.setHeader("Content-Disposition", "attachment; filename=results.txt'");			
 				    			response.setHeader("Transfer-coding","chunked");
 					    		if (gMode.equalsIgnoreCase("lm")) {
-					    			textResult = recognizerService.Transcribe(audio,contentType,af,outMode,out,response,hr);
+					    			textResult = recognizerService.Transcribe(audio,contentType,af,outMode,out,response,amId,lmId,dictId,hr);
 					    		} else {
 							        _logger.debug("recognition result is null");
 								    out.println("recognition result is null");
@@ -357,51 +389,23 @@ public class SpeechUploadServlet extends HttpServlet {
 					          	if (gMode.equalsIgnoreCase("simple")) {
 					          		String jsgfGrammar = simpleToJsgf(grammarString);
 					          		_logger.debug("New Gram:\n"+jsgfGrammar);
-					    	        result = recognizerService.Recognize(audio, jsgfGrammar,contentType,af,outMode, doEndpointing,cmnBatch,hr);
+					    	        result = recognizerService.Recognize(audio, jsgfGrammar,contentType,af,outMode, doEndpointing,cmnBatch,    	
+					    	            	doOog, oogBranchProb, phoneInsertionProb,amId,lmId,dictId,hr);
 					          	} else if (gMode.equalsIgnoreCase("jsgf") ) {
-					    	        result = recognizerService.Recognize(audio, grammarString,contentType,af,outMode, doEndpointing,cmnBatch,hr);
+					    	        result = recognizerService.Recognize(audio, grammarString,contentType,af,outMode, doEndpointing,cmnBatch,    	
+					    	            	doOog, oogBranchProb, phoneInsertionProb,amId,lmId,dictId,hr);
 					          	}  else if (gMode.equalsIgnoreCase("lm")) {
-					    			result = recognizerService.Recognize(audio,contentType,af,outMode, doEndpointing,cmnBatch,hr);
+					    			result = recognizerService.Recognize(audio,contentType,af,outMode, doEndpointing,cmnBatch,amId,lmId,dictId,hr);
 					          	} else {
 					          		_logger.warn("Unrecognized grammar mode: "+gMode+" using defualt language model");
-					    			result = recognizerService.Recognize(audio,contentType,af,outMode, doEndpointing,cmnBatch,hr);
+					    			result = recognizerService.Recognize(audio,contentType,af,outMode, doEndpointing,cmnBatch,amId,lmId,dictId,hr);
 					          	}
 					          		
 
-					    		audio.close();
-					    		request.getInputStream().close();
-								PrintWriter out = response.getWriter();	
-								if (result == null) {									
-									result = new Utterance();
-									result.setRCode("NullResult");
-									result.setRMessage("recognition result is null");
-								}
-								
-								if (outMode == OutputFormat.json) {
-									textResult = gson.toJson(result);
-									_logger.debug(textResult);
-									out.println(textResult);
-								} else if (outMode == OutputFormat.text) {	
-									textResult = result.getText();
-									_logger.debug(textResult);
-									out.println(textResult);								
-								} else {
-									textResult = result.getText();
-									_logger.warn("Unsupported output format, using text +outMode");
-									_logger.debug(textResult);
-									out.println(textResult);	
-								}
-					    		long stop2 =  System.currentTimeMillis();
-				    			_logger.debug("Done! " + stop2 +" ("+(stop2-start) +")" );
-					    	    //String filename = Long.toString(System.currentTimeMillis()) + ".wav";
-					    		//writeStreamToFile2(audio,filename);
-				    			
 
 				    						    			
 				    		}
-				    	} catch (Exception e) {
-				    		e.printStackTrace();
-				    	}
+
 				    } else if (name.equals("grammar")) {
 						grammarString = readInputStreamAsString(stream);
 				    }
@@ -414,9 +418,73 @@ public class SpeechUploadServlet extends HttpServlet {
 			//this.getServletContext().getRequestDispatcher("/speechup_result.jsp").forward(request, response);
 
 		} catch (IOFileUploadException e) {
+			e.printStackTrace();
+			result = new Utterance();
+			result.setRCode("IOError");
+			result.setRMessage(e.getMessage());
 			throw (IOException) e.getCause();
 		} catch (FileUploadException e) {
+			e.printStackTrace();
+			result = new Utterance();
+			result.setRCode("UploadError");
+			result.setRMessage(e.getMessage());
 			throw new ServletException(e.getMessage(), e);
+		
+		} catch (NoSuchElementException e) {	
+			_logger.warn(e.getMessage());
+			result = new Utterance();
+			result.setRCode("PoolExhausted");
+			result.setRMessage(e.getMessage());
+			
+		} catch (Exception e) {	
+			_logger.debug("Exception 1");
+			result = new Utterance();
+			result.setRCode("Error");
+			result.setRMessage(e.getMessage());
+			e.printStackTrace();
+		} finally {
+
+			audio.close();
+			request.getInputStream().close();
+
+			response.setCharacterEncoding("UTF-8");
+			response.setContentType("text/plain");
+			PrintWriter out = response.getWriter();	
+			if (result == null) {									
+				result = new Utterance();
+				result.setRCode("NullResult");
+				result.setRMessage("recognition result is null");
+			}
+			
+			if (outMode == OutputFormat.json) {
+				textResult = gson.toJson(result);
+				_logger.debug(textResult);
+				out.println(textResult);
+		    	try {
+		            FileOutputStream fos = new FileOutputStream("c:\\temp\\test-server.txt");
+		            Writer out2 = new OutputStreamWriter(fos, "UTF8");
+		            out2.write(textResult);
+		            out2.close();
+		        } 
+		        catch (IOException e) {
+		            e.printStackTrace();
+		        }
+			} else if (outMode == OutputFormat.text) {	
+				textResult = result.getText();
+				_logger.debug(textResult);
+				out.println(textResult);								
+			} else {
+				textResult = result.getText();
+				_logger.warn("Unsupported output format, using text +outMode");
+				_logger.debug(textResult);
+				out.println(textResult);	
+			}
+			long stop2 =  System.currentTimeMillis();
+			_logger.debug("Done! " + stop2 +" ("+(stop2-start) +")" );
+		    //String filename = Long.toString(System.currentTimeMillis()) + ".wav";
+			//writeStreamToFile2(audio,filename);
+			
+			
 		}
 	}
 
@@ -432,6 +500,19 @@ public class SpeechUploadServlet extends HttpServlet {
 	
 	public  String readInputStreamAsString(InputStream in) throws IOException {
 
+		
+	    StringBuffer buffer = new StringBuffer();
+		InputStreamReader isr = new InputStreamReader(in,"UTF8");
+		Reader inReader = new BufferedReader(isr);
+		int ch;
+		while ((ch = inReader.read()) > -1) {
+			buffer.append((char)ch);
+		}
+		inReader.close();
+		_logger.debug(buffer.toString());
+		return buffer.toString();
+		
+		/* Old 
 		BufferedInputStream bis = new BufferedInputStream(in);
 		ByteArrayOutputStream buf = new ByteArrayOutputStream();
 		int result = bis.read();
@@ -442,6 +523,7 @@ public class SpeechUploadServlet extends HttpServlet {
 		}        
 		_logger.debug(buf.toString());
 		return buf.toString();
+		*/
 	}
 
 	

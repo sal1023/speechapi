@@ -126,6 +126,9 @@ public class Utterance {
      */
     public void setRuleMatches(List<RuleMatch> ruleMatches) {
     	this.ruleMatches = ruleMatches;
+        for (RuleMatch rm: ruleMatches) {
+        	_logger.info(rm.getRule() +": "+ rm.getTag());
+        }
     }
 
 	/**

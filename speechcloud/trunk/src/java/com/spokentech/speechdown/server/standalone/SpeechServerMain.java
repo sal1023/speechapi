@@ -16,7 +16,7 @@ import org.springframework.beans.factory.BeanFactoryAware;
 import org.springframework.context.support.ClassPathXmlApplicationContext;
 
 import com.spokentech.speechdown.server.recog.RecEngine;
-import com.spokentech.speechdown.server.util.pool.SphinxRecEngineFactory;
+import com.spokentech.speechdown.server.util.pool.SpringSphinxRecEngineFactory;
 
 
 // TODO: Auto-generated Javadoc
@@ -35,7 +35,7 @@ public class SpeechServerMain implements BeanFactoryAware {
 	private BeanFactory beanFactory;
 	public static ClassPathXmlApplicationContext context;	
 
-    private SphinxRecEngineFactory sphinxRecEngineFactory;
+    private SpringSphinxRecEngineFactory sphinxRecEngineFactory;
 
 	/**
      * Startup.
@@ -127,14 +127,14 @@ public class SpeechServerMain implements BeanFactoryAware {
     /**
      * @return the sphinxRecEngineFactory
      */
-    public SphinxRecEngineFactory getSphinxRecEngineFactory() {
+    public SpringSphinxRecEngineFactory getSphinxRecEngineFactory() {
     	return sphinxRecEngineFactory;
     }
 
 	/**
      * @param sphinxRecEngineFactory the sphinxRecEngineFactory to set
      */
-    public void setSphinxRecEngineFactory(SphinxRecEngineFactory sphinxRecEngineFactory) {
+    public void setSphinxRecEngineFactory(SpringSphinxRecEngineFactory sphinxRecEngineFactory) {
     	this.sphinxRecEngineFactory = sphinxRecEngineFactory;
     }
     

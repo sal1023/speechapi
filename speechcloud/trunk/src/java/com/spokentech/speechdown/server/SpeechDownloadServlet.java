@@ -148,20 +148,20 @@ public class SpeechDownloadServlet extends HttpServlet {
             // If the request parameter can appear more than once in the query string, get all values
             //String[] values = request.getParameterValues(name);
 	        _logger.debug("Form field " + name + " with value " + value + " detected.");
-	        if (name.equals(HttpCommandFields.SAMPLE_RATE_FIELD_NAME)) {
+	        if (name.equalsIgnoreCase(HttpCommandFields.SAMPLE_RATE_FIELD_NAME)) {
 	        	sampleRate = Integer.parseInt(value);
-	        }else if (name.equals(HttpCommandFields.TEXT)) {
+	        }else if (name.equalsIgnoreCase(HttpCommandFields.TEXT)) {
 	        	text = value;
-	        }else if (name.equals(HttpCommandFields.VOICE_NAME)) {
+	        }else if (name.equalsIgnoreCase(HttpCommandFields.VOICE_NAME)) {
 	        	voice = value;
-	        } else if (name.equals(HttpCommandFields.BIG_ENDIAN_FIELD_NAME)) {
+	        } else if (name.equalsIgnoreCase(HttpCommandFields.BIG_ENDIAN_FIELD_NAME)) {
 	        	bigEndian = Boolean.parseBoolean(value);
-        	} else if (name.equals(HttpCommandFields.BYTES_PER_VALUE_FIELD_NAME)) {
+        	} else if (name.equalsIgnoreCase(HttpCommandFields.BYTES_PER_VALUE_FIELD_NAME)) {
 	        	bytesPerValue = Integer.parseInt(value);
-    		} else if (name.equals(HttpCommandFields.MIME_TYPE)) {
+    		} else if (name.equalsIgnoreCase(HttpCommandFields.MIME_TYPE)) {
     			mime = value;
     
-    		} else if (name.equals(HttpCommandFields.ENCODING_FIELD_NAME)) {
+    		} else if (name.equalsIgnoreCase(HttpCommandFields.ENCODING_FIELD_NAME)) {
     			if (value.equals(AudioFormat.Encoding.ALAW.toString())) {
     				encoding = AudioFormat.Encoding.ALAW;
     			} else if (value.equals(AudioFormat.Encoding.ULAW.toString())) {
@@ -175,13 +175,13 @@ public class SpeechDownloadServlet extends HttpServlet {
     			} else {
     				_logger.warn("Unsupported encoding: "+value);
     			}
-	        } else if (name.equals(HttpCommandFields.DEVELOPER_ID)) {
+	        } else if (name.equalsIgnoreCase(HttpCommandFields.DEVELOPER_ID)) {
 	        	developerId = value;
-	        } else if (name.equals(HttpCommandFields.DEVELOPER_SECRET)) {
+	        } else if (name.equalsIgnoreCase(HttpCommandFields.DEVELOPER_SECRET)) {
 	        	developerSecret = value;
-	        } else if (name.equals(HttpCommandFields.USER_ID)) {
+	        } else if (name.equalsIgnoreCase(HttpCommandFields.USER_ID)) {
 	        	userId = value;
-	        } else if (name.equals(HttpCommandFields.DEVELOPER_DEFINED)) {
+	        } else if (name.equalsIgnoreCase(HttpCommandFields.DEVELOPER_DEFINED)) {
 	        	developerDefined = value;
 	        } else {
 	        	_logger.warn("Unrecognized field "+name+ " = "+value);
@@ -411,7 +411,7 @@ public class SpeechDownloadServlet extends HttpServlet {
 			    InputStream stream = item.openStream();
 			    String contentType = item.getContentType();
 			    if (item.isFormField()) {
-			    	String value = Streams.asString(stream);
+			    	String value = Streams.asString(stream,"UTF-8");
 			        _logger.debug("Form field " + name + " with value " + value + " detected.");
 			        try { 
 				        if (name.equals(HttpCommandFields.SAMPLE_RATE_FIELD_NAME)) {

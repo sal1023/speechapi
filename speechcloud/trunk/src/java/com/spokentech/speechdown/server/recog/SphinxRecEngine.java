@@ -6,15 +6,19 @@
  */
 package com.spokentech.speechdown.server.recog;
 
+import java.io.ByteArrayOutputStream;
 import java.io.FileWriter;
 import java.io.IOException;
 import java.io.InputStream;
+import java.io.OutputStreamWriter;
 import java.io.PrintWriter;
 import java.text.DecimalFormat;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Date;
+import java.util.Enumeration;
 import java.util.List;
+import java.util.Properties;
 import java.util.Timer;
 import java.util.TimerTask;
 
@@ -45,6 +49,7 @@ import com.spokentech.speechdown.server.domain.RecogRequest;
 import com.spokentech.speechdown.server.util.ResultUtils;
 import com.spokentech.speechdown.server.util.ServiceLogger;
 import com.spokentech.speechdown.server.util.pool.AbstractPoolableObject;
+import com.spokentech.speechdown.server.util.pool.ModelPools;
 import com.spokentech.speechdown.server.util.pool.PoolableObject;
 import com.sun.speech.engine.recognition.BaseRecognizer;
 import com.sun.speech.engine.recognition.BaseRuleGrammar;
@@ -69,13 +74,19 @@ import edu.cmu.sphinx.frontend.filter.Preemphasizer;
 import edu.cmu.sphinx.frontend.frequencywarp.MelFrequencyFilterBank;
 import edu.cmu.sphinx.frontend.transform.DiscreteCosineTransform;
 import edu.cmu.sphinx.frontend.transform.DiscreteFourierTransform;
+import edu.cmu.sphinx.frontend.util.AudioFileDataSource;
 import edu.cmu.sphinx.frontend.window.RaisedCosineWindower;
 import edu.cmu.sphinx.jsgf.JSGFGrammar;
 import edu.cmu.sphinx.jsgf.JSGFGrammarException;
 import edu.cmu.sphinx.jsgf.JSGFGrammarParseException;
+import edu.cmu.sphinx.linguist.Linguist;
+import edu.cmu.sphinx.linguist.acoustic.AcousticModel;
 import edu.cmu.sphinx.linguist.acoustic.tiedstate.Loader;
 import edu.cmu.sphinx.linguist.acoustic.tiedstate.Sphinx3Loader;
+import edu.cmu.sphinx.linguist.dictionary.Dictionary;
 import edu.cmu.sphinx.linguist.flat.FlatLinguist;
+import edu.cmu.sphinx.linguist.language.ngram.large.LargeTrigramModel;
+import edu.cmu.sphinx.linguist.lextree.LexTreeLinguist;
 import edu.cmu.sphinx.recognizer.Recognizer;
 import edu.cmu.sphinx.recognizer.StateListener;
 import edu.cmu.sphinx.recognizer.Recognizer.State;
@@ -111,6 +122,10 @@ public class SphinxRecEngine implements RecEngine {
 	protected TimerTask _noInputTimeoutTask;	
 	protected StreamDataSource _dataSource = null;
 	
+	private int targetSampleRate =8000;
+	
+
+
 	//front end elements
 	DataBlocker dataBlocker ;
 	SpeechClassifier speechClassifier;
@@ -124,8 +139,11 @@ public class SphinxRecEngine implements RecEngine {
 	Dither dither;
 	RaisedCosineWindower raisedCosineWindower ;
 	DiscreteFourierTransform discreteFourierTransform ;
-	MelFrequencyFilterBank melFrequencyFilterBank ;
-	DiscreteCosineTransform discreteCosineTransform ;
+	MelFrequencyFilterBank melFrequencyFilterBank16k ;
+	MelFrequencyFilterBank melFrequencyFilterBank8k ;
+	DiscreteCosineTransform discreteCosineTransform8k ;
+	DiscreteCosineTransform discreteCosineTransform16k ;
+
 	BatchCMN batchCmn ;
 	LiveCMN liveCmn;
 	FeatureTransform lda;
@@ -143,11 +161,12 @@ public class SphinxRecEngine implements RecEngine {
 	private boolean recordingEnabled;
     private BaseRecognizer jsapiRecognizer;
 
+    private ModelPools modelPool;
+
 
 	private boolean transcribeMode = false;
 
     Gson gson = new Gson();
-
     
     public SphinxRecEngine() {
 	    super();
@@ -160,7 +179,7 @@ public class SphinxRecEngine implements RecEngine {
        
     	recognizer.allocate();
 
-	    jsgf = (JSGFGrammar) cm.lookup("grammar");
+		jsgf = (JSGFGrammar) cm.lookup("grammar");
 	    this.grammarManager = grammarManager;
 
         _cm = cm;
@@ -222,8 +241,9 @@ public class SphinxRecEngine implements RecEngine {
     //constructor that does not use configuration manager (more convenient for creating pools) for setter injection
     public void startup()  {
 
-    	//this is a not a very good solution ... the problem is need a single jsgf object per jsgf recognizer and prototype creaste one for both injections
-    	// and singleton is one for all recognizers, so provided this way to get a handle to the Linguist, but not all linguists have a grammar
+    	// this is a not a very good solution ... the problem is need a single jsgf object per jsgf recognizer and prototype creaste one for 
+    	// both injections
+    	// and singleton creates one for all recognizers, so provided this way to get a handle to the Linguist, but not all linguists have a grammar
     	// and furtehrmore not all have a jsgfGrammar.  arghh!
     	//TODO: should have a a GrammarSphinxRevEngine and a LMSphinixRecEngine.  Will be simpler to have separte classes.
 	    if (recognizer.getDecoder().getSearchManager().getLinguist() instanceof FlatLinguist) {
@@ -288,7 +308,8 @@ public class SphinxRecEngine implements RecEngine {
     }
 
 	//Recognize using language mode
-    public Utterance recognize(InputStream as, String mimeType, AFormat af, OutputFormat outMode, boolean doEndpointing, boolean cmnBatch, SpeechRequestDTO hr) {
+    public Utterance recognize(InputStream as, String mimeType, AFormat af, OutputFormat outMode, boolean doEndpointing, boolean cmnBatch,
+    		                   String amId, String lmId, String dictionaryID, SpeechRequestDTO hr) {
 
     	long  start = System.nanoTime();
     	long startTime= System.currentTimeMillis();
@@ -309,7 +330,77 @@ public class SphinxRecEngine implements RecEngine {
 			recorder.startRecording();
 		}
 		
-	    Result r = doRecognize(as, mimeType, af, outMode, doEndpointing, cmnBatch);
+		//get the proper models and connect to the linguist
+		//am = ModelPools.getAm();
+		//lm = ModelPools.getLm
+		//dict = lm.getDictionary();
+		//ling.setAcousticModel(am);
+		//ling.setLanguageModel(lm);
+		//ling.setDictionary(lm.getDictionary());
+		LexTreeLinguist ling = (LexTreeLinguist)recognizer.getDecoder().getSearchManager().getLinguist();
+					
+		/*   Model selection code -- add back later
+		 * *******************************************
+		AcousticModel am;
+		int sRate;
+		_logger.info("dic "+ dictionaryID+ " amid: "+amId+" lmId: "+lmId);
+
+		if (amId.equals("en")) {
+			if (af != null) {
+				sRate = (int) af.getSampleRate();
+				if (sRate == 16000) {
+					_logger.info("Using 16000 a "+sRate);
+					am = modelPool.getAcoustic().get("english16").getModel();
+				} else if (sRate == 8000) {
+					_logger.info("Using 8000  "+sRate);
+					am = modelPool.getAcoustic().get("english8").getModel();	
+				} else {
+					_logger.info("Using 16000 b "+sRate);
+					am = modelPool.getAcoustic().get("english16").getModel();
+					
+				}
+			// if format is not specified, it will be transcoded and resampled to 1600.0 by default
+			} else {
+				sRate = 16000;
+				_logger.info("Using 16000 c "+sRate);
+				am = modelPool.getAcoustic().get("english16").getModel();
+			}
+		} else {
+			am = modelPool.getAcoustic().get(amId).getModel();
+			sRate = 16000;
+
+		}
+			
+		
+		LargeTrigramModel lm = modelPool.getLanguage().get(lmId);
+		Dictionary dic = lm.getDictionary();//    modelPool.getDictionary().get(dictionaryID);
+		ling.setLanguageModel(lm);
+		ling.setDictionary(dic);
+		ling.setAcousticModel(am);
+		try {
+			ling.allocate();
+		} catch (IOException e1) {
+			// TODO Auto-generated catch block
+			e1.printStackTrace();
+		}  //so to call compileGramamr()
+		*********************************
+		End of the model selction code 
+		*********************************/
+		
+		int sRate = targetSampleRate;
+		
+		Loader loader = ling.getAcousticModel().getLoader();
+	
+		//TODO: use model properties for deciding what model to use.
+		//Was hoping to get model properties to help decide which model to use...but none set 
+		//Properties props = ling.getAcousticModel().getProperties();
+		//Enumeration en = props.propertyNames();
+	    //while (en.hasMoreElements()) {
+	    //  String key = (String) en.nextElement();
+	    //  System.out.println("******** "+key + " -- " + props.getProperty(key));
+	    //}
+		
+	    Result r = doRecognize(as, mimeType, af, outMode, doEndpointing, cmnBatch,loader,sRate);
 	    _logger.info("Result: " + (r != null ? r.getBestFinalResultNoFiller() : null));
 	    
 		long stop = System.nanoTime();
@@ -384,7 +475,13 @@ public class SphinxRecEngine implements RecEngine {
         	 stopAudioTransfer();
         	_state = COMPLETE;
         }
+        
+        System.out.println("....................YOYOYO****************************");
+        OutputStreamWriter out = new OutputStreamWriter(new ByteArrayOutputStream());
+        System.out.println("ENCODING: "+out.getEncoding());
 	
+        System.out.println(r.getBestFinalResultNoFiller());
+        
         Utterance utterance = null;
 		if (r != null) {
 			//TODO: change to return Utterance object that can be serialized to json or plant text (see transcribe method)
@@ -400,18 +497,26 @@ public class SphinxRecEngine implements RecEngine {
         return utterance;
     }
 	//recognize using a grammar
-	public Utterance recognize(InputStream as, String mimeType, String grammar, AFormat af, OutputFormat outMode,  boolean doEndpointing, boolean cmnBatch, SpeechRequestDTO hr) {
+	public Utterance recognize(InputStream as, String mimeType, String grammar, AFormat af, OutputFormat outMode,  boolean doEndpointing, 
+			                   boolean cmnBatch, boolean oog, double oogBranchProb, double phoneInsertionProb, 
+			                   String amId, String lmId, String dictionaryID,  SpeechRequestDTO hr) {
 
 		long  start = System.nanoTime();
     	long startTime= System.currentTimeMillis();
 		_logger.info("Using g recognizer # "+_id+ ", time: "+startTime);
     	_logger.info("Using  a rec engine: "+recordingEnabled+" "+recordingFilePath);
 		//setup the recorder
+    	//if (recognizer.getState() == State.DEALLOCATED)
+    	///	recognizer.allocate();
 		if (recordingEnabled) {
-			//TODO: Test if setting the format in the recorder is needed!
+			//TODO: Test if setting the format in the recorder is needed!  This a problem.  What if not 8khz?
 			recorder.setBigEndian(true);
 			recorder.setBitsPerSample(16);
-			recorder.setSampleRate(8000);
+			if (af == null) {
+			    recorder.setSampleRate(16000);
+			} else {
+				recorder.setSampleRate((int) af.getSampleRate());
+			}
 			recorder.setSigned(true);
 
 			recorder.setDeveloperId(hr.getDeveloperId());
@@ -419,7 +524,63 @@ public class SphinxRecEngine implements RecEngine {
 			recorder.startRecording();
 		}
         
-	
+		
+    	
+		//get a handle to the linguist and set the oog mode (based on the command) here at run time
+		FlatLinguist fl = (FlatLinguist) recognizer.getDecoder().getSearchManager().getLinguist();
+		fl.setAddOutOfGrammarBranch(oog);
+		fl.setOutOfGrammarBranchProbability(oogBranchProb);
+		fl.setPhoneInsertionProbability( phoneInsertionProb);
+		_logger.debug(oog+" oogBranchProb: "+oogBranchProb+" pnoneProb: "+phoneInsertionProb);
+
+		/*  This is causing nullpointer exceptions and otehr problems -- remove for now 
+		_logger.info("dic "+ dictionaryID+ " amid: "+amId+" lmId: "+lmId);
+		//TODO: handle no language support checks (default to english maybe...)
+		Dictionary dic = modelPool.getDictionary().get(dictionaryID);
+		jsgf.setDictionary(dic);    	 
+		fl.setGrammar(jsgf);
+		*/
+		
+		AcousticModel am;
+		int sRate = targetSampleRate;
+
+		/*   Model selection code -- add back later
+		 * *******************************************
+		// if (amId.equals("en")) {
+		if (af != null) {
+			sRate = (int) af.getSampleRate();
+			if (sRate == 16000) {
+				_logger.info("Using 16000 a "+sRate);
+				am = modelPool.getAcoustic().get("english16").getModel();
+			} else if (sRate == 8000) {
+				_logger.info("Using 8000  "+sRate);
+				am = modelPool.getAcoustic().get("english8").getModel();	
+			} else {
+				_logger.info("Using 16000 b "+sRate);
+				am = modelPool.getAcoustic().get("english16").getModel();
+				
+			}
+		// if format is not specified, it will be transcoded and resampled to 1600.0 by default
+		} else {
+			sRate = targetSampleRate;
+			_logger.info("Using 16000 c "+sRate);
+			am = modelPool.getAcoustic().get("english16").getModel();
+		}
+		//} else {
+		//	am = modelPool.getAcoustic().get(amId).getModel();
+		//	sRate = 16000;
+		//}
+
+		
+		//AcousticModel am2 = modelPool.getAcoustic().get("phoneLoop").getModel();
+		fl.setAcousticModel(am);
+		fl.setPhoneLoopAcousticModel(am); 
+		
+		/----------------------------------------------------
+		End model pool stuff that was commmented out		*/	
+		
+		Loader loader = fl.getAcousticModel().getLoader();
+
 		String resultCode = "Success";
 		String resultMessage = null;
 		GrammarLocation grammarLocation = null;
@@ -433,10 +594,19 @@ public class SphinxRecEngine implements RecEngine {
 	        _logger.debug("After save and load grammar" + System.currentTimeMillis());
 	        
 	        //do the recognition
-		    r = doRecognize(as, mimeType, af, outMode, doEndpointing,  cmnBatch);
+		    r = doRecognize(as, mimeType, af, outMode, doEndpointing,  cmnBatch, loader,sRate);
 			
 		    //process the results (text or json)
 			if (r != null) {
+				
+				if (r.getBestFinalResultNoFiller() == "") {
+					resultCode ="noFinalResult";
+			    	resultMessage ="No final result was returned from Reognition Engine";
+				} 
+	        	//_logger.info("IMPORTANT:" + r.isFinal()+ " "+ r.getBestFinalResultNoFiller()+"\n"+r.getBestFinalToken());
+	        	//_logger.info("IMPORTANT:" + r.isFinal()+ " "+ r.getBestResultNoFiller()+"\n"+ r.getBestToken());
+
+		        		
 				//TODO: change to return Utterance object that can be serialized to json or plant text (see transcribe method)
 				//current approach is a bit of a hack, by constructing with a json flag.
 				RuleGrammar ruleGrammar = new BaseRuleGrammar (jsapiRecognizer, jsgf.getRuleGrammar());
@@ -444,6 +614,7 @@ public class SphinxRecEngine implements RecEngine {
 
 	        	utterance = ResultUtils.getAllResults(r, false, false,ruleGrammar);
 
+	        	
 		    } else {
 		    	resultCode = "NullResult";
 		    	resultMessage ="Null result returned from Reognition Engine";
@@ -475,12 +646,13 @@ public class SphinxRecEngine implements RecEngine {
 
 	        RecogRequest rr = new RecogRequest();
 	        
-	        
 	        //TODO: Save processing time and get raw and pro from results (it is already there)
 			String raw = null;
 			String pro = null;
 			if (r != null) {
 				raw = r.getBestFinalResultNoFiller();
+				if (raw == null)
+					raw = r.getBestToken().getWordUnitPath();
 				pro = r.getBestPronunciationResult();
 			    rr.setRawResults(raw);
 			    rr.setPronunciation(pro);
@@ -534,6 +706,20 @@ public class SphinxRecEngine implements RecEngine {
 		long x = (tt - stop)/1000000;
 		_logger.debug("  Logging time "+ x);
 		
+		
+		//TODO:  WORKAROUND TO Clear out old grammars need to deallocate and reallocate
+		/*jsgf.deallocate();
+		try {
+			jsapiRecognizer.deallocate();
+		} catch (EngineException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		} catch (EngineStateError e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}*/
+		
+		
     	//recognizer.deallocate();
 		utterance.setRCode(resultCode);
 		utterance.setRMessage(resultMessage);
@@ -541,18 +727,20 @@ public class SphinxRecEngine implements RecEngine {
 
     }
 
-	private Result doRecognize(InputStream as, String mimeType, AFormat af, OutputFormat outMode, boolean doEndpointing, boolean cmnBatch) {
+	private Result doRecognize(InputStream as, String mimeType, AFormat af, OutputFormat outMode, boolean doEndpointing, boolean cmnBatch, Loader loader, int sRate) {
 	    //TODO: Timers for recog timeout
 		
 		transcribeMode = false;
 
+		
 	
 	     // configure the audio input for the recognizer
 	 	 // if the format is null, that indicates that no format was passed in
 		 // use xuggler front end and let xuggler get the format from the header
 		 if (af == null) {
 			 _dataSource = new XugglerAudioStreamDataSource();
-			 fe = createAudioFrontend(true,true,(DataProcessor) _dataSource);
+			 ((XugglerAudioStreamDataSource) _dataSource).setTargetRate(targetSampleRate);
+			 fe = createAudioFrontend(true,true,(DataProcessor) _dataSource,loader,sRate);
 			 
 		 // if the format is not (it wa specified) use a front end based on mimetype.
 	     // used for realtime mode
@@ -562,21 +750,21 @@ public class SphinxRecEngine implements RecEngine {
 			 String parts[] = mimeType.split("/");
 			 if (parts[1].equals("x-s4audio")) {
 				 _dataSource = new S4DataStreamDataSource();
-				 fe = createAudioFrontend(doEndpointing,cmnBatch,(DataProcessor)_dataSource);
+				 fe = createAudioFrontend(doEndpointing,cmnBatch,(DataProcessor)_dataSource,loader,sRate);
 			 } else if (parts[1].equals("x-s4feature")) {
 				 _dataSource = new S4DataStreamDataSource();
-				 fe = createFeatureFrontend((DataProcessor)_dataSource);
+				 fe = createFeatureFrontend((DataProcessor)_dataSource,loader);
 				 if (doEndpointing) {
 					 _logger.warn("Endpointing not supported for feature streams");
 				 }
 			 } else if (parts[1].equals("x-wav")) {
 				 _dataSource = new AudioStreamDataSource();
-				 fe = createAudioFrontend(doEndpointing,cmnBatch,(DataProcessor)_dataSource);
+				 fe = createAudioFrontend(doEndpointing,cmnBatch,(DataProcessor)_dataSource,loader,sRate);
 			 } else {
 				 _dataSource = new AudioStreamDataSource();
 				 //TODO: Check if xuggler is installed on this machine
 				 //_dataSource = new XugglerAudioStreamDataSource();
-				 fe = createAudioFrontend(doEndpointing,cmnBatch,(DataProcessor)_dataSource);
+				 fe = createAudioFrontend(doEndpointing,cmnBatch,(DataProcessor)_dataSource,loader,sRate);
 			 }
 		     _logger.debug("-----> "+mimeType+ " "+parts[1]);
 		 }
@@ -616,7 +804,7 @@ public class SphinxRecEngine implements RecEngine {
 	}
 	
 	
-	private String doTranscribe(InputStream as, String mimeType, AFormat af, OutputFormat outMode, PrintWriter out,HttpServletResponse response) {
+	private String doTranscribe(InputStream as, String mimeType, AFormat af, OutputFormat outMode, PrintWriter out,HttpServletResponse response,Loader loader,int sRate) {
 	    //TODO: Timers for recog timeout
 	
 		transcribeMode = true;
@@ -631,7 +819,9 @@ public class SphinxRecEngine implements RecEngine {
 		 // use xuggler front end and let xuggler get the format from the header
 		 if (af == null) {
 			 _dataSource = new XugglerAudioStreamDataSource();
-			 fe = createAudioFrontend(true,true,(DataProcessor) _dataSource);
+			 ((XugglerAudioStreamDataSource) _dataSource).setTargetRate(targetSampleRate);
+
+			 fe = createAudioFrontend(true,true,(DataProcessor) _dataSource,loader,sRate);
 			 
 		 // if the format is not (it wa specified) use a front end based on mimetype.
 	     // used for realtime mode
@@ -641,17 +831,19 @@ public class SphinxRecEngine implements RecEngine {
 			 String parts[] = mimeType.split("/");
 			 if (parts[1].equals("x-s4audio")) {
 				 _dataSource = new S4DataStreamDataSource();
-				 fe = createAudioFrontend(true,true,(DataProcessor) _dataSource);
+				 fe = createAudioFrontend(true,true,(DataProcessor) _dataSource,loader,sRate);
 			 } else if (parts[1].equals("x-s4feature")) {
 				 _logger.warn("Feature mode Endpointing not for continuous recognition mode");
 				 _dataSource = new S4DataStreamDataSource();
 			 } else if (parts[1].equals("x-wav")) {
 				 _dataSource = new AudioStreamDataSource();
-				 fe = createAudioFrontend(true,true,(DataProcessor) _dataSource);
+				 fe = createAudioFrontend(true,true,(DataProcessor) _dataSource,loader,sRate);
 			 } else {
 				 //TODO: Check if xuggler is installed on this machine
 				 _dataSource = new XugglerAudioStreamDataSource();
-				 fe = createAudioFrontend(true,true,(DataProcessor) _dataSource);
+				 ((XugglerAudioStreamDataSource) _dataSource).setTargetRate(targetSampleRate);
+
+				 fe = createAudioFrontend(true,true,(DataProcessor) _dataSource,loader,sRate);
 			 }
 		     _logger.debug("-----> "+mimeType+ " "+parts[1]);
 		 }
@@ -675,6 +867,12 @@ public class SphinxRecEngine implements RecEngine {
 		//List<Utterance> utterences = new ArrayList<Utterance>();
 		Result result;
 	    while ((result = recognizer.recognize())!= null) {
+	    	
+	        
+	        System.out.println("....................YOYOYO****************************");
+	        OutputStreamWriter xxx = new OutputStreamWriter(new ByteArrayOutputStream());
+	        System.out.println("ENCODING: "+xxx.getEncoding());
+	        System.out.println(" > "+result.getBestFinalResultNoFiller());
 	
 	        String resultText = null;      
 	        
@@ -716,7 +914,8 @@ public class SphinxRecEngine implements RecEngine {
 	}
 
 	@Override
-    public String transcribe(InputStream as, String mimeType, AFormat af,  OutputFormat outMode, PrintWriter out,HttpServletResponse response, SpeechRequestDTO hr) {
+    public String transcribe(InputStream as, String mimeType, AFormat af,  OutputFormat outMode, PrintWriter out,
+    		HttpServletResponse response, String amId, String lmId, String dictionaryID, SpeechRequestDTO hr) {
 		
 		_logger.debug("Using recognizer # "+_id);
 	    //SAL
@@ -729,9 +928,59 @@ public class SphinxRecEngine implements RecEngine {
 			recorder.startRecording();
 		}
         
+		
+		//get the proper models and connect to the linguist
+		//am = ModelPools.getAm();
+		//lm = ModelPools.getLm
+		//dict = lm.getDictionary();
+		//ling.setAcousticModel(am);
+		//ling.setLanguageModel(lm);
+		//ling.setDictionary(lm.getDictionary());
+		
+		
+		int sRate = targetSampleRate;
+
+		/*
+		AcousticModel am;
+		
+
+		// if af specified use the best model (only two now)
+		if (af != null) {
+			sRate = (int) af.getSampleRate();
+			if (sRate == 16000) {
+				_logger.info("Using 16000 a "+sRate);
+				am = modelPool.getAcoustic().get("english16").getModel();
+			} else if (sRate == 8000) {
+				_logger.info("Using 8000  "+sRate);
+				am = modelPool.getAcoustic().get("english8").getModel();	
+			} else {
+				_logger.info("Using 16000 b "+sRate);
+				am = modelPool.getAcoustic().get("english16").getModel();
+				
+			}
+		// if format is not specified, it will be transcoded and resampled to 1600.0 by default
+		} else {
+			sRate = 16000;
+			_logger.info("Using 16000 c "+sRate);
+			am = modelPool.getAcoustic().get("english16").getModel();
+		}
+		*/
+		LexTreeLinguist ling = (LexTreeLinguist)recognizer.getDecoder().getSearchManager().getLinguist();
+		//ling.setAcousticModel(am);		
+		Loader loader = ling.getAcousticModel().getLoader();
+		
+		/*
+		try {
+			ling.allocate();
+		} catch (IOException e1) {
+			// TODO Auto-generated catch block
+			e1.printStackTrace();
+		}
+		*/
+		
 		long  start = System.nanoTime();
 
-	    String r = doTranscribe(as, mimeType, af, outMode, out, response);
+	    String r = doTranscribe(as, mimeType, af, outMode, out, response, loader,sRate);
 	    
 		long stop = System.nanoTime();
 		long wall = (stop - start)/1000000;
@@ -797,17 +1046,33 @@ public class SphinxRecEngine implements RecEngine {
 	  * @throws GrammarException
 	  */
 	public synchronized void loadJSGF(JSGFGrammar jsgfGrammar, GrammarLocation grammarLocation) throws IOException, GrammarException {
-		jsgfGrammar.setBaseURL(grammarLocation.getBaseURL());
+
+
+
 		//System.out.println("SAL:::"+grammarLocation.getBaseURL()+"  "+grammarLocation.getGrammarName());
 		try {
-			//jsgfGrammar.deallocate();
+			
+			//TODO:  WORKAROUND TO Clear out old grammars need to deallocate and realloctae
+			/*jsgfGrammar.allocate();
+			jsgfGrammar.setBaseURL(grammarLocation.getBaseURL());
+
+			this.jsapiRecognizer = new BaseRecognizer(jsgf.getGrammarManager());
+    		this.jsapiRecognizer.allocate();
+			*/
+			
 			jsgfGrammar.loadJSGF(grammarLocation.getGrammarName());
-			jsgfGrammar.commitChanges();
-			this.jsapiRecognizer.commitChanges();
+			//jsgfGrammar.commitChanges();
+			//this.jsapiRecognizer.commitChanges();
 		} catch (JSGFGrammarParseException e) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
 		} catch (JSGFGrammarException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		//} catch (EngineException e) {
+			// TODO Auto-generated catch block
+		//	e.printStackTrace();
+		} catch (EngineStateError e) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
 		}
@@ -949,10 +1214,17 @@ public class SphinxRecEngine implements RecEngine {
     
     
     
-    private FrontEnd createFeatureFrontend(DataProcessor dataSource) {
+    private FrontEnd createFeatureFrontend(DataProcessor dataSource, Loader loader) {
     	   ArrayList<DataProcessor> components = new ArrayList <DataProcessor>();
     	   //components.add (new IdentityStage ());
      	   components.add(dataSource);
+     	   
+    	   //TODO:  feature extractor is constructed on the fly, it needs the loader for the model.  Should not be very high overhead if
+    	   //it already loaded anyway.  Some models dont have a matrix. 
+    	   if (loader.getTransformMatrix() != null) {
+       			lda = new FeatureTransform(loader);
+       			components.add (lda);
+    	   }
     	   FrontEnd fe = new FrontEnd (components);
     	   return fe;   	
     }
@@ -961,7 +1233,7 @@ public class SphinxRecEngine implements RecEngine {
 	
     private void createFrontEndElements() {
     	
-    	
+    	//TODO: use spring rather than constructors here...
     	/*There are the spring bean prototype names
     	 * Could get the beanfactory and get them that way, 
     	 * not sure what is best yet...
@@ -1000,12 +1272,14 @@ public class SphinxRecEngine implements RecEngine {
     	dither = new Dither();
     	raisedCosineWindower = new RaisedCosineWindower(0.46,(float)25.625,(float)10.0);
     	discreteFourierTransform = new DiscreteFourierTransform(-1,false);
-    	melFrequencyFilterBank = new MelFrequencyFilterBank((double)130.0,(double)6800.0,40);
-    	discreteCosineTransform = new DiscreteCosineTransform(40,13);
+    	melFrequencyFilterBank16k = new MelFrequencyFilterBank((double)130.0,(double)6800.0,40);
+    	melFrequencyFilterBank8k = new MelFrequencyFilterBank((double)200.0,(double)3500.0,31);
+    	discreteCosineTransform8k = new DiscreteCosineTransform(31,13);
+    	discreteCosineTransform16k = new DiscreteCosineTransform(40,13);
     	batchCmn = new BatchCMN();
     	liveCmn = new LiveCMN(12,500,800);
     	deltasFeatureExtractor = new DeltasFeatureExtractor(3);
-    	//lda = new FeatureTransform(loader);
+
     	
 		boolean isCompletePath = false;
 		int bitsPerSample = 16;
@@ -1019,7 +1293,7 @@ public class SphinxRecEngine implements RecEngine {
     }
     
     
-    private FrontEnd createAudioFrontend(boolean endpointing, boolean batchCMN, DataProcessor dataSource) {
+    private FrontEnd createAudioFrontend(boolean endpointing, boolean batchCMN, DataProcessor dataSource, Loader loader, int sampleRate) {
     	
  	   ArrayList<DataProcessor> components = new ArrayList <DataProcessor>();
  	   components.add(dataSource);
@@ -1043,12 +1317,21 @@ public class SphinxRecEngine implements RecEngine {
 	      components.add(recorder);
 	   }
 	   components.add (preemphasizer);
-	   components.add (dither);
+	   //components.add (dither);
 	   components.add (raisedCosineWindower);
 	   components.add (discreteFourierTransform);
-	   components.add (melFrequencyFilterBank);
+	   if (sampleRate == 16000) {
+	      components.add (melFrequencyFilterBank16k);
+		   components.add (discreteCosineTransform16k);
+	   }else if (sampleRate == 8000) {
+		   components.add (melFrequencyFilterBank8k);
+		   components.add (discreteCosineTransform8k);
+	   }else {
+		   components.add (melFrequencyFilterBank16k);
+		   components.add (discreteCosineTransform16k);
+	   }
 
-	   components.add (discreteCosineTransform);
+
 	   if (batchCMN) {
 	      components.add (batchCmn);
 	   } else {
@@ -1056,7 +1339,14 @@ public class SphinxRecEngine implements RecEngine {
 	   }
 	   
 	   components.add (deltasFeatureExtractor);
-	   //components.add (lda);
+	   
+	   
+	   //TODO:  feature extractor is constructed on the fly, it needs the loader for the model.  Should not be very high overhead if
+	   //it already loaded anyway.  Some models dont have a matrix. 
+	   if (loader.getTransformMatrix() != null) {
+   			lda = new FeatureTransform(loader);
+   			components.add (lda);
+	   }
 	   	   
        //for (DataProcessor dp : components) {
        //   _logger.debug(dp);
@@ -1207,5 +1497,22 @@ public class SphinxRecEngine implements RecEngine {
     public void setRecordingEnabled(boolean recordingEnabled) {
     	this.recordingEnabled = recordingEnabled;
     }
+    
+
+	public ModelPools getModelPool() {
+		return modelPool;
+	}
+
+	public void setModelPool(ModelPools modelPool) {
+		this.modelPool = modelPool;
+	}
+	
+	public int getTargetSampleRate() {
+		return targetSampleRate;
+	}
+
+	public void setTargetSampleRate(int targetSampleRate) {
+		this.targetSampleRate = targetSampleRate;
+	}
 
 }

@@ -83,17 +83,17 @@ public class SpeechDataMonitor extends BaseDataProcessor {
             //endFlag = true;
         } else if (data instanceof DataStartSignal) {
         	start = System.currentTimeMillis();
-        	 _logger.fine(start+ " <<<<<<<<<<<<<<< DataStartSignal encountered!");
+        	 _logger.info(start+ " <<<<<<<<<<<<<<< DataStartSignal encountered!");
         } else if (data instanceof DataEndSignal) {
         	long time = System.currentTimeMillis();
-        	 _logger.fine(time+"  >>>>>>>>>>>>>>> DataEndSignal encountered! "+(time-start));
+        	 _logger.info(time+"  >>>>>>>>>>>>>>> DataEndSignal encountered! "+(time-start));
         }
         return data;
     }
     
     private void broadcastSpeechStartSignal() {
     	long time = System.currentTimeMillis();
-    	 _logger.fine(time+"  *************** SpeechStartSignal encountered! "+(time-start));
+    	 _logger.info(time+"  *************** SpeechStartSignal encountered! "+(time-start));
         if (_speechEventListener != null) {
             _speechEventListener.speechStarted();
         }
@@ -101,7 +101,7 @@ public class SpeechDataMonitor extends BaseDataProcessor {
 
     private void broadcastSpeechEndSignal() {
     	long time = System.currentTimeMillis();
-    	 _logger.fine(time+ "  *************** SpeechEndSignal encountered!  "+(time-start));
+    	 _logger.info(time+ "  *************** SpeechEndSignal encountered!  "+(time-start));
         if (_speechEventListener != null) {
             _speechEventListener.speechEnded();
         }

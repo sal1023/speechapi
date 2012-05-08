@@ -1,6 +1,10 @@
-1,1,spencer,file:///C:/work/speechcloud/etc/prompts/fire_and_ice_frost_add_64kb.mp3
-2,1,spencer,file:///C:/tmp/moviespeechthankyouforsmoking1.mp3
-3,1,spencer,file:///C:/tmp/moviespeechwallstreet1144.mp3
-4,1,spencer,file:///C:/tmp/barackobama911pentagonmemorialspeech.mp3
-5,1,spencer,file:///C:/tmp/Political_videos-GeorgeWBush20061227_795.mov
-6,1,spencer,file:///C:/work/speechcloud/etc/prompts/cubanson.wav
+1,1,spencer,file:///c:/work/vbwork/48kBit-22kHz-DEMO-CLIP.mp3
+2,1,spencer,file:///c:/work/vbwork/981571732_73227766001_A02-AppWhirl.flv
+3,1,spencer,file:///c:/work/vbwork/981571732_73227766001_A02-AppWhirl_mout.mp3
+4,1,spencer,file:///c:/work/vbwork/981571732_73229555001_A03-AppVoyage.flv
+5,1,spencer,file:///c:/work/vbwork/981571732_73229555001_A03-AppVoyage_mout.
+6,1,spencer,file:///c:/work/vbwork/981571732_73259717001_A08-Bloson.mp4
+7,1,spencer,file:///c:/work/vbwork/981571732_73259717001_A08-Bloson_mout.mp3
+8,1,spencer,file:///c:/work/vbwork/981571732_73357606001_B08-AirSet.flv
+9,1,spencer,file:///c:/work/vbwork/981571732_73357606001_B08-AirSet_mout.mp3
+10,1,spencer,file:///c:/work/vbwork/Panel-Mobile.mp3

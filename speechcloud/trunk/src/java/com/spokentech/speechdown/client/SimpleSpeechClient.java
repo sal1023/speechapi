@@ -13,13 +13,16 @@ import javax.sound.sampled.AudioFormat;
 import javax.sound.sampled.AudioInputStream;
 import javax.sound.sampled.AudioSystem;
 import javax.sound.sampled.DataLine;
+import javax.sound.sampled.Line;
 import javax.sound.sampled.LineEvent;
 import javax.sound.sampled.LineListener;
 import javax.sound.sampled.LineUnavailableException;
+import javax.sound.sampled.Mixer;
 import javax.sound.sampled.TargetDataLine;
 import javax.sound.sampled.UnsupportedAudioFileException;
 import org.apache.log4j.Logger;
 
+import com.google.gson.Gson;
 import com.spokentech.speechdown.client.endpoint.ExternalTriggerEndPointer;
 import com.spokentech.speechdown.client.endpoint.MicS4EndPointingInputStream;
 import com.spokentech.speechdown.client.endpoint.S4EndPointer;
@@ -37,367 +40,418 @@ import com.spokentech.speechdown.common.Utterance.OutputFormat;
 public class SimpleSpeechClient {
 	private static Logger _logger = Logger.getLogger(SimpleSpeechClient.class);
 
-    private static int audioBufferSize = 16000;
-    
-    private static String upService = "http://www.speechapi.com:8000/speechcloud/SpeechUploadServlet";      
-    private static String downService = "http://www.speechapi.com:8000/speechcloud/SpeechDownloadServlet";      
-    //private static String upService = "http://spokentech.net/speechcloud/SpeechUploadServlet";      
-    //private static String downService = "http://spokentech.net/speechcloud/SpeechDownloadServlet";      
+	private static int audioBufferSize = 16000;
+	
+	//private static String upService = "http://localhost:8080/speechcloud/SpeechUploadServlet";
+	//private static String downService = "http://localhost:8080/speechcloud/SpeechDownloadServlet";
 
-    private static int sampleRate = 8000;
-    private static boolean signed = true;
-    private static boolean bigEndian = true;
-    private static int channels = 1;
-    private static int sampleSizeInBits = 16;
+	private static String upService = "http://www.speechapi.com:8000/speechcloud/SpeechUploadServlet";
+	private static String downService = "http://www.speechapi.com:8000/speechcloud/SpeechDownloadServlet";
+	// private static String upService =
+	// "http://spokentech.net/speechcloud/SpeechUploadServlet";
+	// private static String downService =
+	// "http://spokentech.net/speechcloud/SpeechDownloadServlet";
 
-    private static boolean s4Mode = true;
-    private static String streamMode = "audio";
-    private static boolean lmflag = false;
-    private static boolean batchFlag = true;
-    private static OutputFormat outMode = OutputFormat.json;
-    
+	private static int sampleRate = 8000;
+	private static boolean signed = true;
+	private static boolean bigEndian = true;
+	private static int channels = 1;
+	private static int sampleSizeInBits = 16;
+
+	private static boolean s4Mode = true;
+	private static String streamMode = "audio";
+	private static boolean lmflag = false;
+	private static boolean batchFlag = true;
+	private static OutputFormat outMode = OutputFormat.json;
+
 	private static final String DEFAULT_VOICE = "jmk-arctic";
-	private static final String  WAV = "audio/x-wav";
-	private static final String  MP3 = "audio/mpeg";
-
+	private static final String WAV = "audio/x-wav";
+	private static final String MP3 = "audio/mpeg";
 
 	private static final int RECOGNIZING = 0;
 
 	private static final int READY = 1;
 
-    private SpeechEventListener listener;
+	private SpeechEventListener listener;
 
-	private String devId ="ff-plugin";
+	private String devId = "ff-plugin";
 	private String userId = null;
 	private String key = null;
-    
-    //public JSObject _window = null;
+
+	// public JSObject _window = null;
 
 	HttpSynthesizer synth = null;
-    HttpRecognizer recog =null;
+	HttpRecognizer recog = null;
 
 	private int state = READY;
 
 	private String currentId;
 	ExternalTriggerEndPointer ep;
-	StreamEndPointingInputStream epStream ;
+	StreamEndPointingInputStream epStream;
 
 	private Utterance results;
 	private boolean resultsYet;
 
 	TargetDataLine audioLine = null;
-	
-    public void setup() {
-		 synth = new HttpSynthesizer(devId, key);    
-		 synth.setService(downService);	 
-	     recog = new HttpRecognizer(devId,key);
-	     recog.setService(upService);
-	     recog.enableAsynchMode(2);
-		 System.out.println("created a recognizer ");
-		 
 
-    }
-    
-    public  String recognize (String grammar) {
-	
-    	if (state ==  RECOGNIZING) {
-    		recog.cancel();
-    	}
-    	state = RECOGNIZING;
-    	
-    	_logger.debug("Starting recognition ...");
-    	
+	private Gson  gson = new Gson();;
 
-        //_window = (JSObject) JSObject.getWindow(this);
-		/*try {
-           JSObject window = JSObject.getWindow(this);
-           System.out.println("Calling JavaScript getString();");
-           String res = (String) window.eval("smash.getString();");
-           System.out.println("Got string from JavaScript: \"" + res + "\"");
-		} catch (Exception e) {
-			e.printStackTrace();
-		}*/
+	public void setup() {
+		System.out.println("Entered Setup ");
+		synth = new HttpSynthesizer(devId, key);
+		synth.setService(downService);
+		System.out.println("created a synthesizer ");
+		recog = new HttpRecognizer(devId, key);
+		recog.setService(upService);
+		recog.enableAsynchMode(2);
+		System.out.println("created a recognizer ");
 
-    	String mimeType = "audio/x-s4audio";
+	}
 
-    	long timeout = 10000;       	
+	public SimpleSpeechClient() {
+		super();
+		System.out.println("Createing the simple speech client");
+	}
 
-        AudioFormat desiredFormat = new AudioFormat ((float) sampleRate, sampleSizeInBits, channels, signed, bigEndian);
+	public String recognize(String grammar) {
 
-    	S4EndPointer ep = new S4EndPointer();
-    	MicS4EndPointingInputStream epStream = new MicS4EndPointingInputStream(ep);
-    	epStream.setupStream(desiredFormat, mimeType);
+		if (state == RECOGNIZING) {
+			recog.cancel();
+		}
+		state = RECOGNIZING;
+
+		_logger.info("Starting recognition ...");
+
+		// _window = (JSObject) JSObject.getWindow(this);
+		/*
+		 * try { JSObject window = JSObject.getWindow(this);
+		 * System.out.println("Calling JavaScript getString();"); String res =
+		 * (String) window.eval("smash.getString();");
+		 * System.out.println("Got string from JavaScript: \"" + res + "\""); }
+		 * catch (Exception e) { e.printStackTrace(); }
+		 */
+
+		String mimeType = "audio/x-s4audio";
+
+		long timeout = 10000;
+
+		AudioFormat desiredFormat = new AudioFormat((float) sampleRate,
+				sampleSizeInBits, channels, signed, bigEndian);
+
+		S4EndPointer ep = new S4EndPointer();
+		MicS4EndPointingInputStream epStream = new MicS4EndPointingInputStream(
+				ep);
+		epStream.setupStream(desiredFormat, mimeType);
 		System.out.println("Set up input stream ");
 
-    	listener = new SpeechListener();
-    	String r = null;
-        try {
-			currentId = recog.recognizeAsynch(devId, key,userId, grammar,  epStream,  lmflag, batchFlag, outMode, timeout, listener ) ;
+		listener = new SpeechListener();
+		String r = null;
+		try {
+			currentId = recog.recognizeAsynch(devId, key, userId, grammar,
+					epStream, lmflag, batchFlag, outMode, timeout, listener);
 			System.out.println("Called recognize ");
-        } catch (InstantiationException e) {
-            // TODO Auto-generated catch block
-            e.printStackTrace();
-        } catch (IOException e) {
-            // TODO Auto-generated catch block
-            e.printStackTrace();       
-        } catch (StreamInUseException e) {
-	        // TODO Auto-generated catch block
-	        e.printStackTrace();
-        } catch (AsynchNotEnabledException e) {
-	        // TODO Auto-generated catch block
-	        e.printStackTrace();
-        }
-    	
-        if (r == null) {
-        	System.out.println("null result");
-        } else {
-           System.out.println("result: "+r);	 
-        }
-        
-	    //String result=r.getText();
-	    //create the json object with tags for extracting semantic meaning
-	    //String tags = toJSONString(r);
-        
-        //String[] params = new String[2];
-        //params[0] = r.getText();
-        //_window.call("smash.recognitionEvent", params); 
-        
+		} catch (InstantiationException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		} catch (IOException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		} catch (StreamInUseException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		} catch (AsynchNotEnabledException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
 
-        return currentId;
- 
-    }
+		if (r == null) {
+			System.out.println("null result");
+		} else {
+			System.out.println("result: " + r);
+		}
 
+		// String result=r.getText();
+		// create the json object with tags for extracting semantic meaning
+		// String tags = toJSONString(r);
 
-	public  void play (String text, String voice) {
+		// String[] params = new String[2];
+		// params[0] = r.getText();
+		// _window.call("smash.recognitionEvent", params);
 
-		_logger.debug("Starting Synthesizer ...");
+		return currentId;
+
+	}
+
+	public void play(String text, String voice) {
+
+		_logger.info("Starting Synthesizer ...");
 
 		String mime = MP3;
-		//Encoding encoding = new Encoding("MPEG1L3");
-		
+		// Encoding encoding = new Encoding("MPEG1L3");
+
 		if (voice == null)
-		   voice=DEFAULT_VOICE;
+			voice = DEFAULT_VOICE;
 
+		// format = new AudioFormat ((float) sampleRate, sampleSizeInBits,
+		// channels, signed, bigEndian);
+		// int frameSize = sampleSizeInBits/8;
+		// int frameRate = sampleRate/frameSize;
 
+		AudioFormat format = new AudioFormat(AudioFormat.Encoding.PCM_SIGNED,
+				16000, 16, 1, 2, 16000, true);
 
-
-		//format = new AudioFormat ((float) sampleRate, sampleSizeInBits, channels, signed, bigEndian);
-		//int frameSize = sampleSizeInBits/8;
-		//int frameRate = sampleRate/frameSize;
-		
-		AudioFormat format = new AudioFormat(
-                AudioFormat.Encoding.PCM_SIGNED,
-                16000,
-                16,
-                1,
-                2,
-                16000,
-                true);
-
-		
-		//TODO: This is a bug, why do I need to flip flop the endian-ness?
-		AudioFormat formata = new AudioFormat(
-                AudioFormat.Encoding.PCM_SIGNED,
-                16000,
-                16,
-                1,
-                2,
-                16000,
-                false);
-		
-
-		
+		// TODO: This is a bug, why do I need to flip flop the endian-ness?
+		AudioFormat formata = new AudioFormat(AudioFormat.Encoding.PCM_SIGNED,
+				16000, 16, 1, 2, 8000, false);
 
 		InputStream stream = synth.synthesize(userId, text, format, WAV, voice);
-     	System.out.println("after calling synthesize ");
+		System.out.println("after calling synthesize ");
 
 		if (stream != null) {
 
-				try {
-					//format = new AudioFormat ((float) 16000.0, 16, 1, signed, false);
-					AudioInputStream ais = new AudioInputStream(stream,formata,-1);
-			     	System.out.println("after making ais ");
+			try {
+				// format = new AudioFormat ((float) 16000.0, 16, 1, signed,
+				// false);
+				AudioInputStream ais = new AudioInputStream(stream, formata, -1);
+				System.out.println("after making ais ");
 
-					AudioUtils.streamAudioToSpeaker(ais);
-			     	System.out.println("after calling streama to speaker ");
+				AudioUtils.streamAudioToSpeaker(ais);
+				System.out.println("after calling streama to speaker ");
 
-				} catch (IOException e) {
-					// TODO Auto-generated catch block
-					e.printStackTrace();
-				} catch (UnsupportedAudioFileException e) {
-					// TODO Auto-generated catch block
-					e.printStackTrace();
-				} catch (LineUnavailableException e) {
-					// TODO Auto-generated catch block
-					e.printStackTrace();
-				}
-
+			} catch (IOException e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+			} catch (UnsupportedAudioFileException e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+			} catch (LineUnavailableException e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+			}
 
 		} else {
 			_logger.warn("stream was null");
 		}
 
 	}
+
+	public String recognizeWithTriggers(String grammar) {
+
+		if (state == RECOGNIZING) {
+			recog.cancel(currentId);
 	
-	
-	
-	
-    public String recognizeWithTriggers(String grammar) {
-	    
-    	if (state ==  RECOGNIZING) {
-    		recog.cancel(currentId);
-    	}
-    	state = RECOGNIZING;
-    	
-    	
-	    AudioFormat desiredFormat = new AudioFormat ((float) sampleRate, sampleSizeInBits, channels, signed, bigEndian);
-        DataLine.Info info = new DataLine.Info(TargetDataLine.class, desiredFormat);
-        if (!AudioSystem.isLineSupported(info)) {
-            _logger.warn(desiredFormat + " not supported");
-            throw new RuntimeException("unsupported audio format");
-        } 
-        System.out.println("Desired format: " + desiredFormat);
+		}
+		if(audioLine!=null) {
+			audioLine.close();
+		}
+		state = RECOGNIZING;
 
-        
-        // Get the audio line from the microphone (java sound api) 
+		AudioFormat desiredFormat = new AudioFormat((float) 16000,
+				sampleSizeInBits, channels, signed, bigEndian);
+		
+		
+		DataLine.Info info = new DataLine.Info(TargetDataLine.class, desiredFormat);
+		//DataLine.Info info = new DataLine.Info(SourceDataLine.class, desiredFormat);
+		
+		 boolean foundOne = false;
+		 Mixer.Info[] mixerInfo =  AudioSystem.getMixerInfo();
+		 for(int cnt = 0; cnt < mixerInfo.length; cnt++){
+			 //System.out.println(cnt+"  "+mixerInfo[cnt].getName());
+			 Mixer mixer = AudioSystem.getMixer(mixerInfo[cnt]);
+			 if (mixer.isLineSupported(info) ) {
+				try {
+				    System.out.println(cnt+" "+mixerInfo[cnt].getName()+"   supported!");
+					audioLine = (TargetDataLine) mixer.getLine(info);
+				} catch (LineUnavailableException e) {
+					// TODO Auto-generated catch block
+					e.printStackTrace();
+				}
+				foundOne = true;
+				break;
+			 } else {
+				 System.out.println(cnt+" "+mixerInfo[cnt].getName()+ "  Not supported!");
+			 }
+		 }//end for loop 
+		 //Mixer mixer = AudioSystem.getMixer(mixerInfo[2]);
+	     //try {
+		//	audioLine = (TargetDataLine) mixer.getLine(info);
+		//} catch (LineUnavailableException e1) {
+			// TODO Auto-generated catch block
+		//	e1.printStackTrace();
+		//}
 
-        try {
-             audioLine = (TargetDataLine) AudioSystem.getLine(info);
-            /* Add a line listener that just traces
-             * the line states.
-             */
-            audioLine.addLineListener(new LineListener() {
-                public void update(LineEvent event) {
-                    _logger.debug("line listener " + event);
-                }
-            });
-        } catch (LineUnavailableException e) {
-            _logger.warn("microphone unavailable " + e.getMessage());
-        }
- 
-        // open up the line from the mic (javasound)
-        if (audioLine != null) {
-        	if (!audioLine.isOpen()) {
-        		_logger.debug("open");
-        		try {
-        			audioLine.open(desiredFormat, audioBufferSize);
-        		} catch (LineUnavailableException e) {
-        			_logger.warn("Can't open microphone " + e.getMessage());
-        			e.printStackTrace();
-        		}  
-        	} 
-        } else {
-        	_logger.warn("Can't find microphone");
-        	throw new RuntimeException("Can't find microphone");
-        }
-    	
+		
+		// if (!foundOne) {
+		//if (!AudioSystem.isLineSupported(info)) {
+		//	_logger.warn(desiredFormat + " not supported");
+		//	throw new RuntimeException("unsupported audio format");
+		//}
+		System.out.println("Desired format: " + desiredFormat);
 
-		 //setup the external trigger endpoint stream and reuse (trigger starts and stops)
+		// Get the audio line from the microphone (java sound api)
 
-	     String mimeType = "audio/x-wav";
-	     ep = new ExternalTriggerEndPointer();
-		 epStream = new StreamEndPointingInputStream(ep);
-	     //epStream = new MicS4EndPointingInputStream(ep);
+		//try {
+			//SAL  audioLine = (TargetDataLine) AudioSystem.getLine(info);
+			/*
+			 * Add a line listener that just traces the line states.
+			 */
+			audioLine.addLineListener(new LineListener() {
+				public void update(LineEvent event) {
+					_logger.info("line listener " + event);
+				}
+			});
+			
+		System.out.println("Added listener");
+		//SAL} catch (LineUnavailableException e) {
+		//	_logger.warn("microphone unavailable " + e.getMessage());
+		//}
 
-		 epStream.setMimeType(mimeType);
-		 AFormat f = FormatUtils.covertToNeutral(desiredFormat);	
-		 AudioInputStream as = new AudioInputStream(audioLine);
-		 
-		 epStream.setupStream(as, f);
-    	
-    	
-    	long timeout = 10000; 	
-    	listener = new SpeechListener();
-    	boolean lmflg = false;
-    	boolean batchFlag = true;
+		// open up the line from the mic (javasound)
+		if (audioLine != null) {
+			System.out.println("not null");
 
-        try {	            
-            currentId = recog.recognizeAsynch(devId,key,userId, grammar,  epStream,  lmflg,  batchFlag,OutputFormat.json, timeout,listener) ;
-        } catch (InstantiationException e) {
-            // TODO Auto-generated catch block
-            e.printStackTrace();
-        } catch (IOException e) {
-            // TODO Auto-generated catch block
-            e.printStackTrace();
-        } catch (HttpRecognizerException e) {
-            // TODO Auto-generated catch block
-            e.printStackTrace();
-        }
-        return currentId;
-    }
-	
-    public void triggerStart() {
-       	if (state ==  RECOGNIZING) {
-       		System.out.println("Calling start trigger");
-       		audioLine.start();
-           ep.triggerStart();
-       	} else {
-       		System.out.println("Triggered start but not in recognizing state");
-       	}
-    }
-	
-    public void triggerEnd() {
-	    if (state ==  RECOGNIZING) {
-       		System.out.println("Calling end trigger");
-	        ep.triggerEnd();
-	        resultsYet=false;
-	        audioLine.stop();
-	   	} else {
-	   		System.out.println("Triggered start but not in recognizing state");
-	   	}
-    }
-    
-    public String getResults() {
-    	if ((state == RECOGNIZING) && (!resultsYet)) {
-    		return null;
-    	} else {
-	        state = READY;
-    		return results.getText();
-    	}
-	
-    }
+			if (!audioLine.isOpen()) {
+				_logger.info("open");
+				System.out.println("Not open");
 
+				try {
+					audioLine.open(desiredFormat, audioBufferSize);
+					System.out.println("opened");
 
-	
-    public class SpeechListener implements SpeechEventListener {
-        
-        /* (non-Javadoc)
-         * @see com.spokentech.speechdown.common.SpeechEventListener#noInputTimeout()
-         */
-        @Override
-        public void noInputTimeout() {
-    	    _logger.debug("No input timeout");
+				} catch (LineUnavailableException e) {
+					System.out.println("not opened ");
 
-        }
+					_logger.warn("Can't open microphone " + e.getMessage());
+					e.printStackTrace();
+				}
+			}
+		} else {
+			System.out.println("already open");
 
-        /* (non-Javadoc)
-         * @see com.spokentech.speechdown.common.SpeechEventListener#recognitionComplete(com.spokentech.speechdown.common.RecognitionResult)
-         */
-        @Override
-        public void recognitionComplete(Utterance arg0) {
-    	    _logger.debug("Recognition Completed");
-            results = arg0;
-    	    resultsYet=true;
-        }
+			_logger.warn("Can't find microphone");
+			throw new RuntimeException("Can't find microphone");
+		}
 
-        /* (non-Javadoc)
-         * @see com.spokentech.speechdown.common.SpeechEventListener#speechEnded()
-         */
-        @Override
-        public void speechEnded() {
-    	    _logger.debug("Speech ended");
+		// setup the external trigger endpoint stream and reuse (trigger starts
+		// and stops)
 
-        }
+		String mimeType = "audio/x-wav";
+		ep = new ExternalTriggerEndPointer();
+		epStream = new StreamEndPointingInputStream(ep);
+		// epStream = new MicS4EndPointingInputStream(ep);
 
-        /* (non-Javadoc)
-         * @see com.spokentech.speechdown.common.SpeechEventListener#speechStarted()
-         */
-        @Override
-        public void speechStarted() {
-    	    _logger.debug("Speech started");
+		epStream.setMimeType(mimeType);
+		AFormat f = FormatUtils.covertToNeutral(desiredFormat);
+		AudioInputStream as = new AudioInputStream(audioLine);
 
-        }
+		epStream.setupStream(as, f);
 
+		long timeout = 10000;
+		listener = new SpeechListener();
+		boolean lmflg = false;
+		boolean batchFlag = true;
 
-    }
+		try {
+			currentId = recog.recognizeAsynch(devId, key, userId, grammar,
+					epStream, lmflg, batchFlag, OutputFormat.json, timeout,
+					listener);
+		} catch (InstantiationException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		} catch (IOException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		} catch (HttpRecognizerException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+		return currentId;
+	}
+
+	public void triggerStart() {
+		if (state == RECOGNIZING) {
+			System.out.println("Calling start trigger");
+			audioLine.start();
+			ep.triggerStart();
+		} else {
+			System.out.println("Triggered start but not in recognizing state");
+		}
+	}
+
+	public void triggerEnd() {
+		if (state == RECOGNIZING) {
+			System.out.println("Calling end trigger");
+			ep.triggerEnd();
+			resultsYet = false;
+			audioLine.stop();
+		} else {
+			System.out.println("Triggered start but not in recognizing state");
+		}
+	}
+
+	public String getResults() {
+		if ((state == RECOGNIZING) && (!resultsYet)) {
+			return null;
+		} else {
+			state = READY;
+			resultsYet=false;
+			System.out.println("Get results, returning: "+results);
+			return gson.toJson(results);
+		}
+
+	}
+
+	public class SpeechListener implements SpeechEventListener {
+
+		/*
+		 * (non-Javadoc)
+		 * 
+		 * @see
+		 * com.spokentech.speechdown.common.SpeechEventListener#noInputTimeout()
+		 */
+		@Override
+		public void noInputTimeout() {
+			_logger.info("No input timeout");
+
+		}
+
+		/*
+		 * (non-Javadoc)
+		 * 
+		 * @see
+		 * com.spokentech.speechdown.common.SpeechEventListener#recognitionComplete
+		 * (com.spokentech.speechdown.common.RecognitionResult)
+		 */
+		@Override
+		public void recognitionComplete(Utterance arg0) {
+			_logger.info("Recognition Completed: " + arg0);
+			results = arg0;
+			resultsYet = true;
+		}
+
+		/*
+		 * (non-Javadoc)
+		 * 
+		 * @see
+		 * com.spokentech.speechdown.common.SpeechEventListener#speechEnded()
+		 */
+		@Override
+		public void speechEnded() {
+			_logger.info("Speech ended");
+
+		}
+
+		/*
+		 * (non-Javadoc)
+		 * 
+		 * @see
+		 * com.spokentech.speechdown.common.SpeechEventListener#speechStarted()
+		 */
+		@Override
+		public void speechStarted() {
+			_logger.info("Speech started");
+
+		}
+
+	}
 }

@@ -667,7 +667,7 @@
 	        classname="org.hibernate.tool.hbm2ddl.SchemaExportTask"
 	        classpathref="hib.classpath"/>
 	    <schemaexport
-	    	config="${basedir}/etc/postgresql-hibernate.cfg.xml" 
+	    	config="${basedir}/etc/hibernate.cfg.xml" 
 	        quiet="no"
 	        text="no"
 	        drop="no"
@@ -750,7 +750,7 @@
 	    <zipfileset dir="${sphinx.home}/models/language/wsj" prefix="${dist.name}-${dist.version}/models/language/wsj"/>
 	    <zipfileset dir="${build.war.home}" includes="${war.filename}" prefix="${dist.name}-${dist.version}"/>
 	    <zipfileset dir="${basedir}/etc/grammar" includes="*.gram" prefix="${dist.name}-${dist.version}/temp/grammar"/>
-		<zipfileset dir="${basedir}" prefix="${dist.name}-${dist.version}" includes="README.txt"/>
+	    <zipfileset dir="${basedir}" prefix="${dist.name}-${dist.version}" includes="Readme.txt"/>
 	    <zipfileset dir="${basedir}/src/examples" prefix="${dist.name}-${dist.version}/examples" includes="**" />
 	    <zipfileset dir="${speechcloud.cli.home}" prefix="${dist.name}-${dist.version}/examples/speechcloud-cli" includes="**" />
 		

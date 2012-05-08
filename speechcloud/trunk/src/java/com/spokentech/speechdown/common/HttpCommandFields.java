@@ -12,12 +12,16 @@ public class HttpCommandFields {
     public static final String LANGUAGE_MODEL_FLAG = "lmFlag";     //being replaced by gMode (more than 2 options)
     public static final String CONTINUOUS_FLAG = "continuousFlag";
     public static final String ENDPOINTING_FLAG = "doEndpointing";
+    public static final String OOG_FLAG = "detectOOG";
     public static final String DATA_MODE = "dataMode";
     public static final String CMN_BATCH = "CmnBatchFlag";
     public static final String OUTPUT_MODE = "outputMode";  //text or json (default to text)
     public static final String GRAMMAR_MODE = "gMode";		//simple, jsgf, lm (replacing lmFlag)
     public static final String LANGUAGE_MODEL_ID = "lmId";	
     public static final String ACOUSTIC_MODEL_ID = "amId";
+    public static final String DICTIONARY_ID = "amId";
+    public static final String OUT_OF_GRAMMAR_BRANCH_PROB = "oogBranchProb";
+    public static final String PHONE_INSERTION_PROB = "phoneInsertionProb";
 
     
 	//Common Recognizer and Synthesizer field names
@@ -30,6 +34,7 @@ public class HttpCommandFields {
     public static final String DEVELOPER_SECRET = "developerSecret";
     public static final String USER_ID = "userId";
     public static final String DEVELOPER_DEFINED = "devDefined";
+    public static final String LANGUAGE_FIELD_NAME = "language";
   
     //Recognizer attachment names
     public static final String GRAMMAR = "grammar";

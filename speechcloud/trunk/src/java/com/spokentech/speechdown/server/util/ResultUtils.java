@@ -80,6 +80,7 @@ public class ResultUtils {
              
             if (u.getText().equals(OUTOFGRAMMAR)) {
                 u.setOog(true);
+                _logger.info(r.getBestToken().getWordUnitPath());
             }
             if (u.getText() != null  && ruleGrammar != null && !u.isOog()) {
                 try {
