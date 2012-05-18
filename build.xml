@@ -1,12 +1,15 @@
 <?xml version="1.0" encoding="UTF-8"?>
 
-<project name="speechcloud" basedir="." default="help" xmlns:artifact="antlib:org.apache.maven.artifact.ant">
+<project name="speechcloud" basedir="." default="help" xmlns:artifact="antlib:org.apache.maven.artifact.ant" xmlns:ivy="antlib:org.apache.ivy.ant">
 
+    
+      
+    
 	<property environment="env" />
 
 	<property file="${basedir}/${user.name}.properties" />
-    <property file="${user.home}/build.properties" />
-    <property file="${basedir}/build.properties" />
+        <property file="${user.home}/build.properties" />
+        <property file="${basedir}/build.properties" />
 
 	<property name="build.home" value="${basedir}/target/build" />
 	<property name="dist.home" value="${basedir}/dist" />
@@ -22,11 +25,6 @@
 	<property name="sql.dir" value="${basedir}/sql" />
 	
 	<property name="lib.dir" value="${basedir}/lib" />
-	
-    <path id="maven-ant-tasks.classpath" path="${lib.dir}/maven-ant-tasks-2.1.0.jar" />
-    <typedef resource="org/apache/maven/artifact/ant/antlib.xml"
-           uri="antlib:org.apache.maven.artifact.ant"
-           classpathref="maven-ant-tasks.classpath" />	
 	
 	<property name="freetts.jar" value="${lib.dir}/freetts-SNAPSHOT.jar" />
 	<property name="log4j.jar" value="${lib.dir}/log4j-1.2.14.jar" />
@@ -51,9 +49,9 @@
 	
 	<property name="hibernate.jar" value="${lib.dir}/hibernate3.jar" />
 	<property name="hsqldb.jar" value="${lib.dir}/hsqldb.jar" />
-    <property name="jta.jar" value="${lib.dir}/jta-1.1.jar" />
+        <property name="jta.jar" value="${lib.dir}/jta-1.1.jar" />
     
-    <property name="postgresql-jdbc-driver.jar" value="${lib.dir}/postgresql-8.4-701.jdbc4.jar" />
+        <property name="postgresql-jdbc-driver.jar" value="${lib.dir}/postgresql-8.4-701.jdbc4.jar" />
 
 	<property name="mary-common.jar" value="${lib.dir}/mary-common.jar" />
 	
@@ -64,7 +62,7 @@
 	<property name="slf4j-api.jar" value="${lib.dir}/slf4j-api-1.5.10.jar" />
 	<property name="slf4j-jcl.jar" value="${lib.dir}/slf4j-jcl-1.5.10.jar" />
 
-    <property name="servlet-api.jar" value="${catalina.home}/lib/servlet-api.jar" />
+        <property name="servlet-api.jar" value="${catalina.home}/lib/servlet-api.jar" />
 	<property name="commons-logging.jar" value="${lib.dir}/commons-logging.jar" />
 	<property name="commons-fileupload.jar" value="${lib.dir}/commons-fileupload-1.2.1.jar" />
 	<property name="commons-io.jar" value="${lib.dir}/commons-io-1.4.jar" />
@@ -72,7 +70,7 @@
 	<property name="standard.jar" value="${catalina.home}/webapps/examples/WEB-INF/lib/standard.jar" />
 	
 	
-    <property name="xuggle-xuggler.jar" value="${lib.dir}/xuggle-xuggler.jar" />
+        <property name="xuggle-xuggler.jar" value="${lib.dir}/xuggle-xuggler-5.2.jar" />
 	
 	<property name="verbose" value="true" />
 
@@ -86,11 +84,16 @@
 	<property name="server.wsdl.location" value="${basedir}/etc/"/>
 	<property name="server.binding.files" value="customfile-server.xml"/>
 
+        <path id="maven-ant-tasks.classpath" path="${lib.dir}/maven-ant-tasks-2.1.0.jar" />
+        <typedef resource="org/apache/maven/artifact/ant/antlib.xml"
+           uri="antlib:org.apache.maven.artifact.ant"
+           classpathref="maven-ant-tasks.classpath" />	
+	
 	<path id="toolslib">
-	 <path location="lib/hibernate-tools.jar" />
-	 <path location="lib/hibernate3.jar" />
-	 <path location="lib/freemarker.jar" />
-	 <path location="${jdbc.driver.jar}" />
+	    <path location="lib/hibernate-tools.jar" />
+	    <path location="lib/hibernate3.jar" />
+	    <path location="lib/freemarker.jar" />
+	    <path location="${jdbc.driver.jar}" />
 	</path>
 
 	
@@ -102,12 +105,12 @@
 		<pathelement	location="${slf4j-api.jar}" />
 		<pathelement	location="${slf4j-jcl.jar}" />
 		<pathelement	location="${commons-logging.jar}" />
-		 <pathelement  location="lib/hibernate-tools.jar" />
-		 <pathelement location="lib/hibernate3.jar" />
-		 <pathelement location="lib/freemarker.jar" />
-		 <pathelement location="${jdbc.driver.jar}" />
-		 <pathelement location="${basedir}/src/java" />
-		 <pathelement location="${build.classes.home}" />
+		<pathelement  location="lib/hibernate-tools.jar" />
+		<pathelement location="lib/hibernate3.jar" />
+		<pathelement location="lib/freemarker.jar" />
+		<pathelement location="${jdbc.driver.jar}" />
+		<pathelement location="${basedir}/src/java" />
+		<pathelement location="${build.classes.home}" />
 	</path>
 	
 	<path id="speech.classpath">
@@ -137,7 +140,7 @@
 				
 		<pathelement	location="${hibernate.jar}" />
 		<!--pathelement	location="${jstl.jar}" /-->
-	    <!--pathelement	location="${standard.jar}" /-->
+	        <!--pathelement	location="${standard.jar}" /-->
 	    
 		<pathelement	location="${mary-common.jar}" />
 		<pathelement	location="${jlibrtp.jar}" />
@@ -156,8 +159,6 @@
 
 
 	<path id="speechcloud.client.classpath">
-
-	
 		<pathelement location="${java.home}/../lib/tools.jar" />
 		<pathelement	location="${commons-pool.jar}" />
 		<pathelement	location="${commons-lang.jar}" />
@@ -242,6 +243,11 @@
 		<delete dir="${build.home}" includeEmptyDirs="true" />
 	</target>
 	
+	<target name="resolve" description="--> retrieve dependencies with ivy">
+            <ivy:settings file="ivysettings.xml"/>
+            <ivy:retrieve />
+        </target>
+
 	
 	<!-- ********************************************************** -->
 	<!-- *				HTTP Speech Server						  * -->
@@ -264,7 +270,7 @@
       </antcall>
     </target>
     
-    <target name="compile-server" depends="import-wsdl-server">
+    <target name="compile-server" depends="import-wsdl-server">    <!-- add resolve in depends for ivy -->
       <echo message="compile-server" />
 
       <javac srcdir="${basedir}/src/java"

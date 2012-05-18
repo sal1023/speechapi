@@ -48,7 +48,6 @@
 	<classpathentry kind="lib" path="C:/thirdparty/jersey-archive-1.1.5/lib/jersey-core-1.1.5.jar"/>
 	<classpathentry kind="lib" path="C:/thirdparty/jersey-archive-1.1.5/lib/jersey-server-1.1.5.jar"/>
 	<classpathentry kind="lib" path="C:/thirdparty/jersey-archive-1.1.5/lib/jsr311-api-1.1.1.jar"/>
-	<classpathentry kind="lib" path="lib/xuggle-xuggler.jar"/>
 	<classpathentry kind="lib" path="lib/apache-mime4j-0.6.jar"/>
 	<classpathentry kind="lib" path="lib/httpclient-4.0.1.jar"/>
 	<classpathentry kind="lib" path="lib/httpcore-4.0.1.jar"/>
@@ -59,12 +58,13 @@
 	<classpathentry kind="var" path="JAXWS_HOME"/>
 	<classpathentry kind="lib" path="lib/jsapi.jar"/>
 	<classpathentry kind="lib" path="lib/jmf.jar"/>
-	<classpathentry kind="lib" path="lib/mary-common.jar"/>
+	<classpathentry kind="lib" path="lib/mary-common.jar" sourcepath="/OpenMary"/>
 	<classpathentry kind="lib" path="C:/work/speechcloud/etc"/>
 	<classpathentry kind="lib" path="lib/slf4j-api-1.5.10.jar"/>
 	<classpathentry kind="lib" path="lib/slf4j-jcl-1.5.10.jar"/>
 	<classpathentry kind="lib" path="lib/signalproc.jar"/>
 	<classpathentry kind="lib" path="lib/WSJ_8gau_13dCep_16k_40mel_130Hz_6800Hz.jar"/>
 	<classpathentry kind="lib" path="lib/WSJ_8gau_13dCep_8kHz_31mel_200Hz_3500Hz.jar"/>
+	<classpathentry kind="lib" path="C:/work/speechcloud/lib/xuggle-xuggler-5.4.jar"/>
 	<classpathentry kind="output" path="target/eclipse"/>
 </classpath>

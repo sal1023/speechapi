@@ -1,0 +1,182 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml" lang="en" xml:lang="en">
+
+
+<head>
+  <meta http-equiv="Content-Type" content="text/html; charset=utf-8"></meta>
+  <title>Speech ATC Demo</title>`
+  <script type="text/javascript" src="http://localhost:8080/speechcloud/lib/speechapi-1.3.js"></script>
+  <script type="text/javascript" src="http://localhost:8080/speechcloud/lib/swfobject.js"></script>`
+  <script language="JavaScript" type="text/javascript" >
+
+
+
+	function onLoaded() {
+		oogBranchProb = document.getElementById('oogProb').value;
+		phoneProb = document.getElementById('phoneProb').value;
+		oogFlag = true;
+		if(document.getElementById('oogFlag').value == "False") {
+			oogFlag = false;
+		}
+		startOver();
+	}
+
+	var stage = 0;
+	var oogBranchProb = "1e-25"; 
+	var phoneProb = "1e-20";
+	var oogFlag = false;
+
+	var grammar;
+
+	grammar = "#JSGF V1.0;\n";
+	grammar = grammar + "grammar test;\n";
+	grammar = grammar + "public <q1> = <A>{A} <B>{B} <C>{C} <D>{D} ;\n";
+	grammar = grammar + "<A> = <pre> A|Mars;\n";
+	grammar = grammar + "<B> = <pre> B|Saturn;\n";
+	grammar = grammar + "<C> = <pre> C|Venus;\n";
+	grammar = grammar + "<D> = <pre> D|Jupiter;\n";
+	grammar = grammar + "<pre> = [the answer is];\n";
+
+	
+
+	var flashvars = {speechServer : "http://localhost:8080/speechcloud"};
+        var params = {allowscriptaccess : "always"};
+	var attributes = {};
+	attributes.id = "flashContent";
+
+	swfobject.embedSWF("http://localhost:8080/speechcloud/lib/speechapi-1.5.swf", "myAlternativeContent", "215", "138", "9.0.28", false,flashvars, params, attributes);
+
+	speechapi.setup("spencer","password",onResult, onFinishTTS, onLoaded, "flashContent");
+		
+
+
+	function onResult(result) {
+		if (result.oog == true) {
+			document.getElementById('oog').innerHTML = "Out of grammar, try again"; 
+		}else{
+			document.getElementById('oog').innerHTML = ""; 
+			//copy all tags to a associative array (should do this in the api!)
+			
+			document.getElementById('tags').innerHTML = "";
+			var tags = new Array();
+  			for (var k in result.ruleMatches) {
+				tags[result.ruleMatches[k]._rule] = result.ruleMatches[k]._tag; 
+				//alert (result.ruleMatches[k]._tag+ " "+  result.ruleMatches[k]._rule);
+				document.getElementById('tags').innerHTML = document.getElementById('tags').innerHTML +" "+k+" of "+
+					result.ruleMatches.length+ " : "+ result.ruleMatches[k]._rule+ "->"+  result.ruleMatches[k]._tag+ "<br>"; 
+   			}
+
+
+			var s1Prompt1 = "good job!  You said" +result.text+".  Venus is the correct answer"; 
+			var s1Prompt2 = "Sorry, that is not correct. You said" +result.text+".  Try again."; 
+			if ("q1" in tags ) {
+				if (tags["q1"] == "C") {
+					speechapi.speak(s1Prompt1,"hmm-slt");
+				} else {
+					speechapi.speak(s1Prompt2,"hmm-slt");
+				}
+			} else {
+				speechapi.speak("Error, No answer","hmm-slt");
+			}
+
+			document.getElementById('spokenWords').innerHTML = result.text;
+			//document.getElementById('spokenWords').innerHTML = document.getElementById('spokenWords').innerHTML + result.text+" ";
+		}
+		//speechapi.speak(result.text,"hmm-slt");
+	}
+
+
+
+	function onFinishTTS() {
+		//alert("finishTTS");
+	}
+
+	function ResetOog() {
+		oogBranchProb = document.getElementById('oogProb').value;
+		phoneProb = document.getElementById('phoneProb').value;
+		oogFlag = document.getElementById('oogFlag').value;
+		speechapi.setOogParams(oogBranchProb, phoneProb );
+		//speechapi.setupRecognition("SIMPLE", document.getElementById('words').value,false,oogFlag);
+	}	
+
+
+	function startOver() {
+		//alert("start over");
+		document.getElementById('spokenWords').innerHTML ="";
+
+		document.getElementById('stage').innerHTML = stage;
+		document.getElementById('grammar').innerHTML = grammar[s];
+		speechapi.speak(prompt,"hmm-slt");
+
+	   	var auto= false;
+	   	var gMode = "JSGF";
+	   	speechapi.setupRecognition(gMode, grammar, auto,oogFlag);
+	   	//Logger.info("start!");
+	   	//alert(grammar);
+	}
+
+
+
+</script>
+
+</head>
+<body>
+<h4>Multiple Choice</h4>
+<p>Which planet is closest to the sun?</p>
+<ul>
+	<li>A. Mars</li>
+	<li>B. Saturn </li>
+	<li>C. Venus</li>
+	<li>D. Jupiter</li>
+</ul>
+
+
+
+<br>
+<table border="1" >
+
+<tr>
+	<td width="100"><input type="button" value="Start Over" onclick="startOver()"></td>
+	<td><b id="oog" width=600 ></td>
+</tr>
+<tr>
+	<td><b id="stage"/></td>
+	<td><b id="spokenWords"/></td>
+</tr>
+
+<tr>
+	<td colspan="2"><b id='tags' </td>
+</tr>
+<tr>
+	<td colspan="2"><textarea id='grammar' rows='8' cols='120'></textarea>
+</tr>
+</td>
+</tr>
+</table>
+
+<br>
+
+<table>
+<tr>
+  OOG Prob: <input type="textarea" id="oogProb" value="1e-25" size="10"/>
+          Phone Insert Prob: <input type="text" id="phoneProb" value="1e-20" size="10"/>
+
+          Oog: <select id="oogFlag">
+                  <option value="False">Off</option>
+                  <option value="True">On</option>
+
+               </select>
+	  
+      <input type="button" value="Reset Oog" onclick="ResetOog()">
+</tr>
+</table>
+<br>
+
+
+<div id="myAlternativeContent"></div>
+<div id="flashContent"></div>
+
+
+
+</body>
+</html>
