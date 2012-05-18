@@ -5,6 +5,7 @@
         
   <appender name="Console" class="org.apache.log4j.ConsoleAppender">
      <param name="Target" value="System.err"/> 
+     <param name="encoding" value="UTF-8" />
      <layout class="org.apache.log4j.PatternLayout">
         <param name="ConversionPattern" value="%m%n"/>
         <!--param name="ConversionPattern" value="%d %-5p {%t} %c%n %m%n"/-->
@@ -19,18 +20,18 @@
     <priority value="info"/>
   </category>
     <category name="com.spokentech.speechdown.common">
-    <priority value="debug"/>
+    <priority value="info"/>
   </category>
       <category name="com.spokentech.speechdown.server">
-    <priority value="debug"/>
+    <priority value="info"/>
   </category>
 
   <category name="edu.cmu.sphinx.frontend">
-    <priority value="debug"/>
+    <priority value="info"/>
   </category>
 
   <category name="com.spokentech.speechdown.client">
-    <priority value="debug"/>
+    <priority value="info"/>
   </category>
 
   <root>

@@ -476,11 +476,10 @@ public class SphinxRecEngine implements RecEngine {
         	_state = COMPLETE;
         }
         
-        System.out.println("....................YOYOYO****************************");
         OutputStreamWriter out = new OutputStreamWriter(new ByteArrayOutputStream());
-        System.out.println("ENCODING: "+out.getEncoding());
+
 	
-        System.out.println(r.getBestFinalResultNoFiller());
+        //_logger.debug(r.getBestFinalResultNoFiller());
         
         Utterance utterance = null;
 		if (r != null) {
@@ -610,7 +609,7 @@ public class SphinxRecEngine implements RecEngine {
 				//TODO: change to return Utterance object that can be serialized to json or plant text (see transcribe method)
 				//current approach is a bit of a hack, by constructing with a json flag.
 				RuleGrammar ruleGrammar = new BaseRuleGrammar (jsapiRecognizer, jsgf.getRuleGrammar());
-			    _logger.info("created rulegrammar ");
+			    //_logger.info("created rulegrammar ");
 
 	        	utterance = ResultUtils.getAllResults(r, false, false,ruleGrammar);
 
@@ -869,11 +868,7 @@ public class SphinxRecEngine implements RecEngine {
 	    while ((result = recognizer.recognize())!= null) {
 	    	
 	        
-	        System.out.println("....................YOYOYO****************************");
-	        OutputStreamWriter xxx = new OutputStreamWriter(new ByteArrayOutputStream());
-	        System.out.println("ENCODING: "+xxx.getEncoding());
-	        System.out.println(" > "+result.getBestFinalResultNoFiller());
-	
+	        OutputStreamWriter xxx = new OutputStreamWriter(new ByteArrayOutputStream());	
 	        String resultText = null;      
 	        
 	        if (outMode == OutputFormat.text) {

@@ -320,14 +320,14 @@ public class SpeechUploadServlet extends HttpServlet {
 
 			        FileItemHeaders h = item.getHeaders();
 			        if (h == null) {
-			        	System.out.println(item.getName() +" has no headers");
+			        	_logger.debug(item.getName() +" has no headers");
 			        } else {
-			        	System.out.println(item.getName() +" has the following headers");
+			        	_logger.debug(item.getName() +" has the following headers");
 				        Iterator it = h.getHeaderNames();
 						while (it.hasNext()) {
 						    String hname = (String) it.next();
 						    String head =h.getHeader(hname);
-						    System.out.println(hname+" = "+head);
+						    _logger.debug(hname+" = "+head);
 						}
 			        }
 
@@ -460,7 +460,7 @@ public class SpeechUploadServlet extends HttpServlet {
 				textResult = gson.toJson(result);
 				_logger.debug(textResult);
 				out.println(textResult);
-		    	try {
+		    	/*try {
 		            FileOutputStream fos = new FileOutputStream("c:\\temp\\test-server.txt");
 		            Writer out2 = new OutputStreamWriter(fos, "UTF8");
 		            out2.write(textResult);
@@ -468,7 +468,7 @@ public class SpeechUploadServlet extends HttpServlet {
 		        } 
 		        catch (IOException e) {
 		            e.printStackTrace();
-		        }
+		        }*/
 			} else if (outMode == OutputFormat.text) {	
 				textResult = result.getText();
 				_logger.debug(textResult);
