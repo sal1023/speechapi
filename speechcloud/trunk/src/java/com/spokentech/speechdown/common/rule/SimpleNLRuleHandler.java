@@ -52,13 +52,13 @@ public class SimpleNLRuleHandler {
     }
 
     private void handleRuleTag(RuleTag tag) {
-    	logger.info("RULETAG: "+tag.toString());
+    	//logger.info("RULETAG: "+tag.toString());
         RuleMatch ruleMatch = new RuleMatch(_activeRule, tag.getTag());
         _ruleMatches.add(ruleMatch);
     }
 
     private void handleRuleAlternatives(RuleAlternatives ruleAlternatives) {
-    	logger.info("RULEALTS: "+ruleAlternatives.toString());
+    	//logger.info("RULEALTS: "+ruleAlternatives.toString());
 
         Rule[] rules = ruleAlternatives.getRules();
         for (int i = 0; i < rules.length; i++) {
@@ -69,17 +69,17 @@ public class SimpleNLRuleHandler {
     private void handleRuleSequence(RuleSequence ruleSequence) {
 
         Rule[] rules = ruleSequence.getRules();
-    	logger.info("RULESEQ: "+ruleSequence.toString()+":: "+rules.length);
+    	//logger.info("RULESEQ: "+ruleSequence.toString()+":: "+rules.length);
 
         for (int i = 0; i < rules.length; i++) {
-        	logger.info("--------> "+rules[i]);
+        	//logger.info("--------> "+rules[i]);
             handleRule(rules[i]);
         }
     }
 
     private void handleRuleParse(RuleParse ruleParse) {
-    	logger.info("RULEPARSE: "+ruleParse.toString());
-    	logger.info("RULEPARSE NAME: "+ruleParse.getRuleName().getSimpleRuleName());
+    	//logger.info("RULEPARSE: "+ruleParse.toString());
+    	//logger.info("RULEPARSE NAME: "+ruleParse.getRuleName().getSimpleRuleName());
         handleRuleName(ruleParse.getRuleName());
         String parentRule = _activeRule;
         _activeRule = ruleParse.getRuleName().getSimpleRuleName();
@@ -88,7 +88,7 @@ public class SimpleNLRuleHandler {
     }
 
     private void handleRuleName(RuleName ruleName) {
-    	logger.info("RULENAME: "+ruleName.toString());
+    	//logger.info("RULENAME: "+ruleName.toString());
 
         // ignore, handled by handleRuleParse()
         //_activeRule = ruleName.getSimpleRuleName();

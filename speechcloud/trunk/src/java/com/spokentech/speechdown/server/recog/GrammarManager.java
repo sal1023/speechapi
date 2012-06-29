@@ -129,6 +129,7 @@ public class GrammarManager {
         }catch (Exception e) {
         	e.printStackTrace();
         } finally {
+        	fw.flush();
             fw.close();
         }
 

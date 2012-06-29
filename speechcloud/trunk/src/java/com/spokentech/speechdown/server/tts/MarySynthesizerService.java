@@ -52,21 +52,8 @@ import org.apache.log4j.Logger;
 
 import com.spokentech.speechdown.server.SynthesizerService;
 import com.spokentech.speechdown.server.domain.SpeechRequestDTO;
-import com.spokentech.speechdown.server.domain.SynthRequest;
+import com.spokentech.speechdown.server.util.AudioTranscoder;
 import com.spokentech.speechdown.server.util.ServiceLogger;
-import com.xuggle.mediatool.IMediaReader;
-import com.xuggle.mediatool.IMediaWriter;
-import com.xuggle.mediatool.ToolFactory;
-import com.xuggle.xuggler.IAudioResampler;
-import com.xuggle.xuggler.IAudioSamples;
-import com.xuggle.xuggler.IContainer;
-import com.xuggle.xuggler.IError;
-import com.xuggle.xuggler.IPacket;
-import com.xuggle.xuggler.IStream;
-import com.xuggle.xuggler.IStreamCoder;
-import com.xuggle.xuggler.ICodec;
-
-
 
 
 public class MarySynthesizerService implements SynthesizerService {
@@ -166,11 +153,11 @@ public class MarySynthesizerService implements SynthesizerService {
 	public void startup() {
 
 		try {
-			BasicConfigurator.configure();
-			addJarsToClasspath();
+			//BasicConfigurator.configure();
+			//addJarsToClasspath();
 			MaryProperties.readProperties();
 			// mary = new Mary();
-			Mary.startup();
+			Mary.startup(false);
 		} catch (Exception e) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
@@ -247,20 +234,27 @@ public class MarySynthesizerService implements SynthesizerService {
 
             AudioFileFormat.Type audioType = MaryAudioUtils.getAudioFileFormatType(audioTypeName);
             
-            //AudioFormat audioFormat = null;
-            //if (audioType.toString().equals("MP3")) {
+            if (voice == null) {
+            	voice = Voice.getDefaultVoice(Locale.US);
+            }
+            
+            AudioFormat audioFormat = null;
+            if (audioType.toString().equals("MP3")) {
                 //if (!MaryAudioUtils.canCreateMP3())
                 //    throw new UnsupportedAudioFileException("Conversion to MP3 not supported.");
-                //audioFormat = MaryAudioUtils.getMP3AudioFormat();
-            //} else {
-                //Voice ref = (voice != null) ? voice : Voice.getDefaultVoice(Locale.ENGLISH);
-                //audioFormat = ref.dbAudioFormat();
-            //}
+                audioFormat = MaryAudioUtils.getMP3AudioFormat();
+            } else {
+                //Voice ref = (voice != null) ? voice : Voice.getDefaultVoice(Locale.US);
+                audioFormat = voice.dbAudioFormat();
+            }
             _logger.debug("***: "+format.toString());
-            audioFileFormat = new AudioFileFormat(audioType, format, AudioSystem.NOT_SPECIFIED);
+            _logger.debug("***: "+audioFormat.toString());
+            //AudioFormat wavFormat = new AudioFormat(AudioFormat.Encoding.PCM_SIGNED, 44100, 16, 1, 2, 44100, true);
+            audioFileFormat = new AudioFileFormat(audioType, audioFormat, AudioSystem.NOT_SPECIFIED);
         }
         
-        Locale locale = Locale.US;
+        Locale locale =  voice.getLocale(); //Locale.US;
+       
         Request request = new Request(inputType, outputType,locale, voice, "", "", 1, audioFileFormat);
  
         
@@ -270,7 +264,16 @@ public class MarySynthesizerService implements SynthesizerService {
         	ByteArrayInputStream bs = new ByteArrayInputStream(text.getBytes());
 	        request.readInputData( new InputStreamReader(bs, "UTF-8"));
 	        request.process();
-	        request.writeOutputData(out);
+        	request.writeOutputData(out);
+	        
+	        //if (mime.equals("audio/mpeg")) {
+	        //	PipedInputStream in1 = new PipedInputStream();
+	        //	PipedOutputStream out2 = new PipedOutputStream(in1);
+	        //	(new Thread(new AudioTranscoder(in1, out))).start();
+	        //	request.writeOutputData(out2);
+	        //} else {
+	        //	request.writeOutputData(out);
+	        //}
 
 
 			if (recordingEnabled) {
@@ -318,117 +321,7 @@ public class MarySynthesizerService implements SynthesizerService {
     	
     }
 	
-	
-	private void transcode(InputStream in, OutputStream out) {
 
-
-		PipedInputStream in1 = new PipedInputStream();
-		PipedOutputStream out2 = new PipedOutputStream(in1);
-
-		// Create a Xuggler container object
-		IContainer container = IContainer.make();
-
-		// Open up the container
-		int cRetCode = container.open(in, null);
-
-		// query how many streams the call to open found
-		int numStreams = container.getNumStreams();
-
-		// and iterate through the streams to find the first audio stream
-		int audioStreamId = -1;
-		IStreamCoder audioCoder = null;
-		for(int i = 0; i < numStreams; i++)  {
-			// Find the stream object
-			IStream stream = container.getStream(i);
-			// Get the pre-configured decoder that can decode this stream;
-			IStreamCoder coder = stream.getStreamCoder();      
-			if (coder.getCodecType() == ICodec.Type.CODEC_TYPE_AUDIO) {
-				audioStreamId = i;
-				audioCoder = coder;
-				break;
-			}
-		}
-		
-		if (audioStreamId == -1)
-			throw new RuntimeException("could not find audio stream in container ");
-
-		//Let's open up our decoder so it can do work.
-		if (audioCoder.open() < 0)
-			throw new RuntimeException("could not open audio decoder for container ");
-
-		/*
-		 * Now, we start walking through the container looking at each packet.
-		 */
-		IPacket packet = IPacket.make();
-		while(container.readNextPacket(packet) >= 0)  {
-			/*
-			 * Now we have a packet, let's see if it belongs to our audio stream
-			 */
-			if (packet.getStreamIndex() == audioStreamId)  {
-				/*
-				 * We allocate a set of samples with the same number of channels as the
-				 * coder tells us is in this buffer.
-				 * 
-				 * We also pass in a buffer size (1024 in our example), although Xuggler
-				 * will probably allocate more space than just the 1024 (it's not important why).
-				 */
-				IAudioSamples samples = IAudioSamples.make(1024, audioCoder.getChannels());
-		        IPacket enSamples = IPacket.make(x);
-		        
-				/*
-				 * A packet can actually contain multiple sets of samples (or frames of samples
-				 * in audio-decoding speak).  So, we may need to call decode audio multiple
-				 * times at different offsets in the packet's data.  We capture that here.
-				 */
-				int offset = 0;
-
-				/*
-				 * Keep going until we've processed all data
-				 */
-				while(offset < packet.getSize()) {
-					int bytesDecoded = audioCoder.decodeAudio(samples, packet, offset);
-					if (bytesDecoded < 0)
-						throw new RuntimeException("got error decoding audio in: ");
-					offset += bytesDecoded;
-					/*
-					 * Some decoder will consume data in a packet, but will not be able to construct
-					 * a full set of samples yet.  Therefore you should always check if you
-					 * got a complete set of samples from the decoder
-					 */
-					if (samples.isComplete()) {
-						
-						int bytesEncoded - audioCoder.encodeAudio(enSamples, samples, samples.getNumSamples());
-						
-					    byte[] rawBytes = samples.getData().getByteArray(0, samples.getSize());
-					    try {
-							out.write(rawBytes, 0, samples.getSize());
-						} catch (IOException e) {
-							// TODO Auto-generated catch block
-							e.printStackTrace();
-						}
-					}
-				}
-			} else {
-				/*
-				 * This packet isn't part of our audio stream, so we just silently drop it.
-				 */
-				do {} while(false);
-			}
-
-		}
-
-
-		if (audioCoder != null) {
-			audioCoder.close();
-			audioCoder = null;
-		}
-		if (container !=null)  {
-			container.close();
-			container = null;
-		}
-	}
-	
-	
 
 	@Override
     public File ttsFile(String text, AudioFormat format, String mime) {

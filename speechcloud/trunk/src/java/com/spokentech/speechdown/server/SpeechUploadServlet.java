@@ -20,6 +20,7 @@ import java.io.InputStreamReader;
 import java.io.OutputStreamWriter;
 import java.io.PrintWriter;
 import java.io.Reader;
+import java.io.UnsupportedEncodingException;
 import java.io.Writer;
 import java.util.Date;
 import java.util.Enumeration;
@@ -418,29 +419,37 @@ public class SpeechUploadServlet extends HttpServlet {
 			//this.getServletContext().getRequestDispatcher("/speechup_result.jsp").forward(request, response);
 
 		} catch (IOFileUploadException e) {
+			_logger.warn("IOFileupload " +e.getMessage());
 			e.printStackTrace();
 			result = new Utterance();
 			result.setRCode("IOError");
 			result.setRMessage(e.getMessage());
-			throw (IOException) e.getCause();
+			//throw (IOException) e.getCause();
 		} catch (FileUploadException e) {
+			_logger.warn("Fileupload " +e.getMessage());
 			e.printStackTrace();
 			result = new Utterance();
 			result.setRCode("UploadError");
 			result.setRMessage(e.getMessage());
-			throw new ServletException(e.getMessage(), e);
+			//throw new ServletException(e.getMessage(), e);
 		
 		} catch (NoSuchElementException e) {	
-			_logger.warn(e.getMessage());
+			_logger.warn("Pool exhausted " +e.getMessage());
 			result = new Utterance();
 			result.setRCode("PoolExhausted");
 			result.setRMessage(e.getMessage());
 			
+		} catch (SpeechApiGrammarException e) {	
+			_logger.warn("Grammar problem " +e.getMessage());
+			result = new Utterance();
+			result.setRCode("GrammarError");
+			result.setRMessage(e.getMessage());			
+			
 		} catch (Exception e) {	
-			_logger.debug("Exception 1");
+			_logger.warn("General Exception: "+e.getMessage());
 			result = new Utterance();
 			result.setRCode("Error");
-			result.setRMessage(e.getMessage());
+			result.setRMessage(e.getClass().getName()+" : "+e.getCause().getMessage()+" / "+e.getMessage());
 			e.printStackTrace();
 		} finally {
 
@@ -498,18 +507,32 @@ public class SpeechUploadServlet extends HttpServlet {
 		response.sendRedirect(response.encodeRedirectURL("/")); // TODO: allow redirect location to be configured
 	}
 	
-	public  String readInputStreamAsString(InputStream in) throws IOException {
+	public  String readInputStreamAsString(InputStream in) throws SpeechApiGrammarException {
 
 		
 	    StringBuffer buffer = new StringBuffer();
-		InputStreamReader isr = new InputStreamReader(in,"UTF8");
+		InputStreamReader isr = null;
+		try {
+			isr = new InputStreamReader(in,"UTF8");
+		} catch (UnsupportedEncodingException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+			throw(new SpeechApiGrammarException(e.getMessage()));
+		}
 		Reader inReader = new BufferedReader(isr);
 		int ch;
-		while ((ch = inReader.read()) > -1) {
-			buffer.append((char)ch);
+		try {
+			while ((ch = inReader.read()) > -1) {
+				buffer.append((char)ch);
+			}
+			inReader.close();
+		} catch (IOException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+			throw(new SpeechApiGrammarException(e.getMessage()));
+
 		}
-		inReader.close();
-		_logger.debug(buffer.toString());
+		_logger.info(buffer.toString());
 		return buffer.toString();
 		
 		/* Old 

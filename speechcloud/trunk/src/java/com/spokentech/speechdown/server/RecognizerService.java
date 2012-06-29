@@ -24,7 +24,7 @@ import org.apache.commons.pool.ObjectPool;
 import org.apache.commons.pool.impl.GenericObjectPool;
 import org.apache.commons.pool.impl.StackObjectPool;
 import org.apache.log4j.Logger;
-import org.jvnet.staxex.StreamingDataHandler;
+
 
 import com.spokentech.speechdown.common.AFormat;
 import com.spokentech.speechdown.common.Utterance;
@@ -139,15 +139,20 @@ public class RecognizerService {
         try {
             List<Object> objects = new ArrayList<Object>();
             while (true) try {
-                objects.add(_grammarRecognizerPool.borrowObject());
+            	Object x = _grammarRecognizerPool.borrowObject();
+            	_logger.info("borrow rec to pool "+x);
+                objects.add(x);
             } catch (NoSuchElementException e){
                 // ignore, max active reached
+            	_logger.info("no such element and so break?");
                 break;
             }
+            _logger.info("SIZE: "+objects.size());
             for (Object obj : objects) {
             	_grammarRecognizerPool.returnObject(obj);
             }
         } catch (Exception e) {
+        	e.printStackTrace();
             try {
             	_grammarRecognizerPool.close();
             } catch (Exception e1) {
@@ -164,53 +169,9 @@ public class RecognizerService {
 	}
 	
 	
-	public Utterance Recognize(DataHandler audio, String grammar) throws GrammarException, IOException {	
-		_logger.debug("audio attachment content type: "+ audio.getContentType());
-		_logger.debug("audio attachment name: "+ audio.getName());
-		_logger.debug("audio attachment class name: "+audio.getClass().getCanonicalName());
-    	InputStream stream = null;
-    	AudioInputStream as = null;
-        try {
-            if (audio instanceof StreamingDataHandler) {
-            	_logger.debug("Data handler is instance of streamdatdaHandler");
-                stream = ((StreamingDataHandler) audio).readOnce();
-            } else {
-            	_logger.debug("Data hancler is not streamdatahandler");
-                stream = audio.getInputStream();
-            }
-	        as = AudioSystem.getAudioInputStream(stream) ;
-        } catch (IOException e) {
-	        // TODO Auto-generated catch block
-	        e.printStackTrace();
-        } catch (UnsupportedAudioFileException e) {
-	        // TODO Auto-generated catch block
-	        e.printStackTrace();
-        }  
 
-        Utterance results = Recognize(as, grammar);
-        
-        return results;		
-	}
 
-	public  Utterance Recognize(AudioInputStream as, String grammar) {
-	    RecEngine rengine = null;
-        try {
-            rengine = (RecEngine) _grammarRecognizerPool.borrowObject();
-        } catch (Exception e) {
-            // TODO Auto-generated catch block
-            throw new RuntimeException(e);
-        }
-        
-        Utterance results = rengine.recognize(as,grammar);
-        
-        try {
-        	_grammarRecognizerPool.returnObject(rengine);
-        } catch (Exception e) {
-	        // TODO Auto-generated catch block
-            throw new RuntimeException(e);
-        }
-	    return results;
-    }
+
 
 	//grammar method
 	public Utterance Recognize(InputStream as, String grammar, String mimeType, AFormat af, OutputFormat outMode, boolean doEndpointing, 
@@ -221,19 +182,28 @@ public class RecognizerService {
 		
     	
         RecEngine rengine = null;
+        _logger.info("before borrow (active/idle): "+_grammarRecognizerPool.getNumActive()+ " " +_grammarRecognizerPool.getNumIdle());
         rengine = (RecEngine) _grammarRecognizerPool.borrowObject();    
+        _logger.info(rengine);
+        _logger.info("after borrow (active/idle): "+_grammarRecognizerPool.getNumActive()+ " " +_grammarRecognizerPool.getNumIdle());
 
         _logger.debug("After borrow" + System.currentTimeMillis());
 	
 
         Utterance results ;
-        results = rengine.recognize(as,mimeType,grammar,af,outMode, doEndpointing, cmnBatch, oog, oogBranchProb, phoneInsertionProb,amId, lmId, dictionaryId, hr);
-        
         try {
-        	_grammarRecognizerPool.returnObject(rengine);
-        } catch (Exception ee) {
-            _logger.warn("Could not return recognizer to pool");
-            throw new RuntimeException(ee);
+            results = rengine.recognize(as,mimeType,grammar,af,outMode, doEndpointing, cmnBatch, oog, oogBranchProb, phoneInsertionProb,amId, lmId, dictionaryId, hr);
+        }catch (Exception e) {
+        	throw e;
+        } finally {
+            _logger.info("before return (active/idle): "+_grammarRecognizerPool.getNumActive()+ " " +_grammarRecognizerPool.getNumIdle());
+
+            try {
+            	_grammarRecognizerPool.returnObject(rengine);
+            } catch (Exception ee) {
+            	_logger.warn("Could not return recognizer to pool");
+            }
+            _logger.info("after return (active/idle): "+_grammarRecognizerPool.getNumActive()+ " " +_grammarRecognizerPool.getNumIdle());
         }
     
       
@@ -256,16 +226,21 @@ public class RecognizerService {
         _logger.debug("After borrow" + System.currentTimeMillis());
 	
         Utterance results ;
+        try {
+        	results = rengine.recognize(as,mimeType,af, outMode, doEndpointing, cmnBatch,amId, lmId, dictionaryId, hr);
+        
+        }catch (Exception e) {
+ 	       	throw e;
+        } finally {
+            _logger.info("before return (active/idle): "+_grammarRecognizerPool.getNumActive()+ " " +_grammarRecognizerPool.getNumIdle());
 
-        results = rengine.recognize(as,mimeType,af, outMode, doEndpointing, cmnBatch,amId, lmId, dictionaryId, hr);
-
-    	try {
-    		_lmRecognizerPool.returnObject(rengine);
-    	} catch (Exception e) {
-            _logger.warn("Could not return recognizer to pool");
-            e.printStackTrace();
-    		throw new RuntimeException(e);
-    	}
+            try {
+           		_lmRecognizerPool.returnObject(rengine);
+           	} catch (Exception ee) {
+                _logger.warn("Could not return recognizer to pool");
+            }
+            _logger.info("after return (active/idle): "+_lmRecognizerPool.getNumActive()+ " " +_lmRecognizerPool.getNumIdle());
+        }
 
 	    return results;	
     }
@@ -283,14 +258,17 @@ public class RecognizerService {
 	
         String results ;
 
-        results = rengine.transcribe(audio,mimeType, af,outMode, out,response,amId,lmId,dictionaryId,  hr);
-
         try {
-        	_lmRecognizerPool.returnObject(rengine);
+        	results = rengine.transcribe(audio,mimeType, af,outMode, out,response,amId,lmId,dictionaryId,  hr);
         } catch (Exception e) {
-            _logger.warn("Could not return recognizer to pool");
-            e.printStackTrace();
-    		throw new RuntimeException(e);
+        	throw e;
+        } finally {
+        	try {
+        		_lmRecognizerPool.returnObject(rengine);
+        	} catch (Exception e) {
+        		_logger.warn("Could not return recognizer to pool");
+        		e.printStackTrace();
+        	}
         }
 	    return results;	
     }

@@ -131,6 +131,9 @@
         <constructor-arg type="boolean" index="5" value="${speech.dictionary.allowMissingWords}"/>
         <constructor-arg type="boolean" index="6" value="true" />
         <constructor-arg  index="7" ref="englishUnitManager"/>
+        <constructor-arg type="boolean" index="8" value="${speech.dictionary.freeTtsG2p}"/>
+        <constructor-arg type="java.lang.String" index="9" value="${speech.dictionary.g2pPhoneList}"/>
+        <constructor-arg type="java.lang.String" index="10" value="${speech.dictionary.g2Pmodel}"/>
     </bean>
     
     <!--bean name="dictionary06d" class="edu.cmu.sphinx.linguist.dictionary.FastDictionary" scope="singleton">

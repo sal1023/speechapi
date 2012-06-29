@@ -9,13 +9,14 @@
 
 <title></title> 
 
+<script type="text/javascript" src="../lib/speechapi-1.4.js"></script>
+<script type="text/javascript" src="../lib/swfobject.js"></script>
 
-
-<script type="text/javascript" src="http://localhost:8080/speechcloud/lib/speechapi-1.1.js"></script>
-<script type="text/javascript" src="http://localhost:8080/speechcloud/lib/swfobject.js"></script>
 <script type="text/javascript" src="http://ajax.googleapis.com/ajax/libs/jquery/1.4.2/jquery.min.js"></script>
 
 <script language="JavaScript" type="text/javascript" >
+
+        url =self.location.protocol+"//"+ self.location.host+"/speechcloud";
 	var linkables = [];
 	var speakables = [];
 	var focusables =["text","textarea"];	
@@ -26,11 +27,11 @@
 	function onResult(result) {}
 	function onLoaded() {}
 
-	var flashvars = {speechServer : "http://localhost:8080/speechcloud"};
+	var flashvars = {speechServer : url};
         var params = {allowscriptaccess : "always"};
 	var attributes = {};
 	attributes.id = "flashContent";
-	swfobject.embedSWF("http://localhost:8080/speechcloud/lib/speechapi-1.4.swf", "myAlternativeContent", "215", "138", "9.0.28", false,flashvars, params, attributes);
+	swfobject.embedSWF(url+"/lib/speechapi-1.8.swf", "myAlternativeContent", "215", "138", "9.0.28", false,flashvars, params, attributes);
 
 	speechapi.setupPage("sal","password",onResult,onTtsComplete, onLoaded, "flashContent",linkables,speakables,focusables,browserControl,formsEnabled);
 
