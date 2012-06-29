@@ -4,12 +4,17 @@
 
 <head>
   <meta http-equiv="Content-Type" content="text/html; charset=utf-8"></meta>
-  <title>Speech ATC Demo</title>`
-  <script type="text/javascript" src="http://localhost:8080/speechcloud/lib/speechapi-1.3.js"></script>
-  <script type="text/javascript" src="http://localhost:8080/speechcloud/lib/swfobject.js"></script>`
+  <title>Multiple Choice Demo</title>
+
+
+  <script type="text/javascript" src="../lib/speechapi-1.4.js"></script>
+  <script type="text/javascript" src="../lib/swfobject.js"></script>
+  <script language="JavaScript" type="text/javascript" >
+ 
   <script language="JavaScript" type="text/javascript" >
 
 
+        url =self.location.protocol+"//"+ self.location.host+"/speechcloud";
 
 	function onLoaded() {
 		oogBranchProb = document.getElementById('oogProb').value;
@@ -18,10 +23,15 @@
 		if(document.getElementById('oogFlag').value == "False") {
 			oogFlag = false;
 		}
-		startOver();
+
+		document.getElementById('spokenWords').innerHTML ="";
+		document.getElementById('answer').innerHTML = "";
+		document.getElementById('grammar').innerHTML = grammar;
+	   	var auto= false;
+	   	var gMode = "JSGF";
+	   	speechapi.setupRecognition(gMode, grammar, auto,oogFlag);
 	}
 
-	var stage = 0;
 	var oogBranchProb = "1e-25"; 
 	var phoneProb = "1e-20";
 	var oogFlag = false;
@@ -30,21 +40,21 @@
 
 	grammar = "#JSGF V1.0;\n";
 	grammar = grammar + "grammar test;\n";
-	grammar = grammar + "public <q1> = <A>{A} <B>{B} <C>{C} <D>{D} ;\n";
-	grammar = grammar + "<A> = <pre> A|Mars;\n";
-	grammar = grammar + "<B> = <pre> B|Saturn;\n";
-	grammar = grammar + "<C> = <pre> C|Venus;\n";
-	grammar = grammar + "<D> = <pre> D|Jupiter;\n";
-	grammar = grammar + "<pre> = [the answer is];\n";
+	grammar = grammar + "public <q1> = [<pre>] (<A>{A} | <B>{B} | <C>{C}| <D>{D}) ;\n";
+	grammar = grammar + "<A> = (one|Mars);\n";
+	grammar = grammar + "<B> = (two|Saturn);\n";
+	grammar = grammar + "<C> = (three|Venus);\n";
+	grammar = grammar + "<D> = (four|Jupiter);\n";
+	grammar = grammar + "<pre> = the answer is;\n";
 
 	
 
-	var flashvars = {speechServer : "http://localhost:8080/speechcloud"};
+	var flashvars = {speechServer : url};
         var params = {allowscriptaccess : "always"};
 	var attributes = {};
 	attributes.id = "flashContent";
 
-	swfobject.embedSWF("http://localhost:8080/speechcloud/lib/speechapi-1.5.swf", "myAlternativeContent", "215", "138", "9.0.28", false,flashvars, params, attributes);
+	swfobject.embedSWF(url+"/lib/speechapi-1.8.swf", "myAlternativeContent", "215", "138", "9.0.28", false,flashvars, params, attributes);
 
 	speechapi.setup("spencer","password",onResult, onFinishTTS, onLoaded, "flashContent");
 		
@@ -53,6 +63,9 @@
 	function onResult(result) {
 		if (result.oog == true) {
 			document.getElementById('oog').innerHTML = "Out of grammar, try again"; 
+			document.getElementById('response').innerHTML = "I did not understand";
+			document.getElementById('answer').innerHTML = ""
+			speechapi.speak("sorry I did not understand.","hmm-slt");
 		}else{
 			document.getElementById('oog').innerHTML = ""; 
 			//copy all tags to a associative array (should do this in the api!)
@@ -67,15 +80,20 @@
    			}
 
 
-			var s1Prompt1 = "good job!  You said" +result.text+".  Venus is the correct answer"; 
-			var s1Prompt2 = "Sorry, that is not correct. You said" +result.text+".  Try again."; 
+			var s1Prompt1 = "good job!  You said " +result.text+".  Venus is the correct answer"; 
+			var s1Prompt2 = "Sorry, that is not correct. You said " +result.text+".  Try again."; 
 			if ("q1" in tags ) {
+				document.getElementById('answer').innerHTML = tags["q1"];
 				if (tags["q1"] == "C") {
+					document.getElementById('response').innerHTML = s1Prompt1;
 					speechapi.speak(s1Prompt1,"hmm-slt");
 				} else {
+					document.getElementById('response').innerHTML = s1Prompt2;
 					speechapi.speak(s1Prompt2,"hmm-slt");
 				}
 			} else {
+				document.getElementById('response').innerHTML = "";
+				document.getElementById('answer').innerHTML = "no answer";
 				speechapi.speak("Error, No answer","hmm-slt");
 			}
 
@@ -95,26 +113,18 @@
 		oogBranchProb = document.getElementById('oogProb').value;
 		phoneProb = document.getElementById('phoneProb').value;
 		oogFlag = document.getElementById('oogFlag').value;
+
+		oogFlag = true;
+		if(document.getElementById('oogFlag').value == "False") {
+			oogFlag = false;
+		}
+		alert(oogFlag+" "+oogBranchProb+" "+phoneProb);
+
 		speechapi.setOogParams(oogBranchProb, phoneProb );
-		//speechapi.setupRecognition("SIMPLE", document.getElementById('words').value,false,oogFlag);
-	}	
-
-
-	function startOver() {
-		//alert("start over");
-		document.getElementById('spokenWords').innerHTML ="";
-
-		document.getElementById('stage').innerHTML = stage;
-		document.getElementById('grammar').innerHTML = grammar[s];
-		speechapi.speak(prompt,"hmm-slt");
-
 	   	var auto= false;
 	   	var gMode = "JSGF";
 	   	speechapi.setupRecognition(gMode, grammar, auto,oogFlag);
-	   	//Logger.info("start!");
-	   	//alert(grammar);
-	}
-
+	}	
 
 
 </script>
@@ -124,10 +134,10 @@
 <h4>Multiple Choice</h4>
 <p>Which planet is closest to the sun?</p>
 <ul>
-	<li>A. Mars</li>
-	<li>B. Saturn </li>
-	<li>C. Venus</li>
-	<li>D. Jupiter</li>
+	<li>1. Mars</li>
+	<li>2. Saturn </li>
+	<li>3. Venus</li>
+	<li>4. Jupiter</li>
 </ul>
 
 
@@ -136,11 +146,13 @@
 <table border="1" >
 
 <tr>
-	<td width="100"><input type="button" value="Start Over" onclick="startOver()"></td>
-	<td><b id="oog" width=600 ></td>
+	<td colspan="2"><b id='response' </td>
 </tr>
 <tr>
-	<td><b id="stage"/></td>
+	<td colspan="2"><b id='oog' </td>
+</tr>
+<tr>
+	<td><b id="answer"/></td>
 	<td><b id="spokenWords"/></td>
 </tr>
 

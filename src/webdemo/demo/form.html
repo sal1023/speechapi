@@ -3,7 +3,7 @@
 
 <h5>Synthesizer Form</h4>
 
-	<form action="http://localhost:8080/speechcloud/SpeechDownloadServlet" method="post" enctype="multipart/form-data">
+	<form action="../SpeechDownloadServlet" method="post" enctype="multipart/form-data">
 								Enter Text Below: <input  name="text" size=80 type="text" />
 							<br>
 							<br>
@@ -26,7 +26,7 @@
 
 <h5>Recognizer Form</h4>
 
-				<form action="http://localhost:8080/speechcloud/SpeechUploadServlet" method="post" enctype="multipart/form-data">
+				<form action="../SpeechUploadServlet" method="post" enctype="multipart/form-data">
 					    <input id="lmFlag" name="lmFlag" type="hidden" value="true">
 					    <input type="hidden" id="continuousFlag" name="continuousFlag" value="true">
 					    <input type="hidden" id="doEndpointing" name="doEndpointing" value="true" />

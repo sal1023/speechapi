@@ -1,12 +1,8 @@
 <?xml version="1.0" encoding="UTF-8"?>
 
 <project name="speechcloud" basedir="." default="help" xmlns:artifact="antlib:org.apache.maven.artifact.ant" xmlns:ivy="antlib:org.apache.ivy.ant">
-
-    
-      
     
 	<property environment="env" />
-
 	<property file="${basedir}/${user.name}.properties" />
         <property file="${user.home}/build.properties" />
         <property file="${basedir}/build.properties" />
@@ -20,12 +16,26 @@
 	<property name="build.war.home" value="${build.home}/war" />
 	<property name="name" value="${ant.project.name}" />
 	<property name="war.filename" value="${name}.war" />
+	<property name="marybase" value="c:/thirdparty/marytts" />
 	
 	<property name="schema.name" value="${name}.sql" />
 	<property name="sql.dir" value="${basedir}/sql" />
 	
 	<property name="lib.dir" value="${basedir}/lib" />
-	
+	<property name="verbose" value="true" />
+
+	<property name="appserver.lib" value="${catalina.home}/lib" />
+	<property name="deploy.path" value="${appserver.home}/webapps" />
+	<property name="tomcat.manager.url" value="http://localhost:8090/manager" />
+	<property name="tomcat.manager.username" value="tomcat" />
+	<property name="tomcat.manager.password" value="s3cret" />
+
+	<property name="pkg.server" value="com.spokentech.speechdown.server" />
+	<property name="server.wsdl.location" value="${basedir}/etc/"/>
+	<property name="server.binding.files" value="customfile-server.xml"/>
+
+
+        <!-- begin delete this -->	
 	<property name="freetts.jar" value="${lib.dir}/freetts-SNAPSHOT.jar" />
 	<property name="log4j.jar" value="${lib.dir}/log4j-1.2.14.jar" />
 	<property name="spring.jar" value="${lib.dir}/spring-2.5.5.jar" />
@@ -41,48 +51,27 @@
 	<property name="sphinx4.jar" value="${lib.dir}/sphinx4.jar" />
 	<property name="jsapi.jar" value="${lib.dir}/jsapi.jar" />
 	<property name="jmf.jar" value="${lib.dir}/jmf.jar" />
-
 	<property name="jsapi-1.0-base.jar" value="${lib.dir}/jsapi-1.0-base.jar" />
-	
 	<property name="aws-java-sdk.jar" value="${lib.dir}/aws-java-sdk-1.0.005.jar" />
-	
-	
 	<property name="hibernate.jar" value="${lib.dir}/hibernate3.jar" />
 	<property name="hsqldb.jar" value="${lib.dir}/hsqldb.jar" />
         <property name="jta.jar" value="${lib.dir}/jta-1.1.jar" />
-    
         <property name="postgresql-jdbc-driver.jar" value="${lib.dir}/postgresql-8.4-701.jdbc4.jar" />
-
 	<property name="mary-common.jar" value="${lib.dir}/mary-common.jar" />
-	
 	<property name="jlibrtp.jar" value="${lib.dir}/jlibrtp.jar" />
 	<property name="jdom.jar" value="${lib.dir}/jdom.jar" />
 	<property name="dom4j.jar" value="${lib.dir}/dom4j-1.6.1.jar" />
-	
 	<property name="slf4j-api.jar" value="${lib.dir}/slf4j-api-1.5.10.jar" />
 	<property name="slf4j-jcl.jar" value="${lib.dir}/slf4j-jcl-1.5.10.jar" />
-
         <property name="servlet-api.jar" value="${catalina.home}/lib/servlet-api.jar" />
 	<property name="commons-logging.jar" value="${lib.dir}/commons-logging.jar" />
 	<property name="commons-fileupload.jar" value="${lib.dir}/commons-fileupload-1.2.1.jar" />
 	<property name="commons-io.jar" value="${lib.dir}/commons-io-1.4.jar" />
 	<property name="jstl.jar" value="${catalina.home}/webapps/examples/WEB-INF/lib/jstl.jar" />
 	<property name="standard.jar" value="${catalina.home}/webapps/examples/WEB-INF/lib/standard.jar" />
-	
-	
         <property name="xuggle-xuggler.jar" value="${lib.dir}/xuggle-xuggler-5.2.jar" />
+        <!-- end delete this -->	
 	
-	<property name="verbose" value="true" />
-
-	<property name="appserver.lib" value="${catalina.home}/lib" />
-	<property name="deploy.path" value="${appserver.home}/webapps" />
-	<property name="tomcat.manager.url" value="http://localhost:8090/manager" />
-	<property name="tomcat.manager.username" value="tomcat" />
-	<property name="tomcat.manager.password" value="s3cret" />
-
-	<property name="pkg.server" value="com.spokentech.speechdown.server" />
-	<property name="server.wsdl.location" value="${basedir}/etc/"/>
-	<property name="server.binding.files" value="customfile-server.xml"/>
 
         <path id="maven-ant-tasks.classpath" path="${lib.dir}/maven-ant-tasks-2.1.0.jar" />
         <typedef resource="org/apache/maven/artifact/ant/antlib.xml"
@@ -113,7 +102,7 @@
 		<pathelement location="${build.classes.home}" />
 	</path>
 	
-	<path id="speech.classpath">
+	<path id="old.speech.classpath">
 		<pathelement location="${java.home}/../lib/tools.jar" />
 		<pathelement	location="${commons-pool.jar}" />
 		<pathelement	location="${commons-lang.jar}" />
@@ -125,9 +114,7 @@
 		<pathelement	location="${jsapi-1.0-base.jar}" />
 		<pathelement	location="${jsapi.jar}" />
 		<pathelement	location="${jmf.jar}" />
-				
 		<pathelement	location="${cairo-rtp.jar}" />
-		
 		<pathelement	location="${servlet-api.jar}" />
 		<pathelement	location="${commons-fileupload.jar}" />
 		<pathelement	location="${commons-io.jar}" />
@@ -137,20 +124,15 @@
 		<pathelement	location="${httpclient.jar}" />
 		<pathelement	location="${httpcore.jar}" />
 		<pathelement	location="${commons-logging.jar}" />
-				
 		<pathelement	location="${hibernate.jar}" />
 		<!--pathelement	location="${jstl.jar}" /-->
 	        <!--pathelement	location="${standard.jar}" /-->
-	    
 		<pathelement	location="${mary-common.jar}" />
 		<pathelement	location="${jlibrtp.jar}" />
 		<pathelement	location="${jdom.jar}" />
-
 		<pathelement	location="${xuggle-xuggler.jar}" />
 		<pathelement    location="${java.home}/lib/plugin.jar" />
-		
 		<pathelement	location="${aws-java-sdk.jar}" />
-		
 		<fileset dir="${jaxws.home}/lib">
 			<include name="*.jar" />
 			<exclude name="j2ee.jar" />
@@ -163,13 +145,20 @@
 		<pathelement	location="${commons-pool.jar}" />
 		<pathelement	location="${commons-lang.jar}" />
 		<pathelement	location="${cairo-rtp.jar}" />
-		
 		<pathelement	location="${httpmime.jar}" />
 		<pathelement	location="${mime4j.jar}" />
 		<pathelement	location="${httpclient.jar}" />
 		<pathelement	location="${httpcore.jar}" />
 		<pathelement    location="${java.home}/lib/plugin.jar" />
 	</path>
+
+    <path id="speech.classpath">
+        <pathelement location="${java.home}/../lib/tools.jar" />
+        <pathelement    location="${java.home}/lib/plugin.jar" />
+         <fileset dir="${lib.dir}">
+              <include name="*.jar"/>
+         </fileset>
+    </path>
 
 	
 
@@ -193,8 +182,6 @@
       <artifact:remoteRepository id="gson"
                              url="http://google-gson.googlecode.com/svn/mavenrepo" />
     </artifact:dependencies>
-    
-    
     
     <artifact:dependencies filesetId="rest.dependency.fileset"
                              useScope="runtime"
@@ -220,13 +207,6 @@
 
 	
 
-	<taskdef name="apt" classname="com.sun.tools.ws.ant.Apt">
-		<classpath refid="speech.classpath" />
-	</taskdef>
-	
-	<taskdef name="wsimport" classname="com.sun.tools.ws.ant.WsImport">
-		<classpath refid="speech.classpath" />
-	</taskdef>
 
 	<target name="setup">
 		<mkdir dir="${build.home}" />
@@ -255,22 +235,8 @@
  	
 	<target name="server" depends="clean, deploy" />
 
-    <target name="import-wsdl-server" depends="setup"> 
-      <antcall target="do-wsdl2java">
-        <param name="pkg" value="${pkg.server}"/>
-        <param name="wsdl.location" value="${server.wsdl.location}"/>
-        <param name="wsdl.file" value="${server.wsdl.location}/SpeechAttach.wsdl"/>
-        <param name="customization.binding.files" value="${server.binding.files}"/>
-      </antcall>
-      <antcall target="do-wsdl2java">
-        <param name="pkg" value="${pkg.server}"/>
-        <param name="wsdl.location" value="${server.wsdl.location}"/>
-        <param name="wsdl.file" value="${server.wsdl.location}/SpeechLink.wsdl"/>
-        <param name="customization.binding.files" value="${server.binding.files}"/>
-      </antcall>
-    </target>
     
-    <target name="compile-server" depends="import-wsdl-server">    <!-- add resolve in depends for ivy -->
+    <target name="compile-server" depends="setup">    <!-- add resolve in depends for ivy -->
       <echo message="compile-server" />
 
       <javac srcdir="${basedir}/src/java"
@@ -286,46 +252,6 @@
 	   </javac>
     </target>
     
-	<!-- for creating a war that can be used with google app server -->
-	<!-- TODO: Get it to work (not working yet)                      -->	
-	<target name="create-gae-war" depends="compile-server,jar-model">
-		
-		<filter token="serviceLoggingFlag" value="true" />
-		<filter token="applicationContext.recognizerService.baseGrammarDir" value="c:/temp" />
-		<filter token="applicationContext.recognizerService.sphinxConfigFile" value="file:///${catalina.home}/webapps/${ant.project.name}/WEB-INF/sphinx-config-2pools.xml" />
-		<filter token="applicationContext.synthesizerService.prefix" value="http://${catalina.host}:${catalina.port}/${ant.project.name}/prompts/" />
-		<filter token="applicationContext.synthesizerService.promptDir" value="${catalina.home}/webapps/${ant.project.name}/prompts" />
-		<copy todir="${build.war.home}/WEB-INF" overwrite="true" filtering="true">
-			<fileset dir="${basedir}/etc" includes="*.xml" />
-		</copy>
-		
-		
-		<copy todir="${build.war.home}/WEB-INF/lib">
-           <fileset refid="rest.dependency.fileset" />
-           <mapper classpathref="maven-ant-tasks.classpath"
-               classname="org.apache.maven.artifact.ant.VersionMapper"
-               from="${dependency.versions}" to="flatten" />
-        </copy>
-
-		<war warfile="${build.war.home}/gae-${war.filename}" webxml="${build.war.home}/WEB-INF/web.xml">
-
-			<webinf dir="${build.war.home}/WEB-INF" includes="*.xml" />
-			<zipfileset dir="etc/prompts" prefix="prompts" />
-			<zipfileset dir="etc/grammar" prefix="grammar" />
-			<!--zipfileset dir="etc/lm" prefix="lm" /-->
-			<zipfileset dir="${basedir}/etc" prefix="WEB-INF/wsdl" includes="*.wsdl, *.xsd" />			
-			<zipfileset dir="${basedir}/src/java" prefix="WEB-INF/classes" includes="**/*.hbm.xml" />
-			<zipfileset dir="${basedir}/etc" prefix="WEB-INF/classes" includes="log4j.xml, hibernate.cfg.xml" />
-			<classes dir="${build.classes.home}" />
-			<lib dir="${basedir}/lib" />
-		    <lib file="${language.model}" />
-		    <lib file="${build.war.home}/lib/${accoustic.model.name}.jar" />
-
-			<lib dir="${build.war.home}/WEB-INF/lib" />
-			
-		</war>
-	</target>	
-	         
 
 
 	<!-- create a war for http speech server -->
@@ -341,15 +267,13 @@
 		</copy>
 		
 		<copy todir="${build.war.home}/WEB-INF/lib">
-           <fileset refid="rest.dependency.fileset" />
-           <mapper classpathref="maven-ant-tasks.classpath"
-               classname="org.apache.maven.artifact.ant.VersionMapper"
-               from="${dependency.versions}" to="flatten" />
-        </copy>
+                     <fileset refid="rest.dependency.fileset" />
+                     <mapper classpathref="maven-ant-tasks.classpath"
+                             classname="org.apache.maven.artifact.ant.VersionMapper"
+                             from="${dependency.versions}" to="flatten" />
+                </copy>
 
-
-		<war warfile="${build.war.home}/${war.filename}" webxml="${build.war.home}/WEB-INF/web.xml">
-
+		<war warfile="${build.war.home}/${war.filename}" webxml="${build.war.home}/WEB-INF/web.xml" duplicate="preserve">
 			<webinf dir="${build.war.home}/WEB-INF" includes="*.xml" />
 			<zipfileset dir="etc/prompts" prefix="prompts" />
 			<zipfileset dir="etc/grammar" prefix="grammar" />
@@ -357,146 +281,44 @@
 			<zipfileset dir="${basedir}/etc" prefix="WEB-INF/wsdl" includes="*.wsdl, *.xsd" />			
 			<zipfileset dir="${basedir}/src/java" prefix="WEB-INF/classes" includes="**/*.hbm.xml" />
 			<zipfileset dir="${basedir}/etc" prefix="WEB-INF/classes" includes="log4j.xml, hibernate.cfg.xml,speech.properties" />
-		    <zipfileset dir="${basedir}/src/webdemo"  includes="lib/**,demo/**" />
-			
+		        <zipfileset dir="${basedir}/src/webdemo"  includes="lib/**,demo/**" />
 			<classes dir="${build.classes.home}" />
 			<lib dir="${basedir}/lib" includes="*.jar,*.txt" />
-			<!--lib dir="${basedir}/lib/mary" /-->
+			<lib dir="${marybase}/java" includes="*.jar" />
 			<!--lib dir="${basedir}/lib/sphinx4" /-->
 			<lib dir="${build.war.home}/WEB-INF/lib" />
-			
 		</war>
 	</target>
-	
-	
-	<!-- create a war for http speech server                                                -->
-	<!-- TODO: combine the two war targets (maybe use properties to control the type of war -->
-	<target name="create-ami-war" depends="compile-server">		
-		<filter token="serviceLoggingFlag" value="true" />
-		<filter token="applicationContext.recognizerService.baseGrammarDir" value="/tmp" />
-		<filter token="application.context" value="/WEB-INF/ami-applicationContext2.xml" />
-		<filter token="applicationContext.recognizerService.sphinxConfigFile" value="file:///${catalina.home}/webapps/${ant.project.name}/WEB-INF/sphinx-config-5pools.xml" />
-		<filter token="applicationContext.synthesizerService.prefix" value="http://${catalina.host}:${catalina.port}/${ant.project.name}/prompts/" />
-		<filter token="applicationContext.synthesizerService.promptDir" value="${catalina.home}/webapps/${ant.project.name}/prompts" />
-		<copy todir="${build.war.home}/WEB-INF" overwrite="true" filtering="true">
-			<fileset dir="${basedir}/etc" includes="*.xml" />
-		</copy>
-		
-		<copy todir="${build.war.home}/WEB-INF/lib">
-           <fileset refid="rest.dependency.fileset" />
-           <mapper classpathref="maven-ant-tasks.classpath"
-               classname="org.apache.maven.artifact.ant.VersionMapper"
-               from="${dependency.versions}" to="flatten" />
-        </copy>
-
-		<war warfile="${build.war.home}/${war.filename}" webxml="${build.war.home}/WEB-INF/web.xml">
-
-			<webinf dir="${build.war.home}/WEB-INF" includes="*.xml" />
-			<zipfileset dir="etc/prompts" prefix="prompts" />
-			<zipfileset dir="etc/grammar" prefix="grammar" />
-			<!--zipfileset dir="etc/lm" prefix="lm" /-->
-			<zipfileset dir="${basedir}/etc" prefix="WEB-INF/wsdl" includes="*.wsdl, *.xsd" />			
-			<zipfileset dir="${basedir}/src/java" prefix="WEB-INF/classes" includes="**/*.hbm.xml" />
-			<zipfileset dir="${basedir}/etc" prefix="WEB-INF/classes" includes="log4j.xml, hibernate.cfg.xml" />
-			<classes dir="${build.classes.home}" />
-			<lib dir="${basedir}/lib" />
-			<lib dir="${build.war.home}/WEB-INF/lib" />
-
-		</war>
-	</target>
-
-
-
-	<!-- create a war for http speech server for BETA                                          -->
-	<!-- TODO: combine the THREE  war targets (maybe use properties to control the type of war -->
-	<target name="create-beta-war" depends="compile-server">		
-		<filter token="serviceLoggingFlag" value="true" />
-		<filter token="applicationContext.recognizerService.baseGrammarDir" value="/tmp" />
-		<filter token="application.context" value="/WEB-INF/beta-applicationContext.xml" />
-		<filter token="applicationContext.recognizerService.sphinxConfigFile" value="file:///${catalina.home}/webapps/${ant.project.name}/WEB-INF/sphinx-config-beta.xml" />
-		<filter token="applicationContext.synthesizerService.prefix" value="http://${catalina.host}:${catalina.port}/${ant.project.name}/prompts/" />
-		<filter token="applicationContext.synthesizerService.promptDir" value="${catalina.home}/webapps/${ant.project.name}/prompts" />
-		<copy todir="${build.war.home}/WEB-INF" overwrite="true" filtering="true">
-			<fileset dir="${basedir}/etc" includes="*.xml" />
-		</copy>
-		
-		<copy todir="${build.war.home}/WEB-INF/lib">
-           <fileset refid="rest.dependency.fileset" />
-           <mapper classpathref="maven-ant-tasks.classpath"
-               classname="org.apache.maven.artifact.ant.VersionMapper"
-               from="${dependency.versions}" to="flatten" />
-        </copy>
-
-		<war warfile="${build.war.home}/${war.filename}" webxml="${build.war.home}/WEB-INF/web.xml">
-
-			<webinf dir="${build.war.home}/WEB-INF" includes="*.xml" />
-			<zipfileset dir="etc/prompts" prefix="prompts" />
-			<zipfileset dir="etc/grammar" prefix="grammar" />
-			<!--zipfileset dir="etc/lm" prefix="lm" /-->
-			<zipfileset dir="${basedir}/etc" prefix="WEB-INF/wsdl" includes="*.wsdl, *.xsd" />			
-			<zipfileset dir="${basedir}/src/java" prefix="WEB-INF/classes" includes="**/*.hbm.xml" />
-			<zipfileset dir="${basedir}/etc" prefix="WEB-INF/classes" includes="log4j.xml, hibernate.cfg.xml" />
-			<classes dir="${build.classes.home}" />
-			<lib dir="${basedir}/lib" />
-			<lib dir="${build.war.home}/WEB-INF/lib" />
-
-		</war>
-	</target>
-	
 	
 	<!-- deploy the http server -->
 	<target name="deploy">
 		<copy file="${build.war.home}/${war.filename}" todir="${catalina.home}/webapps" />
 	</target>
 
-
-	<!-- TODO: Is this used -->
-	<target name="build-server-java" depends="setup">
-		<apt
-			fork="true"
-			debug="true"
-			verbose="${verbose}"
-			destdir="${build.classes.home}"
-			sourcedestdir="${build.classes.home}"
-			sourcepath="${basedir}/src/java">
-			<classpath>
-				<path refid="speech.classpath" />
-				<pathelement location="${basedir}/src/java" />
-				<pathelement location="${build.classes.home}" />
-			</classpath>
-			<option key="r" value="${build.home}" />
-			<source dir="${basedir}/src/java">
-			<include name="**/server/ws/SpeechServiceImpl.java" />
-			<!--include name="**/common/**/*.java" /-->
-			</source>
-		</apt>
-	</target>
-	
-	
 		
 	<!-- ********************************************************** -->
 	<!-- *				Standalone Speech Server				  * -->
  	<!-- ********************************************************** -->
  	
-	<!-- TODO: Compile the standalone server code  (with out wsdl dependency)-->
-	<!-- now the jar-server target,  jars the classes from the complete server compile -->
-	<target name="compile-standalone-server" depends="setup">
-      <echo message="compile-server" />
-      <javac srcdir="${basedir}/src/java"
-        destdir="${build.classes.home}"
-        includes="**/server/**, **/common/**"
-        debug="on"
-        failonerror="true">
-        <classpath>
-        		<path refid="speech.classpath" />
-				<pathelement location="${build.classes.home}" />
-		</classpath>
-	   </javac>
+     <!-- TODO: Compile the standalone server code  (with out wsdl dependency)-->
+     <!-- now the jar-server target,  jars the classes from the complete server compile -->
+     <target name="compile-standalone-server" depends="setup">
+        <echo message="compile-server" />
+        <javac srcdir="${basedir}/src/java"
+            destdir="${build.classes.home}"
+            includes="**/server/**, **/common/**"
+            debug="on"
+            failonerror="true">
+            <classpath>
+                <path refid="speech.classpath" />
+		<pathelement location="${build.classes.home}" />
+	    </classpath>
+        </javac>
     </target>
 
 
-   <!-- Jar the standalone server  -->	
-   <target name="jar-server" depends="compile-server">
+    <!-- Jar the standalone server  -->	
+    <target name="jar-server" depends="compile-server">
         <jar destfile="${basedir}/lib//speechcloud-server.jar"
              basedir="${build.classes.home}"
              filesonly="true"
@@ -559,66 +381,9 @@
     </target>
 
 
-    <target name="import-wsdl-client">
-      <antcall target="do-wsdl2java">
-        <param name="pkg" value="${pkg.client}"/>
-        <param name="wsdl.location" value="${client.wsdl.location}"/>
-        <param name="sourcedestdir" value="${build.generated.home}"/>
-<!--        <param name="wsdl.file" value="${client.wsdl.location}"/> -->
-        <param name="customization.binding.files" value="${client.binding.files}"/>
-      </antcall>
-    </target>
     
     
     
-     <!-- TODO:  Not sure if this is used  -->
-    <target name="compile-client">
-      <echo message="compile-client" />
-      <javac srcdir="src/java"
-        destdir="${build.classes.home}"
-        classpathref="speechcloud.client.classpath"
-        includes="client/**, common/**"
-        debug="on"
-        debuglevel="lines,vars,source" 
-        failonerror="true"/>
-    </target>
-
-    <!-- TODO:  Not sure if this is used or works  -->
-	<target name="run">
-		<java fork="true" classname="com.spokentech.speechdown.client.SpeechServiceClient">
-			<classpath>
-				<path refid="speech.classpath" />
-				<pathelement location="${build.client.classes.home}" />
-				<pathelement location="${basedir}/etc" />
-			</classpath>
-		</java>
-	</target>   
-
-
-	<!-- ********************************************************** -->
-	<!-- *				SOAP/WSDL								  * -->
- 	<!-- ********************************************************** -->
- 		
-
-    <!-- generates portable artifacts WSDL-to-Java (wsimport) -->
-    <!-- uses binding customizations to specify where artifacts go -->
-    <target name="do-wsdl2java">
-           <echo message="Invoking WsImport task (WSDL-to-Java mapping)" />
-           <wsimport 
-              fork="true"
-              package="${pkg}"
-              verbose="${verbose}"
-              debug="${wsimport.debug}"
-              destdir="${build.classes.home}"
-              sourcedestdir="${build.generated.home}"
-              keep="true"
-              wsdllocation="${wsdl.location}"
-              wsdl="${wsdl.file}">
-              <binding dir="." includes="${customization.binding.files}"/>
-           </wsimport>
-    </target> 
-    
-
 
 	<!-- ================================================================== -->
 	<!-- Tomcat tasks - can remove these if you don't have Tomcat installed -->
@@ -696,11 +461,10 @@
         </schemavalidator>
     </target>
 	
-	<target name="sal">
+    <target name="sal">
 		<taskdef name="hibernatetool"
 		                classname="org.hibernate.tool.ant.HibernateToolTask"
 		                classpathref="hib.classpath"/>
-	
 	
 	    <hibernatetool destdir="${sql.dir}">
 		 <classpath>
@@ -710,7 +474,7 @@
 		 <hbm2ddl export="false" outputfilename="${schema.name}.sql"/>
 	
 		</hibernatetool>
-	</target>
+    </target>
 	
 		    
     <!-- ********************************************************** -->
@@ -718,29 +482,27 @@
     <!-- * Create the acoustic model  jar.                        * -->
     <!-- *                                                        * -->
     <!-- ********************************************************** -->
-    
-    <target name="jar-model"
-            description="Jar the accoustic model.">
+    <target name="jar-model" description="Jar the accoustic model.">
         <jar destfile="${build.war.home}/lib/${accoustic.model.name}.jar"
              basedir="${accoustic.model.dir}"
              filesonly="true"
              compress="true"/>
     </target>
 	
-	   <target name="jar-language-model"
+    <target name="jar-language-model"
 	            description="Jar the accoustic model.">
 	        <jar destfile="${build.war.home}/lib/${language.model.name}.jar"
 	             basedir="${language.model.dir}"
 	             filesonly="true"
 	             compress="true"/>
-	    </target>
+    </target>
 	
 	
-	<target name="help">
+    <target name="help">
 		<echo message="server:				Builds and deploys the service endpoint WAR" />
 		<echo message="client:				Builds the client" />
 		<echo message="run:					Runs the client" />
-	</target>
+    </target>
 	
 	
     
@@ -751,7 +513,7 @@
 <!-- ********************************************************** -->	
 	
     <target name="dist"   description="Create the downloadable distribution."  depends="create-war">
-	    <zip destfile="${dist.home}/${dist.name}-${dist.version}.zip">
+	 <zip destfile="${dist.home}/${dist.name}-${dist.version}.zip">
 	    <zipfileset dir="${openmary.dir}" prefix="${dist.name}-${dist.version}/mary" includes="conf/**,lib/**,java/**" />
 	    <zipfileset dir="${sphinx.home}/models/language/wsj" prefix="${dist.name}-${dist.version}/models/language/wsj"/>
 	    <zipfileset dir="${build.war.home}" includes="${war.filename}" prefix="${dist.name}-${dist.version}"/>
@@ -759,14 +521,162 @@
 	    <zipfileset dir="${basedir}" prefix="${dist.name}-${dist.version}" includes="Readme.txt"/>
 	    <zipfileset dir="${basedir}/src/examples" prefix="${dist.name}-${dist.version}/examples" includes="**" />
 	    <zipfileset dir="${speechcloud.cli.home}" prefix="${dist.name}-${dist.version}/examples/speechcloud-cli" includes="**" />
-		
 	  </zip>
     	
-      <tar destfile="${dist.home}/${dist.name}-${dist.version}.tar.gz" compression="gzip">
-    	  <zipfileset src="${dist.home}/${dist.name}-${dist.version}.zip"/>
-      </tar>
+          <tar destfile="${dist.home}/${dist.name}-${dist.version}.tar.gz" compression="gzip">
+    	      <zipfileset src="${dist.home}/${dist.name}-${dist.version}.zip"/>
+          </tar>
+     </target>
 
-    	
+
+
+
+<!-- ********************************************************** -->
+<!-- *                                                        * -->
+<!-- * Probably can delete the following                      * -->
+<!-- *                                                        * -->
+<!-- ********************************************************** -->	
+	
+    <!-- TODO:  Not sure if this is used or works  -->
+	<target name="run">
+		<java fork="true" classname="com.spokentech.speechdown.client.SpeechServiceClient">
+			<classpath>
+				<path refid="speech.classpath" />
+				<pathelement location="${build.client.classes.home}" />
+				<pathelement location="${basedir}/etc" />
+			</classpath>
+		</java>
+	</target>   
+
+
+
+	
+	<!-- create a war for http speech server                                                -->
+	<!-- TODO: combine the two war targets (maybe use properties to control the type of war -->
+	<target name="create-ami-war" depends="compile-server">		
+		<filter token="serviceLoggingFlag" value="true" />
+		<filter token="applicationContext.recognizerService.baseGrammarDir" value="/tmp" />
+		<filter token="application.context" value="/WEB-INF/ami-applicationContext2.xml" />
+		<filter token="applicationContext.recognizerService.sphinxConfigFile" value="file:///${catalina.home}/webapps/${ant.project.name}/WEB-INF/sphinx-config-5pools.xml" />
+		<filter token="applicationContext.synthesizerService.prefix" value="http://${catalina.host}:${catalina.port}/${ant.project.name}/prompts/" />
+		<filter token="applicationContext.synthesizerService.promptDir" value="${catalina.home}/webapps/${ant.project.name}/prompts" />
+		<copy todir="${build.war.home}/WEB-INF" overwrite="true" filtering="true">
+			<fileset dir="${basedir}/etc" includes="*.xml" />
+		</copy>
+		
+		<copy todir="${build.war.home}/WEB-INF/lib">
+           <fileset refid="rest.dependency.fileset" />
+           <mapper classpathref="maven-ant-tasks.classpath"
+               classname="org.apache.maven.artifact.ant.VersionMapper"
+               from="${dependency.versions}" to="flatten" />
+        </copy>
+
+		<war warfile="${build.war.home}/${war.filename}" webxml="${build.war.home}/WEB-INF/web.xml">
+
+			<webinf dir="${build.war.home}/WEB-INF" includes="*.xml" />
+			<zipfileset dir="etc/prompts" prefix="prompts" />
+			<zipfileset dir="etc/grammar" prefix="grammar" />
+			<!--zipfileset dir="etc/lm" prefix="lm" /-->
+			<zipfileset dir="${basedir}/etc" prefix="WEB-INF/wsdl" includes="*.wsdl, *.xsd" />			
+			<zipfileset dir="${basedir}/src/java" prefix="WEB-INF/classes" includes="**/*.hbm.xml" />
+			<zipfileset dir="${basedir}/etc" prefix="WEB-INF/classes" includes="log4j.xml, hibernate.cfg.xml" />
+			<classes dir="${build.classes.home}" />
+			<lib dir="${basedir}/lib" />
+			<lib dir="${build.war.home}/WEB-INF/lib" />
+
+		</war>
 	</target>
+
+
+
+	<!-- create a war for http speech server for BETA                                          -->
+	<!-- TODO: combine the THREE  war targets (maybe use properties to control the type of war -->
+	<target name="create-beta-war" depends="compile-server">		
+		<filter token="serviceLoggingFlag" value="true" />
+		<filter token="applicationContext.recognizerService.baseGrammarDir" value="/tmp" />
+		<filter token="application.context" value="/WEB-INF/beta-applicationContext.xml" />
+		<filter token="applicationContext.recognizerService.sphinxConfigFile" value="file:///${catalina.home}/webapps/${ant.project.name}/WEB-INF/sphinx-config-beta.xml" />
+		<filter token="applicationContext.synthesizerService.prefix" value="http://${catalina.host}:${catalina.port}/${ant.project.name}/prompts/" />
+		<filter token="applicationContext.synthesizerService.promptDir" value="${catalina.home}/webapps/${ant.project.name}/prompts" />
+		<copy todir="${build.war.home}/WEB-INF" overwrite="true" filtering="true">
+			<fileset dir="${basedir}/etc" includes="*.xml" />
+		</copy>
+		
+		<copy todir="${build.war.home}/WEB-INF/lib">
+           <fileset refid="rest.dependency.fileset" />
+           <mapper classpathref="maven-ant-tasks.classpath"
+               classname="org.apache.maven.artifact.ant.VersionMapper"
+               from="${dependency.versions}" to="flatten" />
+        </copy>
+
+		<war warfile="${build.war.home}/${war.filename}" webxml="${build.war.home}/WEB-INF/web.xml">
+
+			<webinf dir="${build.war.home}/WEB-INF" includes="*.xml" />
+			<zipfileset dir="etc/prompts" prefix="prompts" />
+			<zipfileset dir="etc/grammar" prefix="grammar" />
+			<!--zipfileset dir="etc/lm" prefix="lm" /-->
+			<zipfileset dir="${basedir}/etc" prefix="WEB-INF/wsdl" includes="*.wsdl, *.xsd" />			
+			<zipfileset dir="${basedir}/src/java" prefix="WEB-INF/classes" includes="**/*.hbm.xml" />
+			<zipfileset dir="${basedir}/etc" prefix="WEB-INF/classes" includes="log4j.xml, hibernate.cfg.xml" />
+			<classes dir="${build.classes.home}" />
+			<lib dir="${basedir}/lib" />
+			<lib dir="${build.war.home}/WEB-INF/lib" />
+
+		</war>
+	</target>
+
+
+     <!-- TODO:  Not sure if this is used  -->
+    <target name="compile-client">
+      <echo message="compile-client" />
+      <javac srcdir="src/java"
+        destdir="${build.classes.home}"
+        classpathref="speechcloud.client.classpath"
+        includes="client/**, common/**"
+        debug="on"
+        debuglevel="lines,vars,source" 
+        failonerror="true"/>
+    </target>
+
+	<!-- for creating a war that can be used with google app server -->
+	<!-- TODO: Get it to work (not working yet)                      -->	
+	<target name="create-gae-war" depends="compile-server,jar-model">
+		
+		<filter token="serviceLoggingFlag" value="true" />
+		<filter token="applicationContext.recognizerService.baseGrammarDir" value="c:/temp" />
+		<filter token="applicationContext.recognizerService.sphinxConfigFile" value="file:///${catalina.home}/webapps/${ant.project.name}/WEB-INF/sphinx-config-2pools.xml" />
+		<filter token="applicationContext.synthesizerService.prefix" value="http://${catalina.host}:${catalina.port}/${ant.project.name}/prompts/" />
+		<filter token="applicationContext.synthesizerService.promptDir" value="${catalina.home}/webapps/${ant.project.name}/prompts" />
+		<copy todir="${build.war.home}/WEB-INF" overwrite="true" filtering="true">
+			<fileset dir="${basedir}/etc" includes="*.xml" />
+		</copy>
+		
+		
+		<copy todir="${build.war.home}/WEB-INF/lib">
+           <fileset refid="rest.dependency.fileset" />
+           <mapper classpathref="maven-ant-tasks.classpath"
+               classname="org.apache.maven.artifact.ant.VersionMapper"
+               from="${dependency.versions}" to="flatten" />
+        </copy>
+
+		<war warfile="${build.war.home}/gae-${war.filename}" webxml="${build.war.home}/WEB-INF/web.xml">
+
+			<webinf dir="${build.war.home}/WEB-INF" includes="*.xml" />
+			<zipfileset dir="etc/prompts" prefix="prompts" />
+			<zipfileset dir="etc/grammar" prefix="grammar" />
+			<!--zipfileset dir="etc/lm" prefix="lm" /-->
+			<zipfileset dir="${basedir}/etc" prefix="WEB-INF/wsdl" includes="*.wsdl, *.xsd" />			
+			<zipfileset dir="${basedir}/src/java" prefix="WEB-INF/classes" includes="**/*.hbm.xml" />
+			<zipfileset dir="${basedir}/etc" prefix="WEB-INF/classes" includes="log4j.xml, hibernate.cfg.xml" />
+			<classes dir="${build.classes.home}" />
+			<lib dir="${basedir}/lib" />
+		    <lib file="${language.model}" />
+		    <lib file="${build.war.home}/lib/${accoustic.model.name}.jar" />
+
+			<lib dir="${build.war.home}/WEB-INF/lib" />
+			
+		</war>
+	</target>	
+
 
 </project>

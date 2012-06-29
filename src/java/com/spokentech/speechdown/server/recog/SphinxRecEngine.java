@@ -12,6 +12,7 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStreamWriter;
 import java.io.PrintWriter;
+import java.net.MalformedURLException;
 import java.text.DecimalFormat;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
@@ -44,6 +45,7 @@ import com.spokentech.speechdown.common.sphinx.IdentityStage;
 import com.spokentech.speechdown.common.sphinx.InsertSpeechSignalStage;
 import com.spokentech.speechdown.common.sphinx.SpeechDataMonitor;
 import com.spokentech.speechdown.common.sphinx.WavWriter;
+import com.spokentech.speechdown.server.SpeechApiGrammarException;
 import com.spokentech.speechdown.server.domain.SpeechRequestDTO;
 import com.spokentech.speechdown.server.domain.RecogRequest;
 import com.spokentech.speechdown.server.util.ResultUtils;
@@ -498,7 +500,7 @@ public class SphinxRecEngine implements RecEngine {
 	//recognize using a grammar
 	public Utterance recognize(InputStream as, String mimeType, String grammar, AFormat af, OutputFormat outMode,  boolean doEndpointing, 
 			                   boolean cmnBatch, boolean oog, double oogBranchProb, double phoneInsertionProb, 
-			                   String amId, String lmId, String dictionaryID,  SpeechRequestDTO hr) {
+			                   String amId, String lmId, String dictionaryID,  SpeechRequestDTO hr) throws SpeechApiGrammarException {
 
 		long  start = System.nanoTime();
     	long startTime= System.currentTimeMillis();
@@ -585,10 +587,16 @@ public class SphinxRecEngine implements RecEngine {
 		GrammarLocation grammarLocation = null;
 		Result r = null; 
 	    Utterance utterance = null;
-	    try {
+	    //try {
 	    	_logger.info(grammar);
 	    	//save and load the grammar
-	        grammarLocation = grammarManager.saveGrammar(grammar);
+	        try {
+				grammarLocation = grammarManager.saveGrammar(grammar);
+			} catch (IOException e1) {
+				// TODO Auto-generated catch block
+				e1.printStackTrace();
+				throw new SpeechApiGrammarException(e1.getMessage());
+			}
 	        loadJSGF(jsgf, grammarLocation);
 	        _logger.debug("After save and load grammar" + System.currentTimeMillis());
 	        
@@ -620,17 +628,12 @@ public class SphinxRecEngine implements RecEngine {
 		    	utterance = new Utterance();
 		    }
 			
-        } catch (GrammarException e) {
+        //} catch (SpeechApiGrammarException e) {
 	        // TODO Auto-generated catch block
-	        e.printStackTrace();
-	        resultCode="GrammarException";
-	        resultMessage = e.getMessage();
-        } catch (IOException e) {
-	        // TODO Auto-generated catch block
-	        e.printStackTrace();
-	        resultCode="IOException";
-	        resultMessage = e.getMessage();
-        }	
+	    //    e.printStackTrace();
+	    //    resultCode="GrammarException";
+	    //    resultMessage = e.getMessage();
+        //}	
 			
 		// Do Recording 
 		long stop = System.nanoTime();
@@ -1040,12 +1043,11 @@ public class SphinxRecEngine implements RecEngine {
 	  * @throws IOException
 	  * @throws GrammarException
 	  */
-	public synchronized void loadJSGF(JSGFGrammar jsgfGrammar, GrammarLocation grammarLocation) throws IOException, GrammarException {
-
-
+	public synchronized void loadJSGF(JSGFGrammar jsgfGrammar, GrammarLocation grammarLocation) throws SpeechApiGrammarException {
 
 		//System.out.println("SAL:::"+grammarLocation.getBaseURL()+"  "+grammarLocation.getGrammarName());
-		try {
+	
+	    	//this.jsgf = (JSGFGrammar) ((FlatLinguist) recognizer.getDecoder().getSearchManager().getLinguist()).getGrammar();
 			
 			//TODO:  WORKAROUND TO Clear out old grammars need to deallocate and realloctae
 			/*jsgfGrammar.allocate();
@@ -1055,22 +1057,48 @@ public class SphinxRecEngine implements RecEngine {
     		this.jsapiRecognizer.allocate();
 			*/
 			
-			jsgfGrammar.loadJSGF(grammarLocation.getGrammarName());
-			//jsgfGrammar.commitChanges();
-			//this.jsapiRecognizer.commitChanges();
-		} catch (JSGFGrammarParseException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
-		} catch (JSGFGrammarException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
-		//} catch (EngineException e) {
-			// TODO Auto-generated catch block
-		//	e.printStackTrace();
-		} catch (EngineStateError e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
-		}
+			Dictionary d = jsgfGrammar.getDictionary();
+		    this.jsgf = new  JSGFGrammar(grammarLocation.getBaseURL(), logMath, "example", true, false, false, false, d);
+			((FlatLinguist) recognizer.getDecoder().getSearchManager().getLinguist()).setGrammar(jsgf);
+			
+			try {
+				jsgf.loadJSGF(grammarLocation.getGrammarName());
+				//jsgfGrammar.commitChanges();
+				//this.jsapiRecognizer.commitChanges();
+			} catch (JSGFGrammarParseException e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+				throw (new SpeechApiGrammarException(e.getMessage()));
+			} catch (JSGFGrammarException e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+				throw (new SpeechApiGrammarException(e.getMessage()));
+			} catch (IOException e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+				throw (new SpeechApiGrammarException(e.getMessage()));
+			//} catch (EngineException e) {
+				// TODO Auto-generated catch block
+			//	e.printStackTrace();
+			//} catch (EngineStateError e) {
+				// TODO Auto-generated catch block
+			//	e.printStackTrace();
+	
+			}
+			
+	    	this.jsapiRecognizer = new BaseRecognizer(jsgf.getGrammarManager());
+	    	try {
+	    		this.jsapiRecognizer.allocate();
+	    	} catch (EngineException e1) {
+	    		// TODO Auto-generated catch block
+	    		e1.printStackTrace();
+	    	} catch (EngineStateError e1) {
+	    		// TODO Auto-generated catch block
+	    		e1.printStackTrace();
+	    	}
+			
+			
+
 		_logger.debug("loadJSGF(): completed successfully.");
 	}
  
@@ -1295,6 +1323,7 @@ public class SphinxRecEngine implements RecEngine {
 	   components.add (dataBlocker);
 	   if (endpointing) {
 		  components.add (speechClassifier);
+		  speechClassifier = new SpeechClassifier(10,0.003,10.0,0.0);
 	      components.add (speechMarker);
 	      components.add (nonSpeechDataFilter);
 	   //} else {

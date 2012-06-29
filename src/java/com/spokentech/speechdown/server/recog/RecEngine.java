@@ -15,6 +15,7 @@ import javax.sound.sampled.AudioInputStream;
 import com.spokentech.speechdown.common.AFormat;
 import com.spokentech.speechdown.common.Utterance;
 import com.spokentech.speechdown.common.Utterance.OutputFormat;
+import com.spokentech.speechdown.server.SpeechApiGrammarException;
 import com.spokentech.speechdown.server.domain.SpeechRequestDTO;
 
 public interface RecEngine {
@@ -25,7 +26,7 @@ public interface RecEngine {
 	
 	public Utterance recognize(InputStream as, String mimeType, String grammar, AFormat af, OutputFormat outMode, boolean doEndpointing, 
 			                   boolean cmnBatch, boolean oog, double oogBranchProb, double phoneInsertionProb, 
-			                   String amId, String lmId, String dictionaryID, SpeechRequestDTO hr);
+			                   String amId, String lmId, String dictionaryID, SpeechRequestDTO hr) throws SpeechApiGrammarException;
 
 	public Utterance recognize(InputStream as, String mimeType, AFormat af, OutputFormat outMode, boolean doEndpointing, boolean cmnBatch, 
 			String amId, String lmId, String dictionaryID, SpeechRequestDTO hr);

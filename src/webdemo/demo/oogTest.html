@@ -5,11 +5,12 @@
 <head>
   <meta http-equiv="Content-Type" content="text/html; charset=utf-8"></meta>
   <title>Speech Parrot Page</title>
-  <script type="text/javascript" src="http://localhost:8080/speechcloud/lib/speechapi-1.3.js"></script>
-  <script type="text/javascript" src="http://localhost:8080/speechcloud/lib/swfobject.js"></script>
+
+  <script type="text/javascript" src="../lib/speechapi-1.4.js"></script>
+  <script type="text/javascript" src="../lib/swfobject.js"></script>
   <script language="JavaScript" type="text/javascript" >
 
-
+        url =self.location.protocol+"//"+ self.location.host+"/speechcloud";
         function onLoaded() {
   		speechapi.setupRecognition("SIMPLE", document.getElementById('words').value,false);
 	}
@@ -17,11 +18,11 @@
 	var oogBranchProb = "1e-25"; 
 	var phoneProb = "1e-20";
 	var oogFlag = "False";
-	var flashvars = {speechServer : "http://localhost:8080/speechcloud"};
+	var flashvars = {speechServer : url};
         var params = {allowscriptaccess : "always"};
 	var attributes = {};
 	attributes.id = "flashContent";
-	swfobject.embedSWF("http://localhost:8080/speechcloud/lib/speechapi-1.5.swf", "myAlternativeContent", "215", "138", "9.0.28", false,flashvars, params, attributes);
+	swfobject.embedSWF(url+"/lib/speechapi-1.8.swf", "myAlternativeContent", "215", "138", "9.0.28", false,flashvars, params, attributes);
 	speechapi.setup("eli","password",onResult, 
 			onFinishTTS, onLoaded, "flashContent");
 
